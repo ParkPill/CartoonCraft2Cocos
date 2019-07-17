@@ -1,0 +1,129 @@
+<Solution>
+  <PropertyGroup Name="PlatformDefense" Version="3.10.0.0" Type="CocosStudio" />
+  <SolutionFolder>
+    <Group ctype="ResourceGroup">
+      <RootFolder Name=".">
+        <Project Name="AttendReward.csd" Type="Scene" />
+        <Project Name="Battle.csd" Type="Scene" />
+        <Project Name="BattleEnemyInfo.csd" Type="Scene" />
+        <Project Name="BattlePopup.csd" Type="Scene" />
+        <Image Name="betaTag.png" />
+        <TTF Name="BMDOHYEON.ttf" />
+        <Project Name="BottomUnitBar.csd" Type="Node" />
+        <Image Name="btnAttack.png" />
+        <Image Name="btnBlack.png" />
+        <Image Name="btnBox.png" />
+        <Image Name="btnBuild.png" />
+        <Image Name="btnGreen.png" />
+        <Image Name="btnInfo.png" />
+        <Image Name="btnMove.png" />
+        <Image Name="btnOk.png" />
+        <Image Name="btnStop.png" />
+        <Image Name="cardIcon.png" />
+        <Project Name="CastleInfo.csd" Type="Scene" />
+        <Image Name="chapter0.png" />
+        <Project Name="ChapterSelect.csd" Type="Scene" />
+        <Image Name="check.png" />
+        <Project Name="Colosseum.csd" Type="Scene" />
+        <Project Name="ColosseumReward.csd" Type="Scene" />
+        <Image Name="comingSoon.png" />
+        <Project Name="DailyMission.csd" Type="Scene" />
+        <Project Name="DefenceRecord.csd" Type="Scene" />
+        <Project Name="DragButton.csd" Type="Node" />
+        <Project Name="ExistNameAndID.csd" Type="Scene" />
+        <Project Name="ExitPopup.csd" Type="Scene" />
+        <Project Name="FindMatch.csd" Type="Scene" />
+        <Project Name="FreeAdsAlert.csd" Type="Scene" />
+        <Image Name="gem.png" />
+        <Project Name="GemRewardMessageBox.csd" Type="Scene" />
+        <Image Name="goldenTicket.png" />
+        <Image Name="goldIcon.png" />
+        <Image Name="greenArrow.png" />
+        <Project Name="HeroPopup.csd" Type="Scene" />
+        <Image Name="horizontalScrollBackground.png" />
+        <Image Name="iconBag.png" />
+        <Image Name="iconCalendar.png" />
+        <Image Name="iconCardMerge.png" />
+        <Image Name="iconCollection.png" />
+        <Image Name="iconCup.png" />
+        <Image Name="iconDrag.png" />
+        <Image Name="iconEnchant.png" />
+        <Image Name="iconFrench.png" />
+        <Image Name="iconGermany.png" />
+        <Image Name="iconHammer.png" />
+        <Image Name="iconHouse.png" />
+        <Image Name="iconKorea.png" />
+        <Image Name="iconLanguage.png" />
+        <Image Name="iconLock.png" />
+        <Image Name="iconMedal.png" />
+        <Image Name="iconMine.png" />
+        <Image Name="iconMission.png" />
+        <Image Name="iconMusic.png" />
+        <Image Name="iconPlus.png" />
+        <Image Name="iconPopulation.png" />
+        <Image Name="iconQuestion.png" />
+        <Image Name="iconRank.png" />
+        <Image Name="iconRefresh.png" />
+        <Image Name="iconRussia.png" />
+        <Image Name="iconShield.png" />
+        <Image Name="iconSound.png" />
+        <Image Name="iconSpain.png" />
+        <Image Name="iconStar.png" />
+        <Image Name="iconTime.png" />
+        <Image Name="iconTrophy.png" />
+        <Image Name="iconTurkey.png" />
+        <Image Name="iconUsa.png" />
+        <Project Name="ItemGet.csd" Type="Scene" />
+        <Project Name="LanguagePopup.csd" Type="Scene" />
+        <Image Name="lumberIcon.png" />
+        <Image Name="manIcon.png" />
+        <Project Name="Menu.csd" Type="Scene" />
+        <Project Name="MessageBox.csd" Type="Scene" />
+        <Project Name="MineButton.csd" Type="Node" />
+        <Image Name="mission.png" />
+        <Image Name="networkTag.png" />
+        <Image Name="newTag.png" />
+        <Image Name="nonMultiplayTag.png" />
+        <Project Name="NotEnoughWorkerUseGem.csd" Type="Scene" />
+        <Project Name="OrcMagePremium.csd" Type="Scene" />
+        <Image Name="orcTroop.png" />
+        <Project Name="OrcUnitSelect.csd" Type="Scene" />
+        <Image Name="pointerDown.png" />
+        <Project Name="PremiumRetry.csd" Type="Scene" />
+        <Image Name="redDot.png" />
+        <Project Name="RegisterName.csd" Type="Scene" />
+        <Project Name="RightBottomPanel.csd" Type="Scene" />
+        <Project Name="Setting.csd" Type="Scene" />
+        <Project Name="Shop.csd" Type="Scene" />
+        <Project Name="SpecialOffer.csd" Type="Scene" />
+        <Project Name="StageSelect.csd" Type="Scene" />
+        <Project Name="SubscribeSupport.csd" Type="Scene" />
+        <Image Name="swordIcon.png" />
+        <Image Name="targetCircle.png" />
+        <Project Name="TicketOffer.csd" Type="Scene" />
+        <Project Name="Title.csd" Type="Scene" />
+        <Image Name="titleBackground.png" />
+        <Project Name="Train.csd" Type="Scene" />
+        <Image Name="tree0.png" />
+        <Image Name="tree1.png" />
+        <Project Name="TutorialBox.csd" Type="Scene" />
+        <Image Name="uiBox.png" />
+        <Image Name="uiBoxSelected.png" />
+        <Image Name="uiBoxSmall.png" />
+        <Image Name="uiBoxSmallBlue.png" />
+        <Image Name="uiBoxSmallGray.png" />
+        <Image Name="uiBoxTiny.png" />
+        <Image Name="uiTab.png" />
+        <Project Name="UnitDetail.csd" Type="Scene" />
+        <Project Name="UnitTrainInfo.csd" Type="Scene" />
+        <Project Name="UserSelect.csd" Type="Scene" />
+        <Image Name="verticalScrollBackground.png" />
+        <Image Name="videoIcon.png" />
+        <Project Name="VideoStore.csd" Type="Scene" />
+        <Image Name="weaponX.png" />
+        <Project Name="WinPopup.csd" Type="Scene" />
+        <Project Name="WorkerPopup.csd" Type="Scene" />
+      </RootFolder>
+    </Group>
+  </SolutionFolder>
+</Solution>

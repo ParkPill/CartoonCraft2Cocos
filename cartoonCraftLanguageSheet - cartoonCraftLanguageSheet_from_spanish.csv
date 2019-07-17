@@ -1,0 +1,203 @@
+order,english,korean,spanish
+getFullVersion,FULL PACKAGE,풀 패키지,VERSIÓN COMPLETA
+menu,MENU,메뉴,MENÚ
+ok,OK,확인,OK
+cancel,Cancel,취소,Cancelar
+exit,EXIT,나가기,SALIR
+league,League,리그,Liga
+next league,NEXT LEAGUE,다음 리그 진출,SIGUIENTE LIGA
+time,Time,시간,Tiempo
+enemy killed,Killed Enemy,처지한 적,Enemigos eliminados
+your rank,My rank,내 순위,Mi rango
+purchase success,PURCHASE COMPLETE,구매 완료,COMPRA REALIZADA
+colosseum,COLOSSEUM,콜로세움,COLISEO
+video not available,Video is not available now,광고가 준비되지 않았습니다,El video no está disponible
+ticket received,You received a golden ticket.,티켓이 지급되었습니다.,Has recibido un ticket dorado
+BEGINNER,BEGINNER,비기너,PRINCIPIANTE
+BRONZE,BRONZE,브론즈,BRONCE
+SILVER,SILVER,실버,PLATA
+GOLD,GOLD,골드,ORO
+PLATINUM,PLATINUM,플래티넘,PLATINO
+DIAMOND,DIAMOND,다이아몬드,DIAMANTE
+MASTER,MASTER,마스터,MAESTRO
+GRAND MASTER,GRAND MASTER,그랜드 마스터,GRAN MAESTRO
+LEGENDARY,LEGENDARY,전설,LEYENDA
+congratulations,Congratulations,축하합니다,Enhorabuena
+league reward promotion,I can’t believe how amazing you are! You are just promoted to the next league with the reward below.,축하합니다! 어마어마한 기록이네요. 아래 보상과 함께 다음 리그로 승급되었습니다!,¡No puedo creer lo increíble que eres! Acabas de ascender a la siguiente liga. Esta es tu recompensa.
+league reward,Awesome! You are record was amazing! I can’t wait to watch your next battle!,엄청나네요! 높은 성적으로 리그를 통과하여 아래와 같은 보상을 얻었습니다. 다음 배틀도 기대하겠습니다!,¡Increíble! ¡Tu récord ha sido brutal! No puedo esperar a ver tu próxima batalla.
+league reward normal,Good job! I am sure you can get a better rank next time.,훌륭합니다! 내일은 더 높은 기록을 얻을 수 있을 것 같네요!,¡Buen trabajo! Seguro que puedes conseguir un rango mejor la próxima vez.
+league result down,It was so close! Let’s try this league when we are ready. How about we go down a little bit?,아깝네요! 엄청난 경쟁자들이 순위를 모두 차지했네요. 조금 덜 치열한 전장으로 가볼까요?,¡Casi! Intentémoslo de nuevo cuando estemos listos. ¿Qué tal si bajamos un poco el listón?
+league result,RESULT,리그 결과,RESULTADO
+challenge arena,Be the first player to challenge today’s arean!,오늘의 아레나의 첫 번째 도전자가 되어주세요!,¡Sé el primero en desafiar la arena hoy!
+rank,RANK,순위,RANGO
+reward,REWARD,보상,RECOMPENSA
+not enough ticket,Not enough tickets,티켓이 부족합니다.,No tienes tickets suficientes
+server fail try again,Failed to connect with Server,서버 접속에 실패 했습니다.,Error al conectar con el servidor
+play,PLAY,플레이,JUGAR
+back key exit,What? Exit? Really?,뭐시라?! 나가겠다고?!,¿Qué? ¿Te vas? ¿En serio?
+option,OPTION,옵션,OPCIONES
+save,SAVE,저장하기,GUARDAR
+load,LOAD,불러오기,CARGAR
+arena,ARENA,아레나,ARENA
+coming soon,COMING SOON,커밍 순,PRÓXIMAMENTE 
+buy,BUY,구매하기,COMPRAR
+beta alert,This is in BETA state. It might not work properly :P,베타 테스트 중입니다. 정상적으로 동작하지 않을 수도 있어용^^;,Esta es una versión BETA. Puede que no funcione correctamente :p
+select support,GET,선택,CONSEGUIR
+sign in google play,Sign in to Google Play Game Service,게임 서비스 로그인이 필요합니다.,Inicia sesión en tu cuenta de Google Play
+sign in game center,Sign in to Game Center,게임 센터 로그인이 필요합니다.,Inicia sesión en tu cuenta de Game Center
+effect on,EFFECT ON,효과음 켜짐,EFECTOS: SÍ
+effect off,EFFECT OFF,효과음 꺼짐,EFECTOS: NO
+music on,MUSIC ON,배경음 켜짐,MÚSICA: SÍ
+music off,MUSIC OFF,배경음 꺼짐,MÚSICA: NO
+never show,Never show,다시 보지 않기,No volver a mostrar
+rate game,"Please, rate this game.",게임을 평가해주세요.,"Por favor, valora este juego."
+enjoy game,Enjoying Cartoon Craft?,카툰 크래프트 재미있으신가요?,¿Te gusta Cartoon Craft?
+select all,ALL FORCES,전 병력 선택,TODAS LAS FUERZAS
+select screen,FORCES IN SCREEN,화면 내 병력 선택,FUERZAS EN PANTALLA
+later,Later,나중에,Más tarde
+choose support,Get Support Force,지원 병력 선택,Consigue fuerzas de apoyo
+overwrite save data,Data exists on the slot. Do you want to overwrite?,저장된 데이터가 있습니다. 덮어쓰기 하시겠습니까?,Hay información en la ranura. ¿Quieres sobreescribirla?
+load data,Do you want to play the saved game?,저장된 게임을 플레이하시겠습니까?,¿Quieres jugar la partida guardada?
+gold left,Gold Left: %d,남은 금: %d,Oro restante: %d
+next,Next,다음,Siguiente 
+not available on this stage,Not available on this stage,이 스테이지에서는 사용할 수 없습니다,No disponible en este nivel
+not enough gold,Not enough gold,금이 부족합니다,No tienes suficiente oro
+not enough lumber,Not enough lumber,나무가 부족합니다,No tienes suficiente madera
+not enough food,Not enough food,농장이 부족합니다,No tienes suficiente comida
+castle,Castle,성,Castillo
+farm,Farm,농장,Granja
+barracks,Barracks,병영,Cuartel
+lumbermill,Lumber mill,목재소,Aserradero
+build lumbermill first,Build a lumbermill` first.,목재소를 먼저 건설해야 합니다,Construye un aserradero primero.
+watcher tower,Watcher tower,감시탑,Torre de vigilancia
+factory,Factory,공장,Fábrica
+airport,Airport,공항,Aeropuerto
+mine,Mine,금광,Mina
+worker,Worker,일꾼,Trabajador
+swordsman,Swordsman,검사,Espadachín
+archer,Archer,궁수,Arquero
+helicopter,Helicopter,드론병,Helicóptero
+catapult,Catapult,투석기,Catapulta
+,,,
+resume,RESUME,계속하기,CONTINUAR
+stage title 0,Begin a journey,여행의 시작,¡Que comience la aventura!
+stage title 1,Raid of Orcs,오크의 습격,Incursión orca
+stage title 2,Counter Attack,카운터 어택,Contraataque
+stage title 3,Rise of Zombies,좀비의 등장,La aparición de los zombis
+stage title 4,Help Orcs,오크를 구하라,Ayuda a los orcos
+stage title 5,Alliance,동맹,Alianza
+stage title 6,Zombies King,좀비의 왕,El rey zombi
+stage title 7,Swarm of Zombies,좀비떼의 습격,Plaga de zombis
+stage title 8,Rise in Revolt,반란군의 등장,Rebelión
+stage title 9,Betrayer,배신자,Traidor
+stage title 10,Hive of Zombies,좀비굴,Colmena de zombis
+stage title 11,End of Zombies King,좀비왕의 최후,El fin del rey zombi
+stage title story 0,Hello little angel. Granny has a very interesting story to bring you to a deep sleeping land. Once upon a time` there were Orcs and Humans doing war kind of crap. They were fighting each other since forever. They didn’t even know why they were fighting. They just do it because their daddies and mommies were doing it. Then one day! Boom! They became friends and friends. How? Because there was a huge pain in the nose rising from the north-east. But before we get there` you have to know how they build a farm and barracks. Then about training swordsmen. Are you ready? I hope you are ready. Let’s dig it with granny` sweety.,우리 귀여운 손자. 할미가 우리 애기 코~ 자라고 재밌는 이야기를 하나 해줄꺼에요. 겁나 기대되지요? (헤헤) 옛날 옛날 겁나 먼 옛날에 판교랑 정자에 오크족과 휴먼족이 살고 있었어요. 그것들은 틈만나면 쌈박질을 했지. 당췌 언제부터 그랬는지 그 시작을 알 수 없을 정도로 오랜 기간동안 쌈박질을 하고 있었어요. 우리 애기는 그런거 하면 안되요? 알겠지요? 아무튼 그들은 지들 애미애비가 전쟁질을 하니까 지들도 커서 아무 생각없이 전쟁질을 하고 있던게야. 그러던 어느날! 갑자기 휴먼과 오크가 친구가 된거에요! 어떻게 그런 일이 있을 수 있냐구? 왜냐면 북동쪽 오리 지역에서 골치아픈 공공의 적이 내려왔기 때문이야. 그 얘기를 하기 전에 그들이 어떻게 살았는지 할미가 알려줄게요? 어떻게 집을 짓고 어떻게 병사들을 훈련시켰는지 말이야.,"Hola, angelito. La abuelita tiene una historia muy interesante que te transportará a una tierra de ensueño. Érase una vez una época en la que orcos y humanos hacían movidas de la guerra y esas cosas. Llevaban desde siempre luchando entre ellos. La verdad es que ni siquiera sabían por qué luchaban, solo lo hacían porque sus papás y sus mamás lo hacían. Y, entonces, un día ¡Pumba! Se hicieron amigos. ¿Cómo? Pues, porque había un tocapelotas alzándose en el noreste. Pero antes de llegar a eso, tienes que saber cómo construían granjas y cuarteles y cómo entrenaban a sus espadachines. ¿Estás preparado? Espero que sí. Ven a echar un vistazo con la abuelita, cariño."
+stage title story 1,Orcs are very aggressive race. But they are pretty much like human beings. They sometimes ask a question about why orcs eat and smell things. It means they have ego. Just like human beings` they also do art work like painting and making sculptures. But there is one thing they don’t have a question about why they are doing it. That is a fight. Nobody ever in history of Orcs has a question about why they have to fight. They just fight like animals make doodies after mill. That was just a natural behavior. So as usual` Orcs were happy thinking about a fight that will be placed on the day after. But Adun the newbie general of human side already knew about the fight Orcs’ plan. Thus he decided to attack them before the sunrise.,오크는 매우 호전적인 종족이야. 응? 호전적인게 뭐냐구? 쌈박질 좋아한다는 뜻이지. 흐흐. 그런데 그들도 인간과 많이 다르지는 않았어. 그들도 자신의 존재가치에 대한 질문을 던질 수 있을 만큼의 지성을 가진 종족이었지. 그들도 인간들처럼 그림도 그리고 조각도 하는 문명인이라는거야. 다만 하나 다른점이라면 그들은 쌈박질에 관해서라면 이유가 필요하지 않았지. 왜 싸우는지도 중요치 않았어. 그저 본능처럼 싸우는 거야. 싸울 상대가 없으면 지들끼리도 싸우곤 하지. 그런 그들이었으니. 다음날 펼쳐질 인간과의 전쟁을 기다리는 시간이 너무나도 즐거웠어. 하지만 휴먼족의 장군인 아둔 역시 싸우는 걸 무척이나 좋아했어. 하지만 지는게 너무 싫었던 그는 정면 싸움을 그리 즐기지는 않았어. 그래서 그는 약속된 전쟁의 전날밤에 오크를 기습하기로 결정한거야!,"Los orcos eran una raza muy agresiva, pero se parecían mucho a los humanos. A veces se preguntaban cosas como por qué comían u olían cosas, lo que quiere decir que eran conscientes de su existencia. Al igual que los humanos, también hacían trabajos artísticos, como pinturas y esculturas. Sin embargo, había una única cosa que no se cuestionaban; y esa era la lucha. Nunca nadie, en la historia de los orcos, se había preguntado por qué tenían que luchar. Para ellos, luchar era como respirar, estaba en su naturaleza. Así que, como siempre había sido, los orcos eran felices pensando en la batalla que tendría lugar el día siguiente. Sin embargo, Adun, el nuevo general de los humanos, ya sabía cuál era el plan de los orcos. Así que decidió atacarles antes del amanecer."
+stage title story 2,It was not long after humans started enjoying their victory. Because Orcs are very nimble` it took a less than a few hours for the other Orcs to come to the battle field. It was impossible to win against hundreds of Ocrs. Adun only has a dozen of swordsmen and archers after the glorious battle. But lucky for Adun` Orcs are very upset. They don’t wait for the other troop. Once they arrived` they attack. So Adun does not have to fight against hundreds of Orcs at a single battle. It is just a battle against a few of Orcs for hundred times. But it is not easy. Orcs are very strong. Adun needs one more card. And he knew the best defense is the best attack. Orcs has a report that humans are defending themselves at their base. But humans are advancing forward and forward. Who do you think will win the battle?,휴먼족은 기습을 성공하고 지난 전투에서 승리를 거머쥐었지. 하지만 승리에 취해서 잠시 병사들을 그 자리에서 쉬게한 아둔의 결정은 정말 큰 실수였어. 발빠른 오크족은 동족의 패배 소식을 듣고 전장으로 출발했고` 그 수가 수백에 달하는 오크족 병사들이 전장으로 오고 있다는 첩보를 듣게 됐거든! 불행히도 아둔의 병력은 기습을 위해 기동성을 중시해서 그 숫자가 많이 않았어. 기껏해야 50명의 정예부대. 그마저도 전투에서 절반 이상을 잃었지. 하지만 아둔은 절망하지 않았어. 왜냐구? 아둔은 오크족을 잘 알고 있었거든. 싸움을 참지 못하는 오크족은 전장에 도착하는 족족 전투를 걸어오지. 아둔은 수백의 병력과 한 번에 전투를 벌이는 대신 10명도 되지 않는 적들과 수십번의 전투를 하면 되는 거였어. 하지만 그리 쉽지만은 않다는 것도 알고 있었지. 오크족은 전투를 좋아하는 만큼 아주 강한 전사들이거든.  그래서 아둔은 한 가지 방법을 떠올렸어. 그 자리에서 방어하는 것보다 적이 오는 방향으로 전진에서 매복을 하는 거였지. 과연 아둔은 이 전투도 이길 수 있을까?,"Los humanos no tardaron mucho en celebrar su victoria. Pero los orcos eran avispados y solo bastó con unas pocas horas para que otros orcos acudieran al campo de batalla. Era imposible ganar contra centenares de orcos y a  Adun solo le quedaban una docena de espadachines y arqueros tras la gloriosa batalla, pero, por suerte para Adun, los orcos estaban muy cabreados y atacaban según llegaban, sin esperar al resto de las tropas. De manera que Adun no tuvo que enfrentarse a centenares de orcos en una sola batalla. Solo a unos cientos de batallas contra unos pocos orcos en cada una. Sin embargo, no fue fácil, pues los orcos eran muy fuertes. Pero Adun tenía un as bajo la manga y sabía que la mejor defensa es un buen ataque. Los orcos informaron de que los humanos se estaban defendiendo en su base, pero en realidad avanzaban cada vez más. ¿Quién crees que ganará?"
+stage title story 3,Orcs get serious damage fm the last battle against humans. Khalan the chief of Ocrs commands to concentrate all the troop. Yes. It is time to face the biggest battle ever. But wait! Who is it? Someone under weird mask shows up with his weird laughing sound. It took a few seconds before Adun recognized him. He is Lamington the legendary hero that was kicked from the army for having an affair with a female orc. Story tells he has been dead. But that is not true. He is alive and standing in front of Adun. Because he is a huge fan of the hero` Adun has so many questions for the hero. Why is he here? What is he doing here? Why is the mask so weird?,오크는 지난 전투에서 큰 피해를 입었어. 그제서야 오크 족장인 칼란은 동족들을 한데 모았지. 맞아. 흥분한 칼란은 온동족을 모아서 역사상 가장 큰 전쟁을 벌이려고 하고있어! 근데 이게 누구야? 가면을 쓴 이상한자가 그들을 가로막았어. 이상한 웃음소리를 내면서 말이야. 하지만 아둔은 한 번에 그를 알아보았지. 그는 여성오크와 사랑에 빠져 휴먼족에게서 추방당한 레밍턴 장군이었어! 그가 죽었다는 소문이 돌았지만 사실이 아니었던게지. 살아있는 그가 지금 아둔의 눈앞에 서있으니까 말이야. 아둔은 어릴적부터 레밍턴을 동경해왔어. 궁금한게 너무도 많았지만 지금 가장 궁금한 건 하나였지. 그 멋있던 레밍턴이 왜 저런 이상한 가면을 쓰고 있는걸까?,"Los orcos salieron bastante malparados de su última batalla contra los humanos. Khalan, el jefe de los orcos, ordenó reunir a todas sus tropas. Sí. Era el momento de enfrentarse a la mayor batalla jamás vista. ¡Espera un momento! ¿Quién era ese? Un misterioso enmascarado apareció con una risa macabra. Adun lo reconoció enseguida. Se trataba de Lamington, el héroe legendario que fue expulsado del ejército por tener un romance con una orca. Las historias contaban que estaba muerto. Al parecer se equivocaban, porque estaba vivo y frente a Adun. Como Adun era un gran fan del héroe, tenía muchas preguntas que hacerle. ¿Por qué estaba allí? ¿Para qué? ¿Por qué la máscara era tan rara?"
+stage title story 4,Lamington is not bluffing. He actually has superior army than any of Orcs and humans. And the first target would be Orcs. Orcs are very aggressive and never pullback. But this time it is a little bit different. Orcs are terrified. They fear not on the field. But when it comes to ghost and zombies. They fear a lot. At that time` Adun realized humans can’t defeat Lamington’s army either. Humans has to conclude an alliance with Orcs. He hates Orcs. But zombies are the worst.,레밍턴의 말은 허풍이 아니었어. 정말로 그의 병력은 오크와 휴먼의 병력을 크게 상회하고 있었거든. 그리고 그 병력의 오크를 향해 가고 있었지. 오크는 용맹하고 전투에 있어서는 두려움을 몰랐지만 이 번엔 달랐어. 그 용맹하던 오크들이 겁을 먹었지. 죽는것도 두려워하지 않는 오크들도 무서운게 하나 있던거야. 바로 귀신들이지. 좀비도 그들이 보기엔 귀신같았던 거야. 오크들은 그들에게서 도망가기 바빴지. 같은 시간 아둔은 다른 생각을 하고 있었어. 레밍턴의 병력을 휴먼족만으로는 감당하기 어렵다는 걸 깨닫는데는 그리 오랜 시간이 걸리지 않았지. 레밍턴과의 전쟁을 이기기 위해선 오크와의 협력이 불가피하단 결론에 도달했던거야. 오크도 싫지만 좀비는 더 싫었거든.,"Lamington no iba de farol. Era cierto que su ejército era más grande que el de los orcos y los humanos. Y su primer objetivo serían los orcos. Los orcos eran muy agresivos y nunca se rinden, pero esta vez era diferente; estaban aterrorizados. No temían al campo de batalla, pero cuando se trata de fantasmas y zombis...se cagaban de miedo. En ese momento, Adun se dio  cuenta de que tampoco era capaz derrotar al ejército de Lamington. Los humanos tenían que fundar una alianza con los orcos. Adun los odiaba, pero los zombis eran lo peor."
+stage title story 5,So Adun saved Orc troops. They both hate each other. But not now. Now` they have a common enemy. There is a saying that enemy’s enemy is my friend. Until the threat of zombies disappear` they decided to put all they power to clean the zombies out. Everything looks promising. But it wasn’t. He has no idea what’s coming next. Who’s he? Well` let’s find out.,그래서 아둔은 오크족을 도와 좀비와의 첫 전투를 승리로 이끌었어. 그들은 당장이라도 서로에게 무기를 들이대고 싶었지만 지금은 그럴때가 아니란걸 알고 있었지. 지금은 공공의 적이 있거든. 적의 적은 나의 아군이란 말도 있지. 뭐 대부분은 그렇지 않지만.(키키) 아무튼 그들은 좀비의 위협이 사라질 때까지 불가침조약을 맺었어. 모든게 희망적이었지. 마치 오크와 휴먼간의 긴 전쟁이 끝난 것처럼 말이야.,"De modo que Adun salvó a las tropas orcas. Ambos se odiaban, pero no era el momento para ello, tenían un enemigo común. Según el dicho, el enemigo de mi enemigo es mi amigo. Decidieron no darse por vencidos hasta que acabaran con los zombis. Todo parecía prometedor... Nada más lejos de la realidad. Adun no tenía ni idea de lo que se le venía encima. ¿Qué sería? Bueno, vamos a averiguarlo."
+stage title story 6,One of Orcs troop accidentally witnessed Lamington is crawling in to a house that looks like his shelter. Did they find out his place? It that really Lamington’s house? It doesn’t matter. If they can catch him` the war is over. Nobody can possibly find a single reason to hesitate. Adun gathers good men and made them sneak into the zone.,오크 병사 중 하나가 레밍턴이 어떤 집으로 들어가는 걸 목격했다는 소식이 들려왔어. 그게 레밍턴의 집인지 잠시 들른건지는 알 수 없었지. 하지만 만약 그게 레밍턴의 집이고 그가 휴식을 취할 때 습격해서 레밍턴을 저지하면 이 전쟁을 끝낼수도 있는 일이었지. 물론 함정일 수도 있어. 하지만 그냥 놓치기에는 너무 아까운 기회였지. 그 누구도 망설일 이유를 찾지 못했어. 아둔은 즉시 기동대를 편성하고 그 지역으로 침투했어. 하지만 그 길목에는 좀비들이 가득했지! 정말 그 집은 레밍턴의 주둔지인걸까?,"Una de las tropas orcas vio, casi sin quererlo, como Lamington se arrastraba hasta una casa que parecía ser su refugio. ¿Habrían encontrado su guarida? ¿Sería realmente la casa de Lamington? No importaba; si lo atrapaban, la guerra se acabaría. Nadie podía encontrar una razón para echarse atrás. Adun juntó a sus mejores hombres y se infiltraron en la zona."
+stage title story 7,The place they sneaked into was a trap. IT’S A TRAP! Swarm of zombies awaits them. It looks like there is no way out. A second before they gave up their lives` they saw a little light. God never gave up on them. The trap is in the forest which by the way looks really familiar to them. It was kind of a maze. Zombies stopped moving. Because they are not smart enough to break the  path. They have a final chance to break the situation.,그들이 침투한 지역은 역시나 함정이었어. 좀비떼가 그들을 기다리고 있었지. 빠져나갈 구멍은 하나도 보이지 않았어. 전투를 포기하고 무기를 내려놓으려던 찰나! 그들은 한 줄기 빛을 보았지. 아직 신은 그들에게서 시선을 떼지 않았던게야! 그 곳은 수 년전 그들이 야영했던 장소와 가까웠지. 마치 미로같았던 그들의 야영지. 그 숲이라면 좀비들에게서 시간을 벌고 전열을 재정비 할 수 있다 판단하고 그들은 그 숲으로 향했어.,"El lugar en el que se infiltraron era una trampa. ¡UNA TRAMPA! Una plaga de zombis les esperaba. Parecía no haber escapatoria. Un instante antes de darse por vencidos, vieron una lucecilla. Dios no les había abandonado todavía. La trampa estaba en un bosque que les resultaba familiar, parecía un laberinto. Los zombis se detuvieron porque no eran lo suficientemente listos como para averiguar el camino. Tenían una última oportunidad de darle la vuelta a la tortilla."
+stage title story 8,Humans just survived through the critical trap. But who knows what’s coming next? An unexpected situation is waiting for them. Orcs were killing each other. Just before an axe of Orc made a knock knock joke on Adun’s heart. The other axe went through the Orc’s head. Some of Orcs hate Humans way more than they do Zombies. It was a revolt. Adun has no other option but help disable the revolt.,아둔은 겨우겨우 함정에서 빠져나왔어. 야영지에 있던 금광 때문에 더욱 강화된 병력과 함께 전장에서 당당히 돌아올 수 있었지. 하지만 이게 왠걸? 어처구니 없는 일들이 눈앞에 펼쳐지고 있는게 아니겠니? 오크들이 서로 싸우고 있던거야. 그러다 오크의 도끼가 아둔에게 날아오던 찰나에 칼란의 도끼가 날아와 아둔의 머리칼을 자르고 목을 향하던 도끼를 날려버렸어. 오크족 내에서 반란이 일어난거야. 좀비도 싫지만 휴먼족이 너무나도 싫었던 일부 오크족이 칼란에게 반기를 들었던게지. 좀비보다 휴먼이 더 싫은 오크도 있었던게야.,"Los humanos acababan de sobrevivir a una trampa mortal. Pero, ¿quién sabe qué vendría después? Una situación inesperada les aguardaba; los orcos se mataban entre ellos. Adun estaba perplejo. En ese momento, vio como un hacha orca se dirigía hacia su cabeza dispuesta a darle un beso de buenas noches, pero , de repente, otra hacha orca se interpuso para salvarle la vida; era el de Khalan. ¿Qué pasaba con los orcos?. Simple. Algunos odian a los humanos más que a los zombis. Era una rebelión y a Adun no le quedaba otra que pararla. "
+stage title story 9,The revolt of Orc is disabled with a help of Human. But as I said` nobody knows what’s coming. This time. There is a trouble in an army of Humans. A betrayer was helping Lamington’s plan. Why? Because he doesn’t like the fact that Orcs and Humans getting along. He is so furious about that. He decided to help Lamington to extinguish Orcs and Humans on this planet. So stuipid` right?,휴먼의 도움으로 오크족의 반란군을 모두 무력화시킬 수 있었어. 하지만 이 다음에 무슨 일이 일어날지는 아무도 모르는 일. 이번엔 휴먼족 내에서 분란이 있었던게야. 배신자가 몰래 레밍턴을 돕고 있었지. 왜냐구? 반란을 일으켰던 오크와 같은 이유야. 오크에게 부모를 잃은 많은 병사들은 오크와의 동맹을 받아들일 수가 없었지. 오크의 적이 되길 원했던 그들은 오크와 동맹을 맺은 휴먼이 아닌 오크의 적. 바로 좀비들의 편에 섰던 것이지. 정말 바보같은 생각 아니니?,"Se neutralizó la rebelión de los orcos gracias a los humanos. Pero, como he dicho, nadie sabía qué estaba pasando. Esta vez había un problema dentro del ejército de los humanos. Un traidor había estado ayudando a Lamington con su plan. ¿Por qué? Porque no le hacía ninguna gracia que orcos y humanos se llevasen bien. Estaba tan cabreado que decidió ayudar a Lamington a erradicar tanto a orcos como a humanos de este planeta. Qué tontería, ¿no?"
+stage title story 10,Now` there is no interruption between each other. Just Zombies vs Human and Orc alliance. At first` it looks like Zombies are so many like they will never stop coming up from the ground. And it is. They are endless. But there is a hive of zombies. Without the hive they can’t continue infecting dead bodies. And it is in front of Adun’s army. It is not going to be easy. But it is something Adun must face.,모든 분란이 사라지고 드디어 좀비와 오크 휴먼 동맹은 큰 전쟁을 앞두게 되었지. 휴먼과 오크는 좀비군대를 앞에 두고 생각했어. 처음엔 끝도 없어 보이던 좀비들이 지금도 끝도 없어 보이는거야! 사실이야 끝도 없어. 산사람은 물론 죽은 시체들까지 좀비로 일으켜세우니까 말이야. 하지만 멈출 수 있는 방법은 있지. 좀비 하이브. 그걸 없애면 시체들이 좀비화되는 걸 막을 수 있어. 그리고 아둔의 군대는 마침내 하이브 앞까지 도착했지. 이 전투가 쉽지는 않을꺼야. 하지만 피할 수도 없는 전투 이기도 하지.,"Ya no había nada que les parase los pies. Tan solo zombis contra la alianza de humanos y orcos. Al principio había tantos zombis que parecía que no pararan de salir del suelo. Y así era, eran incontables. Sin embargo vieron una colmena de zombis frente al ejército de Adun, si la destrozaban, dejaría de infectar a los cadáveres. No iba a ser fácil, pero era algo a lo que Adun tenía que enfrentarse."
+stage title story 11,The hive of Zombies are gone. No more fresh zombies are rising. Just smashing current zombies will save the world. And maybe another war will begin between Human and Orc. But Adun is thinking Orc might change after this battle. Maybe they can live along just like they do now. So Adun is running to Zombies with a smile on his face thinking about a world without a war. But the biggest war on the history is reserved after this battle. Nobody knows what’s coming.,좀비 하이브가 사라졌어! 아둔의 전략이 성공한거지. 더 이상 싱싱한 좀비는 만들어지지 않을꺼야. 눈에 보이는 좀비들만 뭉개버리면 다시 좀비없는 세상이 오는거지.  좀비가 없는 세상에는 다시 오크와 휴먼의 전쟁이 자리를 잡겠지만. 아둔은 한 가지 희망을 가지고 있었어. 이 전투 후에 같이 싸운 서로를 동료로서 맞이하고 영원한 동맹을 맺는 희망 말이야! 지금처럼 어깨를 나란히 한 채 살아가는 휴먼과 오크를 생각하며 아둔은 요상한 미소를 머금은 채 좀비들을 향해 돌진했어. 이 전투가 세상의 마지막 전투이길 바라며! 어리석게도 말이야.,"La colmena de zombis fue destruida. No aparecían nuevos zombis, solo aplastar a los que quedaban salvaría el mundo. Y probablemente otra guerra entre orcos y humanos empezaría. Aunque Adun pensaba que los orcos podían cambiar tras esta batalla y, quizás, pudieran convivir como lo hacían en ese momento. De manera que se abalanzó contra los zombis con una sonrisa en la cara al pensar en un mundo sin guerras. Sin embargo, la mayor guerra de la historia aguardaba tras esta batalla. Nadie sabía qué sería lo próximo."
+tutorial 0,Sweety. Welcome to the battle field. I will teach you how to battle. Select a worker. Look at the left side of this talk box. Workers look like this. Select one of them.,어서오렴. 전장에 온 걸 환영한다. 지금부터 뭘 어찌 해야되는지 가르쳐줄께. 우선 일꾼을 선택해보아라. 이 대화상자 왼쪽에 그림이 보이지? 저게 일꾼이란다. 한 명 선택해보렴.,"Bienvenido al campo de batalla, cariño. Te enseñaré a luchar. Selecciona un trabajador. Mira a la izquierda. Los trabajadores son así. Selecciona uno de ellos. "
+tutorial 1,Good. And touch ground to make units MOVE.,좋아. 이제 땅을 터치해서 일꾼을 움직여보거라.,Bien. Toca el suelo para hacer que la unidad se MUEVA.
+tutorial 2,And use your  two fingers to move the view.,두 손가락으로 화면을 움직일 수도 있어.,Y usa tus dos dedos para mover la cámara.
+tutorial 3,Very good. He can gather gold. Find a gold mine. And send the selected worker to the mine. A mine looks like this. If you are confused. Just select a worker and select the mine. That’s it.,아주 좋아. 일꾼은 금을 캘 수 있단다. 금광을 찾아서 일꾼에게 일을 시키렴. 어떻게 하냐구? 간단해. 일꾼 선택하고 금광을 선택하면 된다다. 금광은 이렇게 생겼단다.,"Muy bien. Puede recoger oro. Encunetra una mina y envía al trabajador seleccionado a la mina. Por si estás un poco perdido, una mina es así. Solo selecciona un trabajador y selecciona la mina. Eso es. "
+tutorial 4,Oh dear. You are good at this. aren’t you? Allll right. Now send worker to a tree. He can gather lumber as well. Make sure you checked the axe icon above the lumber you touched. It is just annoying when you find a worker resting under the tree forever!,오 마이! 정말 잘하는구나! 그래` 좋았어! 이제 놀고 있는 일꾼을 선택해서 나무를 해보자꾸나. 일꾼을 선택하고 나무를 선택하면 돼. 나무 위에 도끼 모양이 나타나야 제대로 일을 시작한거야. 가끔 나무 밑에서 놀고있는 일꾼들을 보면 화가 치밀어오르지!,"Oh, cariño. Se te da bien, ¿a que sí? Muyyy bien. Ahora envía a un trabajador a un árbol. También puede recoger madera. Asegúrate de que el icono de un hacha aparece sobre el árbol que has tocado. ¡Molesta encontrarse a los trabajadores descansando a la sombra de un árbol!"
+tutorial 5,Goooood. Now. Let’s try building a farm. People must eat. The more farm you have. The more people you can get. Select the worker and select the build icon.,쪼오아. 이제 농장을 하나 지어볼까? 더 많은 인구를 확보하려면 농장이 많아야 한단다. 먹어야 살 것 아니니? 끌끌끌. 일꾼을 선택하고 건설 아이콘을 선택해보려무나.,"Bieeeeen. Ahora construyamos una granja. La gente tendrá que comer, ¿no?. Cuantas más granjas tengas, más gente podrás tener. Selecciona un trabajador y selecciona el icono para construir."
+tutorial 6,Then select the farm. Look at the left. Farms look like this. Let’s build one.,이제 농장을 선택해보렴. 농장은 왼쪽의 그림처럼 생긴 건물이란다. 하나 지어보자꾸나.,Ahora selecciona la granja. Mira a la izquierda. Las granjas son así. Construyamos una.
+tutorial 7,Alll righty. Why don’t we try building a barracks. You can train swordsmen and archers from barracks. Try building this one. Do you see the building on the left?,잘 하고 있어! 이제 병영도 하나 지어볼까? 병영에서는 검사나 궁수 같은 병력들을 생산할 수 있단다. 하지 지어보자꾸나. 왼쪽에 그림이 보이지? 저렇게 생긴걸 하나 만들어보려무나.,Muy bien. ¿Por qué no probamos a construir un cuartel? En ellos puedes entrenar a espadachines y a arqueros. Prueba a construir este. ¿Ves el edificio a la izquierda?
+tutorial 8,Perrrrfect. Let’s train a swordsman. Select the barracks that you just build. And select a swordsman to train.,완벽해! 이제 검사를 한 명 뽑아보렴. 방금 지은 병영을 선택하고 검사를 선택하면 돼! 아주 쉽지?,Perrrrrfecto. Vamos a entrenar a espadachines. Selecciona el cuartel que acabas de construir y un espadachín al que entrenar.
+tutorial 9,Oh my goodness! You are reeeeally talented! Now. I have a last thing to teach you. DRAG to select MULTIPLE units.,옴마나 세상에! 아주 능숙하구나. 역사에 이름을 남길만한 인물이 여기 있구나! 이제 거의 마지막이다. 한 손가락으로 화면을 쓸어서 여러명의 병력을 선택해보거라.,"¡Dios mío! ¡Tienes talento! Bien, tengo una última cosa que enseñarte. ARRASTRA para seleccionar MÚLTIPLES unidades."
+tutorial 10,Alrighty. Then double tap ground to make unit MOVE and ATTACK.,좋아! 이제 빈 땅을 더블탭해보거라! 어택땅이라고 하는데. 이게 아주 편해. 병사들이 이동하다가 적을 마주하면 자동으로 전투를 시작하지. 뭐? 알고 있다고?,Excelente. Ahora toca dos veces el suelo para hacer que la unidad se MUEVA y ATAQUE.
+tutorial 11,Ggggggreat. No more words needed. Try finding out what you can do with what you got. The objectives are on the top left corner of the screen. Good luck. Sweat heart.,쪼아조아조아조아. 더 이상 말이 필요 없겠구나. 이제 나름의 방법으로 전장을 지휘하려무나. 화면 왼쪽 위에 임무 목표가 있으니 마음껏 즐기렴. 행운을 빌어주마.,"Ggggggenial. No hay más que decir. Intenta averiguar qué puedes hacer con lo que tienes. Los objetivos aparecen en la esquina superior izquierda de la pantalla. Buena suerte, cariño."
+tutorialHowTo0,Select a worker,일꾼을 선택하세요,Selecciona un trabajador
+tutorialHowTo1,Touch ground to move selected worker,땅을 터치해서 선택된 일꾼을 이동하세요,Toca el suelo para que el trabajador seleccionado se mueva
+tutorialHowTo2,Drag screen with two fingers to move the view,두 손가락으로 화면을 쓸어서 시야를 이동하세요,Arrastra dos dedos por la pantalla para mover la cámara
+tutorialHowTo3,Select a worker and select the mine,일꾼을 선택하고 금광을 선택하세요,Selecciona un trabajador y selecciona la mina
+tutorialHowTo4,Select a worker and select a tree,일꾼을 선택하고 나무를 선택하세요,Selecciona un trabajador y selecciona un árbol
+tutorialHowTo5,Select a worker and select the build icon,일꾼을 선택하고 건설 메뉴를 선택하세요,Selecciona un trabajador y selecciona el icono para construir
+tutorialHowTo6,Build a farm,농장을 지으세요,Construye una granja
+tutorialHowTo7,Build a barracks,병영을 지으세요,Construye un cuartel
+tutorialHowTo8,Train a swordsman,검사를 생산하세요,Entrena a un espadachín
+tutorialHowTo9,Drag screen with one finger to select multiple units,한 손가락으로 화면을 쓸어서 여러명의 유닛을 선택하세요,Arrastra un dedo por la pantalla para seleccionar a múltiples unidades
+tutorialHowTo10,Double tap ground to command MOVE AND ATTACK to selected units,유닛을 선택한채로 땅을 더블탭하면 유닛이 이동하며 공격가능한 대상을 만나면 자동으로 공격합니다,Toca el suelo dos veces para ordenar MOVERSE y ATACAR a las unidades seleccionadas
+,,,
+,,,
+,,,
+objective build farm,Build farms,농장을 건설하라,Construye granjas
+objective build barracks,Build barracks,병영을 건설하라,Construye cuarteles
+objective train swordsman,Train swordsmen,검사를 생산하라,Entrena a espadachines
+objective destroy them all,Destroy them all,적의 전멸,Acaba con todos
+objective survive,Survive for %d minutes,%d분 동안 살아남기,Sobrevive %d minutos
+objective protect all,Protect your ally,동맹을 지켜라,Protege a tus aliados
+event0_0,hero>I know you’ve been waiting for today!,hero>칼란! 네가 오늘을 고대한 건 알고 있다!,hero>Se que llevas mucho esperando este momento.
+event0_1,hero>But today is not the day!,hero>하지만 오늘은 날이 아니야!,hero>¡Pero hoy no será el día!
+event0_2,orc>What?,orc>뭐? 왓? 뭐?,orc>¿Qué?
+event0_3,hero>There is a spooky plague that is spreading all over the land.,hero>대륙 전체에 기분나쁜 전염병이 돈다는 소문이다!,hero>Una plaga aterradora se propaga por todos lados.
+event0_4,orc>Pleegooo?,orc>전병? 먹어?,orc>¿Plaajaaa?
+event0_5,hero>No. Plague. A sickness. They say this plague is dangerous as hell.,hero>아니. 전염병! 아픈 것 말이다! 한글 좀 더 배우렴! 이 전염병이 아주 위험하다고 한다!,hero>No. Plaga. Una enfermedad muy chunga.
+event0_6,hero>Soldiers must die at war. Not by plague.,hero>내 전사들의 마지막을 전염병으로 더럽히고 싶지 않다!,"hero>Los soldados deben morir en la guerra, no por culpa de una plaga."
+event0_7,orc>What… are you say?,orc>뭐? 그래서? 뭐? 왓?,orc>¿Qué...tu diciendo?
+event0_8,hero>I say let’s postpone this war until Doctors find a cure.,hero>의사들이 해결책을 찾기 전까지 이 전투를 미루는 것이 어떤가?!,hero>Digo que pospongamos esta guerra hasta que los médicos encuentren una cura.
+event0_9,orc>That is dog speaking! Our troop strong. No sick endanger Orc.,orc>멍청한 소리! 오크 병사 강하다! 감기 따위 걸리지 않는다!,orc>Eso ser tonterías. Nuestra tropa ser fuerte. Ninguna enfermedad afectar orcos.
+event0_10,hero>You don’t understand. The situ..,hero>감기가 아니라 전염병이라니까..,hero>No lo entiendes. La situa...
+event0_11,orc>That is cow moo! Stop mooing! And stand there watch spank you!,orc>바보 소리! 대화 없다 필요! 싸운다 우리! 딱 기다려라!,orc>Ser bebé llorón. ¡Dejar de llorar! Y venir aquí para yo azotar a ti. 
+event0_12,hero>Alright. Then let’s make it quick. How about a single combat? Just you and me.,hero>이대로 돌아갈 순 없다는 말로 알아듣겠다. 그럼 이건 어떤가? 너랑 나랑 둘이 결판을 내자. 길게 끌 필요 없잖아?,hero>Está bien. Pero rapidito. ¿Qué te parece un combate individual? Tu contra mi.
+event0_13,hero>Let’s not waste time and men.,hero>시간 낭비 하지 말자구.,hero>No perdamos tiempo ni hombres.
+event0_14,orc>No! My troop want to war! Don't steal my troop’s war!,orc>안된다! 우리 오크들 기다렸다 이 날! 우리들의 즐거움을 가져가지 마라!,orc>¡No! Tropas mías querer guerra. No robar guerra a tropas mías.
+event0_15,undead>Well… well… well…,undead>그럼 그렇지…,undead> Vaya... Vaya... Vaya...
+event0_16,undead>You guys never learn.,undead>정말 너희들은 늘 똑같구나.,undead>Vosotros nunca aprendéis.
+event0_17,hero>Who are you?,hero>댁은 뉘슈?,hero>¿Quién eres?
+event0_18,orc>…,orc>가면 멋있다! 나 주라!,orc>...
+event0_19,undead>I am no one.,undead>나말인가? 그저 스처가는 나그네라 하고 싶지만 이 너무나도 대화에 끼고 싶군.,undead>No soy nadie.
+event0_20,hero>I recognize you. No way… You are..,hero>말도 안돼! 당신은 레밍…,hero>Me suenas. No puede ser... Tu eres...
+event0_21,undead>Hey` hey` hey. I just said I’m no one. Please. Don’t ruin the moment.,undead>헤이! 보이! 그건 중요치 않아. 과거의 내가 누구이건 간에 지금 사라져야 할 건 그대들이라는 거지.,"undead>Ey, ey, ey. Acabo de decir que no soy nadie. No arruines el momento, por favor. "
+event0_22,orc>You talk much. You dead too.,orc>우오! 말 많다! 좀 맞자!,orc>Tu hablar mucho. Tu  muerto también.
+event0_23,orc>OAAOAAOAAOAA!!!,orc>우오우오오우오!,orc>¡¡¡OAAOAAOAAOAA!!!
+event0_24,undead>What are you OAAOAAOAAOAAing for?,undead>누구한데 우오우오오우오 거리는거야?,undead>¿Por qué haces eso?
+event0_25,orc>My troop kill you and stupid humans!,orc>우리 군대가 널 뭉개고 멍청한 휴먼도 뭉개버릴 것이다!,orc>Mi tropa matar a tu y a humanos estúpidos.
+event0_26,hero>You look like Orc. My men will not give you a mercy. You should run.,hero>당신은 이제 휴먼족보단 오크에 더 가깝군요. 내 병력들은 당신을 오크라 생각할 겁니다. 위험하니 물러서세요.,hero>Te pareces a un orco. Mis hombres no tendrán piedad. Será mejor que te vayas.
+event0_27,undead>You two. What are you talking about? Your men are not here.,undead>너희 둘. 무슨 말을 하는거야? 도대체 어디에 너희 병력이 있다는 거야?,undead>¿De qué habláis vosotros dos? Vuestros hombres no están aquí. 
+event0_28,hero>What?(yell),hero>뭐?(yell),hero>¿Qué?(yell)
+event0_29,orc>What?(yell),orc>왓?(yell),orc>¿Qué?(yell)
+event0_30,hero>What happen to them?,hero>그들에게 무슨 일이 일어난거지?,hero>¿Qué les ha pasado?
+event0_31,undead>They are my men now.,undead>그들은 이제 내 병력들이야!,undead>Ahora son mis hombres.
+event0_32,undead>Prepare.,undead>준비하거라!,undead>Preparaos.
+event0_33,undead>To be one of them.,undead>너희도 곧 같은 모습이 될테니.,undead>Para ser uno de ellos.
+event0_34,undead>HAHAHAHHHAHAHHAHAHAHAHAHHAHAHAHAHAHAHAHAHAHAHAHAH..(yell),undead>무와하하하하하하하하핫하하하하하하하하하하하하(yell),undead>JAJAJAJJJAJAJJAJAJAJAJAJJAJAJAJAJAJAJAJAJAJAJAJA...(yell)
+event1_0,hero>Give up. You failed.,hero>포기해라 레밍턴! 넌 실패했어!,hero>Ríndete. Has fracasado.
+event1_1,undead>What? Who said that?,undead>뭐? 누가 그래? 그리고 너 왜 반말이야?,undead>¿Qué?¿Quién ha dicho eso?
+event1_2,hero>Why? Do you have more zombies in your pocket?,hero>왜? 주머니에 좀비 좀 남아있어? 휴먼을 떠난 시점에서 존칭을 기대하진 말아야지.,hero>¿Qué pasa?¿Tienes más zombis en el bolsillo?
+event1_3,undead>You make a joke` now. Do you think you ended the war.,undead>농담도 하는 걸 보니. 꽤 여유롭구나. 왜? 니가 전쟁을 끝내기라도 한 것 같니?,undead>¡Qué gracioso! ¿Crees que has terminado la guerra?
+event1_4,hero>No. I didn’t. We. We ended the war.,hero>내가 아니야. 우리가 끝낸거지. 휴먼족과 오크족이 말이야.,"hero>No, yo no. Nosotros, nosotros la hemos terminado. "
+event1_5,orc>OAHOAHOHOAA!,orc>우오우오오우오오!,orc>¡OAHOAHOHOAA!
+event1_6,hero>See?,hero>들었지?,hero>¿Ves?
+event1_7,undead>Ha!,undead>뭘?,undead>¡Já!
+event1_8,undead>Like I said. You never learn.,undead>잘 들어봐. 정말 휴먼족과 오크족을 우리라고 말하고 싶은거야?,undead> Como ya dije. Nunca aprendéis.
+event1_9,hero>What?,hero>무슨 말이지?,hero>¿A qué te refieres? 
+event1_10,undead>Do you think the piece came to the world?,undead>휴먼족과 오크족이 평생 동맹이라도 할 줄 알았냔 말이야.,undead>¿Crees que hay paz en el mundo?
+event1_11,hero>It is. Orc and Human are friend` now.,hero>물론이지! 나 이제 깨달아요~ 휴먼족과 오크족도 친구가 될 수 있음을~,"hero>Ahora que orcos y humanos somos amigos, sí."
+event1_12,undead>HAHAHAHAHAHAHAHA(yell),undead>푸하하하하하하하하!(yell),undead>JAJAJAJAJAJAJAJA(yell)
+event1_13,undead>Let me ask Orc if that is true.,undead>어디 오크족도 그렇게 생각하는지 물어볼까?,undead>Permíteme que le pregunte a los orcos al respecto.
+event1_14,undead>Hey pal. After you kill me` who do you want to kill next?,undead>거기 오크 친구. 자네가 날 죽이면 그 뒤엔 누구를 죽일건가?,"undead>Ey, chaval. ¿A quién quieres matar después de acabar conmigo?"
+event1_15,orc>I kill you and pity annoying humans!,orc>너 죽는다 나한테! 그리고 휴먼족도 다 뭉개버린다!,orc>Yo matar a tu y luego matar a humano lamentable. 
+event1_16,hero>WhAT?(yell),hero>머라꼬?(yell),hero>¿Qué?(yell)
+event1_17,undead>See?,undead>들었지?,undead>¿Ves?
+event1_18,hero>What are you talking about? We are friends` now.,hero>무슨 말이야? 이제 우린 동료잖아! 내 목숨까지 구해줬잖아?,hero>¿De qué estás hablando? Ahora somos amigos.
+event1_19,orc>Bullshit! No friend become Human and Orc. Orc kill Human. Bad Human.,orc>강아지 풀 심는 소리! 오크족 휴먼족 친구 못한다! 휴먼족 나쁘다! 겁나 나쁘다!,orc>¡Paparruchas! No amigos entre orcos y humanos. Orco matar humano. Humano malo.
+event1_20,hero>Why is Human bad? You are the one who kills.,hero>왜 휴먼족이 나쁜거야? 틈만 나면 다 뭉개버리는 건 너희들이잖아!,hero>¿Por qué los humanos son los malos? Tu eres el que va matando por ahí.
+event1_21,orc>Orc kill human. Because Human kill everything else.,orc>오크는 휴먼 뭉갠다! 왜냐하면 휴먼은 세상 모든걸 다 뭉개버리기 때문이다!,orc>Orco matar a humano porque humano matar todo lo demás.
+event1_22,hero>I have no idea what you are talking about.,hero>무슨 말인지 하나도 모르겠군.,hero>No sé de qué estás hablando.
+event1_23,undead>See? You guys never learn. That’s why I wanted to bring end to the world.,undead>봤지? 너희들은 항상 똑같다니깐. 그래서 이 세상엔 리프뤠쉬가 필요한거야. 종말이 필요해.,undead>¿Ves? Nunca aprendéis. Por eso quería destruir el mundo.
+event1_24,undead>That is D only solution.,undead>그게 유일한 해결책이야.,undead>Esa es la única solución.
+event1_25,undead>And it is still on the way.,undead>그리고 아직 진행중이지! 무와하!,undead>Y sigue siendo la única manera.
+event1_26,hero>He’s gone!,hero>가버렸어!,hero>¡Ya no está!
+event1_27,orc>He died. Zombie died. Now human!,orc>레밍머시기 죽었다! 이제 휴먼 차례다! 거기 딱 서있어라!,orc>Muerto. Zombi muerto. Ahora humano.
+event1_28,orc>OAHAOHAOAHOAHOAHOAHOAHOA!(yell),orc>우오우오오오오오!(yell),orc>¡OAHAOHAOAHOAHOAHOAHOAHOA!(yell)
+event1_29,hero>WAIT!(yell),hero>자..잠깐만!(yell),hero>¡Espera!(yell)
