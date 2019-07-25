@@ -227,31 +227,34 @@ void HelloWorld::move(float dt, Movable* obj, Movable* target, bool horiFirst){
     obj->moveToTarget();
 }
 void HelloWorld::updateUnitMoveNew(float dt){
-    for(auto hero: heroArray){
-        if(hero->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH){
-            hero->restingTime -= dt;
-            if(hero->restingTime < 0){
-                hero->unitAct = UNIT_ACT_NONE;
-                hero->unitActDetail = UNIT_ACT_DETAIL_IDLE;
-            }
-        }else if (hero->unitAct == UNIT_ACT_NONE || hero->unitAct == UNIT_ACT_ATTACK_DDANG) {
-            if (hero->unitActDetail == UNIT_ACT_DETAIL_IDLE || hero->unitAct == UNIT_ACT_ATTACK_DDANG) {
-//                if (hero->canFindTarget) {
-                    hero->target = findTargetEnemy(hero);
-                    if (hero->target == nullptr) {
-                        if(hero->unitAct == UNIT_ACT_NONE){
-                            hero->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
-                            hero->restingTime = 1;
-                        }
-                    }else{
-                        hero->unitAct = UNIT_ACT_ATTACK;
-                        hero->moveToPos = Vec2::ZERO;
-                        hero->moveFlagPos = hero->target->getPosition();
+    for(auto unit: heroArray){
+        if(unit->attackType != ATTACK_TYPE_NONE){
+            if(unit->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH){
+                unit->restingTime -= dt;
+                if(unit->restingTime < 0){
+                    //                unit->unitAct = UNIT_ACT_NONE;
+                    //                unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+                    unit->stopNew();
+                }
+            }else if (unit->unitAct == UNIT_ACT_NONE || unit->unitAct == UNIT_ACT_ATTACK_DDANG) {
+                //            if (unit->unitAct == UNIT_ACT_NONE || unit->unitActDetail == UNIT_ACT_DETAIL_IDLE || unit->unitAct == UNIT_ACT_ATTACK_DDANG) {
+                //                if (unit->canFindTarget) {
+                unit->target = findTargetEnemy(unit);
+                if (unit->target == nullptr) {
+                    if(unit->unitAct == UNIT_ACT_NONE){
+                        unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
+                        unit->restingTime = 1;
                     }
-//                }
+                }else{
+                    unit->unitAct = UNIT_ACT_ATTACK;
+                    unit->moveToPos = Vec2::ZERO;
+                    unit->moveFlagPos = unit->target->getPosition();
+                }
+                //                }
+                //            }
             }
         }
-        hero->moveNew(dt);
+        unit->moveNew(dt);
     }
     
     for(auto unit: enemyArray){
@@ -261,19 +264,29 @@ void HelloWorld::updateUnitMoveNew(float dt){
                 unit->unitAct = UNIT_ACT_NONE;
                 unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
             }
-        }else if (unit->unitAct == UNIT_ACT_NONE) {
-            if (unit->unitActDetail == UNIT_ACT_DETAIL_IDLE || unit->unitAct == UNIT_ACT_ATTACK_DDANG) {
+        }else if (unit->unitAct == UNIT_ACT_NONE || unit->unitAct == UNIT_ACT_ATTACK_DDANG) {
+//            if (unit->unitActDetail == UNIT_ACT_DETAIL_IDLE) {
 //                if (unit->canFindTarget) {
                     unit->target = findTargetHero(unit);
+            if(unit->unreachableTarget == unit->target){
+                unit->target = nullptr;
+                unit->unreachableTarget = nullptr;
+            }
                     if (unit->target == nullptr) {
                         unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
-                        unit->restingTime = 1;
+                        unit->restingTime = 1 + 0.1f*(rand()%100);
                     }else{
                         unit->unitAct = UNIT_ACT_ATTACK;
                         unit->moveToPos = Vec2::ZERO;
                         unit->moveFlagPos = unit->target->getPosition();
+                        unit->canRevengeAttack = true;
                     }
 //                }
+//            }
+        }
+        if(unit->wantToEli){
+            if (unit->unitActDetail == UNIT_ACT_DETAIL_IDLE && unit->unitAct == UNIT_ACT_NONE) {
+                attackNearHero((EnemyBase*)unit);
             }
         }
         unit->moveNew(dt);
@@ -781,7 +794,6 @@ void HelloWorld::endGame(bool win){
     this->unschedule(schedule_selector(HelloWorld::gravityUpdateForCustomMoving));
     this->unschedule(schedule_selector(HelloWorld::gravityUpdateForFlyingOrSwimingEnemies));
     
-    
     for(auto unit: enemyArray) {
         unit->stopAllActions();
         unit->unscheduleAllCallbacks();
@@ -1185,6 +1197,10 @@ void HelloWorld::removeDeadUnit(EnemyBase* unit){
             }
         }
     }
+    if(unit->ndLevelCircle){
+        unit->ndLevelCircle->removeFromParent();
+        unit->ndLevelCircle = nullptr;
+    }
     if(unit->isBuilding){
         setOccupy(getPositionFromTileCoordinate(unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y), unit->buildingOccupySize.width, unit->buildingOccupySize.height, false);
         updateMiniMapForNonMoving();
@@ -1203,10 +1219,14 @@ void HelloWorld::removeDeadUnit(EnemyBase* unit){
     MovableArray.eraseObject(unit);
     bool elli = true;
     for (auto unit: heroArray) {
-        if(unit->isBuilding && unit->energy > 0){
-            elli = false;
-        }else if(unit->attackType != ATTACK_TYPE_NONE){
-            elli = false;
+        if (isBuildingExistWhenStartTheGame) {
+            if(unit->isBuilding && unit->energy > 0){
+                elli = false;
+            }
+        }else{
+            if(unit->attackType != ATTACK_TYPE_NONE){
+                elli = false;
+            }
         }
     }
     if (elli) {
@@ -1726,10 +1746,10 @@ void HelloWorld::runEffect(int effect, Point point, float angle){
         GM->runAnimation(spt, "cartoonyExplosion", false);
         spt->runAction(Sequence::create(DelayTime::create(0.04*14), SPT_REMOVE_FUNC, nullptr));
     }else if (effect == EFFECT_FIREBALL_EXPLOSION) {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             Sprite* spt = Sprite::createWithSpriteFrameName("groundExplosion0.png");
             spriteBatchEffect->addChild(spt, 5);
-            spt->setPosition(point + Vec2(rand()%100 - 50, rand()%100 - 50));
+            spt->setPosition(point + Vec2(rand()%200 - 100, rand()%200 - 100));
             GM->runAnimation(spt, "fireExplosion", false);
             spt->runAction(Sequence::create(DelayTime::create(0.07*8), SPT_REMOVE_FUNC, nullptr));
         }
@@ -2917,7 +2937,7 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
     if(GM->currentStageIndex != STAGE_LOBBY){
         addGold(0);
         addLumber(0);
-        if(UDGetBool(KEY_PREMIUM_START, false)){
+        if(UDGetBool(KEY_PREMIUM_START, false)){ // test
             addGold(1500);
             addLumber(1000);
         }
@@ -2956,7 +2976,7 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
     int talkCount = 0;
     
     experimental::TMXLayer* stageLayer = tileMap->getLayer("stage");
-    experimental::TMXLayer* soilLayer = tileMap->getLayer("soil");
+    soilLayer = tileMap->getLayer("soil");
     experimental::TMXLayer* unitLayer = tileMap->getLayer("unit");
     decoLayer = tileMap->getLayer("deco");
     decoLayer->setVisible(false);// test
@@ -3074,8 +3094,12 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
                     createUnit(UNIT_TROLL, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "troll");
                 }else if(gid == 36){ // troll schedule
                     createUnit(UNIT_TROLL, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "troll")->scheduledAttackTime = 60*5;
+                }else if(gid == 92){ // wizard hero
+                    createUnit(UNIT_WIZARD, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, GM->getUnitName(UNIT_WIZARD));
                 }else if(gid == 117){ // wizard ready
                     createUnit(UNIT_WIZARD, WHICH_SIDE_READY_HERO, ITS_NOT_BUILDING, pos, GM->getUnitName(UNIT_WIZARD));
+                }else if(gid == 118){ // wizard enemy
+                    createUnit(UNIT_WIZARD, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, GM->getUnitName(UNIT_WIZARD));
                 }else if(gid == 17 || gid == 85){ // goblin bomb
                     EnemyBase* unit = createUnit(UNIT_GOBLIN_BOMB, gid == 85?WHICH_SIDE_HERO:(WHICH_SIDE_ENEMY), ITS_NOT_BUILDING, pos, GM->getUnitName(UNIT_GOBLIN_BOMB));
                     if (gid == 85) {
@@ -3339,7 +3363,7 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
             }
             if (rand()%2 == 0) {
                 int soilGid = soilLayer->getTileGIDAt(point);
-                if(soilGid > 0){
+                if(soilGid > 0 && soilGid < 130){ // change decorationed soil to plain soil
                     soilLayer->setTileGID(soilGid + 70, point);
                 }
             }
@@ -3636,6 +3660,22 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
             }
         }
     }
+    
+    bool isBuildingExist = false;
+    for (auto unit: heroArray) {
+        if(unit->isBuilding){
+            isBuildingExist = true;
+        }
+    }
+    
+    for (auto unit: unitsToCreateArray){
+        if(unit->alliSide == WHICH_SIDE_HERO && unit->isBuilding){
+            isBuildingExist = true;
+        }
+    }
+    
+    isBuildingExistWhenStartTheGame = isBuildingExist;
+    
     CCLOG("setStage done");
 }
 cocos2d::Size HelloWorld::getBuildingOccupySize(int unit){
@@ -3809,18 +3849,18 @@ void HelloWorld::resetPathState(){
     for (int j = 0; j < mapSize.height; j++) {
         for (int i = 0; i < mapSize.width; i++) {
         
-            gid = stageLayer->getTileGIDAt(Point(i, j));
-            if (gid) {
-                isBlocked = (!isWay(gid) || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Point(i, j)))));
+//            gid = stageLayer->getTileGIDAt(Point(i, j));
+//            if (gid) {
+                isBlocked = (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Point(i, j)))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(Point(i, j))));
 //                ?TILE_STATE_OCCUPIED:TILE_STATE_EMPTY
                 GM->setPathState(i, j, isBlocked);
 //                GM->astar.m.map[i][j] = isBlocked;
 //                ASTAR::Cordinate::blockState[i][j] = isBlocked;
                 
-            }else{
-//                GM->setPathState(i, j, PATH_EMPTY);
-                GM->setPathState(i, j, false);
-            }
+//            }else{
+////                GM->setPathState(i, j, PATH_EMPTY);
+//                GM->setPathState(i, j, false);
+//            }
         }
     }
 }
@@ -3867,7 +3907,7 @@ EnemyBase* HelloWorld::createUnit(int index, int whichSide, bool isBuilding, Poi
     unit->setScaleX(scaleX);
     unit->rewardExp = 10;
     unit->rewardCoin = 10;
-//    unit->runMoveAnimation(DIRECTION_STAY);
+    unit->runAnimation(ANIMATION_TYPE_IDLE);
     unit->alliSide = whichSide;
     unit->desiredPosition = pos;
     unit->setLocalZOrder(-unit->getBoundingBox().getMinY());//-pos.y);
@@ -4067,7 +4107,7 @@ float HelloWorld::getUnitMonitoringDistance(int index){
        index == UNIT_HERO_ORC){
         return 600000;
     }else if(index == UNIT_WATCHERTOWER || index == UNIT_ORC_BUNKER || index == UNIT_ORC_HQ){
-        return 950000;
+        return 350000;
     }else if(index == UNIT_HELICOPTER){
         return 1000000;
     }else if(index == UNIT_CATAPULT){
@@ -4189,6 +4229,7 @@ int HelloWorld::getUnitMaxHP(int unit){
         return 20; // test
     }else if(unit == UNIT_MINE){
         return 50000; // test
+//        return 50; // test
     }else if(unit == UNIT_TROLL){
         return 580;
     }else if(unit == UNIT_GOBLIN || unit == UNIT_GOBLIN_BOMB){
@@ -4198,9 +4239,9 @@ int HelloWorld::getUnitMaxHP(int unit){
     }else if(unit == UNIT_ORC_SPEAR){
         return 120;
     }else if(unit == UNIT_ZOMBIE_ORC_AXE){
-        return 190;
+        return 260;
     }else if(unit == UNIT_ZOMBIE_SWORDSMAN){
-        return 160;
+        return 220;
     }else if(unit == UNIT_WIZARD){
         return 40;
     }else if(unit == UNIT_HERO_ORC){
@@ -4293,7 +4334,7 @@ void HelloWorld::splashDamage(Point pos, int radius, int damage, bool isFromEnem
             }
             counter++;
         }
-        if(counter > 3){
+        if(counter > 10){
             break;
         }
     }
@@ -4641,6 +4682,10 @@ Movable* HelloWorld::findTargetHero(Movable* finder){
     float minDistance = 1000000;
     EnemyBase* nearest = nullptr;
     for(auto drop: heroArray){
+        if((finder->wantToEli || finder->isZombie) && nearest == nullptr){
+            nearest = drop;
+            continue;
+        }
         if (drop->untouchable || drop->energy <= 0) {
             continue;
         }
@@ -4661,18 +4706,18 @@ Movable* HelloWorld::findTargetHero(Movable* finder){
 Movable* HelloWorld::findTargetEnemy(Movable* finder){
     float minDistance = 1000000;
     EnemyBase* nearest = nullptr;
-    for(auto drop: enemyArray){
-        if (drop->untouchable || drop->energy <= 0) {
+    for(auto unit: enemyArray){
+        if (unit->untouchable || unit->energy <= 0) {
             continue;
         }
-        if (!canAttack(finder, drop)) {
+        if (!canAttack(finder, unit)) {
             continue;
         }
-        float distance = finder->getPosition().distanceSquared(drop->getPosition());
+        float distance = finder->getPosition().distanceSquared(unit->getPosition());
         if (distance < finder->monitoringDistance) {
             if (minDistance > distance) {
                 minDistance = distance;
-                nearest = drop;
+                nearest = unit;
             }
         }
     }
@@ -4812,6 +4857,7 @@ void HelloWorld::gravityUpdate(float dt)
         doubleClickTimerForAttackDdaing -= dt;
     }
     gameTimer += dt;
+//    gameTimer += dt*30; // test 
     if(GM->currentStageIndex != STAGE_LOBBY){
         
         if(lastTimeCheck + 60 < gameTimer){
@@ -5044,6 +5090,7 @@ void HelloWorld::checkGameSchedule(){
     }
     if (stageIndex == 3) {
         if (lastGameScheduleIndex == -1 && gameTimer > 60*4) {
+//        if (lastGameScheduleIndex == -1 && gameTimer >= 0) { // test
             for(int i = 12; i < 19;i++){
                 decoLayer->setTileGID(0, Point(28, i));
             }
@@ -5071,7 +5118,7 @@ void HelloWorld::checkGameSchedule(){
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
-        }else if (lastGameScheduleIndex == 3 && gameTimer > 60*5) {
+        }else if (lastGameScheduleIndex == 3 && gameTimer > 60*16) {
             for(int i = 57; i < 61;i++){
                 decoLayer->setTileGID(0, Point(30, i));
             }
@@ -5957,6 +6004,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
         if (selectedUnit == nullptr){
             Vector<EnemyBase*> selectedArray;
             for(auto unit: heroArray){ // select hero
+                if(!unit->isVisible()) continue;
                 if(unit->spine){
                     if(unit->spine->getBoundingBox().containsPoint(pos - unit->getPosition())){
                         selectedArray.pushBack(unit);
@@ -5975,6 +6023,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
             selectedArray.clear();
         }
         for (auto unit: enemyArray){ // select enemy
+            if(!unit->isVisible()) continue;
             if(unit->Sprite::getBoundingBox().containsPoint(pos)){
                 selectedUnit = unit;
                 doubleClickTimerForAttackDdaing = 0;
@@ -5984,7 +6033,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
         }
         
         EnemyBase* mutual = nullptr;
-        if(selectedUnit == nullptr){
+        if(selectedUnit == nullptr || selectedUnit->isCarryingGold){
             for(auto unit: mutualArray){
     //            Rect rect = Rect(pos.x - 10, pos.y - 10, unit->getContentSize().width + 20, unit->getContentSize().height + 20);
                 if(unit->getBoundingBox().containsPoint(pos)){
@@ -5994,6 +6043,9 @@ void HelloWorld::doClick(cocos2d::Point pos){
                     doubleClickTimerForSelectTheSame = 0;
                     break;
                 }
+            }
+            if(mutual != nullptr && mutual->unitType == UNIT_MINE && selectedUnit != nullptr && selectedUnit->unitType == UNIT_WORKER){
+                selectedUnit = nullptr;
             }
         }
         if(mutual != nullptr){
@@ -6051,11 +6103,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
                             Point coordinate = WORLD->getCoordinateFromPosition(unit->getPosition());
                             Point destCoordinate = WORLD->getCoordinateFromPosition(mutual->getApproachingPoint(unit->getPosition()));
                             PointArray* array = GM->getPath(coordinate, destCoordinate);
-                            if(array->count() > 0){
-                                
-                            }else{
-                                mutual = WORLD->getNearestTree(unit->getPosition());
-                            }
+                           
                             if(mutual != nullptr){
                                 unit->gatherTree(mutual);
                                 if (WORLD->stageIndex == 0 && unit->unitType == UNIT_WORKER && HUD->tutorialIndex == 4) {
@@ -6076,7 +6124,15 @@ void HelloWorld::doClick(cocos2d::Point pos){
                         }
                     }
                 }else{
-                    unit->moveToTarget(mutual);
+                    if(mutual->unitType == UNIT_TREE_FOR_BATTLE && unit->unitType == UNIT_WIZARD){
+                        unit->unitAct = UNIT_ACT_ATTACK;
+                        unit->moveToPos = Vec2::ZERO;
+                        unit->target = mutual;
+                        unit->moveFlagPos = mutual->getPosition();
+                        showTargetHand(mutual->getPosition(), true);
+                    }else{
+                        unit->moveToTarget(mutual);
+                    }
                 }
             }
             if(mutual->unitType == UNIT_MINE && GM->currentStageIndex != STAGE_LOBBY){
@@ -6141,14 +6197,15 @@ void HelloWorld::doClick(cocos2d::Point pos){
                         unit->moveToTarget(selectedUnit);
                         unit->unitAct = UNIT_ACT_GATHER_TREE;
                         isWorkingWorkerSelected = true;
-                        unit->isTemporaryFlying = true;
+//                        unit->isTemporaryFlying = true;
 //                        unit->runAnimation(ANIMATION_TYPE_MOVE);
                         unit->isGatheringTree = true;
                     }else if(unit->isCarryingGold && (selectedUnit->unitType == UNIT_CASTLE)){
                         unit->returningPlace = selectedUnit;
+                        unit->unitAct = UNIT_ACT_GATHER_GOLD;
                         unit->moveToTarget(selectedUnit);
                         isWorkingWorkerSelected = true;
-                        unit->isTemporaryFlying = true;
+//                        unit->isTemporaryFlying = true;
 //                        unit->runMoveAnimation(DIRECTION_E);
                         unit->isGatheringGold = true;
                     }
@@ -6297,10 +6354,12 @@ void HelloWorld::checkBuildingTemplate(){
     isBuildingReadyToBuild = true;
     buildingTemplateCoordinate = getCoordinateFromPosition(buildingTemplate->getPosition(), theMap);
     
+    Point pos;
     for (int j = 0; j < buildingTemplateSize.height; j++) {
         for (int i = 0; i < buildingTemplateSize.width; i++) {
             Sprite* spt = (Sprite*)buildingTemplate->getChildByTag(i + j*buildingTemplateSize.width);
-            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Point(buildingTemplateCoordinate.x + i, buildingTemplateCoordinate.y - j - 1)));
+            pos = Point(buildingTemplateCoordinate.x + i, buildingTemplateCoordinate.y - j - 1);
+            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(pos)) || isSoilBlock(soilLayer->getTileGIDAt(pos));
             spt->setColor(isBlock?Color3B::RED:Color3B::GREEN);
             if(isBlock){
                 isBuildingReadyToBuild = false;
@@ -6310,9 +6369,11 @@ void HelloWorld::checkBuildingTemplate(){
 }
 EnemyBase* HelloWorld::buildTheBuilding(int index, int x, int y,  int width, int height, std::string spriteName){
     bool isPlaceReady = true;
+    Point pos;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
-            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Point(x + i, y - j - 1)));
+            pos = Point(x + i, y - j - 1);
+            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(pos)) || isSoilBlock(soilLayer->getTileGIDAt(pos));
             if(isBlock){
                 isPlaceReady = false;
             }
@@ -6327,7 +6388,7 @@ EnemyBase* HelloWorld::buildTheBuilding(int index, int x, int y,  int width, int
         return nullptr;
     }
     
-    Point pos = getPositionFromTileCoordinate(x, y - height);
+    pos = getPositionFromTileCoordinate(x, y - height);
     EnemyBase* unit = createUnit(index, WHICH_SIDE_HERO, ITS_BUILDING, pos + Point(width*TILE_SIZE/2 - TILE_SIZE/2, -(height - 1)*TILE_SIZE + height*TILE_SIZE/2 - TILE_SIZE/2), spriteName.substr(0, spriteName.size() - 4), 1, spriteName);
     unit->isBuildingComplete = false;
     setOccupy(pos, width, height, true, unit);
@@ -6523,7 +6584,7 @@ bool HelloWorld::isThisSpotAvailable(Movable* me){
         tileCoordinate.y = theMap->getMapSize().height - 1;
     }
     
-    if(!isCoordinateValid(tileCoordinate) || isDecoBlock(decoLayer->getTileGIDAt(tileCoordinate))){
+    if(!isCoordinateValid(tileCoordinate) || isDecoBlock(decoLayer->getTileGIDAt(tileCoordinate)) || isSoilBlock(soilLayer->getTileGIDAt(tileCoordinate))){
         return false;
     }
     return true;
@@ -6966,6 +7027,7 @@ void HelloWorld::moveTo(Vector<EnemyBase*> troop, Point pos){
             unit->moveFlagPos = pos;
             unit->target = nullptr;
             unit->unitAct = UNIT_ACT_MOVE;
+            unit->canRevengeAttack = false;
             unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
             unit->cancelAttackSchedule();
             if(unit->unitType == UNIT_HELICOPTER){
@@ -7062,12 +7124,17 @@ void HelloWorld::stop(Vector<EnemyBase*> troop){
     }
 }
 void HelloWorld::moveAndAttackTo(EnemyBase* unit, cocos2d::Point pos){
-    unit->targetCoordinate = Point::ZERO;
-    unit->target = nullptr;
-    unit->isTemporaryFlying = false;
-    unit->moveToTarget(pos);
-    unit->canFindTarget = unit->attackType != ATTACK_TYPE_NONE;
-    unit->attackFlagPos = pos;
+    if(isNewCommandSystem){
+        unit->target = nullptr;
+        unit->attackDdangTo(pos);
+    }else{
+        unit->targetCoordinate = Point::ZERO;
+        unit->target = nullptr;
+        unit->isTemporaryFlying = false;
+        unit->moveToTarget(pos);
+        unit->canFindTarget = unit->attackType != ATTACK_TYPE_NONE;
+        unit->attackFlagPos = pos;
+    }
 }
 void HelloWorld::moveAndAttackTo(Vector<EnemyBase*> troop, Point pos){
     moveTo(troop, pos);
@@ -7105,8 +7172,10 @@ void HelloWorld::forceAttack(Vector<EnemyBase*> troop, EnemyBase* target){
             continue;
         }else{
             unit->unitAct = UNIT_ACT_ATTACK;
+            unit->moveToPos = Vec2::ZERO;
             unit->target = target;
         }
+        unit->canRevengeAttack = false;
 //        unit->moveToTarget(target);
         
         unit->forceAttackTarget = true;
@@ -7406,7 +7475,7 @@ float HelloWorld::checkBottom(Movable* p){
                 if(p->velocity.y < 0){
                     if(inter.size.width > 0 && inter.size.height > 0 && p->getCurrentY() >= inter.origin.y + inter.size.height){
                         bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
-                        if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
+                        if (way || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(plPos))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(plPos)))){
                             temp = inter.size.height;
                             ground = true;
                             
@@ -7472,7 +7541,7 @@ void HelloWorld::checkForAndResolveCollisions(Movable* p){
 //            if(tgid > 0){
 //                if(!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))){
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
-            if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
+            if (way || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(plPos))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(plPos)))){
                     Rect tileRect = tileRectFromTileCoords(plPos, map);
                     Rect inter = intersection(tileRect, rect);
                     
@@ -7521,7 +7590,7 @@ void HelloWorld::checkForAndResolveCollisions(Movable* p){
             int tgid = ((experimental::TMXLayer*)map->getChildByTag(TAG_STAGE_LAYER))->getTileGIDAt(plPos);
 //            if(!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))){
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
-            if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
+            if (way || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(plPos))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(plPos)))){
                 Rect tileRect = this->tileRectFromTileCoords(plPos, map);
                 Rect inter = intersection(tileRect, rect);
                 if(inter.size.width > 0 && inter.size.height > 0) {
@@ -7567,7 +7636,7 @@ void HelloWorld::checkForAndResolveCollisions(Movable* p){
 //            if(tgid){
 //                if (!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))) {
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
-            if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
+            if (way || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(plPos))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(plPos)))){
                     Rect tileRect = tileRectFromTileCoords(plPos, map);
                     Rect inter = intersection(tileRect, rect);
                     if(inter.size.width > 0 && inter.size.height > 0){
@@ -7713,6 +7782,26 @@ bool HelloWorld::isWay(int index){
         }
     }
     
+}
+bool HelloWorld::isSoilBlock(int index){
+    switch (index) {
+        case 141:
+        case 142:
+        case 143:
+        case 144:
+        case 145:
+        case 151:
+        case 152:
+        case 153:
+        case 154:
+        case 155:
+        case 161:
+        case 162:
+        case 163:
+            return true;
+        default:
+            return false;
+    }
 }
 bool HelloWorld::isDecoBlock(int index){
     switch (index) {
@@ -9415,11 +9504,16 @@ bool HelloWorld::checkClearGame(){
     isGameClear = isAllClear;
     return isAllClear;
 }
-int HelloWorld::getAttackPriority(int index){
-    if(index == UNIT_WATCHERTOWER || index == UNIT_ORC_BUNKER || index == UNIT_ORC_HQ ){
-        return 1;
-    }else if(index == UNIT_CASTLE || index == UNIT_FARM || index == UNIT_BARRACKS || index == UNIT_LUMBERMILL || index == UNIT_WATCHERTOWER || index == UNIT_FACTORY || index == UNIT_AIRPORT){
+int HelloWorld::getAttackPriority(Movable* unit){
+    if(unit == nullptr){
         return 0;
+    }
+    if(unit->isBuilding){
+        if(unit->attackType != ATTACK_TYPE_NONE){
+            return 1;
+        }else{
+            return 0;
+        }
     }
     return 2;
 }
@@ -9434,21 +9528,22 @@ bool HelloWorld::isInScreen(cocos2d::Point pos){
     return Rect(-getPositionX(), -getPositionY(), size.width, size.height).containsPoint(pos);
 }
 void HelloWorld::revengeAttack(Movable* attackee, Movable* attacker){
-    if (attackee->unitAct == UNIT_ACT_MOVE || attackee->unitAct == UNIT_ACT_ATTACK) {
+//    if (attackee->unitAct == UNIT_ACT_MOVE || attackee->unitAct == UNIT_ACT_ATTACK) {
+    if (!attackee->canRevengeAttack) {
         return;
     }
-    if (attackee->unitActDetail == UNIT_ACT_DETAIL_ATTACK) {
+    if (attackee && attackee != nullptr && attackee->unitActDetail == UNIT_ACT_DETAIL_ATTACK && attacker && attacker != nullptr && attacker->target && attacker->target != nullptr && getAttackPriority(attacker) <= getAttackPriority(attackee->target)) {
         return;
     }
     if (attacker->isEnemy) {
         for(auto unit: heroArray){
-            if (!unit->isBuilding && unit->attackType != ATTACK_TYPE_NONE && unit->getPosition().distanceSquared(attackee->getPosition()) < 300000 && !unit->isGatheringGold && !unit->isGatheringTree && !unit->isGoingToBuild && unit->isArrived) {
+            if (unit && unit != nullptr && !unit->isBuilding && unit->attackType != ATTACK_TYPE_NONE && unit->getPosition().distanceSquared(attackee->getPosition()) < 300000 && !unit->isGatheringGold && !unit->isGatheringTree && !unit->isGoingToBuild) {
                 moveAndAttackTo(unit, attacker->getPosition());
             }
         }
     }else{
         for(auto unit: enemyArray){
-            if (!unit->isBuilding && unit->attackType != ATTACK_TYPE_NONE && unit->getPosition().distanceSquared(attackee->getPosition()) < 300000 && !unit->isGatheringGold && !unit->isGatheringTree && !unit->isGoingToBuild) {
+            if (unit && unit != nullptr && !unit->isBuilding && unit->attackType != ATTACK_TYPE_NONE && unit->getPosition().distanceSquared(attackee->getPosition()) < 300000 && !unit->isGatheringGold && !unit->isGatheringTree && !unit->isGoingToBuild) {
                 moveAndAttackTo(unit, attacker->getPosition());
             }
         }
@@ -9503,4 +9598,36 @@ void HelloWorld::onSelectForcesInScreen(){
 }
 void HelloWorld::getSupportFromVideo(int video){
     finishedVideo = video;
+}
+Movable* HelloWorld::getGroundOwner(Vec2 pos){
+    Vec2 coordinate = getCoordinateFromPosition(pos);
+    for (auto unit: heroArray) {
+        if(unit->isBuilding){
+            Rect rect = Rect(unit->buildingStartCoordinate, unit->buildingOccupySize);
+            if(rect.containsPoint(coordinate)){
+                return unit;
+            }
+        }
+    }
+    for (auto unit: enemyArray) {
+        if(unit->isBuilding){
+            Rect rect = Rect(unit->buildingStartCoordinate, unit->buildingOccupySize);
+            if(rect.containsPoint(coordinate)){
+                return unit;
+            }
+        }
+    }
+    for (auto unit: mutualArray) {
+        if(unit->isBuilding){
+            Rect rect = Rect(unit->buildingStartCoordinate, unit->buildingOccupySize);
+            if(rect.containsPoint(coordinate)){
+                return unit;
+            }
+        }else if(unit->unitType == UNIT_TREE || unit->unitType == UNIT_TREE_FOR_BATTLE){
+            if(getCoordinateFromPosition(unit->getPosition()) == coordinate){
+                return unit;
+            }
+        }
+    }
+    return nullptr;
 }

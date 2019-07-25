@@ -3219,6 +3219,8 @@ void BattleHud::update(float dt){
             zombieInfo->unitType = UNIT_ZOMBIE_SWORDSMAN;
             addUnitToDeck(zombieInfo);
             
+            shouldSaveDeck = true;
+            updateDeckSaveData();
             datas.push_back(DATA_TYPE_DECK);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 0).c_str(), true);
             closePopup();
@@ -3238,6 +3240,8 @@ void BattleHud::update(float dt){
                 addUnitToDeck(trollInfo);
             }
             
+            shouldSaveDeck = true;
+            updateDeckSaveData();
             datas.push_back(DATA_TYPE_DECK);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 2).c_str(), true);
             closePopup();
@@ -3260,7 +3264,8 @@ void BattleHud::update(float dt){
                 bombInfo->unitType = UNIT_GOBLIN_BOMB;
                 addUnitToDeck(bombInfo);
             }
-            
+            shouldSaveDeck = true;
+            updateDeckSaveData();
             datas.push_back(DATA_TYPE_DECK);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 1).c_str(), true);
             closePopup();
@@ -3272,6 +3277,7 @@ void BattleHud::update(float dt){
         UDSetInt(KEY_IAP_TOTAL, iapPoint);
         
         datas.push_back(DATA_TYPE_IAP);
+        datas.push_back(DATA_TYPE_GEM);
         saveUserData(datas);
         showInstanceMessage(LM->getText("purchase success"));
     }else if(GM->iapFlag == IAP_FLAG_FAILED){

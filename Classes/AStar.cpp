@@ -346,7 +346,6 @@ void AStar::startPathFinding(compareTwoCells compareMethod, int startX,int start
             
         }
     }
-//    log("searched: %d", searchCounter );
 }
 
 

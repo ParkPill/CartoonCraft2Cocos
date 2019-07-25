@@ -172,6 +172,8 @@ public:
     int unitActDetail = UNIT_ACT_DETAIL_IDLE;
     Vec2 moveToPos = Vec2::ZERO;
     Vec2 moveFlagPos = Vec2::ZERO;
+    void attackDdangTo(Vec2 pos);
+    bool isInAttackMotion = false;
 
     cocos2d::Point centerPosition;
     cocos2d::Point velocity;
@@ -469,11 +471,13 @@ public:
     int skillCounter = 0;
     Movable* skillTarget = nullptr;
     
-    void checkAttackTarget(float dt);
+    bool checkAttackTargetReturnSuccess(float dt);
 //    virtual Rect getBoundingBox() const override;
-    Rect getBoundingBoxForIntersect();
+    cocos2d::Rect getBoundingBoxForIntersect();
     int attackTag = 78;
     void cancelAttackSchedule();
+    Movable* unreachableTarget = nullptr;
+    bool canRevengeAttack = true;
 };
 
 #endif

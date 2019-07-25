@@ -290,17 +290,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
     
     GM->nextScene = STAGE_FIELD; // test
-    auto scene = HelloWorld::scene(26, false); // test now
+//    auto scene = HelloWorld::scene(27, false); // test
 //    GM->nextScene = STAGE_LOBBY; // test
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
 //    GM->nextScene = STAGE_SINGLEPLAY; // test
 //    GM->singlePlayStageIndex = 0;
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
-    GM->version = "2.41";
-//    auto scene = Scene::create();
-//    Intro* intro = Intro::create();
-//    scene->addChild(intro);
+    GM->version = "2.51";
+    auto scene = Scene::create();
+    Intro* intro = Intro::create();
+    scene->addChild(intro);
     // intro end
 
 //    scene->addChild(FifteenSixLogo::create());

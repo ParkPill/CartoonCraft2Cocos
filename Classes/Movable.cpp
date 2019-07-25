@@ -48,11 +48,6 @@ Movable::Movable()
 }
 void Movable::init(int unit, int eng, float extraSpd, const char* sptName)
 {
-//    this->autorelease();
-//    this->Sprite::init();
-    
-//    SpriteFrame *frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(sptName);
-//    this->setDisplayFrame(frame);
     if (unit == UNIT_HERO_ORC) {
         spine = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
         this->addChild(spine);
@@ -575,6 +570,8 @@ void Movable::runSchedule(){
 }
 
 void Movable::stop(bool search){
+    stopNew();
+    return;
 //    runAnimation(animation_type_idle);
     isTemporaryFlying = false;
     this->forceAttackTarget = false;
@@ -741,7 +738,7 @@ void Movable::onBuildComplete(){//building(float dt){
         this->attackType = ATTACK_TYPE_NEAR;
     }
     this->untouchable = false;
-    stop();
+    stopNew();
 //    }
 }
 void Movable::releaseGathering(){
@@ -820,6 +817,7 @@ void Movable::attackUpdate(float dt){
     }
     if(canMove)
         this->setFlippedX(getPositionX() < target->getPositionX());
+    isInAttackMotion = true;
     Sequence* seq = Sequence::create(DelayTime::create(attackHappenTime), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
     seq->setTag(attackTag);
     this->runAction(seq);
@@ -858,6 +856,7 @@ void Movable::showSkillEffect(){
     }
 }
 void Movable::attack(){
+    isInAttackMotion = false;
     if(!this || !target || target == nullptr || target->untouchable || target->energy <= 0) {
         target = nullptr;
         if (unitAct == UNIT_ACT_ATTACK) {
@@ -949,6 +948,7 @@ void Movable::attack(){
         missile->updateMissileAngle(0);
         missile->untouchable = true;
         missile->shooter = this;
+        missile->isEnemy = isEnemy;
         missile->runAction(Sequence::create(MoveTo::create(dur, target->getPosition()), CallFunc::create(CC_CALLBACK_0(Movable::onMissileMoveDone, missile)), NULL));
     }
 }
@@ -1103,7 +1103,7 @@ bool Movable::getHitAndIsDead(int ap, Movable* attacker){
 //    log("energy: %d, ap: %d", energy, ap);
     
     if (attacker != target && energy > 0 && attacker != nullptr && !attacker->untouchable) {
-        if (target == nullptr || WORLD->getAttackPriority(attacker->unitType) > WORLD->getAttackPriority(target->unitType)) {
+        if (!target || target == nullptr || canRevengeAttack || WORLD->getAttackPriority(attacker) > WORLD->getAttackPriority(target)) {
             bool canAttack = WORLD->canAttack(this, attacker);
             if(canAttack){
                 WORLD->revengeAttack(this, attacker);
@@ -1223,6 +1223,14 @@ void Movable::moveToTarget(Movable* unit){
         
     }
 }
+void Movable::attackDdangTo(Vec2 pos){
+    moveFlagPos = pos;
+    log("attackddang: %f, %f", pos.x, pos.y);
+    moveToPos = Vec2::ZERO;
+    unitAct = UNIT_ACT_ATTACK_DDANG;
+    unitActDetail = UNIT_ACT_DETAIL_IDLE;
+    runAnimation(ANIMATION_TYPE_IDLE);
+}
 void Movable::moveToTarget(cocos2d::Point targetPos){
     Point selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
     targetMoveTilePos = WORLD->getCoordinateFromPosition(targetPos);
@@ -1245,6 +1253,9 @@ void Movable::moveToTarget(cocos2d::Point targetPos){
         }
         PointArray* array = GM->getPath(selfPos, targetMoveTilePos);
         if(!array || array->count() == 0){
+            if(target){
+                unreachableTarget = target;
+            }
             failedFindPathStart = selfPos;
             failedFindPathEnd = targetMoveTilePos;
             if(targetMoveTilePos == attackFlagTilePos){
@@ -1334,6 +1345,7 @@ void Movable::moveToTarget(){
 //        WORLD->draw->clear();
         resetRoute();
         unitActDetail = UNIT_ACT_DETAIL_WALK_ROUTE;
+        
         if(isFlying || isTemporaryFlying){
 //            addRoute(target->getPosition()); // test
             addRoute(target->getApproachingPoint(getPosition()));
@@ -1421,6 +1433,7 @@ void Movable::gatherGold(Movable* mine){
 //    this->isTemporaryFlying = true;
     
     this->unitAct = UNIT_ACT_GATHER_GOLD;
+    this->unitActDetail = UNIT_ACT_DETAIL_IDLE;
     this->moveToPos = Vec2::ZERO;
     this->target = mine;
     this->moveFlagPos = mine->getPosition();
@@ -1610,6 +1623,7 @@ void Movable::updateProductButtons(){
     }
 }
 void Movable::stopNew(){
+    canRevengeAttack = true;
     unitAct = UNIT_ACT_NONE;
     unitActDetail = UNIT_ACT_DETAIL_IDLE;
     runAnimation(ANIMATION_TYPE_IDLE);
@@ -1641,6 +1655,57 @@ void Movable::stopNew(){
         moveToPos = Vec2::ZERO;
         moveFlagPos = newPos;
     }
+    
+    if(isGoingToBuild){
+        isGoingToBuild = false;
+        Movable* unit = WORLD->buildTheBuilding(builderBuildingIndex, builderCoordinate.x, builderCoordinate.y, builderSize.width, builderSize.height, builderSpriteName);
+        if(unit == nullptr){ // condition not met
+            return;
+        }
+        // progress
+        
+        Sprite* spt = Sprite::create("uiBox.png");
+        spt->setPosition(unit->getPosition() + Point(50, unit->getContentSize().height/2 + 10));
+        WORLD->addChild(spt, 1000);
+        auto timer = ProgressTimer::create(Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unit->unitType)));
+        processTimer = timer;
+        timer->setType(ProgressTimer::Type::RADIAL);
+        spt->addChild(timer);
+        timer->setName("timer");
+        spt->setScale(0.3f);
+        timer->setPosition(spt->getContentSize()/2);
+        timer->setPercentage(0);
+        timer->runAction(Sequence::create(ProgressTo::create(WORLD->getUnitCreateTime(unit->unitType), 100), CallFunc::create(CC_CALLBACK_0(Movable::resetProcessTimer, this)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), nullptr));
+        // progress end
+        
+        if(WORLD->selectedArray.find((EnemyBase*)this) != WORLD->selectedArray.end()){
+            WORLD->deselect(this);
+        }
+        builderBuilding = unit;
+        unit->setRotation(0);
+        unit->buildingCompleteTime = WORLD->getUnitCreateTime(builderBuildingIndex);
+        unit->setSpriteFrame("underConstrunction0.png");
+        GM->runAnimation(unit, "underConstrunction", true);
+        this->runAction(Sequence::create(CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
+                                         DelayTime::create(0.2f),
+                                         NULL));
+        this->runAction(Sequence::create(DelayTime::create(unit->buildingCompleteTime), CallFunc::create(CC_CALLBACK_0(Movable::onBuildComplete, this)), NULL));
+        this->setVisible(false); // test
+        this->attackType = ATTACK_TYPE_NONE;
+        this->untouchable = true;
+    }
 }
 void Movable::cancelAttackSchedule(){
     if (unitType == UNIT_HERO_ORC) {
@@ -1648,14 +1713,24 @@ void Movable::cancelAttackSchedule(){
     }
     this->stopActionByTag(attackTag);
 }
-void Movable::moveNew(float dt){
+void Movable::moveNew(float dt){// movenew start
     Vec2 prePos = getPosition();
+    int previousAct = unitAct;
+    if(unreachableTarget != nullptr && unreachableTarget == target){
+        unitAct = UNIT_ACT_NONE;
+    }
+    if(checkAttackTargetReturnSuccess(dt)){
+        return;
+    }else{
+        unitAct = previousAct;
+    }
+    
     // handle move
-    if (unitAct == UNIT_ACT_ATTACK_DDANG ||
+    if (!isBuilding && (unitAct == UNIT_ACT_ATTACK_DDANG ||
         unitAct == UNIT_ACT_ATTACK ||
         unitAct == UNIT_ACT_MOVE ||
         unitAct == UNIT_ACT_GATHER_GOLD ||
-        unitAct == UNIT_ACT_GATHER_TREE) {
+        unitAct == UNIT_ACT_GATHER_TREE)) {
         if (moveToPos == Vec2::ZERO && unitActDetail != UNIT_ACT_DETAIL_ATTACK) {
 //            if(target != nullptr){
 //                moveToPos = target->getApproachingPoint(getPosition());
@@ -1670,10 +1745,10 @@ void Movable::moveNew(float dt){
             Point selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
             resetRoute();
             PointArray* array = PointArray::create(1);
-            if (target) {
+            if (target) { // check target occupy the ground
                 if(target->isBuilding){
-                    for (int j = 0; j < target->buildingOccupySize.width; j++) {
-                        for (int i = 0; i < target->buildingOccupySize.height; i++) {
+                    for (int j = 0; j < target->buildingOccupySize.height; j++) {
+                        for (int i = 0; i < target->buildingOccupySize.width; i++) {
                             GM->setPathState(target->buildingStartCoordinate.x + i, target->buildingStartCoordinate.y + j, false);
                         }
                     }
@@ -1681,6 +1756,32 @@ void Movable::moveNew(float dt){
                     Point targetPos = WORLD->getCoordinateFromPosition(target->getPosition());
                     GM->setPathState(targetPos.x, targetPos.y, false);
                 }
+            }
+            // check ground under the feet occupied
+            bool isGroundUnderTheFeetOccupied = false;
+            Vec2 pos = WORLD->getCoordinateFromPosition(getPosition(), WORLD->theMap);
+            Movable* theObjectThisIsIn = nullptr;
+            if (GM->tileState[(int)pos.x][(int)pos.y] > 0) {
+                theObjectThisIsIn = WORLD->getGroundOwner(getPosition());
+                if (theObjectThisIsIn == nullptr) {
+                    stopNew();
+                }else{
+                    isGroundUnderTheFeetOccupied = true;
+                    if(theObjectThisIsIn->isBuilding){
+                        for (int j = 0; j < theObjectThisIsIn->buildingOccupySize.height; j++) {
+                            for (int i = 0; i < theObjectThisIsIn->buildingOccupySize.width; i++) {
+                                GM->setPathState(theObjectThisIsIn->buildingStartCoordinate.x + i, theObjectThisIsIn->buildingStartCoordinate.y + j, false);
+//                                log("unlock block: %f, %f", theObjectThisIsIn->buildingStartCoordinate.x + i, theObjectThisIsIn->buildingStartCoordinate.y + j);
+                            }
+                        }
+                    }else if(theObjectThisIsIn->unitType == UNIT_TREE || theObjectThisIsIn->unitType == UNIT_TREE_FOR_BATTLE){
+                        Point targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
+                        GM->setPathState(targetPos.x, targetPos.y, false);
+                    }
+                }
+            }
+            if(moveToPos != moveFlagPos){
+                moveToPos = moveFlagPos;
             }
             if (isFlying || isTemporaryFlying || !WORLD->isBlockExistBetween(getPosition(), moveToPos)) {
                 unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
@@ -1692,6 +1793,9 @@ void Movable::moveNew(float dt){
                 array = GM->getPath(selfPos, targetMoveTilePos);
                 
                 if(!array || array->count() == 0){
+                    if(target){
+                        unreachableTarget = target;
+                    }
                     failedFindPathStart = selfPos;
                     failedFindPathEnd = targetMoveTilePos;
                     if(targetMoveTilePos == attackFlagTilePos){
@@ -1702,10 +1806,10 @@ void Movable::moveNew(float dt){
 //                    return;
                 }
             }
-            if (target) {
+            if (target) { // putback target occupy the ground
                 if(target->isBuilding){
-                    for (int j = 0; j < target->buildingOccupySize.width; j++) {
-                        for (int i = 0; i < target->buildingOccupySize.height; i++) {
+                    for (int j = 0; j < target->buildingOccupySize.height; j++) {
+                        for (int i = 0; i < target->buildingOccupySize.width; i++) {
                             GM->setPathState(target->buildingStartCoordinate.x + i, target->buildingStartCoordinate.y + j, true);
                         }
                     }
@@ -1714,7 +1818,19 @@ void Movable::moveNew(float dt){
                     GM->setPathState(targetPos.x, targetPos.y, true);
                 }
             }
-            Point pos;
+            if(isGroundUnderTheFeetOccupied){ // putback theBuildingThisIsIn occupied ground
+                if(theObjectThisIsIn->isBuilding){
+                    for (int j = 0; j < theObjectThisIsIn->buildingOccupySize.height; j++) {
+                        for (int i = 0; i < theObjectThisIsIn->buildingOccupySize.width; i++) {
+                            GM->setPathState(theObjectThisIsIn->buildingStartCoordinate.x + i, theObjectThisIsIn->buildingStartCoordinate.y + j, true);
+                        }
+                    }
+                }else if(theObjectThisIsIn->unitType == UNIT_TREE || theObjectThisIsIn->unitType == UNIT_TREE_FOR_BATTLE){
+                    Point targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
+                    GM->setPathState(targetPos.x, targetPos.y, true);
+                }
+            }
+            
             Vec2 targetPos = moveToPos;
             int startI = array->count()-1;
             if(startI > 1){
@@ -1732,7 +1848,6 @@ void Movable::moveNew(float dt){
                 if(routePositionArray->count() > 2){
                     routePositionArray->removeControlPointAtIndex(0);
                 }
-//                runMoveAnimation(DIRECTION_E);
             }else{
                 if(target != nullptr && attackType == ATTACK_TYPE_RANGE && attackRange > getPosition().distanceSquared(target->getPosition())){
                     
@@ -1767,10 +1882,10 @@ void Movable::moveNew(float dt){
         }else if(unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET){
             isArrived = getPosition() == moveToPos;
         }
-        if (isArrived && unitActDetail != UNIT_ACT_DETAIL_ATTACK){ // arrived
+        if (isArrived && unitActDetail != UNIT_ACT_DETAIL_ATTACK && unitAct != UNIT_ACT_GATHER_GOLD){ // arrived
             attackFlagPos = Vec2::ZERO;
             if (unitAct == UNIT_ACT_ATTACK) {
-                checkAttackTarget(dt);
+                checkAttackTargetReturnSuccess(dt);
             }else{
                 stopNew();
             }
@@ -1809,7 +1924,7 @@ void Movable::moveNew(float dt){
                 }
             }
         }else{
-            if (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE || unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET) {
+            if (isVisible() && (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE || unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET)) {
                 Point dest, current;
                 if (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE) {
                     dest = routePositionArray->getControlPointAtIndex(movePointCounter);
@@ -1840,6 +1955,9 @@ void Movable::moveNew(float dt){
                 }else{
                     this->setPosition(current + Point(xWillMove, yWillMove));
                 }
+                if (unitAct == UNIT_ACT_ATTACK) {
+                    checkAttackTargetReturnSuccess(dt);
+                }
                 if (sptSelectedCircle != nullptr) {
                     sptSelectedCircle->setPosition(getEffectStartPosition());
                 }
@@ -1869,10 +1987,13 @@ void Movable::moveNew(float dt){
             stopNew();
             return;
         }else{
-            checkAttackTarget(dt);
+            checkAttackTargetReturnSuccess(dt);
         }
     }else if (unitAct == UNIT_ACT_ATTACK_DDANG) {
-        
+        checkAttackTargetReturnSuccess(dt);
+    }
+    else if(unitAct == UNIT_ACT_NONE && previousAct == UNIT_ACT_ATTACK){
+        checkAttackTargetReturnSuccess(dt);
     }
     if (unitActDetail == UNIT_ACT_DETAIL_ATTACK) {
         
@@ -1905,9 +2026,15 @@ void Movable::moveNew(float dt){
             runAnimation(ANIMATION_TYPE_MOVE);
         }else if(currentMine == nullptr){
             
-        }else if (!isCarryingGold && currentMine->getBoundingBoxForIntersect().containsPoint(getPosition())){
+        }
+        if(!currentMine || currentMine == nullptr){
+            return;
+        }
+        Rect rect = currentMine->getBoundingBoxForIntersect();
+        Vec2 pos = getPosition();
+        if (!isCarryingGold && rect.containsPoint(pos)){
             if(currentMine->energy <= 0){
-                this->stop();
+                this->stopNew();
                 this->setVisible(true);
                 this->untouchable = false;
                 currentMine = nullptr;
@@ -1916,9 +2043,11 @@ void Movable::moveNew(float dt){
             }
             if(this->isVisible()){
                 this->setVisible(false);
-                this->stop();
+                this->stopNew();
                 this->untouchable = true;
                 this->attackType = ATTACK_TYPE_NONE;
+                this->unitAct = UNIT_ACT_GATHER_GOLD;
+                this->unitAct = UNIT_ACT_ATTACK;
                 this->canFindTarget = false;
                 WORLD->deselect(this);
                 int miner = currentMine->getTag();
@@ -1957,7 +2086,7 @@ void Movable::moveNew(float dt){
                         }
                     }
                 }else{
-                    this->stop();
+                    this->stopNew();
                     this->setVisible(true);
                     this->untouchable = false;
                     isGatheringGold = false;
@@ -1998,14 +2127,48 @@ void Movable::moveNew(float dt){
             return;
         }
     }
+    
+//    if ((scheduledProductTime >= 0 || scheduledAttackTime >= 0) && WORLD->gameTimer > 240 && WORLD->gameTimer < 2400) {
+    if ((scheduledProductTime >= 0 || scheduledAttackTime >= 0)) {
+        timeCollapse += dt;// test
+//        timeCollapse += dt*20;// test 
+        if(scheduledAttackTime >= 0){
+            if (scheduledAttackTime < timeCollapse) {
+                scheduledAttackTime = -1;
+                this->wantToEli = true;
+                WORLD->attackNearHero((EnemyBase*)this);
+            }
+        }else if(scheduledProductTime >= 0){
+            if (scheduledProductTime < timeCollapse) {
+                timeCollapse -= scheduledProductTime;
+                for(int i = 0;i < scheduledProductUnitCount; i++){
+                    int unitType = scheduledProductUnit;
+                    if(unitType == UNIT_ZOMBIE_SWORDSMAN){
+                        unitType = rand()%2==0?UNIT_ZOMBIE_SWORDSMAN:UNIT_ZOMBIE_ORC_AXE;
+                    }
+                    EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Point(i*100, - 300), GM->getUnitName(unitType));
+                    createdUnit->wantToEli = true;
+                }
+            }
+        }
+    }
+    
+    // movenew end
 }
-void Movable::checkAttackTarget(float dt){
+bool Movable::checkAttackTargetReturnSuccess(float dt){
+    if(isInAttackMotion){
+        if(unitActDetail == UNIT_ACT_DETAIL_ATTACK){
+            return true;
+        }else{
+            isInAttackMotion = false;
+        }
+    }
     if (target != nullptr && (isEnemy != target->isEnemy || forceAttackTarget || target->unitType == UNIT_TREE_FOR_BATTLE) && attackType != ATTACK_TYPE_NONE) {
         if (attackType == ATTACK_TYPE_RANGE){
             if (target->getPosition().distanceSquared(getPosition()) < attackRange){
                 // attack
                 attackUpdate(dt);
-                return;
+                return true;
             }else{
                 if (unitActDetail == UNIT_ACT_DETAIL_ATTACK) {
                     unitActDetail = UNIT_ACT_DETAIL_IDLE;
@@ -2018,7 +2181,7 @@ void Movable::checkAttackTarget(float dt){
         }else{
             if(this->getBoundingBoxForIntersect().intersectsRect(target->getBoundingBoxForIntersect())){
                 attackUpdate(dt);
-                return;
+                return true;
             }else{
                 if (unitActDetail == UNIT_ACT_DETAIL_ATTACK) {
                     unitActDetail = UNIT_ACT_DETAIL_IDLE;
@@ -2026,9 +2189,8 @@ void Movable::checkAttackTarget(float dt){
                 }
             }
         }
-        // in case it is not intersects even if it intersected last frame
-        
     }
+    return false;
 }
 void Movable::move(float dt){
     oneSecTimeChecker += dt;
@@ -2083,8 +2245,10 @@ void Movable::move(float dt){
                             int unitType = scheduledProductUnit;
                             if(unitType == UNIT_ZOMBIE_SWORDSMAN){
                                 unitType = rand()%2==0?UNIT_ZOMBIE_SWORDSMAN:UNIT_ZOMBIE_ORC_AXE;
+                            }else if(unitType == UNIT_ORC_AXE){
+                                unitType = rand()%2==0?UNIT_ORC_AXE:UNIT_ORC_SPEAR;
                             }
-                            EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Point(i*10, - 300), GM->getUnitName(unitType));
+                            EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Point(i*50, - 300), GM->getUnitName(unitType));
 //                            WORLD->moveAndAttackTo((EnemyBase*)createdUnit, unit->getApproachingPoint(createdUnit->getPosition()));
                             createdUnit->wantToEli = true;
                         }
@@ -2394,7 +2558,11 @@ Rect Movable::getBoundingBoxForIntersect(){
 //    }
 //}
 Vec2 Movable::getEffectStartPosition(){
-    return getPosition() + Point(0, 14);//Point(0, -getContentSize().height/2 + 30);
+    if(isBuilding){
+        return getPosition() + Point(0, -getContentSize().height/2 + 25);
+    }else{
+        return getPosition() + Point(0, 14);//Point(0, -getContentSize().height/2 + 30);
+    }
 }
 void Movable::playTreeSound(){
 //    GM->playSoundEffect(SOUND_HIT); // test
@@ -2528,7 +2696,7 @@ void Movable::showSelectedCircle(bool show){
         }
         sptSelectedCircle->stopAllActions();
         sptSelectedCircle->setVisible(true);
-        sptSelectedCircle->setPosition(getPosition() + Point(0, 14));//Point(0, -getContentSize().height/2 + 30));
+        sptSelectedCircle->setPosition(getEffectStartPosition());
     }else{
         if (sptSelectedCircle != nullptr) {
             sptSelectedCircle->setVisible(false);

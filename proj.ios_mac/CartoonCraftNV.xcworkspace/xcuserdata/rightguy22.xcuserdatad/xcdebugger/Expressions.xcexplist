@@ -31,6 +31,22 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Movable::attackUpdate(float):Movable.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HelloWorld::setStage(cocos2d::experimental::TMXTiledMap*):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unit-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "Title::titleUpdate(float):Title.cpp">
          <PersistentStrings>
             <PersistentString
@@ -88,25 +104,28 @@
          contextName = "Movable::moveNew(float):Movable.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "unitType">
+               value = "target">
             </PersistentString>
             <PersistentString
                value = "target-&gt;energy">
             </PersistentString>
             <PersistentString
-               value = "target-&gt;unitType">
+               value = "unitAct">
+            </PersistentString>
+            <PersistentString
+               value = "unitActDetail">
+            </PersistentString>
+            <PersistentString
+               value = "getPosition()">
+            </PersistentString>
+            <PersistentString
+               value = "theObjectThisIsIn-&gt;unitType">
             </PersistentString>
             <PersistentString
                value = "moveToPos">
             </PersistentString>
             <PersistentString
-               value = "unitAct">
-            </PersistentString>
-            <PersistentString
-               value = "target">
-            </PersistentString>
-            <PersistentString
-               value = "unitActDetail">
+               value = "unitType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -125,6 +144,22 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "HelloWorld::setOccupy(cocos2d::Vec2, int, int, bool, EnemyBase*):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "building-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HelloWorld::revengeAttack(Movable*, Movable*):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unit-&gt;attackType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "HelloWorld::findTargetHero(Movable*):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
@@ -139,6 +174,9 @@
                value = "target-&gt;energy">
             </PersistentString>
             <PersistentString
+               value = "isEnemy">
+            </PersistentString>
+            <PersistentString
                value = "unitType">
             </PersistentString>
          </PersistentStrings>
@@ -146,6 +184,9 @@
       <ContextState
          contextName = "HelloWorld::doClick(cocos2d::Vec2):HelloWorldScene.cpp">
          <PersistentStrings>
+            <PersistentString
+               value = "unit-&gt;unitAct">
+            </PersistentString>
             <PersistentString
                value = "mutual-&gt;unitType">
             </PersistentString>
@@ -156,6 +197,25 @@
          <PersistentStrings>
             <PersistentString
                value = "hero-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "cocos2d::Mat4::Mat4(cocos2d::Mat4 const&amp;):Mat4.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "target-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Movable::checkAttackTargetReturnSuccess(float):Movable.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unitActDetail">
+            </PersistentString>
+            <PersistentString
+               value = "unitType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -176,22 +236,67 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "HelloWorld::isThisSpotAvailable(Movable*):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "me-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "BattleHud::update(float):BattleHud.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "HelloWorld::isBlockExistBetween(cocos2d::Vec2, cocos2d::Vec2):HelloWorldScene.cpp">
       </ContextState>
       <ContextState
          contextName = "HelloWorld::updateUnitMoveNew(float):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "hero-&gt;unitAct">
+               value = "hero-&gt;unitType">
             </PersistentString>
             <PersistentString
-               value = "hero-&gt;target-&gt;unitType">
+               value = "hero-&gt;target">
+            </PersistentString>
+            <PersistentString
+               value = "unit-&gt;unitType">
+            </PersistentString>
+            <PersistentString
+               value = "hero-&gt;unitActDetail">
+            </PersistentString>
+            <PersistentString
+               value = "unit-&gt;unreachableTarget">
             </PersistentString>
             <PersistentString
                value = "hero-&gt;moveFlagPos">
             </PersistentString>
             <PersistentString
                value = "hero-&gt;target-&gt;getPosition()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Movable::stopNew():Movable.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Movable::getHitAndIsDead(int, Movable*):Movable.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unitType">
+            </PersistentString>
+            <PersistentString
+               value = "target-&gt;unitType">
+            </PersistentString>
+            <PersistentString
+               value = "attacker-&gt;unitType">
+            </PersistentString>
+            <PersistentString
+               value = "target-&gt;unitAct">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

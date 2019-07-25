@@ -178,7 +178,7 @@ bool Title::init()
         btnFull->addChild(lbl);
         lbl->setPosition(btnFull->getContentSize()/2);
     }
-//    UDSetInt(KEY_LAST_CLEAR_STAGE, -1);// test 
+
     GM->playSoundEffect(SOUND_BGM_DUAL);
     GM->titleLayer = this;
     this->schedule(schedule_selector(Title::titleUpdate), 0.2f);
@@ -261,9 +261,9 @@ bool Title::init()
 //    UDSetStr(KEY_SAVED_ID,"-1"); // test
     
     BSM->getHttpTime();
-//    UDSetInt(KEY_LAST_CLEAR_STAGE, 10); // test 
+//    UDSetInt(KEY_LAST_CLEAR_STAGE, 11); // test 
 //    UDSetBool(KEY_CHAPTER_2_PURCHASED, false); // test
-//    UDSetBool(KEY_ID_EXIST_CHECK_DONE, false); // test 
+//    UDSetBool(KEY_ID_EXIST_CHECK_DONE, false); // test
     log("Title init done");
     
 //    spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
@@ -686,16 +686,6 @@ void Title::buyFullPackage(){
 //    NativeInterface::NativeInterface::purchaseOnestore("propack");
 }
 void Title::showChapterSelect(){
-    // bug fix
-    std::string key = "is_chapter_first_open";
-    if(UDGetBool(key.c_str(), true)){
-        UDSetBool(key.c_str(), false);
-        int stageClearIndex = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-        if(stageClearIndex == 10){
-            UDSetInt(KEY_LAST_CLEAR_STAGE, 11);
-        }
-    }
-    
     Node* layer = CSLoader::createNode("ChapterSelect.csb");
     this->addChild(layer, 4);
     layer->setName("chapterSelect");
@@ -713,8 +703,8 @@ void Title::showChapterSelect(){
     
     ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
     sv->setClippingEnabled(true);
-    sv->setInnerContainerSize(sv->getContentSize());
-    for (int i = 0; i < 2; i++) {
+//    sv->setInnerContainerSize(sv->getContentSize());
+    for (int i = 0; i < 3; i++) {
         btn = (Button*)sv->getChildByName(strmake("btnChapter%d", i));
         lbl = (Text*)btn->getChildByName("lblTitle");
         Node* img = btn->getChildByName("img");
@@ -757,7 +747,14 @@ void Title::showChapterSelect(){
                 lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER2));
             }
         }else if(i == 2){
-            LM->setLocalizedString(lbl, "zombie");
+            LM->setLocalizedString(lbl, "coming soon");
+            spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
+            btn->addChild(spChar);
+            spChar->setAnimation(0, "idle", true);
+            spChar->setPosition(img->getPosition());
+            img->removeFromParent();
+            Sprite* sptShadow = Sprite::create("shadow.png");
+            spChar->addChild(sptShadow, -1);
         }else if(i == 3){
             LM->setLocalizedString(lbl, "werewolf");
             
@@ -791,7 +788,8 @@ void Title::onChapterClick(Ref* ref){
         showStageSelect(btn->getTag());
     }else if(btn->getTag() == 1){
         showStageSelect(btn->getTag());
-//        showInstanceMessage(LM->getText("coming soon")); // test
+    }else if(btn->getTag() == 2){
+        showInstanceMessage(LM->getText("coming soon")); // test
     }
 }
 void Title::showStageSelect(int chapter){

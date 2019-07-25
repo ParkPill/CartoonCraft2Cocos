@@ -3526,7 +3526,7 @@ int GameManager::getStageObjective(int stage){
     }else if(stage == 6){
         return CLEAR_CONDITION_TERMINATE;
     }else if(stage == 7){
-        return CLEAR_CONDITION_SURVIVE_FOR_20_MIN;
+        return CLEAR_CONDITION_TERMINATE;
     }else if(stage == 8){
         return CLEAR_CONDITION_PROTECT_ALLI_AND_TERMINATE;
     }else if(stage == 9){

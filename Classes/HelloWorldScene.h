@@ -225,8 +225,9 @@ protected:
     void receivingData(float dt);
 public:
     bool isBlockExistBetween(Vec2 start, Vec2 end);
-    bool blackSheepWell = true; // test now
+    bool blackSheepWell = false; // test
     bool testSuper = false; // test no
+    Movable* getGroundOwner(Vec2 pos);
     Vector<EnemyBase*> unitsToCreateArray;
     Vector<EnemyBase*> heroArray;
     Vector<EnemyBase*> enemyArray;
@@ -276,6 +277,7 @@ public:
     bool keyCollected;
     bool isWay(int index);
     bool isDecoBlock(int index);
+    bool isSoilBlock(int index);
     bool isHighWay(int index);
     bool isOneWay(int index);
     bool isFregile(int index);
@@ -769,6 +771,7 @@ public:
     void resetPathState();
     cocos2d::Point getPositionFromTileCoordinate(int x, int y);
     experimental::TMXLayer* decoLayer = nullptr;
+    experimental::TMXLayer* soilLayer = nullptr;
     void addDecoBlock(cocos2d::Point coordinate, cocos2d::Point position, std::string spriteName);
     
     void eventUpdate(float dt);
@@ -821,7 +824,7 @@ public:
     cocos2d::Rect viewRect;
     void revengeAttack(Movable* attackee, Movable* attacker);
     
-    int getAttackPriority(int index);
+    int getAttackPriority(Movable* unit);
     bool canAttack(Movable* attacker, Movable* target);
     bool isSpotAvailable(bool isEnemy, cocos2d::Point pos);
     
@@ -860,7 +863,8 @@ public:
     Sprite* addDecoToOutOfField(Sprite* spt);
     
     void setTileGID(experimental::TMXLayer* layer, int gid, Vec2 pos);
-    
+
+    bool isBuildingExistWhenStartTheGame = true;
 };
 
 

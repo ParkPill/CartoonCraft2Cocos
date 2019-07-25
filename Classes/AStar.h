@@ -12,7 +12,7 @@
 #define PATH_EMPTY 1
 #define MAP_WIDTH 100
 #define MAP_HEIGHT 100
-#define SEARCH_LIMIT 100
+#define SEARCH_LIMIT 10000
 
 USING_NS_CC;
 using namespace std;

@@ -3545,7 +3545,7 @@ void HudLayer::addListener(){
 //            onTutorialBoxClick();
 //        }
 //        auto last = touches.back();
-        
+        readyToShowNextTalk();
 //        chopad->TouchesBegan(touches, evt);
         // check if last touch point is in which button
         
@@ -3636,15 +3636,15 @@ void HudLayer::onDisposableMessageEvent(float dt){
     endEvent();
 }
 void HudLayer::showEvent(int index, bool isQuest){
-//    eventIndex = index;
+    eventIndex = index;
 //    isThisEventQuest = isQuest;
-//    isReadyToShowNextTalk = true;
-//    talkIndex = 0;// test 
-//    
-//    talkState = TALK_STATE_ASKING;
-//    this->schedule(schedule_selector(HudLayer::onEvent));
-//    
-//    showBlackTopAndBottom();
+    isReadyToShowNextTalk = true;
+    talkIndex = 0;// test
+    
+    talkState = TALK_STATE_ASKING;
+    this->schedule(schedule_selector(HudLayer::onEvent));
+    
+    showBlackTopAndBottom();
 }
 void HudLayer::onEvent(float dt){
     if(!isReadyToShowNextTalk){
@@ -3862,7 +3862,21 @@ void HudLayer::onTalkBoxResizeDone(){
 }
 
 void HudLayer::readyToShowNextTalk(){
-    isReadyToShowNextTalk = true;
+    HelloWorld* stage = WORLD;
+    if(stage->isInEvent){
+        if(talkState == TALK_STATE_QUESTIONING){
+            answer = 0;
+            talkState = TALK_STATE_CHOOSED;
+            talkIndex = 0;
+            sptTalkBox->getChildByTag(0)->runAction(Sequence::create(Blink::create(0.8, 4), DelayTime::create(1),CallFunc::create(CC_CALLBACK_0(HudLayer::readyToShowNextTalk, this)), NULL));
+        }else{
+            if(stage->imgTalkBox != nullptr && stage->imgTalkBox->getChildByName("TOUCH") == nullptr){
+                stage->talkIndex = (int)stage->talkText.size();
+            }else{
+                isReadyToShowNextTalk = true;
+            }
+        }
+    }
 }
 
 void HudLayer::onLeftRelease(){
@@ -5166,6 +5180,8 @@ void HudLayer::onReviveByDead(){
 void HudLayer::showWinPopup(bool win){
     GameSharing::logFB(strmake("STAGE %d %s", GM->currentStageIndex, win?"WIN":"LOSE").c_str());
     Node* popup = Node::create();
+    popup->setName("winPopup");
+    popup->setTag(win?1:0);
     this->addChild(popup, 200);
     resultPopup = popup;
     ImageView* imgBack = ImageView::create("uiBox.png");
@@ -5181,7 +5197,7 @@ void HudLayer::showWinPopup(bool win){
     img->setPosition(Point(size.width/2, size.height/2 + 100));
     popup->addChild(img);
     
-    std::string strResult = LM->getText("mission cleard");
+    std::string strResult = LM->getText("mission cleared");
     if (!win) {
         strResult = LM->getText("mission failed");
     }
@@ -5298,7 +5314,6 @@ void HudLayer::showWinPopup(bool win){
         spt->runAction(Sequence::create(DelayTime::create(1.5f), EaseIn::create(RotateBy::create(0.5f, -90), 2), NULL));
     }
     
-//    BSM->sendArenaScore(<#int score#>)
     this->schedule(schedule_selector(HudLayer::updateResultPopup), 0.1f);
 }
 void HudLayer::showPremiumRetry(){
@@ -5520,9 +5535,13 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
     GM->setHudLayer(nullptr);
     Scene* scene;
     int stage = WORLD->stageIndex;
-    int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-    if(clearStage < stage){
-        UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+    
+    Node* popup = this->getChildByName("winPopup");
+    if(popup != nullptr && popup->getTag() == 1){
+        int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+        if(clearStage < stage){
+            UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+        }
     }
     if(GM->currentStageIndex == 11 && !WORLD->isGameOver){
         this->removeListener();
@@ -5610,9 +5629,9 @@ void HudLayer::arrangeMenu(cocos2d::Point pos){
         btn->setOpacity(0);
         btn->runAction(FadeIn::create(0.16f));
         float angle = i*60 - 120;
-        btn->runAction(EaseOut::create(MoveBy::create(0.16f, Point(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2));
+        btn->setEnabled(false);
+        btn->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.16f, Point(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2), CallFuncN::create(CC_CALLBACK_1(GameManager::enableButton, GM)), nullptr));
     }
-    
 }
 void HudLayer::showIndicator(){
     Button* btn = Button::create("uiBoxSmall.png");
