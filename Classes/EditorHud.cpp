@@ -14,7 +14,7 @@
 //#include "NativeInterface.h"
 #include "LanguageManager.h"
 
-#include "ServerManager.h"
+#include "BuggyServerManager.h"
 #include "Title.h"
 #include "ui/UITextBMFont.h"
 #include "ui/UIScrollView.h"
@@ -2233,7 +2233,7 @@ void EditorHud::removeUsedAssets(){
 void EditorHud::toMain(Ref* pSender, ui::Widget::TouchEventType eEventType){
     if(TouchEventType::TOUCH_EVENT_ENDED != (TouchEventType)eEventType) return;
     
-    ServerManager::getInstance()->getHttpTime();
+//    ServerManager::getInstance()->getHttpTime();
     world->saveCoinIfStarCollected();
     whereToGo = CLOSE_TO_MAIN;
     this->scheduleOnce(schedule_selector(EditorHud::closeSchedule), 0.01);
@@ -2241,7 +2241,7 @@ void EditorHud::toMain(Ref* pSender, ui::Widget::TouchEventType eEventType){
 void EditorHud::toStageSelect(Ref* pSender, ui::Widget::TouchEventType eEventType){
     if(TouchEventType::TOUCH_EVENT_ENDED != (TouchEventType)eEventType) return;
     
-    ServerManager::getInstance()->getHttpTime();
+//    ServerManager::getInstance()->getHttpTime();
     world->saveCoinIfStarCollected();
     
     whereToGo = CLOSE_TO_STAGES;
@@ -3129,7 +3129,7 @@ void EditorHud::onAClick(){
     }else if(deadPopup != nullptr){
         onReviveByGem();
     }else if(alchyShopLayer != nullptr){
-        onAcceptCombineInAlchyShop();
+        
     }else if(peterShopLayer != nullptr){
         onChoosedInsurancePlan(selectedPeterItem);
     }else if(samShopLayer != nullptr && abcLayer == nullptr){
@@ -3276,7 +3276,7 @@ void EditorHud::onBClick(){
             peterShopLayer = nullptr;
         }else if(alchyShopLayer != nullptr){
             alchyShopLayer = nullptr;
-            this->unschedule(schedule_selector(EditorHud::alchyUpdate));
+            
         }else if(samShopLayer != nullptr){
             samShopLayer = nullptr;
         }else if(deadPopup != nullptr){
@@ -4199,9 +4199,9 @@ void EditorHud::showAlchyShop(){
     //    Label* newLbl = changeTextWithLabel(lbl, 313);
     lbl->setString(strmake("A.%s   B.%s", LM->getText("combine").c_str(), LM->getText("cancel").c_str()));
     
-    this->schedule(schedule_selector(EditorHud::alchyUpdate), 1);
+    
     updateAlchyShop();
-    alchyUpdate(0);
+    
 }
 void EditorHud::updateAlchyShop(){
     std::string weaponName = "dagger";
@@ -4350,75 +4350,7 @@ int EditorHud::getAlchyWeaponCombineMinutes(int weaponIndex){
         return (weaponIndex - 17)*60*24;
     }
 }
-void EditorHud::onAcceptCombineInAlchyShop(){
-    if(isReadyCombineInAlchyShop){
-        std::string startTime = UDGetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-        if(startTime.size() == 0){
-            inventory->removeItem(alchyIngredientWeaponName, 2);
-            UDSetStr(KEY_ALCHY_COMBINING_ITEM_NAME, alchyIngredientWeaponName);
-            UDSetStr(KEY_ALCHY_COMBINE_START_TIME, Value(SM->getCurrentTime()).asString());
-            this->unschedule(schedule_selector(EditorHud::alchyUpdate));
-            onBClick();
-            showAlchyShop();
-        }else{
-            double now = SM->getCurrentTime();
-            double startedTime = Value(startTime).asDouble();
-            int minutesToComplete = getAlchyWeaponCombineMinutes(alchyNextWeaponLevel);
-            int minutesLeft = (startedTime + minutesToComplete*60 - now)/60;
-            int gemPrice = getGemForMinute(minutesLeft);
-            if(GM->getGem() < gemPrice){
-                showInstanceMessage(LM->getText("not enough gem"));
-                
-            }else{
-                GM->addGem(-gemPrice);
-                UDSetStr(KEY_ALCHY_COMBINE_START_TIME, Value(SM->getCurrentTime() - minutesToComplete*60 - 1).asString());
-            }
-            alchyUpdate(0);
-        }
-        
-        updateAlchyShop();
-    }else{
-        firstPopup->getChildByName("lblResultDescription")->runAction(Blink::create(1, 3));
-        
-    }
-}
-void EditorHud::alchyUpdate(float dt){
-    std::string startTime = UDGetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-    if(startTime.size() == 0){
-        
-    }else{
-        double now = SM->getCurrentTime();
-        double startedTime = Value(startTime).asDouble();
-        int minutesToComplete = getAlchyWeaponCombineMinutes(alchyNextWeaponLevel);
-        int seconds = (startedTime + minutesToComplete*60 - now);
-        int minutesLeft = seconds/60;
-        int gemPrice = getGemForMinute(minutesLeft);
-        
-        if (seconds <= 0) {
-            UDSetStr(KEY_ALCHY_COMBINING_ITEM_NAME, "");
-            showInstanceMessage(LM->getText("weapon combined"));
-            UDSetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-            this->unschedule(schedule_selector(EditorHud::alchyUpdate));
-            inventory->addItem(alchyIngredientNextWeaponName, ITEM_TYPE_WEAPON);
-            onBClick();
-            showAlchyShop();
-            return;
-        }else{
-            Text* lbl = (Text*)alchyShopLayer->getChildByName("lblDescription");
-            std::string dots;
-            for (int i = 0; i < 3 - seconds%4; i++) {
-                dots.append(".");
-            }
-            lbl->setString(strmake("%s%s\n%s:%s", LM->getText("weapon combining").c_str(), dots.c_str(), LM->getText("time left").c_str(), GM->getTimeLeftInString(seconds).c_str()));
-        }
-        
-        Text* lbl = (Text*)alchyShopLayer->getChildByName("lblResultDescription");
-        lbl->setString(strmake(LM->getText("press a to complete now format").c_str(), gemPrice));
-        
-        lbl = (Text*)alchyShopLayer->getChildByName("lblTip");
-        lbl->setString(strmake("A.%s   B.%s", strmake(LM->getText("complete now format").c_str(), gemPrice).c_str(), LM->getText("cancel").c_str()));
-    }
-}
+
 void EditorHud::selectSamShopItem(Ref* ref){
     if(ref == nullptr) return;
     Button* btn = (Button*)ref;
@@ -4802,26 +4734,10 @@ void EditorHud::onConfirmInsurancePlan(Ref* ref){
         
     }else if(lbl->getTag() == 1){
         GM->addGem(-5);
-        addInsurance(6);
+        
     }else if(lbl->getTag() == 2){
         // purchase
     }
-}
-void EditorHud::addInsurance(int hour){
-    std::string startTime = UDGetStr(KEY_INSURANCE_END_TIME, "");
-    double endTime;
-    if(startTime.size() == 0){
-        endTime = SM->getCurrentTime() + hour*60*60;
-    }else{
-        endTime = Value(startTime).asDouble();
-        if(endTime < SM->getCurrentTime()){
-            endTime = SM->getCurrentTime() + hour*60*60;
-        }else{
-            endTime += hour*60*60;
-        }
-    }
-    UDSetStr(KEY_INSURANCE_END_TIME, Value(endTime).asString());
-    onBClick();
 }
 void EditorHud::showPVP(){
     
@@ -4829,25 +4745,7 @@ void EditorHud::showPVP(){
 void EditorHud::oneSecUpdate(float dt){
     
 }
-void EditorHud::showPotSoul(cocos2d::Point pos){
-    Sprite* spt = Sprite::createWithSpriteFrameName("potSoul.png");
-    this->addChild(spt, 100);
-    spt->setScale(world->getScale());
-    spt->setPosition(pos);
-    spt->setOpacity(0);
-    spt->runAction(FadeIn::create(1));
-    Point targetPos = Point(603.17f, 1209.88f);
-    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(1, Point(0, 100)), 2), EaseInOut::create(MoveTo::create(0.7f, targetPos), 2), CallFunc::create(CC_CALLBACK_0(EditorHud::onPotSoulMoveDone, this)), SPT_REMOVE_FUNC,NULL));
-    Node* counter = this->getChildByName("potCounter");
-    counter->setPosition(Point(900, 1166));
-    counter->runAction(Sequence::create(DelayTime::create(1), MoveTo::create(0.4f, Point(710, 1166)), DelayTime::create(1), MoveTo::create(0.3f, Point(900, 1166)), NULL));
-    counter->runAction(Sequence::create(DelayTime::create(1), FadeIn::create(0.4f), DelayTime::create(1), FadeOut::create(0.3f), NULL));
-    Text* lbl = (Text*)counter->getChildByName("lblCount");
-    int potCount = UDGetInt(KEY_POT_SOUL_COUNT, 0);
-    lbl->setString(Value(potCount).asString());
-    potCount++;
-    UDSetInt(KEY_POT_SOUL_COUNT, potCount);
-}
+
 
 void EditorHud::onPotSoulMoveDone(){
     Node* counter = this->getChildByName("potCounter");

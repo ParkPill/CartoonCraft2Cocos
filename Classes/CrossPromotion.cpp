@@ -8,7 +8,7 @@
 #include "CrossPromotion.h"
 #include "GameManager.h"
 #include "GameSharing.h"
-#include "ServerManager.h"
+#include "BuggyServerManager.h"
 
 bool CrossPromotion::init()
 {
@@ -57,7 +57,7 @@ void CrossPromotion::getCrossPromotion(std::string thisGameForException){
     request->release();
 }
 void CrossPromotion::onCrossPromotionCompleted(cocos2d::Node *sender, void *data){
-    rapidjson::Document document = ServerManager::getInstance()->getDocument(sender, data);
+    rapidjson::Document document = BSM->getDocument(sender, data);
     if(document.IsNull()){
         
         return;

@@ -6,15 +6,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.984074"
+            timestampString = "587612847.819988"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3494"
-            endingLineNumber = "3494"
+            startingLineNumber = "3418"
+            endingLineNumber = "3418"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -27,11 +27,11 @@
             condition = "unitType == 40"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.9848239"
+            timestampString = "587612847.820141"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2426"
-            endingLineNumber = "2426"
+            startingLineNumber = "2674"
+            endingLineNumber = "2674"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -44,11 +44,11 @@
             condition = "unitType == 40"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.986649"
+            timestampString = "587612847.82076"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2423"
-            endingLineNumber = "2423"
+            startingLineNumber = "2671"
+            endingLineNumber = "2671"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -60,11 +60,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/BattleHud.cpp"
-            timestampString = "585708963.987287"
+            timestampString = "587612847.821243"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "5189"
-            endingLineNumber = "5189"
+            startingLineNumber = "5266"
+            endingLineNumber = "5266"
             landmarkName = "BattleHud::updateUI(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -76,11 +76,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.987536"
+            timestampString = "587612847.821294"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "5692"
-            endingLineNumber = "5692"
+            startingLineNumber = "5679"
+            endingLineNumber = "5679"
             landmarkName = "HelloWorld::addListener()"
             landmarkType = "7">
          </BreakpointContent>
@@ -88,31 +88,31 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.9879071"
+            timestampString = "587612847.821391"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "8601"
             endingLineNumber = "8601"
-            landmarkName = "HelloWorld::removeCharacter(EnemyBase* unit)"
+            landmarkName = "HelloWorld::receivingData(float dt)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.988868"
+            timestampString = "587612847.821498"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1159"
-            endingLineNumber = "1159"
+            startingLineNumber = "1162"
+            endingLineNumber = "1162"
             landmarkName = "HelloWorld::removeHero(EnemyBase* spt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -124,11 +124,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.996925"
+            timestampString = "587612847.8215851"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2017"
-            endingLineNumber = "2017"
+            startingLineNumber = "2256"
+            endingLineNumber = "2256"
             landmarkName = "Movable::moveNew(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -140,11 +140,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.997291"
+            timestampString = "587612847.8221231"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2290"
-            endingLineNumber = "2290"
+            startingLineNumber = "2538"
+            endingLineNumber = "2538"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -156,11 +156,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.99763"
+            timestampString = "587612847.8226089"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2319"
-            endingLineNumber = "2319"
+            startingLineNumber = "2567"
+            endingLineNumber = "2567"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -172,11 +172,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.9980299"
+            timestampString = "587612847.823088"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2339"
-            endingLineNumber = "2339"
+            startingLineNumber = "2587"
+            endingLineNumber = "2587"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -188,11 +188,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.998826"
+            timestampString = "587612847.82357"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1887"
-            endingLineNumber = "1887"
+            startingLineNumber = "2126"
+            endingLineNumber = "2126"
             landmarkName = "Movable::moveNew(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -204,11 +204,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.9990979"
+            timestampString = "587612847.824034"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "800"
-            endingLineNumber = "800"
+            startingLineNumber = "814"
+            endingLineNumber = "814"
             landmarkName = "Movable::attackUpdate(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -220,11 +220,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.000307"
+            timestampString = "587612847.824515"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2351"
-            endingLineNumber = "2351"
+            startingLineNumber = "2599"
+            endingLineNumber = "2599"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -236,11 +236,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.000963"
+            timestampString = "587612847.8250591"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "787"
-            endingLineNumber = "787"
+            startingLineNumber = "801"
+            endingLineNumber = "801"
             landmarkName = "Movable::attackUpdate(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -252,12 +252,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.001122"
+            timestampString = "587612847.82558"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1079"
-            endingLineNumber = "1079"
-            landmarkName = "Movable::getHitAndIsDead(int ap, Movable* attacker)"
+            startingLineNumber = "1242"
+            endingLineNumber = "1242"
+            landmarkName = "Movable::getApproachingPoint(cocos2d::Point from)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -268,11 +268,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.001215"
+            timestampString = "587612847.8260781"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2476"
-            endingLineNumber = "2476"
+            startingLineNumber = "2724"
+            endingLineNumber = "2724"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -284,11 +284,27 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.001281"
+            timestampString = "587612847.826583"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1252"
-            endingLineNumber = "1252"
+            startingLineNumber = "1423"
+            endingLineNumber = "1423"
+            landmarkName = "Movable::attackDdangTo(Vec2 pos)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/Movable.cpp"
+            timestampString = "587612847.827046"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1430"
+            endingLineNumber = "1430"
             landmarkName = "Movable::moveToTarget(cocos2d::Point targetPos)"
             landmarkType = "7">
          </BreakpointContent>
@@ -300,27 +316,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.001852"
+            timestampString = "587612847.827505"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1259"
-            endingLineNumber = "1259"
-            landmarkName = "Movable::moveToTarget(cocos2d::Point targetPos)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.001953"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1335"
-            endingLineNumber = "1335"
+            startingLineNumber = "1506"
+            endingLineNumber = "1506"
             landmarkName = "Movable::moveToTarget()"
             landmarkType = "7">
          </BreakpointContent>
@@ -328,16 +328,240 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/AStar.cpp"
+            timestampString = "586702450.918494"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "318"
+            endingLineNumber = "318"
+            landmarkName = "AStar::startPathFinding(compareTwoCells compareMethod, int startX,int startY,int goalX,int goalY)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/HelloWorldScene.cpp"
+            timestampString = "587612847.828037"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "236"
+            endingLineNumber = "236"
+            landmarkName = "HelloWorld::updateUnitMoveNew(float dt)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708964.00205"
+            timestampString = "587612847.8281389"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1358"
-            endingLineNumber = "1358"
-            landmarkName = "Movable::moveToTarget()"
+            startingLineNumber = "1863"
+            endingLineNumber = "1863"
+            landmarkName = "Movable::stopNew()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/Movable.cpp"
+            timestampString = "587612847.8286051"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1824"
+            endingLineNumber = "1824"
+            landmarkName = "Movable::stopNew()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BuggyServerManager.cpp"
+            timestampString = "587612847.82909"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "321"
+            endingLineNumber = "321"
+            landmarkName = "BuggyServerManager::getCurrentTimeT()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829139"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "3784"
+            endingLineNumber = "3784"
+            landmarkName = "BattleHud::onUpgradeClickInUpgradeTab()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829182"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "3974"
+            endingLineNumber = "3974"
+            landmarkName = "BattleHud::updateUnitListForUpgrade()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829218"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "3998"
+            endingLineNumber = "3998"
+            landmarkName = "BattleHud::updateUnitListForUpgrade()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829255"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5232"
+            endingLineNumber = "5232"
+            landmarkName = "BattleHud::updateUI(float dt)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.82929"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5251"
+            endingLineNumber = "5251"
+            landmarkName = "BattleHud::updateUI(float dt)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829325"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "3988"
+            endingLineNumber = "3988"
+            landmarkName = "BattleHud::updateUnitListForUpgrade()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.8293591"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5274"
+            endingLineNumber = "5274"
+            landmarkName = "BattleHud::updateUI(float dt)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829393"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "4266"
+            endingLineNumber = "4266"
+            landmarkName = "BattleHud::onTrainGachaAgainClick(Ref* ref)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.829427"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "3454"
+            endingLineNumber = "3454"
+            landmarkName = "BattleHud::update(float dt)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../Classes/BattleHud.cpp"
+            timestampString = "587612847.8294621"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "277"
+            endingLineNumber = "277"
+            landmarkName = "BattleHud::onVideoTabClick(Ref* ref)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

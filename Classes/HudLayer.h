@@ -421,7 +421,7 @@ public:
     int getAlchyWeaponCombineMinutes(int weaponIndex);
     Node* alchyShopLayer = nullptr;
     void updateAlchyShop();
-    void alchyUpdate(float dt);
+    
     void onAcceptCombineInAlchyShop();
     void showSAMShop();
     void selectSamShopItem(Ref* ref);
@@ -451,7 +451,7 @@ public:
     void showCredit();
     int getGemForMinute(int min);
     void onConfirmInsurancePlan(Ref* ref);
-    void addInsurance(int hour);
+    
     void showPVP();
     void oneSecUpdate(float dt);
     void showPotSoul(cocos2d::Point pos);

@@ -9,7 +9,6 @@
 #include "LanguageManager.h"
 #include "GameManager.h"
 #include "GameSharing.h"
-//#include "ServerManager.h"
 #include "BuggyServerManager.h"
 #include <editor-support/spine/spine-cocos2dx.h>
 #include <editor-support/spine/SkeletonAnimation.h>
@@ -53,6 +52,7 @@ bool Title::init()
     
     Node* title = CSLoader::createNode("Title.csb");
     this->addChild(title);
+    title->setPositionX(size.width/2 - title->getContentSize().width/2);
     Node* sptBackground = title->getChildByName("btnBackground");//Sprite::create("titleBackground.png");
 //    this->addChild(sptBackground);
 //    sptBackground->setPosition(Point(size.width/2, size.height/2 - 300));
@@ -75,6 +75,15 @@ bool Title::init()
     PPLabel* lbl = addLabelToButton(btn, "play", 60, Color3B(4, 90, 4));
     lbl->setPosition(lbl->getPosition() + Point(-110, 10));
     doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    
+    btn = (Button*)title->getChildByName("btnHero");//Button::create("btnBox.png");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroClick, this));
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
+    lbl = addLabelToButton(btn, "hero", 60, Color3B(4, 90, 4));
+    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    btn->setVisible(false); // test now
     
 //    Sprite* spt = Sprite::create("weaponX.png");
 //    btn->addChild(spt);
@@ -120,7 +129,7 @@ bool Title::init()
     btn->addClickEventListener(CC_CALLBACK_0(Title::onBattleClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
-    GM->makeItScaleUpAndDown(btn->getChildByName("imgNewTag"));
+//    GM->makeItScaleUpAndDown(btn->getChildByName("imgNewTag"));
 //    GM->makeItScaleUpAndDown(btn->getChildByName("imgTag"));
 
 
@@ -138,9 +147,19 @@ bool Title::init()
     btn->addClickEventListener(CC_CALLBACK_0(Title::onCommunityClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
-    lbl = addLabelToButton(btn, "forum", 60, Color3B(4, 90, 4));
-    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
-    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    if(LM->getLanguageType() == LanguageType::KOREAN){
+        
+    }else{
+        btn->setVisible(false);
+    }
+//    lbl = addLabelToButton(btn, "forum", 60, Color3B(4, 90, 4));
+//    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+//    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    
+    btn = (Button*)title->getChildByName("btnFacebook");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onFacebookClick, this));
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
     btn = (Button*)title->getChildByName("btnSetting");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onSettingClick, this));
@@ -260,10 +279,11 @@ bool Title::init()
 //    isFreeAppResultArrived = true; // test
 //    UDSetStr(KEY_SAVED_ID,"-1"); // test
     
-    BSM->getHttpTime();
-//    UDSetInt(KEY_LAST_CLEAR_STAGE, 11); // test 
+//    BSM->getHttpTime();
+//    UDSetInt(KEY_LAST_CLEAR_STAGE, 11); // test
 //    UDSetBool(KEY_CHAPTER_2_PURCHASED, false); // test
 //    UDSetBool(KEY_ID_EXIST_CHECK_DONE, false); // test
+//    UDSetBool(KEY_HERO_ALERT_NEVER_SHOW, false); // test
     log("Title init done");
     
 //    spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
@@ -274,6 +294,9 @@ bool Title::init()
     
 //    showExitPopup(); // test
     return true;
+}
+void Title::onFacebookClick(){
+    Application::getInstance()->openURL("https://www.facebook.com/StudioNAP/");
 }
 void Title::onCommunityClick(){
     if(LM->getLanguageType() == LanguageType::KOREAN){
@@ -287,6 +310,7 @@ void Title::onSettingClick(){
     this->addChild(layer, 4);
     layer->setName("settingPopup");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn = (Button*)layer->getChildByName("btnBlock");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
     btn = (Button*)layer->getChildByName("btnClose");
@@ -323,6 +347,7 @@ void Title::onLanguageClick(){
     this->addChild(layer, 4);
     layer->setName("languagePopup");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn = (Button*)layer->getChildByName("btnBlock");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
     layer->setTag(-1);
@@ -461,6 +486,7 @@ void Title::onNetworkResetClick(){
     this->addChild(layer, 4);
     layer->setName("messageBox");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     Button* btn = (Button*)layer->getChildByName("btnBlock");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
@@ -507,6 +533,7 @@ void Title::showExitPopup(){
     this->addChild(layer, 4);
     layer->setName("exitPopup");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     float moveY = 100;
     Button* btn = (Button*)layer->getChildByName("btnNo");
@@ -690,6 +717,7 @@ void Title::showChapterSelect(){
     this->addChild(layer, 4);
     layer->setName("chapterSelect");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btnBlock = (Button*)layer->getChildByName("btnBlock");
@@ -697,7 +725,39 @@ void Title::showChapterSelect(){
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
     
-    Text* lbl = (Text*)layer->getChildByName("imgTitle")->getChildByName("lbl");
+//    btn = (Button*)layer->getChildByName("btnHardMode");
+//    btn->addClickEventListener(CC_CALLBACK_0(Title::onHardModeClick, this));
+    
+    btn = (Button*)layer->getChildByName("btnHero");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroClick, this));
+//    btn->setVisible(false); // test
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "hero");
+    
+    int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+    bool isUnlocked = UDGetBool(KEY_CHAPTER_2_PURCHASED) || UDGetBool(KEY_CHAPTER_3_PURCHASED) || lastClearStage >= 11;
+    btn->getChildByName("imgLock")->setVisible(!isUnlocked);
+    
+    for (int i = 0; i < 3; i++) {
+        ImageView* img = (ImageView*)btn->getChildByName(strmake("img%d", i));
+        spine::SkeletonAnimation* spChar;
+        if(i == 0){
+            spChar = spine::SkeletonAnimation::createWithJsonFile("lizard.json", "lizard.atlas", 1);
+        }else if(i == 1){
+            spChar = spine::SkeletonAnimation::createWithJsonFile("spearMan.json", "spearMan.atlas", 1);
+        }else if(i == 2){
+            spChar = spine::SkeletonAnimation::createWithJsonFile("werewolf.json", "werewolf.atlas", 1);
+        }
+        btn->addChild(spChar, 0);
+//        spChar->setAnimation(0, "idle", true);
+        spChar->setPosition(img->getPosition());
+        spChar->setScale(0.75f);
+        img->removeFromParent();
+        Sprite* sptShadow = Sprite::create("shadow.png");
+        spChar->addChild(sptShadow, -1);
+    }
+    btn->getChildByName("imgLock")->setLocalZOrder(10);
+    lbl = (Text*)layer->getChildByName("imgTitle")->getChildByName("lbl");
     LM->setLocalizedString(lbl, "chapter");
     doLabelFadeInLater(replaceTextToPPLabel(lbl), 0.3f, 0.5f);
     
@@ -740,13 +800,46 @@ void Title::showChapterSelect(){
                 lbl = (Text*)btn->getChildByName("lblOr");
                 LM->setLocalizedString(lbl, "or");
                 lbl = (Text*)btn->getChildByName("lblCondition");
-                LM->setLocalizedString(lbl, "chapter2 unlock condition");
+                LM->setLocalizedString(lbl, "chapter unlock condition");
                 btn->addClickEventListener(CC_CALLBACK_1(Title::onPurchaseChapterClick, this));
                 lbl = (Text*)btn->getChildByName("lblTitle");
                 LM->setLocalizedString(lbl, "or");
                 lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER2));
             }
         }else if(i == 2){
+            Node* img = btn->getChildByName("img");
+            
+            spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
+            btn->addChild(spChar, 0);
+            spChar->setAnimation(0, "idle", true);
+            spChar->setPosition(img->getPosition());
+            img->removeFromParent();
+            Sprite* sptShadow = Sprite::create("shadow.png");
+            spChar->addChild(sptShadow, -1);
+            
+            img->removeFromParent();
+            btn->getChildByName("lblCondition")->setLocalZOrder(2);
+            btn->getChildByName("lblOr")->setLocalZOrder(2);
+            btn->getChildByName("imgConditionBack")->setLocalZOrder(1);
+            
+            int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+            if (UDGetBool(KEY_CHAPTER_3_PURCHASED) || lastClearStage >= 23) {
+                LM->setLocalizedString(lbl, "khalan");
+                btn->getChildByName("lblOr")->setVisible(false);
+                btn->getChildByName("imgConditionBack")->setVisible(false);
+                btn->getChildByName("lblCondition")->setVisible(false);
+                btn->addClickEventListener(CC_CALLBACK_1(Title::onChapterClick, this));
+            }else{
+                lbl = (Text*)btn->getChildByName("lblOr");
+                LM->setLocalizedString(lbl, "or");
+                lbl = (Text*)btn->getChildByName("lblCondition");
+                LM->setLocalizedString(lbl, "chapter unlock condition");
+                btn->addClickEventListener(CC_CALLBACK_1(Title::onPurchaseChapterClick, this));
+                lbl = (Text*)btn->getChildByName("lblTitle");
+                LM->setLocalizedString(lbl, "or");
+                lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER3));
+            }
+        }else if(i == 77){
             LM->setLocalizedString(lbl, "coming soon");
             spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
             btn->addChild(spChar);
@@ -775,10 +868,1435 @@ void Title::showChapterSelect(){
     
     rollOpenScroll((ImageView*)layer->getChildByName("imgBackground"));
 }
+void Title::onHeroClick(){
+    int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+    bool isUnlocked = UDGetBool(KEY_CHAPTER_2_PURCHASED) || UDGetBool(KEY_CHAPTER_3_PURCHASED) || lastClearStage >= 11;
+    if (isUnlocked) {
+        showHeroPage(true);
+    }else{
+        showInstanceMessage(LM->getText("worker condition 1")); // test
+    }
+}
+void Title::onCloseShop(){
+    Node* heroPage = this->getChildByName("heroPage");
+    if(heroPage != nullptr){
+        ndTopBar->removeFromParentAndCleanup(false);
+        heroPage->addChild(ndTopBar);
+        closePopup();
+    }
+}
+void Title::onHeroMoreResourceClick(){
+    onHeroShopClick();
+    onHeroShopTabClick(this->getChildByName("shopLayer")->getChildByName("btnTab1"));
+}
+void Title::onHeroMoreGemClick(){
+    onHeroShopClick();
+    onHeroShopTabClick(this->getChildByName("shopLayer")->getChildByName("btnTab2"));
+}
+void Title::showHeroPage(bool showAlert){
+    GM->playSoundEffect(SOUND_PAPER_FLIP);
+    Node* layer = CSLoader::createNodeWithVisibleSize("HeroPage.csb");
+    this->addChild(layer, 4);
+    layer->setName("heroPage");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    
+    ndTopBar = layer->getChildByName("ndTopBar");
+    ndTopBar->retain();
+    Button* btn;
+    btn = (Button*)ndTopBar->getChildByName("btnGold");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroMoreResourceClick, this));
+    btn = (Button*)ndTopBar->getChildByName("btnTree");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroMoreResourceClick, this));
+    btn = (Button*)ndTopBar->getChildByName("btnGem");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroMoreGemClick, this));
+    lblGemInHud = (Text*)ndTopBar->getChildByName("lblGem");
+    lblGemInHud->setString(Value(GM->getGem()).asString());
+    lastGemUpdated = GM->getGem();
+    lblGoldInHud = (Text*)ndTopBar->getChildByName("lblGold");
+    lblGoldInHud->setString(Value(GM->getCoin()).asString());
+    lastGoldUpdated = GM->getCoin() - 1;
+    lblTreeInHud = (Text*)ndTopBar->getChildByName("lblTree");
+    lblTreeInHud->setString(Value(GM->getTree()).asString());
+    lastTreeUpdated = GM->getTree() - 1;
+    
+    btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    
+    btn = (Button*)layer->getChildByName("btnBack");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnShop");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroShopClick, this));
+    
+    btn = (Button*)layer->getChildByName("btnGacha0");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onChestClick, this));
+    Text* lbl = (Text*)btn->getChildByName("lblDescription");
+    lbl->setString(strmake("%s, %s, %s", LM->getText("common hero").c_str(), LM->getText("good hero").c_str(), LM->getText("great hero").c_str()));
+    btn = (Button*)layer->getChildByName("btnGacha1");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onChestClick, this));
+    lbl = (Text*)btn->getChildByName("lblDescription");
+    lbl->setString(strmake("%s, %s, %s", LM->getText("great hero").c_str(), LM->getText("rare hero").c_str(), LM->getText("epic hero").c_str()));
+    
+    btn = (Button*)layer->getChildByName("btnArrangeRarity");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onSortByRarity, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "sort by rarity");
+    
+    btn = (Button*)layer->getChildByName("btnArrangeSlot");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onSortBySlot, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "sort by slot");
+    
+    btn = (Button*)layer->getChildByName("btnFuse");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onFusionClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "fusion");
+    
+    lbl = (Text*)layer->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "deck");
+    lbl = (Text*)layer->getChildByName("lblInventory");
+    LM->setLocalizedString(lbl, "inventory");
+    
+    std::string str;
+    std::string strEquipped = UDGetStr(KEY_UNITS_HERO_DECK, "");
+    ValueVector units = GM->split(strEquipped, "_");
+    UnitInfo* info;
+    int index = 0;
+    unitInfoListHeroDeck.clear();
+    for (int i = 0; i < units.size(); i++){
+        str = units.at(i).asString();
+        btn = (Button*)layer->getChildByName(strmake("btnEquip%d", index));
+        if(str.length() > 0){
+            info = GM->getUnitInfoFromString(units.at(i).asString());
+            if(info->unitType < 0){
+                continue;
+            }
+            unitInfoListHeroDeck.push_back(info);
+            btn->addClickEventListener(CC_CALLBACK_1(Title::onEquipedHeroClick, this));
+        }else{
+            continue;
+        }
+        
+        lbl = (Text*)btn->getChildByName("lblLevel");
+        
+        if (unitInfoListHeroDeck.size() > index) {
+            info = unitInfoListHeroDeck.at(index);
+            lbl->setString(strmake("LV.%d", info->level + 1));
+            std::string strFile = GM->getSpineFileName(info->unitType);
+            spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+            layer->addChild(spChar);
+            spChar->setAnimation(0, "idle", true);
+//            spChar->setScale(0.75f);
+            Sprite* sptShadow = Sprite::create("shadow.png");
+            spChar->addChild(sptShadow, -1);
+            sptShadow->setOpacity(0);
+            spChar->setPosition(btn->getPosition() + Vec2(0, -45));
+            btn->setColor(getRankColor(info->rank));
+        }else{
+//            btn->setColor(Color3B::WHITE);
+//            lbl->setString("^ 0^/");
+        }
+        index++;
+        if(index >= 6){
+            break;
+        }
+    }
+    for(int i = index; i < 6; i++){
+        btn = (Button*)layer->getChildByName(strmake("btnEquip%d", i));
+        lbl = (Text*)btn->getChildByName("lblLevel");
+        lbl->setString("^ 0^/");
+    }
+    
+    ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+//    sv->setClippingEnabled(true);
+//    UDSetStr(KEY_UNITS_HERO_INVENTORY, "_50/101_49/0_49/0_49/0_50/101_49/200_49/200_49/200"); // test
+    strEquipped = UDGetStr(KEY_UNITS_HERO_INVENTORY, "");
+    units = GM->split(strEquipped, "_");
+    sv->setContentSize(Size(size.width, 244));
+    
+    unitInfoListHeroInventory.clear();
+    ImageView* img;
+    ImageView* imgTemp = (ImageView*)layer->getChildByName("btnEquip0");
+    index = 0;
+    for(int i = 0; i < units.size(); i++){
+        str = units.at(i).asString();
+        UnitInfo* info;
+        if(str.length() > 0){
+            info = GM->getUnitInfoFromString(units.at(i).asString());
+            if(info->unitType < 0){
+                continue;
+            }
+            unitInfoListHeroInventory.push_back(info);
+        }else{
+            continue;
+        }
+        
+        img = (ImageView*)imgTemp->clone();
+        sv->addChild(img);
+        img->setTag(index);
+        img->setPosition(Vec2(img->getContentSize().width*(0.45f + index), sv->getContentSize().height/2));
+        img->addClickEventListener(CC_CALLBACK_1(Title::onHeroInInventoryClick, this));
+        int rareness = info->rank;
+        img->setColor(getRankColor(rareness));
+        Text* lbl = (Text*)img->getChildByName("lblLevel");
+        lbl->setLocalZOrder(10);
+        lbl->setString(strmake("LV.%d", info->level + 1));
+        
+        std::string strFile = GM->getSpineFileName(info->unitType);
+        spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+        sv->addChild(spChar, 0);
+        spChar->setAnimation(0, "idle", true);
+//        spChar->setScale(0.75f);
+        Sprite* sptShadow = Sprite::create("shadow.png");
+        spChar->addChild(sptShadow, -1);
+        sptShadow->setOpacity(0);
+        spChar->setPosition(img->getPosition() + Vec2(0, -45));
+        spChar->setTag(100000 + index);
+        index++;
+    }
+    float totalWidth = (unitInfoListHeroInventory.size() + 0.3f)*261;
+    if (totalWidth > size.width) {
+        sv->setInnerContainerSize(Size(totalWidth, sv->getContentSize().height));
+    }else{
+        sv->setInnerContainerSize(Size(size.width, sv->getContentSize().height));
+    }
+    int arrangeType = UDGetInt(KEY_HERO_ARRANGE_TYPE, 0);
+    if(arrangeType == 1){
+        onSortByRarity();
+    }
+    
+    
+    int sameUnitCounter = 0;
+    for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
+        sameUnitCounter = 1;
+        for (int j = i + 1; j < unitInfoListHeroInventory.size(); j++) {
+            if (unitInfoListHeroInventory.at(i)->unitType == unitInfoListHeroInventory.at(j)->unitType &&
+                unitInfoListHeroInventory.at(i)->rank == unitInfoListHeroInventory.at(j)->rank) {
+                sameUnitCounter++;
+                if (sameUnitCounter > 2) {
+                    break;
+                }
+            }
+        }
+        if (sameUnitCounter > 2) {
+            break;
+        }
+    }
+    btn = (Button*)layer->getChildByName("btnFuse");
+    btn->getChildByName("imgRedDot")->setVisible(sameUnitCounter > 2);
+    
+    if(showAlert && !UDGetBool(KEY_HERO_ALERT_NEVER_SHOW, false)){
+        layer = CSLoader::createNodeWithVisibleSize("HeroAlert.csb");
+        this->addChild(layer, 4);
+        layer->setName("neverAlertHero");
+        setAsPopup(layer);
+        layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+        layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+        
+        lbl = (Text*)layer->getChildByName("lblDescription");
+        LM->setLocalizedString(lbl, "hero alert");
+        ImageView* img = (ImageView*)layer->getChildByName("imgBackground");
+        btn = (Button*)img->getChildByName("btnNever");
+        btn->addClickEventListener(CC_CALLBACK_0(Title::onNeverShowHeroAlertClick, this));
+        lbl = (Text*)btn->getChildByName("lbl");
+        LM->setLocalizedString(lbl, "never show");
+        
+        btn = (Button*)img->getChildByName("btnOk");
+        btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+        lbl = (Text*)btn->getChildByName("lbl");
+        LM->setLocalizedString(lbl, "ok");
+    }
+    titleUpdate(0);
+}
+void Title::onNeverShowHeroAlertClick(){
+    UDSetBool(KEY_HERO_ALERT_NEVER_SHOW, true);
+    closePopup();
+}
+void Title::onEquipedHeroClick(Ref* ref){
+    BTN_FROM_REF
+    UnitInfo* info = unitInfoListHeroDeck.at(btn->getTag());
+    showHeroDetail(info);
+}
+void Title::onSortByRarity(){
+    UDSetInt(KEY_HERO_ARRANGE_TYPE, 1);
+    Node* layer = this->getChildByName("heroPage");
+    ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+    std::vector<int> indexList;UnitInfo* info;
+    for (int rank = 4; rank >= 0; rank--) {
+        for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
+            info = unitInfoListHeroInventory.at(i);
+            if (info->rank == rank) {
+                indexList.push_back(i);
+            }
+        }
+    }
+    for (int i = 0; i < indexList.size(); i++) {
+        Node* nd = sv->getChildByTag(indexList.at(i));
+        nd->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2));
+        
+        Node* ndChar = sv->getChildByTag(indexList.at(i) + 100000);
+        ndChar->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2 - 45));
+    }
+}
+void Title::onSortBySlot(){
+    UDSetInt(KEY_HERO_ARRANGE_TYPE, 0);
+    Node* layer = this->getChildByName("heroPage");
+    ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+    for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
+        Node* nd = sv->getChildByTag(i);
+        nd->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2));
+        
+        Node* ndChar = sv->getChildByTag(i + 100000);
+        ndChar->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2 - 45));
+    }
+}
+void Title::onFusionClick(){
+    Node* layer = CSLoader::createNodeWithVisibleSize("FusionPage.csb");
+    this->addChild(layer, 4);
+    layer->setName("fusionPage");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    
+    layer->getChildByName("imgResult")->setOpacity(0);
+    
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    
+    btn = (Button*)layer->getChildByName("btnBack");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    
+    btn = (Button*)layer->getChildByName("btnFusion");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onFusionButtonClick, this));
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "fusion");
+    
+    lbl = (Text*)layer->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "fusion");
+    lbl = (Text*)layer->getChildByName("lblInventory");
+    LM->setLocalizedString(lbl, "inventory");
+    
+    std::string str;
+    ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+    sv->setClippingEnabled(true);
+    sv->setContentSize(Size(size.width, 244));
+    std::vector<UnitInfo*> candidateList;
+    std::vector<UnitInfo*> candidatePoolList;
+    for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
+        candidatePoolList.push_back(unitInfoListHeroInventory.at(i));
+    }
+    int sameUnitCounter = 0;
+    for (int i = 0; i < candidatePoolList.size(); i++) {
+        sameUnitCounter = 1;
+        for (int j = i + 1; j < candidatePoolList.size(); j++) {
+            if (candidatePoolList.at(i)->unitType == candidatePoolList.at(j)->unitType &&
+                candidatePoolList.at(i)->rank == candidatePoolList.at(j)->rank) {
+                sameUnitCounter++;
+                if (sameUnitCounter > 2) {
+                    int theUnitType = candidatePoolList.at(i)->unitType;
+                    int theRank = candidatePoolList.at(i)->rank;
+                    for (int k = 0; k < candidatePoolList.size(); k++) {
+                        if (candidatePoolList.at(k)->rank == theRank && candidatePoolList.at(k)->unitType == theUnitType) {
+                            candidateList.push_back(candidatePoolList.at(k));
+                            candidatePoolList.erase(candidatePoolList.begin() + k);
+                            k--;
+                        }
+                    }
+                    i = 0;
+                    break;
+                }
+            }
+        }
+    }
+    
+    
+    unitInfoListHeroInventoryArrangedForFusion.clear();
+    for (int i = 0; i < candidateList.size(); i++) {
+        unitInfoListHeroInventoryArrangedForFusion.push_back(candidateList.at(i));
+    }
+//    for (int i = 0; i < candidatePoolList.size(); i++) {
+//        unitInfoListHeroInventoryArrangedForFusion.push_back(candidatePoolList.at(i));
+//    }
+    candidateList.clear();
+    candidatePoolList.clear();
+    unitInfoListHeroSelectedForFusion.clear();
+    updateUnitListForFusion();
+    
+    for(int i = 0; i < 3; i++){
+        Button* btn = (Button*)layer->getChildByName(strmake("btnEquip%d", i));
+        btn->addClickEventListener(CC_CALLBACK_1(Title::onSelectedHeroClickForFusion, this));
+    }
+}
+void Title::onSelectedHeroClickForFusion(Ref* ref){
+    BTN_FROM_REF
+    Node* layer = this->getChildByName("fusionPage");
+    Node* spine = layer->getChildByName(strmake("selectedHeroSpine%d", btn->getTag()));
+    if(spine){
+        unitInfoListHeroInventoryArrangedForFusion.push_back(unitInfoListHeroSelectedForFusion.at(btn->getTag()));
+        unitInfoListHeroSelectedForFusion.erase(unitInfoListHeroSelectedForFusion.begin() + btn->getTag());
+        updateUnitListForFusion();
+    }
+}
+void Title::onHeroInFusionClick(Ref* ref){
+    if(unitInfoListHeroSelectedForFusion.size() >= 3){
+        return;
+    }
+    ImageView* img = (ImageView*)ref;
+    unitInfoListHeroSelectedForFusion.push_back(unitInfoListHeroInventoryArrangedForFusion.at(img->getTag()));
+    unitInfoListHeroInventoryArrangedForFusion.erase(unitInfoListHeroInventoryArrangedForFusion.begin() + img->getTag());
+    updateUnitListForFusion();
+}
+void Title::onFusionButtonClick(){
+    int rank = unitInfoListHeroSelectedForFusion.at(0)->rank;
+    int unitType = unitInfoListHeroSelectedForFusion.at(0)->unitType;
+    int level = unitInfoListHeroSelectedForFusion.at(0)->level;
+    int counter = 0;
+    for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
+        if (unitInfoListHeroInventory.at(i)->rank == rank && unitInfoListHeroInventory.at(i)->unitType == unitType) {
+            unitInfoListHeroInventory.erase(unitInfoListHeroInventory.begin() + i);
+            i--;
+            counter++;
+            if(counter >= 3){
+                break;
+            }
+        }
+    }
+    
+    UnitInfo* info = new UnitInfo();
+    info->unitType = unitType;
+    info->level = level;
+    info->rank = rank;
+    unitInfoListHeroInventory.push_back(info);
+    
+    Node* layer = this->getChildByName("fusionPage");
+    ImageView* imgResult = (ImageView*)layer->getChildByName("imgResult");
+    imgResult->setLocalZOrder(10);
+    Text* lbl = (Text*)imgResult->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "success");
+    lbl = (Text*)imgResult->getChildByName("lblAttack");
+    LM->setLocalizedString(lbl, "attack capital");
+    lbl = (Text*)imgResult->getChildByName("lblMaxLevel");
+    LM->setLocalizedString(lbl, "max level");
+    lbl = (Text*)imgResult->getChildByName("lblSkill");
+    LM->setLocalizedString(lbl, "skill");
+    lbl = (Text*)imgResult->getChildByName("lblHp");
+    LM->setLocalizedString(lbl, "HP");
+    lbl = (Text*)imgResult->getChildByName("lblMaxLevelBefore");
+    lbl->setString(Value(10 + info->rank*2).asString());
+    lbl = (Text*)imgResult->getChildByName("lblHpBefore");
+    lbl->setString(Value((int)(GM->getUnitHP(info->unitType, info->level)*(1 + 0.2f*info->rank))).asString());
+    lbl = (Text*)imgResult->getChildByName("lblAttackBefore");
+    lbl->setString(Value((int)(GM->getUnitATT(info->unitType, info->level)*(1 + 0.2f*info->rank))).asString());
+    lbl = (Text*)imgResult->getChildByName("lblSkillBefore");
+    lbl->setString(strmake("%s%%", Value(10 + 3*info->rank).asString().c_str()));
+    
+    info->rank++;
+    
+    lbl = (Text*)imgResult->getChildByName("lblMaxLevelAfter");
+    lbl->setString(Value(10 + info->rank*2).asString());
+    lbl = (Text*)imgResult->getChildByName("lblHpAfter");
+    lbl->setString(Value((int)(GM->getUnitHP(info->unitType, info->level)*(1 + 0.2f*info->rank))).asString());
+    lbl = (Text*)imgResult->getChildByName("lblAttackAfter");
+    lbl->setString(Value((int)(GM->getUnitATT(info->unitType, info->level)*(1 + 0.2f*info->rank))).asString());
+    lbl = (Text*)imgResult->getChildByName("lblSkillAfter");
+    lbl->setString(strmake("%s%%", Value(10 + 3*info->rank).asString().c_str()));
+    
+    float delayTime = 3;
+    imgResult->setScale(0.5f);
+    imgResult->runAction(Sequence::create(DelayTime::create(delayTime), FadeIn::create(0.1f), NULL));
+    imgResult->runAction(Sequence::create(DelayTime::create(delayTime), EaseBackOut::create(ScaleTo::create(0.3f, 1)), NULL));
+    
+    std::vector<int> datas;
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    saveUserData(datas);
+    
+    Button* btnOk = (Button*)layer->getChildByName("btnOk");
+    btnOk->addClickEventListener(CC_CALLBACK_0(Title::onOkFusionResult, this));
+    btnOk->runAction(Sequence::create(DelayTime::create(3), EaseBackOut::create(MoveTo::create(0.4f, layer->getChildByName("btnFusion")->getPosition())), NULL));
+    lbl = (Text*)btnOk->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "ok");
+    
+    layer->getChildByName("imgBlack")->runAction(FadeIn::create(0.5f));
+    Button* btnEquip0 = (Button*)layer->getChildByName("btnEquip0");
+    Vec2 targetPos = layer->getChildByName(strmake("btnEquip1"))->getPosition();
+    for(int i = 0; i < 3; i++){
+        layer->getChildByName(strmake("btnEquip%d", i))->runAction(MoveTo::create(1, targetPos));
+        layer->getChildByTag(100000 + i)->runAction(MoveTo::create(1, targetPos + Vec2(0, -45)));
+    }
+    GM->addLightStormEffect(layer);
+//    btnEquip0->runAction(Sequence::create(DelayTime::create(0.5f), ScaleTo::create(1.5f, 0.8f), NULL));
+    GM->makeItSiluk(btnEquip0);
+    Button* btnTemp = (Button*)layer->getChildByName("btnTemp");
+    Button* img = (Button*)btnTemp->clone();
+    layer->addChild(img);
+    img->setOpacity(0);
+    img->setPosition(targetPos);
+    img->setScale(0.5f);
+    img->setColor(getRankColor(info->rank));
+    img->runAction(Sequence::create(DelayTime::create(delayTime), FadeIn::create(0.1f), NULL));
+    img->runAction(Sequence::create(DelayTime::create(delayTime), EaseBackOut::create(ScaleTo::create(0.3f, 1)), NULL));
+    lbl = (Text*)img->getChildByName("lblLevel");
+    lbl->setString(strmake("LV.%d", info->level + 1));
+    for (int i = 0; i < 3; i++) {
+        Sprite* spt = Sprite::create("whiteBigCircle.png");
+        img->addChild(spt, -1);
+        spt->setPosition(img->getContentSize()/2);
+        spt->setScale(7, 2.5f);
+        spt->setOpacity(0);
+        spt->setRotation(i*120);
+        spt->runAction(RepeatForever::create(RotateBy::create(1, 100)));
+        spt->runAction(Sequence::create(DelayTime::create(delayTime), FadeIn::create(0.05f), NULL));
+        spt->setBlendFunc(BlendFunc::ADDITIVE);
+        spt->setColor(Color3B::YELLOW);
+    }
+}
+void Title::onOkFusionResult(){
+    closePopup();
+    closePopup();
+    showHeroPage();
+}
+void Title::updateUnitListForFusion(){
+    Node* layer = this->getChildByName("fusionPage");
+    ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+    ImageView* img;
+    ImageView* imgTemp = (ImageView*)layer->getChildByName("btnEquip0");
+    int index = 0;
+    sv->removeAllChildren();
+    
+    for(int i = 0; i < unitInfoListHeroInventoryArrangedForFusion.size(); i++){
+        UnitInfo* info = unitInfoListHeroInventoryArrangedForFusion.at(i);
+        img = (ImageView*)imgTemp->clone();
+        sv->addChild(img);
+        img->setTag(index);
+        img->setPosition(Vec2(img->getContentSize().width*(0.45f + index), sv->getContentSize().height/2));
+        img->addClickEventListener(CC_CALLBACK_1(Title::onHeroInFusionClick, this));
+        int rareness = info->rank;
+        img->setColor(getRankColor(rareness));
+        Text* lbl = (Text*)img->getChildByName("lblLevel");
+        lbl->setLocalZOrder(10);
+        lbl->setString(strmake("LV.%d", info->level + 1));
+        
+        std::string strFile = GM->getSpineFileName(info->unitType);
+        spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+        sv->addChild(spChar, 0);
+        spChar->setAnimation(0, "idle", true);
+        spChar->setScale(0.75f);
+        Sprite* sptShadow = Sprite::create("shadow.png");
+        spChar->addChild(sptShadow, -1);
+        sptShadow->setOpacity(0);
+        spChar->setPosition(img->getPosition() + Vec2(0, -45));
+        spChar->setTag(100000 + index);
+        index++;
+    }
+    float totalWidth = (unitInfoListHeroInventory.size() + 0.3f)*261;
+    if (totalWidth > size.width) {
+        sv->setInnerContainerSize(Size(totalWidth, sv->getContentSize().height));
+    }else{
+        sv->setInnerContainerSize(Size(size.width, sv->getContentSize().height));
+    }
+    for (int i = 0; i < 3; i++) {
+        Node* spine = layer->getChildByName(strmake("selectedHeroSpine%d", i));
+        if(spine){
+            spine->removeFromParent();
+        }
+    }
+    for(int i = 0; i < 3; i++){
+        layer->removeChildByTag(100000 + i);
+    }
+    for(int i = 0; i < unitInfoListHeroSelectedForFusion.size(); i++){
+        UnitInfo* info = unitInfoListHeroSelectedForFusion.at(i);
+        Button* btn = (Button*)layer->getChildByName(strmake("btnEquip%d", i));
+        int rareness = info->rank;
+        btn->setColor(getRankColor(rareness));
+        Text* lbl = (Text*)btn->getChildByName("lblLevel");
+        lbl->setLocalZOrder(10);
+        lbl->setString(strmake("LV.%d", info->level + 1));
+        
+        std::string strFile = GM->getSpineFileName(info->unitType);
+        spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+        layer->addChild(spChar, 10);
+        spChar->setAnimation(0, "idle", true);
+        spChar->setScale(0.75f);
+        Sprite* sptShadow = Sprite::create("shadow.png");
+        spChar->addChild(sptShadow, -1);
+        sptShadow->setOpacity(0);
+        spChar->setPosition(btn->getPosition() + Vec2(0, -45));
+        spChar->setTag(100000 + i);
+        spChar->setName(strmake("selectedHeroSpine%d", i));
+    }
+    Button* btnFusion = (Button*)layer->getChildByName("btnFusion");
+    bool allRegistered = unitInfoListHeroSelectedForFusion.size() == 3;
+    if(unitInfoListHeroSelectedForFusion.size() > 0){
+        int theUnitType = unitInfoListHeroSelectedForFusion.at(0)->unitType;
+        int theRank = unitInfoListHeroSelectedForFusion.at(0)->rank;
+        for (int i = 1; i < unitInfoListHeroSelectedForFusion.size(); i++) {
+            if (theUnitType != unitInfoListHeroSelectedForFusion.at(i)->unitType ||
+                theRank != unitInfoListHeroSelectedForFusion.at(i)->rank) {
+                allRegistered = false;
+                break;
+            }
+        }
+    }
+    btnFusion->setEnabled(allRegistered);
+}
+void Title::onHeroInInventoryClick(Ref* ref){
+    ImageView* img = (ImageView*)ref;
+    UnitInfo* info = unitInfoListHeroInventory.at(img->getTag());
+    showHeroDetail(info);
+}
+void Title::showHeroDetail(UnitInfo* info, bool showLightning){
+    bool isFromInventory = false;
+    for(auto thisInfo : unitInfoListHeroInventory){
+        if(thisInfo == info){
+            isFromInventory = true;
+            break;
+        }
+    }
+    bool isFromDeck = false;
+    for(auto thisInfo : unitInfoListHeroDeck){
+        if(thisInfo == info){
+            isFromDeck = true;
+            break;
+        }
+    }
+    selectedUnitInfo = info;
+    Node* layer = CSLoader::createNode("UnitTrainInfo.csb");
+    this->addChild(layer, 4);
+    layer->setName("unitTrainLayer");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    Button* btnUpgrade = (Button*)layer->getChildByName("btnUpgrade");
+    btnUpgrade->addClickEventListener(CC_CALLBACK_0(Title::onUpgradeUnitClick, this));
+    btnUpgrade->setEnabled(info->rank < 20);
+    int unit = info->unitType;
+    int level = info->level;
+    Text* lbl = (Text*)btnUpgrade->getChildByName("lblGold");
+    lbl->setString(Value(getMaxGold(level)).asString());
+    lbl = (Text*)btnUpgrade->getChildByName("lblTree");
+    lbl->setString(Value(getMaxTree(level)).asString());
+    lbl = (Text*)btnUpgrade->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "upgrade");
+    Button* btnHire = (Button*)layer->getChildByName("btnHire");
+    btnHire->setVisible(false);
+    Button* btnMoveToDeck = (Button*)layer->getChildByName("btnMoveToDeck");
+    btnMoveToDeck->addClickEventListener(CC_CALLBACK_0(Title::onMoveToDeckUnitClick, this));
+    btnMoveToDeck->setVisible(isFromInventory);
+    lbl = (Text*)btnMoveToDeck->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "move to deck");
+    Button* btnRemoveFromDeck = (Button*)layer->getChildByName("btnRemoveFromDeck");
+    btnRemoveFromDeck->addClickEventListener(CC_CALLBACK_0(Title::onRemoveFromDeckUnitClick, this));
+    btnRemoveFromDeck->setVisible(isFromDeck);
+    lbl = (Text*)btnRemoveFromDeck->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "remove from deck");
+    Button* btnFire = (Button*)layer->getChildByName("btnFire");
+    btnFire->setVisible(false);
+    lbl = (Text*)btnFire->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "fire");
+    btn = (Button*)layer->getChildByName("btnComplete");
+    btn->setVisible(false);
+//    btn->setPosition(btnUpgrade->getPosition());
+    
+    Node* nd = layer->getChildByName("ndUpgradeTime");
+    nd->setVisible(false);
+    lbl = (Text*)layer->getChildByName("lblHP");
+    lbl->setString(Value((int)(GM->getUnitHP(unit, level)*(1 + info->rank*0.2f))).asString());
+    lbl = (Text*)layer->getChildByName("lblLevel");
+    lbl->setString(strmake("Lv.%d", level + 1));
+    lbl = (Text*)lbl->clone();
+    lbl->setAnchorPoint(Vec2(0.5, 0.5));
+    lbl->setPosition(Vec2(955.5f, 761.5f));
+    if (info->rank == 0) {
+        LM->setLocalizedString(lbl, "common hero");
+    }else if (info->rank == 1) {
+        LM->setLocalizedString(lbl, "good hero");
+    }else if (info->rank == 2) {
+        LM->setLocalizedString(lbl, "great hero");
+    }else if (info->rank == 3) {
+        LM->setLocalizedString(lbl, "rare hero");
+    }else if (info->rank == 4) {
+        LM->setLocalizedString(lbl, "epic hero");
+    }
+    lbl->setFontSize(44);
+    lbl->enableOutline(Color4B::BLACK, 4);
+    layer->addChild(lbl, 10);
+    lbl = (Text*)layer->getChildByName("lblName");
+    lbl->setString(LM->getText(GM->getUnitName(unit)));
+    lbl = (Text*)layer->getChildByName("lblDesc");
+    LM->setLocalizedString(lbl, strmake("%s desc", GM->getUnitName(unit).c_str()));
+    Node* ndAttack = layer->getChildByName("ndAttack");
+    lbl = (Text*)ndAttack->getChildByName("lblAttack");
+    lbl->setString(Value(GM->getUnitATT(unit, level)).asString());
+    lbl = (Text*)ndAttack->getChildByName("lblAttackAdd");
+    lbl->setVisible(false);//popupType == 1);
+    lbl->setString(strmake("+%d", GM->getUnitATT(unit, level+1) - GM->getUnitATT(unit, level)));
+    lbl = (Text*)layer->getChildByName("lblHPAdd");
+    lbl->setVisible(false);//popupType == 1);
+    lbl->setString(strmake("+%d", GM->getUnitHP(unit, level+1) - GM->getUnitHP(unit, level)));
+    Node* ndPopulation = layer->getChildByName("ndPopulation");
+    ImageView* img = (ImageView*)ndPopulation->getChildByName("imgPopulation");
+    img->loadTexture("iconSkill.png");
+    img->setContentSize(Size(100, 100));
+    lbl = (Text*)ndPopulation->getChildByName("lblPopulation");
+    lbl->setString(strmake("%s%%", Value(10 + 3*info->rank).asString().c_str()));
+    layer->getChildByName("ndUpgradeTimer")->setVisible(false);
+    img = (ImageView*)layer->getChildByName("imgIconBack");
+    img->setColor(getRankColor(info->rank));
+    
+    
+    std::string strFile = GM->getSpineFileName(info->unitType);
+    spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+    spChar->setAnimation(0, "idle", true);
+    spChar->setScale(1.35f);
+    Sprite* sptShadow = Sprite::create("shadow.png");
+    spChar->addChild(sptShadow, -1);
+    sptShadow->setOpacity(0);
+    btn->setColor(getRankColor(info->rank));
+    spChar->setName("spChar");
+    layer->addChild(spChar);
+    spChar->setPosition(layer->getChildByName("imgIconBack")->getPosition() + Vec2(0, -100));
+    
+//    btnMoveToDeck->setPosition(btnHire->getPosition());
+    btnRemoveFromDeck->setPosition(btnHire->getPosition());
+    
+    if(showLightning){
+        
+        Vec2 point = spChar->getPosition();
+        Sprite* spt = Sprite::createWithSpriteFrameName("lightning0.png");
+        spt->setAnchorPoint(Vec2(0.5, 0));
+        layer->addChild(spt, 11);
+        Animation* animation = AnimationCache::getInstance()->getAnimation("effectLightning");
+        Animate* animate = Animate::create(animation);
+        spt->runAction(Sequence::create(animate, CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+        spt->setPosition(point + Vec2(0, -49));
+        
+        spt = Sprite::create("whiteBigCircle.png");
+        layer->addChild(spt);
+        spt->setPosition(point + Vec2(0, 100));
+        spt->setOpacity(0);
+        spt->setColor(Color3B::BLACK);
+        spt->setScale(4);
+        spt->runAction(Sequence::create(DelayTime::create(0.06f*5), FadeTo::create(0, 60), DelayTime::create(0.1f), FadeOut::create(0.3f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+        
+        spt = Sprite::create("whiteBigCircle.png");
+        layer->addChild(spt);
+        spt->setPosition(point);// + Vec2(0, 49));
+        spt->setOpacity(0);
+        spt->setBlendFunc(BlendFunc::ADDITIVE);
+        spt->setColor(Color3B(80, 250, 255));
+        spt->runAction(Sequence::create(DelayTime::create(0.06f*4), FadeTo::create(0, 120), ScaleTo::create(0.1f, 2), FadeOut::create(0.2f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+        
+        for (int i = 0; i < 5; i++) {
+            spt = Sprite::create("whiteBigCircle.png");
+            layer->addChild(spt);
+            spt->setPosition(point);// + Vec2(0, 49));
+            spt->setOpacity(0);
+            spt->setScale(0.2f);
+            spt->setBlendFunc(BlendFunc::ADDITIVE);
+            spt->setColor(Color3B(0, 240, 250));
+            int distance = 180;
+            float angle = 3.14f*(rand()%360)/180;
+            spt->runAction(Sequence::create(DelayTime::create(0.06f*4 + 0.1f), FadeOut::create(0.2f), NULL));
+            spt->runAction(Sequence::create(DelayTime::create(0.06f*4), FadeTo::create(0, 120), MoveBy::create(0.2f, Vec2(distance*cos(angle), distance*sin(angle))), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+        }
+        
+        spt = Sprite::createWithSpriteFrameName("lightning5.png");
+        spt->setOpacity(0);
+        layer->addChild(spt, 1);
+        spt->setAnchorPoint(Vec2(0.5, 0));
+        spt->setPosition(point + Vec2(0, -49));
+        spt->runAction(Sequence::create(DelayTime::create(0.06f*5), FadeTo::create(0, 30), DelayTime::create(0.1f), FadeOut::create(0.3f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+    }
+    
+}
+void Title::onRemoveFromDeckUnitClick(){
+    int index= 0;
+    for(auto info: unitInfoListHeroDeck){
+        if(info == selectedUnitInfo){
+            unitInfoListHeroDeck.erase(unitInfoListHeroDeck.begin() + index);
+            break;
+        }
+        index++;
+    }
+    
+    unitInfoListHeroInventory.push_back(selectedUnitInfo);
+    
+    std::vector<int> datas;
+    updateHeroDeckSaveData();
+    datas.push_back(DATA_TYPE_HERO_DECK);
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    saveUserData(datas);
+    
+    closePopup();
+    closePopup();
+    showHeroPage();
+}
+void Title::onMoveToDeckUnitClick(){
+    if(unitInfoListHeroDeck.size() >= 6){
+        showInstanceMessage(LM->getText("not enough slot"));
+        return;
+    }
+    int index= 0;
+    for(auto info: unitInfoListHeroInventory){
+        if(info == selectedUnitInfo){
+            unitInfoListHeroInventory.erase(unitInfoListHeroInventory.begin() + index);
+            break;
+        }
+        index++;
+    }
+    unitInfoListHeroDeck.push_back(selectedUnitInfo);
+    
+    std::vector<int> datas;
+    updateHeroDeckSaveData();
+    datas.push_back(DATA_TYPE_HERO_DECK);
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    saveUserData(datas);
+    
+    closePopup();
+    closePopup();
+    showHeroPage();
+}
+void Title::onUpgradeUnitClick(){
+    int goldPrice = getMaxGold(selectedUnitInfo->level);
+    int treePrice = getMaxTree(selectedUnitInfo->level);
+    if(GM->getCoin() < goldPrice){
+        showInstanceMessage(LM->getText("not enough gold"));
+        return;
+    }
+    if(GM->getTree() < treePrice){
+        showInstanceMessage(LM->getText("not enough lumber"));
+        return;
+    }
+    
+    GM->addCoin(-goldPrice);
+    GM->addTree(-treePrice);
+    selectedUnitInfo->level++;
+    
+    bool isFromInventory = false;
+    int inventoryIndex = -1;
+    for(auto thisInfo : unitInfoListHeroInventory){
+        inventoryIndex++;
+        if(thisInfo == selectedUnitInfo){
+            isFromInventory = true;
+            break;
+        }
+    }
+    bool isFromDeck = false;
+    int deckIndex = -1;
+    for(auto thisInfo : unitInfoListHeroDeck){
+        deckIndex++;
+        if(thisInfo == selectedUnitInfo){
+            isFromDeck = true;
+            break;
+        }
+    }
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GOLD);
+    datas.push_back(DATA_TYPE_TREE);
+    if(isFromDeck){
+        updateHeroDeckSaveData();
+        datas.push_back(DATA_TYPE_DECK);
+    }
+    if (isFromInventory) {
+        updateHeroInventorySaveData();
+        datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    }
+    saveUserData(datas);
+    
+    
+    closePopup();
+    closePopup();
+    showHeroPage();
+    if (isFromDeck) {
+        showHeroDetail(unitInfoListHeroDeck.at(deckIndex), true);
+    }else if(isFromInventory){
+        showHeroDetail(unitInfoListHeroInventory.at(inventoryIndex), true);
+    }
+    Node* spChar = this->getChildByName("unitTrainLayer")->getChildByName("spChar");
+    float originalScale = spChar->getScaleX();
+    spChar->runAction(Sequence::create(ScaleTo::create(0.15f, originalScale*1.2f), EaseIn::create(ScaleTo::create(0.12f, originalScale*1), 2), nullptr));
+}
+void Title::onChestClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
+    Node* layer = this->getChildByName("heroPage");
+    Text* lbl;
+    btn = (Button*)layer->getChildByName(strmake("btnGacha%d", btn->getTag()));
+    lbl = (Text*)btn->getChildByName("lbl");
+    time_t now = BSM->getCurrentTimeT();
+    bool saveKey = false;
+    bool saveGem = false;
+    bool saveInventory = false;
+    if(btn->getTag() == 0){
+        if (GM->getWoodKey() > 0) {
+            GM->addWoodKey(-1);
+            pickHero(0, 2);
+            saveKey = true;
+            saveInventory = true;
+        }else if(lbl->getString().compare("FREE") == 0){
+            std::string value = "";
+            value += BSM->getStrFromTime(now + 60*60*23 + 60*30);
+            log("value: %s", value.c_str());
+            
+            UDSetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value);
+            UserDefault::getInstance()->setStringForKey(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value);
+            
+            std::string strNew = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
+            log("strNew: %s", strNew.c_str());
+            pickHero(0, 2);
+            saveInventory = true;
+        }else{
+            int price = Value(lbl->getString()).asInt();
+            if(price <= GM->getGem()){
+                GM->addGem(-price);
+                pickHero(0, 2);
+                saveGem = true;
+                saveInventory = true;
+            }else{
+                showInstanceMessage(LM->getText("not enough gems"));
+            }
+        }
+    }else if(btn->getTag() == 1){
+        if (GM->getGoldKey() > 0) {
+            GM->addGoldKey(-1);
+            pickHero(2, 4);
+            saveKey = true;
+            saveInventory = true;
+        }else if(lbl->getString().compare("FREE") == 0){
+            std::string value = "";
+            value += BSM->getStrFromTime(now + 60*60*24*7 - 60*30);
+            UDSetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, value);
+            log("value: %s", value.c_str());
+            std::string strNew = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
+            log("strNew: %s", strNew.c_str());
+            pickHero(2, 4);
+            saveInventory = true;
+        }else{
+            int price = Value(lbl->getString()).asInt();
+            if(price <= GM->getGem()){
+                GM->addGem(-price);
+                pickHero(2, 4);
+                saveInventory = true;
+                saveGem = true;
+            }else{
+                showInstanceMessage(LM->getText("not enough gems"));
+            }
+        }
+    }
+    if(saveKey || saveInventory || saveGem){
+        std::vector<int> datas;
+        if(saveGem){
+            datas.push_back(DATA_TYPE_GEM);
+        }
+        if (saveKey) {
+            datas.push_back(DATA_TYPE_KEYS);
+        }
+        if (saveInventory) {
+            updateHeroInventorySaveData();
+            datas.push_back(DATA_TYPE_HERO_INVENTORY);
+        }
+        saveUserData(datas);
+    }
+}
+void Title::pickHero(int minRank, int maxRank){
+    int rankRate[5];
+    rankRate[0] = 80;
+    rankRate[1] = 50;
+    rankRate[2] = 30;
+    rankRate[3] = 10;
+    rankRate[4] = 2;
+    int rateSum = 0;
+    for (int i = minRank; i <= maxRank; i++) {
+        rateSum += rankRate[i];
+    }
+    int pickedRank = -1;
+    int randomNumber = rand()%rateSum;
+    for (int i = minRank; i <= maxRank; i++) {
+        randomNumber -= rankRate[i];
+        if (randomNumber <= 0) {
+            pickedRank = i;
+            break;
+        }
+    }
+    log("picked: %d", pickedRank);
+    std::vector<int> array;
+    int index = rand()%6;
+    if(index == 0){
+        array.push_back(UNIT_HERO_GOBLIN);
+    }else if(index == 1){
+        array.push_back(UNIT_HERO_ORC);
+    }else if(index == 2){
+        array.push_back(UNIT_HERO_LIZARDMAN);
+    }else if(index == 3){
+        array.push_back(UNIT_HERO_ARCHER);
+    }else if(index == 4){
+        array.push_back(UNIT_HERO_SPEARMAN);
+    }else if(index == 5){
+        array.push_back(UNIT_HERO_WEREWOLF);
+    }
+    
+    for(int i = 0; i < array.size(); i++){
+        UnitInfo* info = new UnitInfo();
+        info->unitType = array.at(i);
+        info->level = pickedRank*100;
+        unitInfoListHeroInventory.push_back(info);
+    }
+    updateHeroInventorySaveData();
+    
+    closePopup();
+    showHeroPage();
+    
+    Node* layer = CSLoader::createNode("ItemGet.csb");
+    Node* ndFront = layer->getChildByName("ndFront");
+    this->addChild(layer, POPUP_ZORDER);
+    setAsPopup(layer);
+    layer->setName("itemGet");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    ndFront->setPositionX(-layer->getPositionX());
+    GM->addLightStormEffect(ndFront);
+    
+    ImageView* img;ImageView* imgWhiteClone;
+    ImageView* imgWhite = (ImageView*)layer->getChildByName("imgWhiteCard");
+    int value;
+    ImageView* imgTemp =(ImageView*)layer->getChildByName("imgTemp");
+    float initTime = 0.3f;
+    float fadeInTime = 0.3f;
+    float fadeOutTime = 1.0f;
+    float centerY = size.height/2 + 200;
+    
+    float gap = 130;
+    int columnCount = 5;
+    if (columnCount > array.size()) {
+        columnCount = array.size();
+    }
+    float scale = 1;
+    int a = (int)(array.size())/columnCount;
+    int b = array.size()%columnCount==0?0:1;
+    int rowCount = a + b;
+    float y = centerY - (imgWhite->getContentSize().height*scale + gap)*(rowCount-1)/2;
+    float centerX = size.width/2;
+    int itemCountInThisRow = 0;
+    float totalWidthInThisRow = 0;
+    float itemWidth = imgTemp->getContentSize().width;
+    float whiteStayTime = 0.5f;
+    float showOffTime = 0.5f;
+    float delayBetweenItems = 0.2f;
+    float totalDelay = 0;
+    Sprite* sptChest;
+    Sprite* sptChestOpen;
+    if (minRank == 0) {
+        sptChest = Sprite::create("chestWoodClosed.png");
+        sptChestOpen = Sprite::create("chestWoodOpen.png");
+    }else{
+        sptChest = Sprite::create("chestGoldClosed.png");
+        sptChestOpen = Sprite::create("chestGoldOpen.png");
+    }
+    ndFront->addChild(sptChest);
+    ndFront->addChild(sptChestOpen);
+    sptChest->setPosition(Vec2(size.width/2, 260));
+    sptChestOpen->setPosition(Vec2(size.width/2, 260));
+    sptChestOpen->setOpacity(0);
+    sptChest->runAction(Sequence::create(ScaleTo::create(0.5f, 0.7f), FadeOut::create(0), NULL));
+    sptChestOpen->runAction(Sequence::create(DelayTime::create(0.5f), FadeIn::create(0), JumpBy::create(0.3f, Vec2(0, 0), 100, 1), DelayTime::create(1.0f), ScaleTo::create(0.2f, 0.1f), FadeOut::create(0), NULL));
+    sptChestOpen->setScale(0.8f);
+    sptChestOpen->runAction(Sequence::create(DelayTime::create(0.5f), EaseBackOut::create(ScaleTo::create(0.3f, 1)), NULL));
+    float hundleDur = 0.03f;
+    int hundleAngle = 5;
+    sptChest->runAction(RepeatForever::create(Sequence::create(RotateBy::create(hundleDur, hundleAngle), RotateBy::create(hundleDur*2, -2*hundleAngle), RotateBy::create(hundleDur, hundleAngle), NULL)));
+    for (int i = 0; i < array.size(); i++) {
+        img = (ImageView*)imgTemp->clone();
+        ndFront->addChild(img);
+        value = array.at(i);
+        std::string strFile = GM->getSpineFileName(value);
+        spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+        ndFront->addChild(spChar, 0);
+        spChar->setAnimation(0, "idle", true);
+//        spChar->setScale(0.75f);
+        Sprite* sptShadow = Sprite::create("shadow.png");
+        spChar->addChild(sptShadow, -1);
+        sptShadow->setOpacity(0);
+        sptShadow->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime), FadeIn::create(fadeInTime), NULL));
+        
+        spChar->setOpacity(0);
+        spChar->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime), FadeIn::create(fadeInTime), NULL));
+//        if(spChar->getChildren().size() > 0){
+//            spChar->getChildren().at(0)->setOpacity(0);
+//            spChar->getChildren().at(0)->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime), FadeIn::create(fadeInTime), NULL));
+//        }
+        imgWhiteClone = (ImageView*)imgWhite->clone();
+        img->getChildByName("lbl")->runAction(Sequence::create(DelayTime::create(showOffTime + initTime), FadeOut::create(fadeOutTime), NULL));
+        int rareness = pickedRank;
+        imgWhiteClone->runAction(Sequence::create(DelayTime::create(showOffTime + initTime), FadeIn::create(fadeInTime), DelayTime::create(whiteStayTime + rareness*0.1f), FadeOut::create(fadeOutTime), NULL));
+        img->setColor(getRankColor(rareness));
+        int angle = 5;
+        float dur = 0.05f;
+        imgWhiteClone->runAction(Sequence::create(DelayTime::create(showOffTime + initTime), FadeIn::create(0.1f), NULL));
+        imgWhiteClone->runAction(RepeatForever::create(Sequence::create(RotateBy::create(dur, angle), RotateBy::create(dur*2, -2*angle), RotateBy::create(dur, angle), NULL)));
+        
+        
+        img->getChildByName("lbl")->setPosition(img->getContentSize()/2);
+        spChar->setPosition(Vec2(img->getContentSize().width/2, img->getContentSize().height/2 + 2));
+        if(array.size() - i > 0){
+            itemCountInThisRow = columnCount;
+        }else{
+            itemCountInThisRow = array.size()%columnCount;
+        }
+        totalWidthInThisRow = itemCountInThisRow*(itemWidth + gap) - gap;
+        img->setPosition(Vec2(centerX - totalWidthInThisRow*scale/2 + (i%columnCount)*(itemWidth + gap)*scale + itemWidth*scale/2, y + (i/columnCount)*(img->getContentSize().height*scale + gap/2)));
+        
+        spChar->setPosition(img->getPosition() + Vec2(0, -60));
+        
+        ndFront->addChild(imgWhiteClone, 1);
+        
+        float dropDistance = -500;
+        img->setPositionY(img->getPositionY() + dropDistance);
+        imgWhiteClone->setPosition(img->getPosition());
+        float openDelayTime = 0.51f;
+        img->setOpacity(0);
+        img->runAction(Sequence::create(DelayTime::create(totalDelay + openDelayTime),FadeIn::create(0.1f), nullptr));
+        img->runAction(Sequence::create(DelayTime::create(totalDelay + openDelayTime), EaseBackOut::create(MoveBy::create(showOffTime, Vec2(0, -dropDistance))), NULL));
+        imgWhiteClone->setOpacity(0);
+        imgWhiteClone->runAction(Sequence::create(DelayTime::create(totalDelay + openDelayTime),FadeIn::create(0.1f), nullptr));
+        imgWhiteClone->runAction(Sequence::create(DelayTime::create(totalDelay + openDelayTime), EaseBackOut::create(MoveBy::create(showOffTime, Vec2(0, -dropDistance))), NULL));
+        
+        showOffTime += delayBetweenItems;
+    }
+    
+    Button* btnAgain = (Button*)layer->getChildByName("btnAgain");
+    if (minRank == 0) {
+        btnAgain->addClickEventListener(CC_CALLBACK_0(Title::onHeroWoodChestGachaAgainClick, this));
+    }else{
+        btnAgain->addClickEventListener(CC_CALLBACK_0(Title::onHeroGoldChestGachaAgainClick, this));
+    }
+    
+    btnAgain->setOpacity(0);
+    btnAgain->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime), FadeIn::create(fadeInTime), NULL));
+    Text* lblPickCount = (Text*)btnAgain->getChildByName("lblPickCount");
+    lblPickCount->setString(strmake("x%d", (int)array.size()));
+    btnAgain->setTag(array.size());
+    Text* lblPrice = (Text*)btnAgain->getChildByName("lblPrice");
+    if (minRank == 0) {
+        lblPrice->setString("50");
+    }else{
+        lblPrice->setString("290");
+    }
+    
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime + 1), FadeIn::create(fadeInTime), NULL));
+    
+    imgTemp->removeFromParent();
+    imgWhite->removeFromParent();
+    
+    //    BHUD->showIndicator();
+    
+}
+Color3B Title::getRankColor(int rank){
+    if (rank == 0) {
+        return Color3B(255, 255, 255);
+    }else if (rank == 1) {
+        return Color3B(57, 211, 205);
+    }else if (rank == 2) {
+        return Color3B(0, 180, 241);
+    }else if (rank == 3) {
+        return Color3B(255, 148, 183);
+    }else if (rank == 4) {
+        return Color3B(179, 22, 135);
+    }
+    return Color3B::WHITE;
+}
+void Title::onHeroWoodChestGachaAgainClick(){
+    int woodChestPrice = 60 - 10;
+    if(GM->getGem() < woodChestPrice){
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    
+    closePopup();
+    GM->addGem(-woodChestPrice);
+    pickHero(0, 2);
+    
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    saveUserData(datas);
+    
+}
+void Title::onHeroGoldChestGachaAgainClick(){
+    int goldChestPrice = 300 - 10;
+    if(GM->getGem() < goldChestPrice){
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    
+    closePopup();
+    GM->addGem(-goldChestPrice);
+    pickHero(2, 4);
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    saveUserData(datas);
+}
+void Title::updateHeroInventorySaveData(){
+    std::string strInventory = "_";
+    for(auto unitInfo: unitInfoListHeroInventory){
+        strInventory += strmake("%d/%d_",unitInfo->unitType, unitInfo->level + unitInfo->rank*100);
+    }
+    UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory);
+}
+
+void Title::updateHeroDeckSaveData(){
+    std::string strDeck = "_";
+    for(auto unitInfo: unitInfoListHeroDeck){
+        strDeck += strmake("%d/%d_",unitInfo->unitType, unitInfo->level + unitInfo->rank*100);
+    }
+    
+    UDSetStr(KEY_UNITS_HERO_DECK, strDeck);
+}
+void Title::onHeroShopClick(){
+    if(this->getChildByName("shopLayer") != nullptr){
+        return;
+    }
+    GM->playSoundEffect(SOUND_PAPER_FLIP);
+    Node* layer = CSLoader::createNodeWithVisibleSize("Shop.csb");
+    this->addChild(layer, 4);
+    layer->setName("shopLayer");
+    setAsPopup(layer);
+    layer->setTag(0);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    
+    layer->getChildByName("imgBackground")->setLocalZOrder(-100);
+    layer->getChildByName("btnTab0")->setVisible(false);
+    layer->getChildByName("imgTabIcon0")->setVisible(false);
+//    moveTopBarTo(layer);
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onCloseShop, this));
+    btn->setPositionY(btn->getPositionY() + layer->getPositionY());
+    
+    ndTopBar->removeFromParentAndCleanup(false);
+    layer->addChild(ndTopBar);
+    
+//    onHeroShopTabClick(layer->getChildByName("btnTab0"));
+    for (int i = 0; i < 3; i++) {
+        btn = (Button*)layer->getChildByName(strmake("btnTab%d", i));
+        btn->addClickEventListener(CC_CALLBACK_1(Title::onHeroShopTabClick, this));
+        layer->getChildByName(strmake("imgTabIcon%d", i))->setLocalZOrder(100);
+    }
+    onHeroShopTabClick(layer->getChildByName(strmake("btnTab%d", 1)));
+}
+int Title::getMineGoldPerHour(int level){
+    string str = GM->buildingAbilityForCastleLevelTable[Value(level).asString()].asValueMap()["mine"].asString();
+    return Value(GM->split(str, "_").at(0)).asInt();
+}
+void Title::onHeroShopTabClick(Ref* ref){
+    BTN_FROM_REF
+    Node* layer = this->getChildByName("shopLayer");
+    int currentTab = btn->getTag();
+    Node* tabBack = layer->getChildByName("tabBack");
+    for (int i = 0; i < 3; i++) {
+        btn = (Button*)layer->getChildByName(strmake("btnTab%d", i));
+        
+        btn->setContentSize(i == currentTab?Size(250.35f, 237.16f):Size(250.35f, 199.01));
+        btn->setColor(i == currentTab?Color3B::WHITE:Color3B::GRAY);
+        btn->setLocalZOrder(tabBack->getLocalZOrder() + (i == currentTab?1:-1));
+        layer->getChildByName(strmake("imgTabIcon%d", i))->setLocalZOrder(btn->getLocalZOrder());
+    }
+    
+    Button* btnTemp;Text* lbl;
+    ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
+    sv->removeAllChildren();
+    int x = 387.93f;
+    int gapX = 740.45f;
+    int y = 429.55f;
+    if (currentTab == 0) {
+        
+    }else if (currentTab == 1) {
+        for (int i = 0; i < 3; i++) {
+            btn = (Button*)((Button*)layer->getChildByName(strmake("btnGold%d", i)))->clone();
+            btn->addClickEventListener(CC_CALLBACK_1(Title::onBuyGold, this));
+            sv->addChild(btn);
+            btn->setPosition(Vec2(x, y));
+            x += gapX;
+            
+            lbl = (Text*)btn->getChildByName("lblTitle");
+            LM->setLocalizedString(lbl, "gold text");
+            int perHour = getMineGoldPerHour(UDGetInt(KEY_CASTLE_LEVEL, 0));
+            lbl = (Text*)btn->getChildByName("lblAmount");
+            int amount = perHour*(i*2 + 1);
+            lbl->setString(Value(amount).asString());
+            lbl = (Text*)btn->getChildByName("lblGem");
+            lbl->setString(Value(GM->getGemForHour()*(i*2 + 1)).asString());
+        }
+        for (int i = 0; i < 3; i++) {
+            btn = (Button*)((Button*)layer->getChildByName(strmake("btnTree%d", i)))->clone();
+            btn->addClickEventListener(CC_CALLBACK_1(Title::onBuyTree, this));
+            sv->addChild(btn);
+            btn->setPosition(Vec2(x, y));
+            x += gapX;
+            
+            lbl = (Text*)btn->getChildByName("lblTitle");
+            LM->setLocalizedString(lbl, "tree");
+            int perHour = 40*60/10;
+            lbl = (Text*)btn->getChildByName("lblAmount");
+            int amount = perHour*(i*2 + 1);
+            lbl->setString(Value(amount).asString());
+            lbl = (Text*)btn->getChildByName("lblGem");
+            lbl->setString(Value(GM->getGemForHour()*(i*2 + 1)/2).asString());
+        }
+    }else if (currentTab == 2) {
+        btn = (Button*)((Button*)layer->getChildByName("btnStarterKeys"))->clone();
+        btn->addClickEventListener(CC_CALLBACK_0(Title::onBuyStartKeys, this));
+        sv->addChild(btn);
+        btn->setPosition(Vec2(x, y));
+        x += gapX;
+        
+        lbl = (Text*)btn->getChildByName("lblTitle");
+        lbl->setString(LM->getText("starter pack"));
+        lbl = (Text*)btn->getChildByName("lblPrice");
+        lbl->setFontName(LM->getLocalizedFont());
+        lbl->setString(GameSharing::getPriceLocale("cc_starterkey"));
+        
+        for (int i = 0; i < 4; i++) {
+            btn = (Button*)((Button*)layer->getChildByName(strmake("btnGem%d", i)))->clone();
+            btn->addClickEventListener(CC_CALLBACK_1(Title::onBuyGem, this));
+            sv->addChild(btn);
+            btn->setPosition(Vec2(x, y));
+            x += gapX;
+            
+            lbl = (Text*)btn->getChildByName("lblTitle");
+            //            PPLabel* lblPP = replaceTextToPPLabel(lbl);
+            lbl->setString(strmake("%s %d", LM->getText("gem pack").c_str(), i+1));
+            //            lblPP->setWidth(btn->getContentSize().width*0.8f);
+            lbl = (Text*)btn->getChildByName("lblPrice");
+            lbl->setFontName(LM->getLocalizedFont());
+            if(i == 0){
+                lbl->setString(GameSharing::getPriceLocale("cc_gem3"));
+            }else if(i == 1){
+                lbl->setString(GameSharing::getPriceLocale("cc_gem10"));
+            }else if(i == 2){
+                lbl->setString(GameSharing::getPriceLocale("cc_gem50"));
+            }else if(i == 3){
+                lbl->setString(GameSharing::getPriceLocale("cc_gem100"));
+            }
+        }
+    }
+    sv->setInnerContainerSize(Size(x, sv->getContentSize().height));
+}
+void Title::onBuyStartKeys(){
+    GameSharing::buyItem(IAP_DETAIL_GEM_3);
+    showIndicator();
+}
+void Title::onBuyTree(Ref* ref){
+    BTN_FROM_REF
+    int index = btn->getTag();
+    Text* lbl = (Text*)btn->getChildByName("lblGem");
+    int gem = Value(lbl->getString()).asInt();
+    lbl = (Text*)btn->getChildByName("lblAmount");
+    int amount = Value(lbl->getString()).asInt();
+    if (GM->getGem() >= gem) {
+        GM->addGem(-gem);
+        GM->addTree(amount);
+    }else{
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    datas.push_back(DATA_TYPE_TREE);
+    saveUserData(datas);
+}
+void Title::onBuyGold(Ref* ref){
+    BTN_FROM_REF
+    int index = btn->getTag();
+    Text* lbl = (Text*)btn->getChildByName("lblGem");
+    int gem = Value(lbl->getString()).asInt();
+    lbl = (Text*)btn->getChildByName("lblAmount");
+    int amount = Value(lbl->getString()).asInt();
+    if (GM->getGem() >= gem) {
+        GM->addGem(-gem);
+        GM->addCoin(amount);
+    }else{
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    datas.push_back(DATA_TYPE_GOLD);
+    saveUserData(datas);
+}
+void Title::saveUserData(std::vector<int>& datas){
+    std::string strData = "";
+    for(int i = 0; i < datas.size();i++){
+        if (datas.at(i) == DATA_TYPE_GEM) {
+            strData = strmake("%s&gem=%d", strData.c_str(), GM->getGem());
+        }else if (datas.at(i) == DATA_TYPE_GOLD) {
+            strData = strmake("%s&gold=%d", strData.c_str(), GM->getCoin());
+        }else if (datas.at(i) == DATA_TYPE_TREE) {
+            strData = strmake("%s&tree=%d", strData.c_str(), GM->getTree());
+        }else if (datas.at(i) == DATA_TYPE_BUILDING) {
+            strData = strmake("%s&buildings=%s", strData.c_str(), UDGetStr(KEY_BUILDINGS, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_INVENTORY) {
+            strData = strmake("%s&inventory=%s", strData.c_str(), UDGetStr(KEY_UNITS_INVENTORY, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_DECK) {
+            strData = strmake("%s&deck=%s", strData.c_str(), UDGetStr(KEY_UNITS_DECK, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_KEYS) {
+            strData = strmake("%s&keys=%s", strData.c_str(), UDGetStr(KEY_KEYS, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_KEY_GET_STATE) {
+            strData = strmake("%s&keygetstate=%s", strData.c_str(), UDGetStr(KEY_KEY_GET_STATE, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_IAP) {
+            strData = strmake("%s&iap_list=%s&iap_total=%d", strData.c_str(), UDGetStr(KEY_IAP_LIST, "").c_str(), UDGetInt(KEY_IAP_TOTAL, 0));
+        }else if (datas.at(i) == DATA_TYPE_SEARCH_STATE) {
+            strData = strmake("%s&search_state=%s", strData.c_str(), UDGetStr(KEY_SEARCH_STATE, "000").c_str());
+        }else if (datas.at(i) == DATA_TYPE_HERO_INVENTORY) {
+            strData = strmake("%s&hivt=%d", strData.c_str(), GM->getTree());
+        }else if (datas.at(i) == DATA_TYPE_HERO_DECK) {
+            strData = strmake("%s&hdck=%d", strData.c_str(), GM->getTree());
+        }
+    }
+    strData = strData.substr(1); // remove first &
+    BSM->saveUserData(strData);
+    log("save data: %s", strData.c_str());
+    datas.clear();
+}
+void Title::onBuyGem(Ref* ref){
+    BTN_FROM_REF
+    int index = btn->getTag();
+    
+    if(index == 0){
+        GameSharing::buyItem(IAP_DETAIL_GEM_3);
+    }else if(index == 1){
+        GameSharing::buyItem(IAP_DETAIL_GEM_10);
+    }else if(index == 2){
+        GameSharing::buyItem(IAP_DETAIL_GEM_50);
+    }else if(index == 3){
+        GameSharing::buyItem(IAP_DETAIL_GEM_100);
+    }
+    
+    showIndicator();
+}
+void Title::onHardModeClick(){
+    showInstanceMessage(LM->getText("coming soon")); // test
+}
 void Title::onPurchaseChapterClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
     if(btn->getTag() == 1){
         GameSharing::buyItem(IAP_DETAIL_CHAPTER2);
+    }else if(btn->getTag() == 2){
+        GameSharing::buyItem(IAP_DETAIL_CHAPTER3);
     }
 }
 void Title::onChapterClick(Ref* ref){
@@ -789,6 +2307,8 @@ void Title::onChapterClick(Ref* ref){
     }else if(btn->getTag() == 1){
         showStageSelect(btn->getTag());
     }else if(btn->getTag() == 2){
+        showStageSelect(btn->getTag());
+    }else if(btn->getTag() == 3){
         showInstanceMessage(LM->getText("coming soon")); // test
     }
 }
@@ -799,6 +2319,7 @@ void Title::showStageSelect(int chapter){
     this->addChild(layer, 4);
     layer->setName("stageSelect");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btnBlock = (Button*)layer->getChildByName("btnBlock");
@@ -1098,12 +2619,6 @@ void Title::onMusicClick(){
     }
 }
 
-void Title::onUpgradeClick(){
-    
-}
-void Title::onShopClick(){
-    
-}
 void Title::showInstanceMessage(std::string msg, int offset){
     Label* lbl = LM->getLocalizedLabel(msg.c_str(), Color4B(255, 255, 255, 255), 50);//Label::createWithSystemFont(msg, "Thonburi", 50);
     this->addChild(lbl, 300);
@@ -1320,6 +2835,133 @@ void Title::titleUpdate(float dt){
     if(isTitleEnd){
         return;
     }
+    if(lblGemInHud && GM->getGem() != lastGemUpdated){
+        lastGemUpdated = GM->makeNumberCloseTo(lastGemUpdated, GM->getGem());
+        lblGemInHud->setString(Value(lastGemUpdated).asString());
+    }
+    if(lblGoldInHud && GM->getCoin() != lastGoldUpdated){
+        lastGoldUpdated = GM->makeNumberCloseTo(lastGoldUpdated, GM->getCoin());
+        lblGoldInHud->setString(Value(lastGoldUpdated).asString());
+        float rate = GM->getCoin()*1.0f/getMaxGold();
+        if(rate > 1){
+            rate = 1;
+        }
+        ndTopBar->getChildByName("imgGoldGuage")->setContentSize(Size(443.56f*rate, 128.90f));
+    }
+    if(lblTreeInHud && GM->getTree() != lastTreeUpdated){
+        lastTreeUpdated = GM->makeNumberCloseTo(lastTreeUpdated, GM->getTree());
+        lblTreeInHud->setString(Value(lastTreeUpdated).asString());
+        float rate = GM->getTree()*1.0f/getMaxTree();
+        if(rate > 1){
+            rate = 1;
+        }
+        ndTopBar->getChildByName("imgTreeGuage")->setContentSize(Size(443.56f*rate, 128.90f));
+    }
+    
+    time_t now = BSM->getCurrentTimeT();
+    std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
+    time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
+    bool isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
+    
+    std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
+    time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
+    bool isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
+    
+    Node* layer = this->getChildByName("heroPage");
+    
+    Node* ndChapterSelect = this->getChildByName("chapterSelect");
+    if(ndChapterSelect && ndChapterSelect != nullptr){
+        ndChapterSelect->getChildByName("btnHero")->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
+    }
+    
+//    layer->getChildByName("btnTrainBR")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady);
+    if(layer && layer != nullptr){
+        Button* btn = (Button*)layer->getChildByName("btnGacha0");
+        btn->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady);
+        
+        Text* lbl = (Text*)btn->getChildByName("lbl");
+        ImageView* img = (ImageView*)btn->getChildByName("imgIcon");
+        if(GM->getWoodKey() > 0){
+            lbl->setString(Value(GM->getWoodKey()).asString());
+            img->loadTexture("keyWood.png");
+            img->setContentSize(Size(31, 60));
+        }else{
+            lbl->setString(isWoodChestGachaFreeReady?"FREE":"60");
+            img->loadTexture("gem.png");
+            img->setContentSize(Size(97, 78));
+        }
+        
+        Text* lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
+        lblTimeLeft->setVisible(!isWoodChestGachaFreeReady);
+        lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextWoodChestGachaFreeTimeT, now)).c_str()));
+        
+        btn = (Button*)layer->getChildByName("btnGacha1");
+        btn->getChildByName("imgRedDot")->setVisible(isGoldChestGachaFreeReady);
+        lbl = (Text*)btn->getChildByName("lbl");
+        img = (ImageView*)btn->getChildByName("imgIcon");
+        if(GM->getGoldKey() > 0){
+            lbl->setString(Value(GM->getGoldKey()).asString());
+            img->loadTexture("keyGold.png");
+            img->setContentSize(Size(31, 60));
+        }else{
+            lbl->setString(isGoldChestGachaFreeReady?"FREE":"300");
+            img->loadTexture("gem.png");
+            img->setContentSize(Size(97, 78));
+        }
+        
+        lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
+        lblTimeLeft->setVisible(!isGoldChestGachaFreeReady);
+        lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextGoldChestGachaFreeTimeT, now)).c_str()));
+    }
+    if(GM->iapFlag == IAP_FLAG_SUCCESS){
+        GM->consumeSkuNameList.push_back(GM->iapDetail);
+        log("consumeSkuNameList push_back: %d", (int)GM->consumeSkuNameList.size());
+    }
+    if(GM->consumeSkuNameList.size() > 0){
+        // remove sku ID from consomeSkuNameList
+        for (int i = 0; i < GM->consumeSkuNameList.size(); i++) {
+            //            if(GM->consumeSkuNameList.at(i).compare(GM->skuID) == 0){
+            GM->iapDetail = GM->consumeSkuNameList.at(i);
+            GM->consumeSkuNameList.erase(GM->consumeSkuNameList.begin() + i);
+            break;
+            //            }
+        }
+        
+        hideIndicator();
+        log("iap success gem!");
+        
+        std::vector<int> datas;
+        int iapPoint = UDGetInt(KEY_IAP_TOTAL, 0);
+        if (GM->iapDetail.compare(IAP_DETAIL_STARTER_KEY) == 0) {
+            GM->addGem(660);
+            GM->addWoodKey(5);
+            GM->addGoldKey(5);
+            iapPoint += 10000;
+        }
+        std::string iapList = UDGetStr(KEY_IAP_LIST, "");
+        iapList += GM->iapDetail + "|";
+        UDSetStr(KEY_IAP_LIST, iapList);
+        UDSetInt(KEY_IAP_TOTAL, iapPoint);
+        
+        datas.push_back(DATA_TYPE_KEYS);
+        datas.push_back(DATA_TYPE_IAP);
+        datas.push_back(DATA_TYPE_GEM);
+        saveUserData(datas);
+        showInstanceMessage(LM->getText("purchase success"));
+    }else if(GM->iapFlag == IAP_FLAG_FAILED){
+        GM->iapFlag = IAP_FLAG_INIT;
+        log("iap failed in BHUD!");
+        hideIndicator();
+    }
+    
+    // consume after give reward
+    if(GM->iapFlag == IAP_FLAG_SUCCESS){
+        GM->iapFlag = IAP_FLAG_INIT;
+        GameSharing::consumePurchased();
+    }
+    
+    
+    
 //    if (GM->iapStateFlag == IAP_STATE_NOT_INIT) {
 //        lblLoading->setString("Loading products...");
 //        return;
@@ -1360,7 +3002,9 @@ void Title::titleUpdate(float dt){
             }
         }else{
             if (UDGetStr(KEY_SAVED_ID, "-1").compare(GM->playerIDWithGPSID) != 0) {
-                UDSetStr(KEY_SAVED_ID, GM->playerIDWithGPSID);
+                std::string gpsID = "";
+                gpsID += GM->playerIDWithGPSID;
+                UDSetStr(KEY_SAVED_ID, gpsID);
                 this->runAction(Sequence::create(DelayTime::create(2), CallFunc::create(CC_CALLBACK_0(Title::restartTheGame, this)), NULL));
                 settingLog("Restore code: 3");
                 return;
@@ -1479,6 +3123,10 @@ void Title::titleUpdate(float dt){
             UDSetBool(KEY_CHAPTER_2_PURCHASED, true);
             closePopup();
             showChapterSelect();
+        }else if(GM->iapDetail.compare(IAP_DETAIL_CHAPTER3) == 0){
+            UDSetBool(KEY_CHAPTER_3_PURCHASED, true);
+            closePopup();
+            showChapterSelect();
         }
     }else if(GM->iapFlag == IAP_FLAG_FAILED){
         GM->iapFlag = IAP_FLAG_INIT;
@@ -1490,47 +3138,28 @@ void Title::titleUpdate(float dt){
         onMessageBoxReceived();
         strMessageBox = "";
     }
-    
-    // test
-//    if(true){
-//    if(GameSharing::IsGPGAvailable() && GameSharing::getPlayerID().compare("notset") != 0){
-//        if(isGameCenterLoginRequestedFromShowColosseum){
-//            isGameCenterLoginRequestedFromShowColosseum = false;
-//            showColosseum();
-//        }
-//
-//        if(!isUserInfoCreatedOrNotKnow){
-//            if(!isWaitingForUserInfoCreated){
-//                log("set user info starts");
-//                isWaitingForUserInfoCreated = true;
-//
-//                std::string requestData =
-//                "id=" + GameSharing::getPlayerID() + "&" +
-//                "level=" + Value(0).asString() + "&" +
-//                "exp=" + Value(0).asString() + "&" +
-//                "messageBox=" + "e" + "&" +
-//                "inventory=" + "e";
-//                log("set user info about to");
-//
-//                BSM->setUserInfo(requestData);
-//                log("set user info ends");
-//            }
-//        }else if(!isUserInfoReceived){
-//            if(!isWaitingForUserInfo){
-//                isWaitingForUserInfo = true;
-//                log("get user info starts");
-//                BSM->getUserInfo(GameSharing::getPlayerID());
-//                log("get user info ends");
-//            }
-//        }
-//    }
-    
-//    if(stageRequested >= 0){
-//        Button* btn = Button::create();
-//        btn->setTag(stageRequested);
-//        onStageClick(btn);
-//        stageRequested = -1;
-//    }
+}
+int Title::getMaxGold(int level){
+    string str = GM->castleStorageForCastleLevelTable[Value(level).asString().c_str()].asValueMap()["resources"].asString();
+    if(str.length() > 0){
+        return Value(GM->split(str, "_").at(0)).asInt();
+    }else{
+        return 400000;
+    }
+}
+int Title::getMaxGold(){
+    return getMaxGold(UDGetInt(KEY_CASTLE_LEVEL, 0));
+}
+int Title::getMaxTree(){
+    return getMaxTree(UDGetInt(KEY_CASTLE_LEVEL, 0));
+}
+int Title::getMaxTree(int level){
+    string str = GM->castleStorageForCastleLevelTable[Value(level).asString().c_str()].asValueMap()["resources"].asString();
+    if(str.length() > 0){
+        return Value(GM->split(str, "_").at(1)).asInt();
+    }else{
+        return 600000;
+    }
 }
 void Title::settingLog(std::string str){
     Node* layer = this->getChildByName("settingPopup");
@@ -1552,6 +3181,7 @@ void Title::showRegisterName(){
     this->addChild(layer, POPUP_ZORDER);
     setAsPopup(layer);
     layer->setName("namePopup");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn;Text* lbl;
     Node* background = layer->getChildByName("imgBackground");
     lbl = (Text*)background->getChildByName("lblTitle");
@@ -1612,6 +3242,7 @@ void Title::showUserSelect(){
     this->addChild(layer, POPUP_ZORDER);
     setAsPopup(layer);
     layer->setName("userSelect");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn;Text* lbl;
     Node* background = layer->getChildByName("imgBackground");
     lbl = (Text*)background->getChildByName("lblTitle");
@@ -1643,6 +3274,7 @@ void Title::showInputUserIDAndName(){
     this->addChild(layer, POPUP_ZORDER);
     setAsPopup(layer);
     layer->setName("accountChange");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn;Text* lbl;
     Node* background = layer->getChildByName("imgBackground");
     lbl = (Text*)background->getChildByName("lblTitle");
@@ -1685,6 +3317,7 @@ void Title::showFreeAppAlert(){
     layer->setName("freeAdsAlert");
     setAsPopup(layer);
     layer->setTag(0);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btnBlock = (Button*)layer->getChildByName("btnBlock");
@@ -1763,6 +3396,7 @@ void Title::showColosseum(){
     layer->setName("colosseum");
     setAsPopup(layer);
     layer->setTag(0);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btnBlock = (Button*)layer->getChildByName("btnBlock");
@@ -1789,8 +3423,9 @@ void Title::showColosseum(){
     lbl = (Text*)layer->getChildByName("lblYourID");
     lbl->setString(strmake("Your ID: %s", UDGetStr(KEY_SAVED_ID).c_str()));//GameSharing::getPlayerID().c_str()));
     
-    int timeInSec = (int)(BSM->getCurrentTime()/1000);
-    int timeLeft = timeInSec%(60*60*24);
+//    int timeInSec = (int)(BSM->getCurrentTimeT());
+    
+    int timeLeft = BSM->getTimeLeftToNewDay();
     lbl = (Text*)layer->getChildByName("lblLeagueTimeLeft");
     lbl->setString(GM->getTimeLeftInString(timeLeft));
     
@@ -1837,7 +3472,9 @@ void Title::onVideoForTicketClick(){
     if(GameSharing::isVideoAvailable()){
         log("on vido click");
         GM->showVideo(VIDEO_TICKET);
-        UDSetInt(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, BSM->getCurrentTime());
+        std::string value = "";
+        value += BSM->getStrFromTime(BSM->getCurrentTimeT());
+        UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
     }else{
         log("on vido click");
         showInstanceMessage(LM->getText("video not available"));
@@ -2018,19 +3655,24 @@ void Title::updateColosseumPopup(float dt){
         }
     }
     if(getChildByName("colosseum")){
-        int timeInSec = (int)(BSM->getCurrentTime());
-        int timeLeft = 60*60*24 - timeInSec%(60*60*24);
+//        int timeInSec = (int)(BSM->getCurrentTime());
+//        int timeLeft = 60*60*24 - timeInSec%(60*60*24);
+        int timeLeft = BSM->getTimeLeftToNewDay();
         Node* layer = getChildByName("colosseum");
         Text* lbl = (Text*)layer->getChildByName("lblLeagueTimeLeft");
         lbl->setString(GM->getTimeLeftInString(timeLeft));
         
-        int lastPlayTime = UDGetInt(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, 0);
-        if(lastPlayTime > timeInSec){
-            UDSetInt(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, timeInSec);
-            lastPlayTime = timeInSec;
+        std::string strLastPlayTime = UDGetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, "");
+        time_t lastPlayTimeT = BSM->getTimeTFromStr(strLastPlayTime);
+        time_t now = BSM->getCurrentTimeT();
+        if(difftime(now, lastPlayTimeT) < 0){
+            std::string value = "";
+            value += BSM->getStrFromTime(now);
+            UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
+            lastPlayTimeT = now;
         }
         int cooltime = 60*60;
-        timeLeft = cooltime - (timeInSec - lastPlayTime);//60*60*24 - timeInSec%(60*60*24);
+        timeLeft = cooltime - (difftime(now, lastPlayTimeT));//60*60*24 - timeInSec%(60*60*24);
         lbl = (Text*)layer->getChildByName("lblTimerForVideo");
         Button* btn = (Button*)layer->getChildByName("btnVideo");
         if(timeLeft >= 0){
@@ -2051,6 +3693,7 @@ void Title::showTicketOffer(){
     this->addChild(layer, 5);
     layer->setName("ticket offer");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     Text* lbl = (Text*)layer->getChildByName("lblTitle");
     lbl->setString(LM->getText("not enough ticket"));
@@ -2099,7 +3742,7 @@ void Title::onPlayColosseum(){
 //    UDSetInt(KEY_LAST_TICKET_USED_TIME, BSM->getCurrentTime());
 //    BSM->forceResultLeague();
 //    return; // test
-    int day = (int)(BSM->getCurrentTime()/(60*60*24)) + 1;
+    int day = (int)(BSM->getCurrentTimeT()/(60*60*24)) + 1;
     int stageIndex = day%7;
     if(day < 0 || day > 6){
         day = rand()%7;
@@ -2174,6 +3817,7 @@ void Title::showLeagueResult(){
     Node* layer = CSLoader::createNode("ColosseumReward.csb");
     this->addChild(layer);
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     UDSetBool(KEY_GOLDEN_TICKET_FREE, true);
     UDSetInt(KEY_CURRENT_COLOSSEUM_LEAGUE_INDEX, DEFAULT_LEAGUE_INDEX);

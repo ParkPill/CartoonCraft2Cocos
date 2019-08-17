@@ -50,13 +50,11 @@
 #define DATA_TYPE_SEARCH_STATE 7
 #define DATA_TYPE_LAST_LAUNCH_DATE 8
 #define DATA_TYPE_SEARCH_ITEMS 9
-//#define DATA_TYPE_ 9
-//#define DATA_TYPE_ 10
-//#define DATA_TYPE_ 11
-//#define DATA_TYPE_ 12
-//#define DATA_TYPE_ 13
-//#define DATA_TYPE_ 14
-#define DATA_TYPE_COUNT 7
+#define DATA_TYPE_HERO_INVENTORY 10
+#define DATA_TYPE_HERO_DECK 11
+#define DATA_TYPE_KEYS 12
+#define DATA_TYPE_KEY_GET_STATE 13
+#define DATA_TYPE_COUNT 14
 using namespace cocos2d;
 using namespace cocos2d::ui;
 class BattleHud : public Layer
@@ -74,7 +72,7 @@ public:
     void onLocalBattleClick(Ref* ref);
     void onNetworkBattleClick(Ref* ref);
     void onCompleteRestingClick(Ref* ref);
-    void onBossBattleClick(Ref* ref);
+    
     void onShopClick();
     void onBuyWorkersClick(Ref* ref);
     
@@ -241,7 +239,7 @@ public:
     bool isVisitRequested = false;
     
     float lastTimeLeftToMidnight = 90000;
-    double shieldEndTime = 0;
+    time_t shieldEndTimeT = 0;
     bool addShieldRequested = false;
     void onBuyShieldWithGem(Ref* ref);
     void onPlayForShieldClick(Ref* ref);

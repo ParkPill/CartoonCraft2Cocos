@@ -18,6 +18,7 @@ bool BattleHud::init()
         return false;
     }
     
+//    UDSetStr("newminebutton9_15", ""); // test
 //    UDSetStr(KEY_SAVED_ID, "2"); // test
 //    BSM->requestedID = UDGetStr(KEY_SAVED_ID, "-1"); // test
     isLoadAllUserDataRequested = true;
@@ -28,7 +29,7 @@ bool BattleHud::init()
     BHUD = this;
     GM->setHudLayer(nullptr);
     GM->titleLayer = nullptr;
-    hudLayer = CSLoader::createNode("Battle.csb");
+    hudLayer = CSLoader::createNodeWithVisibleSize("Battle.csb");
     this->addChild(hudLayer, 200);
 //    hudLayer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     ndTopBar = hudLayer->getChildByName("ndTopBar");
@@ -126,7 +127,10 @@ bool BattleHud::init()
     
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(keyListener, this);
     
-    
+    // test
+//    for(int i = 0; i < 3; i++){
+//        UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, i).c_str(), false);
+//    }
     
     // init done
     return true;
@@ -166,10 +170,12 @@ void BattleHud::onVideoStoreClick(){
     setAsPopup(layer);
     layer->setTag(0);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->getChildByName("imgBackground")->setLocalZOrder(-100);
     moveTopBarTo(layer);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
+    btn->setPositionY(btn->getPositionY() + layer->getPositionY());
     
     for (int i = 0; i < 3; i++) {
         btn = (Button*)layer->getChildByName(strmake("btnTab%d", i));
@@ -223,12 +229,14 @@ void BattleHud::onVideoStoreClick(){
     onVideoTabClick(layer->getChildByName("btnTab0"));
 }
 void BattleHud::onVideoRandomClick(){
-    int nextIndex;
-    double watchedTime;
-    double now = BSM->getCurrentTime();
-        watchedTime = UDGetDouble(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, 0);
-        nextIndex = UDGetInt(KEY_VIDEO_STORE_RANDOM_INDEX, 0);
-    bool isReady = now - watchedTime > videoStoreWaitForNextVideoTime;
+    int nextIndex = UDGetInt(KEY_VIDEO_STORE_RANDOM_INDEX, 0);
+    
+//    double now = BSM->getCurrentTime();
+//    double watchedTime = UDGetDouble(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, 0);
+//    bool isReady = now - watchedTime > videoStoreWaitForNextVideoTime;
+    std::string strWatchedTime = UDGetStr(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, "");
+    time_t watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
+    bool isReady = difftime(BSM->getCurrentTimeT(), watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){
         GM->showVideo(VIDEO_STORE_RANDOM);
     }else{
@@ -238,11 +246,11 @@ void BattleHud::onVideoRandomClick(){
 }
 void BattleHud::onVideoUnitClick(){
     int nextIndex;
-    double watchedTime;
-    double now = BSM->getCurrentTime();
-    watchedTime = UDGetDouble(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, 0);
+    time_t now = BSM->getCurrentTimeT();
+    std::string strWatchedTime = UDGetStr(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, "");
+    time_t watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
     nextIndex = UDGetInt(KEY_VIDEO_STORE_UNIT_INDEX, 0);
-    bool isReady = now - watchedTime > videoStoreWaitForNextVideoTime;
+    bool isReady = difftime(now, watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){
         GM->showVideo(VIDEO_STORE_UNIT);
     }else{
@@ -252,11 +260,11 @@ void BattleHud::onVideoUnitClick(){
 }
 void BattleHud::onVideoGemClick(){
     int nextIndex;
-    double watchedTime;
-    double now = BSM->getCurrentTime();
-    watchedTime = UDGetDouble(KEY_VIDEO_STORE_GEM_WATCHED_TIME, 0);
+    time_t now = BSM->getCurrentTimeT();
+    std::string strWatchedTime = UDGetStr(KEY_VIDEO_STORE_GEM_WATCHED_TIME, "");
+    time_t watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
     nextIndex = UDGetInt(KEY_VIDEO_STORE_GEM_INDEX, 0);
-    bool isReady = now - watchedTime > videoStoreWaitForNextVideoTime;
+    bool isReady = difftime(now, watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){
         GM->showVideo(VIDEO_STORE_GEM);
     }else{
@@ -313,13 +321,14 @@ void BattleHud::onVideoTabClick(Ref* ref){
         }
     }
     oneSecCheckerForUI = 0;
-    updateUI(0);
+//    updateUI(0);
 }
 void BattleHud::showTreeReward(int amount){
     Node* layer = CSLoader::createNode("GemRewardMessageBox.csb");
     this->addChild(layer, 4);
     layer->setName("treeRewardMessageBox");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
     GM->rollOpenScroll(imgBack);
@@ -350,6 +359,7 @@ void BattleHud::showGoldReward(int amount){
     this->addChild(layer, 4);
     layer->setName("treeRewardMessageBox");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
     GM->rollOpenScroll(imgBack);
@@ -430,6 +440,7 @@ void BattleHud::showGemRewardMessageBox(std::string text, int gemCount, int gold
     this->addChild(layer, 4);
     layer->setName("gemRewardMessageBox");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
     GM->rollOpenScroll(imgBack);
@@ -630,7 +641,7 @@ void BattleHud::onCutTreeClick(){
 //            timeLeft += 60;
 //        }
 //    }
-    selectedUnit->buildingCompleteTime = BSM->getCurrentTime() + timeLeft;
+    selectedUnit->buildingCompleteTime = (double)BSM->getCurrentTimeT() + timeLeft;
     selectedUnit->buildingCompleteTimeLeft = timeLeft;
     
     selectedUnit->energy = 1;
@@ -679,6 +690,7 @@ void BattleHud::onWorkerClick(){
     layer->setName("workerPopup");
     setAsPopup(layer);
     layer->setTag(0);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
@@ -765,7 +777,7 @@ void BattleHud::closePopup(){
             if (popupArray.size() == 0) {
                 moveTopBarTo(hudLayer);
                 ndTopBar->stopAllActions();
-                ndTopBar->runAction(EaseInOut::create(MoveTo::create(1, Vec2(0, 0)), 2));
+                ndTopBar->runAction(EaseInOut::create(MoveTo::create(1, Vec2(0, ndTopBar->getPositionY())), 2));
             }else{
                 moveTopBarTo(popupArray.at(popupArray.size() - 1));
             }
@@ -786,6 +798,7 @@ void BattleHud::onBattleClick(){
     setAsPopup(layer);
     layer->setTag(0);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     moveTopBarTo(layer, false);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
@@ -895,6 +908,7 @@ void BattleHud::showDefenceRecord(){
     layer->setName("defenceRecordPopup");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     moveTopBarTo(layer, false);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
@@ -999,7 +1013,7 @@ void BattleHud::showDefenceRecord(){
     lbl = (Text*)layer->getChildByName("lblShieldDesc");
     LM->setLocalizedString(lbl, "shield desc");
     
-    shieldEndTime = UDGetInt(KEY_SHIELD_END_TIME, 0);
+    shieldEndTimeT = BSM->getTimeTFromStr(UDGetStr(KEY_SHIELD_END_TIME, ""));
 }
 void BattleHud::onBuyShieldWithGem(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
@@ -1093,10 +1107,6 @@ void BattleHud::getLastAccessTime(){
     isLastAccessTimeRequested = true;
     BSM->getUserData("last_launch_date=1");
 }
-void BattleHud::onBossBattleClick(Ref* ref){
-    BTN_FROM_REF
-    
-}
 void BattleHud::onShopClick(){
     Node* layer = CSLoader::createNode("Shop.csb");
     this->addChild(layer, 4);
@@ -1104,10 +1114,13 @@ void BattleHud::onShopClick(){
     setAsPopup(layer);
     layer->setTag(0);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->getChildByName("imgBackground")->setLocalZOrder(-100);
     moveTopBarTo(layer);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
+//    btn->setPositionY(size.height - (layer->getContentSize().height - btn->getPositionY()) - layer->getPositionY()/2);
+    btn->setPositionY(btn->getPositionY() + layer->getPositionY());
     
     onTabClick(layer->getChildByName("btnTab0"));
     for (int i = 0; i < 3; i++) {
@@ -1246,7 +1259,8 @@ void BattleHud::onTabClick(Ref* ref){
     }
     
     sv->setInnerContainerSize(Size(x, sv->getContentSize().height));
-}int BattleHud::getMaxGold(int level){
+}
+int BattleHud::getMaxGold(int level){
     string str = GM->castleStorageForCastleLevelTable[Value(level).asString().c_str()].asValueMap()["resources"].asString();
     if(str.length() > 0){
         return Value(GM->split(str, "_").at(0)).asInt();
@@ -1427,6 +1441,7 @@ void BattleHud::showNotEnoughWorkerUseGem(){
     this->addChild(layer, 4);
     layer->setName("notEnoughWorker");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
@@ -1482,6 +1497,7 @@ void BattleHud::showNotEnoughBarracksUseGem(){
     layer->setName("notEnoughWorker");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
@@ -1492,19 +1508,19 @@ void BattleHud::showNotEnoughBarracksUseGem(){
     btn = (Button*)layer->getChildByName("btnOk");
     btn->addClickEventListener(CC_CALLBACK_1(BattleHud::onUseGemToFinishBarracksClick, this));
     int timeLeft = -1;
+    time_t now = BSM->getCurrentTimeT();
     for(auto unit : unitInfoListInventory){
         if(unit->unitState == UNIT_STATE_UPGRADE){
             if(timeLeft == -1){
-                timeLeft = unit->endTime - BSM->getCurrentTime();
-            }else if(unit->endTime - BSM->getCurrentTime() < timeLeft){
-                timeLeft = unit->endTime - BSM->getCurrentTime();
+                timeLeft = unit->endTime - (double)now;
+            }else if(unit->endTime - (double)now < timeLeft){
+                timeLeft = unit->endTime - (double)now;
             }
         }
     }
     int gem = GM->getGemForTimeLeft(timeLeft);
     lbl = (Text*)btn->getChildByName("lbl");
     lbl->setString(Value(gem).asString());
-    
 }
 void BattleHud::onUseGemToFinishBarracksClick(Ref* ref){
 //    UnitInfo* theInfo = nullptr;
@@ -1680,19 +1696,24 @@ void BattleHud::onSpecialOfferClick(){
     layer->setName("specialOffer");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     moveTopBarTo(layer, false);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
+    btn->setPositionY(btn->getPositionY() + layer->getPositionY());
     
     Text* lbl = (Text*)layer->getChildByName("lblTitle");
     LM->setLocalizedString(lbl, "special offer");
     lbl = (Text*)layer->getChildByName("lblDescription");
     LM->setLocalizedString(lbl, "buy only once");
     
-    int openTime = UDGetInt(KEY_SPECIAL_OFFER_OPEN_TIME, -1);
-    if(openTime < 0){
-        UDSetInt(KEY_SPECIAL_OFFER_OPEN_TIME, BSM->getCurrentTime());
+    std::string strOpenTime = UDGetStr(KEY_SPECIAL_OFFER_OPEN_TIME, "");
+    time_t openTimeT = BSM->getTimeTFromStr(strOpenTime);
+    if(strOpenTime.size() == 0){
+        std::string value = "";
+        value += BSM->getStrFromTime(BSM->getCurrentTimeT());
+        UDSetStr(KEY_SPECIAL_OFFER_OPEN_TIME, value);
     }
     
     bool isBought = UDGetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 0).c_str(), false);
@@ -1828,6 +1849,7 @@ void BattleHud::onMissionClick(){
     layer->setName("dailyMission");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     moveTopBarTo(layer, false);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
@@ -1912,6 +1934,7 @@ void BattleHud::onDailyRewardClick(){
     layer->setName("dailyReward");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     GM->showNode(layer, 0);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
@@ -2076,7 +2099,7 @@ void BattleHud::onUpgradeConfirmClick(){
     
     selectedUnit->unitState = UNIT_STATE_UPGRADE;
     selectedUnit->buildingCompleteTimeLeft = getUnitCreatingTime(selectedUnit->unitType, selectedUnit->level+1);
-    selectedUnit->buildingCompleteTime = BSM->getCurrentTime() + selectedUnit->buildingCompleteTimeLeft;
+    selectedUnit->buildingCompleteTime = (double)BSM->getCurrentTimeT() + selectedUnit->buildingCompleteTimeLeft;
     
     selectedUnit->energy = 1;
     selectedUnit->maxEnergy = 100;
@@ -2103,7 +2126,7 @@ void BattleHud::onUpgradeConfirmClick(){
     datas.push_back(DATA_TYPE_BUILDING);
     saveUserData(datas);
     if(selectedUnit->unitType == UNIT_MINE){
-        Node* ndMineButton = WORLD->getChildByName(strmake("mineButton%d_%d", (int)selectedUnit->getPositionX()/TILE_SIZE, (int)selectedUnit->getPositionY()/TILE_SIZE));
+        Node* ndMineButton = WORLD->getChildByName(strmake("newminebutton%d_%d", (int)selectedUnit->getPositionX()/TILE_SIZE, (int)selectedUnit->getPositionY()/TILE_SIZE));
         ndMineButton->setVisible(false);
     }
     if(selectedUnit->unitType == UNIT_LUMBERMILL){
@@ -2120,6 +2143,7 @@ void BattleHud::showInfoPopup(bool isUpgrade){
     layer->setName("infoLayer");
     setAsPopup(layer);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
@@ -2208,6 +2232,10 @@ void BattleHud::showInfoPopup(bool isUpgrade){
         nd->setVisible(true);
         
         ImageView* img = (ImageView*)nd->getChildByName("imgGold");
+        img->loadTexture("lumberIcon.png");
+        img->setContentSize(Size(78, 92));
+        
+        img = (ImageView*)nd->getChildByName("imgGoldStorage");
         img->loadTexture("lumberIcon.png");
         img->setContentSize(Size(78, 92));
         
@@ -2409,9 +2437,9 @@ void BattleHud::updateInventorySaveData(){
             break;
         }
     }
-    if (unitInfoListDeck.size() > 0) {
+//    if (unitInfoListDeck.size() > 0) {
         UDSetStr(KEY_UNITS_INVENTORY, strInventory);
-    }
+//    }
     
 }
 void BattleHud::updateDeckSaveData(){
@@ -2420,9 +2448,9 @@ void BattleHud::updateDeckSaveData(){
         strDeck += strmake("%d/%d/%d/%d_",unitInfo->unitType, unitInfo->level, (int)unitInfo->x, (int)unitInfo->y);
     }
     
-    if(unitInfoListDeck.size() > 0){
+//    if(unitInfoListDeck.size() > 0){
         UDSetStr(KEY_UNITS_DECK, strDeck);
-    }
+//    }
 }
 void BattleHud::saveUserData(std::vector<int>& datas){
     std::string strData = "";
@@ -2575,7 +2603,7 @@ void BattleHud::loadData(){
             if (unit->isBuilding) {
                 unit->setPosition(unit->getPosition() + Vec2(TILE_SIZE*0.5f*(((int)occupySize.width)%2), TILE_SIZE*0.5f*(((int)occupySize.height)%2)));
                 unit->buildingCompleteTime = info->endTime;
-                unit->buildingCompleteTimeLeft = unit->buildingCompleteTime - BSM->getCurrentTime();
+                unit->buildingCompleteTimeLeft = unit->buildingCompleteTime - (double)BSM->getCurrentTimeT();
                 unit->unitState = info->unitState;
                 setupBuilding(unit);
                 unit->level = info->level;
@@ -2609,7 +2637,7 @@ void BattleHud::loadData(){
                     }
                     if (unit->unitState != UNIT_STATE_IDLE) {
                         unit->buildingCompleteTime = info->endTime;
-                        unit->buildingCompleteTimeLeft = info->endTime - BSM->getCurrentTime();
+                        unit->buildingCompleteTimeLeft = info->endTime - (double)BSM->getCurrentTimeT();
                     }
                 }
             }else{
@@ -2760,7 +2788,7 @@ Movable* BattleHud::getUnitFromData(std::string str){
         unit->unitName = GM->getUnitName(unitType);
         unit->level = info->level;//datas.at(1).asInt();
         unit->buildingCompleteTime = info->endTime;//Value(datas.at(4)).asInt();
-        unit->buildingCompleteTimeLeft = unit->buildingCompleteTime - BSM->getCurrentTime();
+        unit->buildingCompleteTimeLeft = unit->buildingCompleteTime - (double)BSM->getCurrentTimeT();
         
         return unit;
     }else{
@@ -2775,7 +2803,7 @@ void BattleHud::setupBuilding(Movable* unit){
         btn->addClickEventListener(CC_CALLBACK_1(BattleHud::onMineButtonClick, this));
         WORLD->addChild(ndMineButton, 200);
         ndMineButton->setPosition(unit->getPosition() + Vec2(0, 150));
-        ndMineButton->setName(strmake("mineButton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE));
+        ndMineButton->setName(strmake("newminebutton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE));
     }else if(unit->unitType == UNIT_LUMBERMILL){
         Node* ndMineButton = CSLoader::createNode("MineButton.csb");
         ImageView* img = (ImageView*)ndMineButton->getChildByName("imgIcon");
@@ -2786,6 +2814,8 @@ void BattleHud::setupBuilding(Movable* unit){
         WORLD->addChild(ndMineButton, 200);
         ndMineButton->setPosition(unit->getPosition() + Vec2(0, 150));
         ndMineButton->setName(strmake("treeButton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE));
+        LoadingBar* pbCollect = (LoadingBar*)ndMineButton->getChildByName("pbCollect");
+        pbCollect->setColor(Color3B(46, 161, 34));
     }
 }
 void BattleHud::setupNonBuilding(Movable* unit){
@@ -2814,13 +2844,17 @@ void BattleHud::onMineButtonClick(Ref* ref){
     }
     
     lbl->setString("0");
-    double now = BSM->getCurrentTime();
-    lbl->setTag(now);
+    time_t now = BSM->getCurrentTimeT();
+//    lbl->setTag(now);
     
     Node* ndMineButton = btn->getParent();
-    log("mine button name: %s, now: %lf", ndMineButton->getName().c_str(), now);
-    UDSetDouble(ndMineButton->getName().c_str(), now);
-    UserDefault::getInstance()->flush();
+    std::string key(ndMineButton->getName().c_str());
+    std::string value = "";
+    value += BSM->getStrFromTime(now);
+    log("mine button name: %s, now: %s", key.c_str(), value.c_str());
+    UDSetStr(key.c_str(), value);
+    std::string newValue = UDGetStr(key.c_str(), "");
+    log("mine button1 name: %s, now: %s", key.c_str(), newValue.c_str());
     
     PPLabel* lblPlus = PPLabel::create(strmake("+%d", amount), 60, Color3B::YELLOW, true, true, TextHAlignment::CENTER, false);
     WORLD->addChild(lblPlus, ndMineButton->getLocalZOrder());
@@ -2877,13 +2911,15 @@ void BattleHud::onTreeButtonClick(Ref* ref){
     }
     
     lbl->setString("0");
-    double now = BSM->getCurrentTime();
-    lbl->setTag(now);
+    time_t now = BSM->getCurrentTimeT();
+//    lbl->setTag(now);
     
     Node* ndTreeButton = btn->getParent();
-    log("mine button name: %s, now: %lf", ndTreeButton->getName().c_str(), now);
-    UDSetDouble(ndTreeButton->getName().c_str(), now);
-    UserDefault::getInstance()->flush();
+//    log("mine button name: %s, now: %lf", ndTreeButton->getName().c_str(), now);
+    std::string key(ndTreeButton->getName().c_str());
+    std::string value = "";
+    value += BSM->getStrFromTime(now);
+    UDSetStr(key.c_str(), value);
     
     PPLabel* lblPlus = PPLabel::create(strmake("+%d", amount), 60, Color3B::YELLOW, true, true, TextHAlignment::CENTER, false);
     WORLD->addChild(lblPlus, ndTreeButton->getLocalZOrder());
@@ -2940,7 +2976,7 @@ void BattleHud::update(float dt){
             }
             if (unit->buildingCompleteTimeLeft > totalTime) {
                 unit->buildingCompleteTimeLeft = totalTime;
-                unit->buildingCompleteTime = totalTime + BSM->getCurrentTime();
+                unit->buildingCompleteTime = totalTime + (double)BSM->getCurrentTimeT();
                 updateBuildingsSaveData();
                 std::vector<int> datas;
                 datas.push_back(DATA_TYPE_BUILDING);
@@ -3027,7 +3063,7 @@ void BattleHud::update(float dt){
             }
         }
     }
-    double now = BSM->getCurrentTime();
+    time_t now = BSM->getCurrentTimeT();
     if (GM->isVideoDone) {
         GM->isVideoDone = false;
         log("is video done in bhud");
@@ -3035,13 +3071,17 @@ void BattleHud::update(float dt){
             std::vector<int> array;
             array.push_back(getRandomUnit());
             showItemGetAndAddToBag(array);
-            UDSetDouble(KEY_VIDEO_GACHA_WATCHED_TIME, now);
+            std::string value = "";
+            value += BSM->getStrFromTime(now);
+            UDSetStr(KEY_VIDEO_GACHA_WATCHED_TIME, value);
         }else if(GM->videoIndex == VIDEO_SHIELD){
             addShieldRequested = true;
             BSM->addShield(6);
             showIndicator();
         }else if(GM->videoIndex == VIDEO_STORE_RANDOM){
-            UDSetDouble(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, now);
+            std::string value = "";
+            value += BSM->getStrFromTime(now);
+            UDSetStr(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, value);
             int index = UDGetInt(KEY_VIDEO_STORE_RANDOM_INDEX, 0);
             std::vector<int> datas;
             if (index >= 0 && index <= 4) {
@@ -3056,6 +3096,7 @@ void BattleHud::update(float dt){
                 layer->setName("unitRewardMessageBox");
                 setAsPopup(layer);
                 layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+                layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
                 ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
                 GM->rollOpenScroll(imgBack);
                 
@@ -3091,7 +3132,9 @@ void BattleHud::update(float dt){
             UDSetInt(KEY_VIDEO_STORE_RANDOM_INDEX, index);
             onVideoTabClick(this->getChildByName("videoStore")->getChildByName("btnTab0"));
         }else if(GM->videoIndex == VIDEO_STORE_UNIT){
-            UDSetDouble(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, now);
+            std::string value = "";
+            value += BSM->getStrFromTime(now);
+            UDSetStr(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, value);
             int index = UDGetInt(KEY_VIDEO_STORE_UNIT_INDEX, 0);
             std::vector<int> datas;
             if (index >= 0 && index <= 4) {
@@ -3109,6 +3152,7 @@ void BattleHud::update(float dt){
                 layer->setName("unitRewardMessageBox");
                 setAsPopup(layer);
                 layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+                layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
                 ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
                 GM->rollOpenScroll(imgBack);
                 
@@ -3148,7 +3192,9 @@ void BattleHud::update(float dt){
             UDSetInt(KEY_VIDEO_STORE_UNIT_INDEX, index);
             onVideoTabClick(this->getChildByName("videoStore")->getChildByName("btnTab1"));
         }else if(GM->videoIndex == VIDEO_STORE_GEM){
-            UDSetDouble(KEY_VIDEO_STORE_GEM_WATCHED_TIME, now);
+            std::string value = "";
+            value += BSM->getStrFromTime(now);
+            UDSetStr(KEY_VIDEO_STORE_GEM_WATCHED_TIME, value);
             int index = UDGetInt(KEY_VIDEO_STORE_GEM_INDEX, 0);
             std::vector<int> datas;
             if (index >= 0 && index <= 4) {
@@ -3188,7 +3234,6 @@ void BattleHud::update(float dt){
         log("iap success gem!");
         updateBuildingsSaveData();
         std::vector<int> datas;
-        datas.push_back(DATA_TYPE_GEM);
         int iapPoint = UDGetInt(KEY_IAP_TOTAL, 0);
         if (GM->iapDetail.compare(IAP_DETAIL_GEM_3) == 0) {
             GM->addGem(180);
@@ -3207,21 +3252,23 @@ void BattleHud::update(float dt){
             iapPoint += 1000;
             log("iap success starter 1!");
             for (int i = 0; i < 3; i++) {
-                UnitInfo* swordInfo = new UnitInfo();
-                swordInfo->unitType = UNIT_SWORDMAN;
-                addUnitToDeck(swordInfo);
+                UnitInfo* info = new UnitInfo();
+                info->unitType = UNIT_SWORDMAN;
+//                addUnitToDeck(swordInfo);
+                unitInfoListInventory.push_back(info);
                 
-                UnitInfo* archerInfo = new UnitInfo();
-                archerInfo->unitType = UNIT_ARCHER;
-                addUnitToDeck(archerInfo);
+                info = new UnitInfo();
+                info->unitType = UNIT_ARCHER;
+                unitInfoListInventory.push_back(info);
+//                addUnitToDeck(archerInfo);
             }
             UnitInfo* zombieInfo = new UnitInfo();
             zombieInfo->unitType = UNIT_ZOMBIE_SWORDSMAN;
             addUnitToDeck(zombieInfo);
             
             shouldSaveDeck = true;
-            updateDeckSaveData();
-            datas.push_back(DATA_TYPE_DECK);
+            updateInventorySaveData();
+            datas.push_back(DATA_TYPE_INVENTORY);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 0).c_str(), true);
             closePopup();
             onSpecialOfferClick();
@@ -3230,19 +3277,22 @@ void BattleHud::update(float dt){
             iapPoint += 3000;
             log("iap success starter 3!");
             for (int i = 0; i < 6; i++) {
-                UnitInfo* archerInfo = new UnitInfo();
-                archerInfo->unitType = UNIT_ARCHER;
-                addUnitToDeck(archerInfo);
+                UnitInfo* info = new UnitInfo();
+                info->unitType = UNIT_ARCHER;
+//                addUnitToDeck(archerInfo);
+                unitInfoListInventory.push_back(info);
             }
             for(int i = 0; i < 2; i++){
                 UnitInfo* trollInfo = new UnitInfo();
                 trollInfo->unitType = UNIT_TROLL;
-                addUnitToDeck(trollInfo);
+//                addUnitToDeck(trollInfo);
+                unitInfoListInventory.push_back(trollInfo);
             }
             
+            
             shouldSaveDeck = true;
-            updateDeckSaveData();
-            datas.push_back(DATA_TYPE_DECK);
+            updateInventorySaveData();
+            datas.push_back(DATA_TYPE_INVENTORY);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 2).c_str(), true);
             closePopup();
             onSpecialOfferClick();
@@ -3251,22 +3301,25 @@ void BattleHud::update(float dt){
             iapPoint += 10000;
             log("iap success starter 2!");
             for (int i = 0; i < 3; i++) {
-                UnitInfo* axeInfo = new UnitInfo();
-                axeInfo->unitType = UNIT_ORC_AXE;
-                addUnitToDeck(axeInfo);
+                UnitInfo* info = new UnitInfo();
+                info->unitType = UNIT_ORC_AXE;
+//                addUnitToDeck(axeInfo);
+                unitInfoListInventory.push_back(info);
                 
-                UnitInfo* spearInfo = new UnitInfo();
-                spearInfo->unitType = UNIT_ORC_SPEAR;
-                addUnitToDeck(spearInfo);
+                info = new UnitInfo();
+                info->unitType = UNIT_ORC_SPEAR;
+//                addUnitToDeck(spearInfo);
+                unitInfoListInventory.push_back(info);
             }
             for(int i = 0; i < 3; i++){
-                UnitInfo* bombInfo = new UnitInfo();
-                bombInfo->unitType = UNIT_GOBLIN_BOMB;
-                addUnitToDeck(bombInfo);
+                UnitInfo* info = new UnitInfo();
+                info->unitType = UNIT_GOBLIN_BOMB;
+//                addUnitToDeck(bombInfo);
+                unitInfoListInventory.push_back(info);
             }
             shouldSaveDeck = true;
-            updateDeckSaveData();
-            datas.push_back(DATA_TYPE_DECK);
+            updateInventorySaveData();
+            datas.push_back(DATA_TYPE_INVENTORY);
             UDSetBool(strmake(KEY_SPECIAL_OFFER_BOUGHT_FORMAT, 1).c_str(), true);
             closePopup();
             onSpecialOfferClick();
@@ -3347,32 +3400,6 @@ void BattleHud::update(float dt){
         }
         if(isLastAccessTimeRequested){
             isLastAccessTimeRequested = false;
-//            double now = BSM->getCurrentTime();
-//            std::string str = UDGetStr(KEY_LAST_LAUNCH_DATE, "");
-//            double lastTime = Value(str).asDouble();
-//            log("now %d, last: %d", (int)now, (int)lastTime);
-//            int timePassed = now - lastTime;
-//            if(timePassed < 0){
-//                timePassed = 1000;
-//            }
-//            for(auto building : buildings){
-//                if(building->unitState == UNIT_STATE_BUILDING || building->unitState == UNIT_STATE_UPGRADE || building->unitState == UNIT_STATE_REMOVING){
-//                    building->buildingCompleteTimeLeft -= timePassed;
-//                }else{
-////                    if(building->unitType == UNIT_MINE){
-////                        building->buildingCompleteTimeLeft += timePassed;
-////                        if(building->buildingCompleteTimeLeft < 0){
-////                            building->buildingCompleteTimeLeft = 200;
-////                        }
-////                    }
-//                }
-//            }
-//
-//            for(auto unit : unitInfoListInventory){
-//                if(unit->unitState == UNIT_STATE_UPGRADE){
-//                    unit->timeLeft -= timePassed;
-//                }
-//            }
         }
         if(isTopRankRequested){
             isTopRankRequested = false;
@@ -3404,7 +3431,7 @@ void BattleHud::update(float dt){
         if(isAnybodyMoving){
             bool stillMoving = false;
             for(auto unit: unitsDeck){
-                if(!unit->isArrived){
+                if(unit->unitAct == UNIT_ACT_MOVE){
                     stillMoving = true;
                     break;
                 }
@@ -3423,7 +3450,7 @@ void BattleHud::update(float dt){
             }
         }else{
             for(auto unit: unitsDeck){
-                if(!unit->isArrived){
+                if(unit->unitAct == UNIT_ACT_MOVE){
                     isAnybodyMoving = true;
                     break;
                 }
@@ -3552,7 +3579,7 @@ Movable* BattleHud::addBuildingCreating(int index, float timeLeft){
         unit->runAnimation("underConstrunction", true);
     }
     
-    unit->buildingCompleteTime = BSM->getCurrentTime() + timeLeft;
+    unit->buildingCompleteTime = BSM->getCurrentTimeT() + timeLeft;
     unit->buildingCompleteTimeLeft = timeLeft;
     unit->unitState = UNIT_STATE_BUILDING;
     buildings.pushBack(unit);
@@ -3591,8 +3618,12 @@ void BattleHud::moveTopBarTo(Node* parent, bool moveToLeft){
     ndTopBar->removeFromParentAndCleanup(false);
     parent->addChild(ndTopBar);
     ndTopBar->stopAllActions();
+    float totalHeight = size.height;
+    float topBarNodeY = 1334;
+    float parentY = parent->getPositionY();
+    ndTopBar->setPositionY(totalHeight - topBarNodeY - parentY);
     if(moveToLeft){
-        ndTopBar->runAction(EaseInOut::create(MoveTo::create(1, Vec2(-130, 0)), 2));
+        ndTopBar->runAction(EaseInOut::create(MoveTo::create(1, Vec2(-130, ndTopBar->getPositionY())), 2));
     }
 }
 void BattleHud::onTrainBRClick(){
@@ -3616,9 +3647,12 @@ void BattleHud::onTrainClick(){
     this->addChild(layer, 4);
     layer->setName("trainLayer");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     moveTopBarTo(layer);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::onCloseTrainPopup, this));
+    btn->setPositionY(btn->getPositionY() + layer->getPositionY());
     btn = (Button*)layer->getChildByName("btnTab0");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::onTrainTab0Click, this));
     int barracksCount = 0;
@@ -3639,7 +3673,7 @@ void BattleHud::onTrainClick(){
             btn->setEnabled(false);
         }
     }
-    Node* ndUnit = layer->getChildByName("ndUnits");
+//    Node* ndUnit = layer->getChildByName("ndUnits");
     // close and reopen for train tab 0
     
     Node* ndUpgrade = layer->getChildByName("ndUpgrade");
@@ -3742,8 +3776,13 @@ void BattleHud::onUpgradeClickInUpgradeTab(){
         }
     }
     
-    double now = BSM->getCurrentTime();
-    UDSetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), now + getUnitUpgradeTime(unit, level));
+    time_t now = BSM->getCurrentTimeT();
+    log("now: %s", BSM->getStrFromTime(now).c_str());
+    std::string value = "";
+    value += BSM->getStrFromTime(now + getUnitUpgradeTime(unit, level));
+    log("endtime1: %s", value.c_str());
+    UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), value);
+    log("endtime2: %s", UDGetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "novalue").c_str());
     UDSetInt(strmake(KEY_UPGRADE_UNIT_FORMAT, tabIndex).c_str(), btn0->getTag());
     
     
@@ -3758,7 +3797,7 @@ void BattleHud::onFinishUpgradeClick(){
     Node* layer = this->getChildByName("trainLayer");
     
     int tabIndex = layer->getTag();
-    UDSetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), -1);
+    UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "");
     int value = UDGetInt(strmake(KEY_UPGRADE_UNIT_FORMAT, tabIndex).c_str(), -1);
     UDSetInt(strmake(KEY_UPGRADE_UNIT_FORMAT, tabIndex).c_str(), -1);
     if(value < 0){
@@ -3930,30 +3969,33 @@ void BattleHud::updateUnitListForUpgrade(){
         Node* btnTab = ndUpgrade->getChildByName(strmake("btnTab%d", i));
         btnTab->setColor(tabIndex == i?Color3B::WHITE:Color3B::GRAY);
     }
-    double endTime = UDGetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), -1);
+    std::string strEndTime = UDGetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "");
+    time_t endTimeT = BSM->getTimeTFromStr(strEndTime);
     int upgradeValue = UDGetInt(strmake(KEY_UPGRADE_UNIT_FORMAT, tabIndex).c_str(), -1);
     if(upgradeValue < 0){
-        endTime = -1;
-        UDSetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), -1);
+        strEndTime = "";
+        UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "");
     }
-    btn0->setVisible(endTime < 0);
-    btn1->setVisible(endTime < 0);
+    btn0->setVisible(upgradeValue < 0);
+    btn1->setVisible(upgradeValue < 0);
     ImageView* imgProcessing = (ImageView*)ndUpgrade->getChildByName("imgProcessing");
-    imgProcessing->setVisible(endTime >= 0);
+    imgProcessing->setVisible(upgradeValue >= 0);
     imgProcessing->removeChildByName("spt");
     
-    
-    double now = BSM->getCurrentTime();
+    time_t now = BSM->getCurrentTimeT();
     Button* btn = (Button*)ndUpgrade->getChildByName("btnComplete");
-    btn->setVisible(endTime >= 0);
+    double timeLeft = difftime(endTimeT, now);
+    btn->setVisible(upgradeValue >= 0 && timeLeft >= 0);
     Text* lbl = (Text*)btn->getChildByName("lbl");
-    lbl->setString(strmake("%d", GM->getGemForTimeLeft(endTime - now)));
+    lbl->setString(strmake("%d", GM->getGemForTimeLeft((int)timeLeft)));
     btn = (Button*)ndUpgrade->getChildByName("btnFinish");
-    btn->setVisible(endTime >= 0 && now - endTime >= 0);
+    btn->setVisible(upgradeValue >= 0 && timeLeft < 0);
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::onFinishUpgradeClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "complete");
     
     Button* btnUpgrade = (Button*)ndUpgrade->getChildByName("btnUpgrade");
-    if (upgradeValue < 0 && endTime < 0) {
+    if (upgradeValue < 0 && strEndTime.size() == 0) {
         bool isUpgradeReady = btn0->getTag() >= 0 && btn0->getTag() == btn1->getTag();
         btnUpgrade->setVisible(isUpgradeReady);
         btnUpgrade->setEnabled(isUpgradeReady);
@@ -3961,7 +4003,7 @@ void BattleHud::updateUnitListForUpgrade(){
         LM->setLocalizedString(lbl, "upgrade");
         Button* btnComplete = (Button*)ndUpgrade->getChildByName("btnComplete");
         btnComplete->setVisible(false);
-    }else if(upgradeValue > 0 && endTime > 0){
+    }else if(upgradeValue > 0){
         btnUpgrade->setVisible(false);
         Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(upgradeValue%1000));
         if(spt){
@@ -3970,6 +4012,7 @@ void BattleHud::updateUnitListForUpgrade(){
             spt->setPosition(Vec2(131, 145));
             lbl = (Text*)imgProcessing->getChildByName("lblLevel");
             lbl->setString(strmake("Lv.%d", upgradeValue/1000 + 1));
+            lbl->setLocalZOrder(10);
         }
     }
     updateUI(0);
@@ -3983,9 +4026,11 @@ void BattleHud::onCompleteUpgradeClick(Ref* ref){
     int gem = Value(lbl->getString()).asInt();
     if (gem <= GM->getGem()) {
         GM->addGem(-gem);
-        double now = BSM->getCurrentTime();
+        time_t now = BSM->getCurrentTimeT();
         int tabIndex = layer->getTag();
-        UDSetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), now);
+        std::string value = "";
+        value += BSM->getStrFromTime(now);
+        UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), value);
         BSM->saveUserData(strmake("gem=%d", GM->getGem()));
     }else{
         showInstanceMessage(LM->getText("not enough gems"));
@@ -4024,9 +4069,11 @@ void BattleHud::onTrainGachaClick(Ref* ref){
             showInstanceMessage(LM->getText("inventory full"));
             return;
         }
-        int nextGachaFreeTime = UDGetInt(KEY_GACHA_NEXT_FREE_TIME, 0);
-        int now = BSM->getCurrentTime();
-        bool isFree = now >= nextGachaFreeTime;
+        std::string strNextGachaFreeTime = UDGetStr(KEY_GACHA_NEXT_FREE_TIME, "");
+        time_t nextGachaFreeTimeT = BSM->getTimeTFromStr(strNextGachaFreeTime);
+        time_t now = BSM->getCurrentTimeT();
+//        bool isFree = now >= nextGachaFreeTime;
+        bool isFree = difftime(nextGachaFreeTimeT, now) < 0;
         
         if(GM->getGem() < 100 && !isFree){
             showInstanceMessage(LM->getText("not enough gems"));
@@ -4034,7 +4081,9 @@ void BattleHud::onTrainGachaClick(Ref* ref){
         }
         
         if(isFree){
-            UDSetInt(KEY_GACHA_NEXT_FREE_TIME, now + 60*60*23);
+            std::string value = "";
+            value += BSM->getStrFromTime(now + 60*60*23 + 60*30);
+            UDSetStr(KEY_GACHA_NEXT_FREE_TIME, value);
         }else{
             GM->addGem(-100);
         }
@@ -4072,11 +4121,14 @@ void BattleHud::showItemGetAndAddToBag(std::vector<int> array){
     
     Node* layer = CSLoader::createNode("ItemGet.csb");
     Node* ndFront = layer->getChildByName("ndFront");
-    GM->addLightStormEffect(ndFront);
+//    ndFront->setContentSize(size);
     //    layer->setPosition(size/2);
     this->addChild(layer, POPUP_ZORDER);
     setAsPopup(layer);
     layer->setName("itemGet");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    ndFront->setPositionX(-layer->getPositionX());
+    GM->addLightStormEffect(ndFront);
     
     ImageView* img;ImageView* imgWhiteClone;
     ImageView* imgWhite = (ImageView*)layer->getChildByName("imgWhiteCard");
@@ -4206,11 +4258,15 @@ void BattleHud::onTrainGachaAgainClick(Ref* ref){
             showInstanceMessage(LM->getText("inventory full"));
             return;
         }
-        int nextGachaFreeTime = UDGetInt(KEY_GACHA_NEXT_FREE_TIME, 0);
-        int now = BSM->getCurrentTime();
-        bool isFree = now >= nextGachaFreeTime;
+        std::string strNextGachaFreeTime = UDGetStr(KEY_GACHA_NEXT_FREE_TIME, "");
+        time_t nextGachaFreeTimeT = BSM->getTimeTFromStr(strNextGachaFreeTime);
+        time_t now = BSM->getCurrentTimeT();
+        bool isFree = difftime(nextGachaFreeTimeT, now) < 0;//now >= nextGachaFreeTime;
+        
         if(isFree){
-            UDSetInt(KEY_GACHA_NEXT_FREE_TIME, now + 60*60*23);
+            std::string value = "";
+            value += BSM->getStrFromTime(now + 60*60*23 + 60*30);
+            UDSetStr(KEY_GACHA_NEXT_FREE_TIME, value);
         }else{
             GM->addGem(-90);
         }
@@ -4503,6 +4559,7 @@ void BattleHud::showUnitTrainInfo(int popupType, int unit, int level){
     layer->setName("unitTrainLayer");
     setAsPopup(layer);
     layer->setTag(popupType);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(BattleHud::closePopup, this));
     btn = (Button*)layer->getChildByName("btnBlock");
@@ -4596,7 +4653,7 @@ void BattleHud::onCompleteUnitTrainClick(Ref* ref){
     int gem = Value(lbl->getString()).asInt();
     if (GM->getGem() >= gem) {
         GM->addGem(-gem);
-        selectedUnitInfo->endTime = BSM->getCurrentTime();
+        selectedUnitInfo->endTime = BSM->getCurrentTimeT();
         reopenUnitTrainInfo();
     }else{
         showInstanceMessage(LM->getText("not enough gems"));
@@ -4663,7 +4720,7 @@ void BattleHud::onUpgradeUnitClick(){
     
     int timeLeft = getUnitUpgradeTime(selectedUnitInfo->unitType, selectedUnitInfo->level);
     selectedUnitInfo->unitState = UNIT_STATE_UPGRADE;
-    selectedUnitInfo->endTime = BSM->getCurrentTime() + timeLeft;
+    selectedUnitInfo->endTime = BSM->getCurrentTimeT() + timeLeft;
     
     
     std::vector<int> datas;
@@ -4831,6 +4888,7 @@ void BattleHud::onFireUnitClick(){
     Node* layer = CSLoader::createNode("MessageBox.csb");
     this->addChild(layer, 4);
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btn = (Button*)layer->getChildByName("btnBlock");
@@ -4917,6 +4975,7 @@ void BattleHud::updateUI(float dt){
         Node* layer = CSLoader::createNode("MessageBox.csb");
         this->addChild(layer, 4);
         setAsPopup(layer);
+        layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
         layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
         
         Button* btn = (Button*)layer->getChildByName("btnNo");
@@ -4975,19 +5034,24 @@ void BattleHud::updateUI(float dt){
     }
     oneSecCheckerForUI = 1;
     
-    double now = BSM->getCurrentTime();
+    time_t now = BSM->getCurrentTimeT();
     for(auto building : buildings){
         if(building->unitType == UNIT_MINE){
-            std::string key = strmake("mineButton%d_%d", (int)building->getPositionX()/TILE_SIZE, (int)building->getPositionY()/TILE_SIZE);
+            std::string key = strmake("newminebutton%d_%d", (int)building->getPositionX()/TILE_SIZE, (int)building->getPositionY()/TILE_SIZE);
             Node* ndMineButton = WORLD->getChildByName(key);
             if(ndMineButton == nullptr){
                 continue;
             }
             ndMineButton->setVisible(building->unitState == UNIT_STATE_IDLE);
 //            building->buildingCompleteTimeLeft += 1;
-            
-            int collectStartTime = UDGetDouble(key.c_str(), 0);//building->buildingCompleteTimeLeft;
-            double timePassed = now - collectStartTime;
+            std::string strCollectStartTime = UDGetStr(key.c_str(), "");
+            if(strCollectStartTime.size() == 0){
+                strCollectStartTime = "";
+                strCollectStartTime += BSM->getStrFromTime(now - 60*60*24*50);
+                UDSetStr(key.c_str(), strCollectStartTime);
+            }
+//            int collectStartTime = //building->buildingCompleteTimeLeft;
+            double timePassed = now - BSM->getTimeTFromStr(strCollectStartTime);
             if(timePassed > 86400){
                 timePassed = 86400;
             }else if(timePassed < 0){
@@ -5009,14 +5073,19 @@ void BattleHud::updateUI(float dt){
             pbCollect->setPercent(amount*100.0f/max);
         }else if(building->unitType == UNIT_LUMBERMILL){
             std::string key = strmake("treeButton%d_%d", (int)building->getPositionX()/TILE_SIZE, (int)building->getPositionY()/TILE_SIZE);
-            Node* ndMineButton = WORLD->getChildByName(key);
-            if(ndMineButton == nullptr){
+            Node* ndTreeButton = WORLD->getChildByName(key);
+            if(ndTreeButton == nullptr){
                 continue;
             }
-            ndMineButton->setVisible(building->unitState == UNIT_STATE_IDLE);
+            ndTreeButton->setVisible(building->unitState == UNIT_STATE_IDLE);
             
-            int collectStartTime = UDGetDouble(key.c_str(), 0);
-            double timePassed = now - collectStartTime;
+            std::string strCollectStartTime = UDGetStr(key.c_str(), "");
+            if(strCollectStartTime.size() == 0){
+                strCollectStartTime = "";
+                strCollectStartTime += BSM->getStrFromTime(now - 60*60*24*50);
+                UDSetStr(key.c_str(), strCollectStartTime);
+            }
+            double timePassed = now - BSM->getTimeTFromStr(strCollectStartTime);
             if(timePassed > 86400){
                 timePassed = 86400;
             }else if(timePassed < 0){
@@ -5032,20 +5101,20 @@ void BattleHud::updateUI(float dt){
                 amount = 0;
                 UDSetDouble(key.c_str(), now);
             }
-            Text* lbl = (Text*)ndMineButton->getChildByName("lbl");
+            Text* lbl = (Text*)ndTreeButton->getChildByName("lbl");
             lbl->setString(Value(amount).asString());
-            LoadingBar* pbCollect = (LoadingBar*)ndMineButton->getChildByName("pbCollect");
+            LoadingBar* pbCollect = (LoadingBar*)ndTreeButton->getChildByName("pbCollect");
             pbCollect->setPercent(amount*100.0f/max);
         }
     }
     
     for(auto info: unitInfoListInventory){
         if(info->unitState == UNIT_STATE_UPGRADE){
-            double timeLeft = info->endTime - BSM->getCurrentTime();
+            double timeLeft = info->endTime - BSM->getCurrentTimeT();
             if(timeLeft > 0){
                 int maxTime = getUnitUpgradeTime(info->unitType, info->level);
                 if(timeLeft > maxTime){
-                    selectedUnit->buildingCompleteTime = BSM->getCurrentTime() + maxTime;
+                    selectedUnit->buildingCompleteTime = BSM->getCurrentTimeT() + maxTime;
                     selectedUnit->buildingCompleteTimeLeft = maxTime;
                     updateBuildingsSaveData();
                     std::vector<int> datas;
@@ -5085,52 +5154,42 @@ void BattleHud::updateUI(float dt){
     }
     Node* layer = this->getChildByName("unitTrainLayer");
     if(layer && layer->getTag() == 1){
-//        Node* ndUpgraderTimer = layer->getChildByName("ndUpgradeTimer");
-//        Node* ndUpgraderTime = layer->getChildByName("ndUpgradeTime");
-//        if(selectedUnitInfo->endTime - BSM->getCurrentTime() > 0){
-//            ndUpgraderTimer->setVisible(true);
-//            ndUpgraderTime->setVisible(false);
-//            Text* lbl = (Text*)ndUpgraderTimer->getChildByName("lbl");
-//            lbl->setString(GM->getTimeLeftInString(selectedUnitInfo->endTime - BSM->getCurrentTime()));
-//            LoadingBar* pbUpgrade = (LoadingBar*)ndUpgraderTimer->getChildByName("pbUpgrade");
-//            int timeLeft = getUnitUpgradeTime(selectedUnitInfo->unitType, selectedUnitInfo->level);
-//            pbUpgrade->setPercent((selectedUnitInfo->endTime - BSM->getCurrentTime())*100/timeLeft);
-//            lbl = (Text*)layer->getChildByName("btnComplete")->getChildByName("lblCount");
-//            lbl->setString(Value(GM->getGemForTimeLeft(timeLeft)).asString());
-//            layer->getChildByName("btnComplete")->setVisible(true);
-//            layer->getChildByName("btnFire")->setVisible(false);
-//            layer->getChildByName("btnMoveToDeck")->setVisible(false);
-//            layer->getChildByName("btnUpgrade")->setVisible(false);
-//        }else{
-//            ndUpgraderTimer->setVisible(false);
-//            ndUpgraderTime->setVisible(true);
-//            layer->getChildByName("btnComplete")->setVisible(false);
-//            layer->getChildByName("btnFire")->setVisible(true);
-//            layer->getChildByName("btnMoveToDeck")->setVisible(true);
-//            layer->getChildByName("btnUpgrade")->setVisible(true);
-//        }
-//        layer->getChildByName("btnFire")->setVisible(true);
-//        layer->getChildByName("btnMoveToDeck")->setVisible(true);
+
     }
     
     
     
     int timeLeftToMidnight = 86400 - (long)now%86400;
     bool isNewDay = false;
-    if(lastTimeLeftToMidnight < timeLeftToMidnight){
+    std::string strSavedToday = UDGetStr(KEY_TODAY_STRING, "").substr(0, 10);
+    std::string strToday = std::string(BSM->getStrFromTime(now)).substr(0, 10);
+    if(strToday.compare(strSavedToday) != 0){
+        UDSetStr(KEY_TODAY_STRING, strToday);
         isNewDay = true;
     }
+//    if(lastTimeLeftToMidnight < timeLeftToMidnight){
+//        isNewDay = true;
+//    }
 
     lastTimeLeftToMidnight = timeLeftToMidnight;
     layer = this->getChildByName("trainLayer");
-    double gachaWatchedTime = UDGetDouble(KEY_VIDEO_GACHA_WATCHED_TIME, 0);
-    if(gachaWatchedTime > now){
-        gachaWatchedTime = now;
-        UDSetDouble(KEY_VIDEO_GACHA_WATCHED_TIME, now);
+    std::string strGachaWatchedTime = UDGetStr(KEY_VIDEO_GACHA_WATCHED_TIME, "");
+    if(strGachaWatchedTime.size() == 0){
+        strGachaWatchedTime = "";
+        strGachaWatchedTime += BSM->getStrFromTime(now - 60*60*24*50);
+        UDSetStr(KEY_VIDEO_GACHA_WATCHED_TIME, strGachaWatchedTime);
     }
-    bool isGachaVideoReady = now - gachaWatchedTime > videoGachaWaitForNextVideoTime;
-    int nextGachaFreeTime = UDGetInt(KEY_GACHA_NEXT_FREE_TIME, 0);
-    bool isGachaFreeReady = now >= nextGachaFreeTime;
+    time_t gachaWatchedTimeT = BSM->getTimeTFromStr(strGachaWatchedTime);
+    if(difftime(now, gachaWatchedTimeT) < 0){
+        gachaWatchedTimeT = now;
+        std::string value = "";
+        value += BSM->getStrFromTime(now);
+        UDSetStr(KEY_VIDEO_GACHA_WATCHED_TIME, value);
+    }
+    bool isGachaVideoReady = difftime(now, gachaWatchedTimeT) > videoGachaWaitForNextVideoTime;
+    std::string strNextGachaFreeTime = UDGetStr(KEY_GACHA_NEXT_FREE_TIME, "");
+    time_t nextGachaFreeTimeT = BSM->getTimeTFromStr(strNextGachaFreeTime);
+    bool isGachaFreeReady = difftime(nextGachaFreeTimeT, now) <= 0;
     
     hudLayer->getChildByName("btnTrainBR")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady);
     if(layer && layer != nullptr){
@@ -5163,13 +5222,31 @@ void BattleHud::updateUI(float dt){
             Button* btn = (Button*)ndUpgrade->getChildByName("btnComplete");
             Text* lbl = (Text*)btn->getChildByName("lblTimeLeft");
             int tabIndex = layer->getTag();
-            double endTime = UDGetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), -1);
+            std::string strEndTime = UDGetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "");
+            
+            time_t endTime = BSM->getTimeTFromStr(strEndTime);
             int upgradeValue = UDGetInt(strmake(KEY_UPGRADE_UNIT_FORMAT, tabIndex).c_str(), -1);
+            std::string str(ctime(&endTime));
+            log("str: %s", str.c_str());
+            log("endTime: %s, now: %s", BSM->getStrFromTime(endTime).c_str(), BSM->getStrFromTime(now).c_str());
             if(upgradeValue >= 0 && endTime < now){
-                UDSetDouble(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), now);
+                std::string value = "";
+                value += BSM->getStrFromTime(now);
+                UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), value);
+                log("what: %s", UDGetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), "").c_str());
                 endTime = now;
             }
-            if(endTime > 0){
+            
+            int level = upgradeValue/1000;
+            int unitType = upgradeValue%1000;
+            int upgradeTime = getUnitUpgradeTime(unitType, level);
+            if (endTime - now > upgradeTime) {
+                endTime = now + upgradeTime;
+                std::string value = "";
+                value += BSM->getStrFromTime(endTime);
+                UDSetStr(strmake(KEY_UPGRADE_ENDTIME_FORMAT, tabIndex).c_str(), value);
+            }
+            if(strEndTime.size() > 0){
                 if(endTime - now > 0){
                     lbl->setString(GM->getTimeLeftInString(endTime - now));
                     lbl = (Text*)btn->getChildByName("lbl");
@@ -5185,7 +5262,7 @@ void BattleHud::updateUI(float dt){
         if(ndGacha->isVisible()){
             Button* btn = (Button*)ndGacha->getChildByName("btn0");
             Text* lbl = (Text*)btn->getChildByName("lbl");
-            lbl->setString(isGachaVideoReady?"READY":GM->getTimeLeftInStringHMS(gachaWatchedTime + videoGachaWaitForNextVideoTime - now));
+            lbl->setString(isGachaVideoReady?"READY":GM->getTimeLeftInStringHMS(videoGachaWaitForNextVideoTime - difftime(now, gachaWatchedTimeT)));
             btn->setEnabled(isGachaVideoReady);
             btn->getChildByName("imgRedDot")->setVisible(isGachaVideoReady);
             
@@ -5196,7 +5273,7 @@ void BattleHud::updateUI(float dt){
             Text* lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
             lbl->setString(isGachaFreeReady?"FREE":"100");
             lblTimeLeft->setVisible(!isGachaFreeReady);
-            lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(nextGachaFreeTime - now).c_str()));
+            lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextGachaFreeTimeT, now)).c_str()));
         }
     }
     
@@ -5228,11 +5305,11 @@ void BattleHud::updateUI(float dt){
         Node* layer = this->getChildByName("defenceRecordPopup");
         Text* lbl = (Text*)layer->getChildByName("lblShieldLeft");
         Button* btn = (Button*)layer->getChildByName("btnPlayForShield");
-        if(shieldEndTime < now){
+        if(difftime(shieldEndTimeT, now) < 0){
             LM->setLocalizedString(lbl, "expired");
             btn->setEnabled(true);
         }else{
-            int timeLeft = shieldEndTime - now;
+            int timeLeft = difftime(shieldEndTimeT, now);
             lbl->setString(GM->getTimeLeftInString(timeLeft));
             btn->setEnabled(timeLeft < 3600);
         }
@@ -5260,9 +5337,10 @@ void BattleHud::updateUI(float dt){
     
     // special offer
     if(!isSpecialOfferCheckOff && BSM->timeEstablished){
-        int openTime = UDGetInt(KEY_SPECIAL_OFFER_OPEN_TIME, -1);
+        std::string strOpenTime = UDGetStr(KEY_SPECIAL_OFFER_OPEN_TIME, "");
+        time_t openTimeT = BSM->getTimeTFromStr(strOpenTime);
         int offerTime = 60*60*24;
-        int timeLeft = offerTime - (now - openTime);
+        int timeLeft = offerTime - (difftime(now, openTimeT));
         if(this->getChildByName("specialOffer")){
             Node* layer = this->getChildByName("specialOffer");
             Text* lbl = (Text*)layer->getChildByName("lblTimeLeft");
@@ -5278,7 +5356,7 @@ void BattleHud::updateUI(float dt){
             lbl = (Text*)layer->getChildByName("btn2")->getChildByName("lbl");
             lbl->setString(strStarterPrice2);
         }
-        if (timeLeft < 0 && openTime > 0) {
+        if (timeLeft < 0 && openTimeT > 0) {
             if (!UDGetBool(KEY_SPECIAL_OFFER_LAST_CHANCE_ASKED, false) && popupArray.size() == 0) {
                 UDGetBool(KEY_SPECIAL_OFFER_LAST_CHANCE_ASKED, false);
                 showSpecialOfferLastChance();
@@ -5293,31 +5371,42 @@ void BattleHud::updateUI(float dt){
         if (isNewDay && popupArray.at(popupArray.size() -1) == layer) {
             closePopup();
             onVideoStoreClick();
+            return;
         }
         Node* nd;
         int nextIndex;
-        double watchedTime;
+        std::string strWatchedTime;
+        time_t watchedTimeT;
         if (layer->getTag() == 0) { // random
-            watchedTime = UDGetDouble(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, 0);
-            if(watchedTime > now){
-                watchedTime = now;
-                UDSetDouble(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, now);
+            strWatchedTime = UDGetStr(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, "");
+            watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
+            if(strWatchedTime.size() == 0){
+                watchedTimeT = now - 60*60;
+                std::string value = "";
+                value += BSM->getStrFromTime(now);
+                UDSetStr(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME, value);
             }
             nd = layer->getChildByName("ndTabRandom");
             nextIndex = UDGetInt(KEY_VIDEO_STORE_RANDOM_INDEX, 0);
         }else if(layer->getTag() == 1){
-            watchedTime = UDGetDouble(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, 0);
-            if(watchedTime > now){
-                watchedTime = now;
-                UDSetDouble(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, now);
+            strWatchedTime = UDGetStr(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, "");
+            watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
+            if(strWatchedTime.size() == 0){
+                watchedTimeT = now - 60*60;
+                std::string value = "";
+                value += BSM->getStrFromTime(now);
+                UDSetStr(KEY_VIDEO_STORE_UNIT_WATCHED_TIME, value);
             }
             nd = layer->getChildByName("ndTabUnit");
             nextIndex = UDGetInt(KEY_VIDEO_STORE_UNIT_INDEX, 0);
         }else if(layer->getTag() == 2){
-            watchedTime = UDGetDouble(KEY_VIDEO_STORE_GEM_WATCHED_TIME, 0);
-            if(watchedTime > now){
-                watchedTime = now;
-                UDSetDouble(KEY_VIDEO_STORE_GEM_WATCHED_TIME, now);
+            strWatchedTime = UDGetStr(KEY_VIDEO_STORE_GEM_WATCHED_TIME, "");
+            watchedTimeT = BSM->getTimeTFromStr(strWatchedTime);
+            if(strWatchedTime.size() == 0){
+                watchedTimeT = now - 60*60;
+                std::string value = "";
+                value += BSM->getStrFromTime(now);
+                UDSetStr(KEY_VIDEO_STORE_GEM_WATCHED_TIME, value);
             }
             nd = layer->getChildByName("ndTabGem");
             nextIndex = UDGetInt(KEY_VIDEO_STORE_GEM_INDEX, 0);
@@ -5326,7 +5415,7 @@ void BattleHud::updateUI(float dt){
             Button* btn = (Button*)nd->getChildByName(strmake("btnGem%d", nextIndex));
             lbl = (Text*)btn->getChildByName("lblGold");
             Node* img = btn->getChildByName("imgIconGold");
-            bool isReady = now - watchedTime > videoStoreWaitForNextVideoTime;
+            bool isReady = difftime(now, watchedTimeT) > videoStoreWaitForNextVideoTime;
             
             img->setVisible(isReady);
             if (isReady) {
@@ -5338,7 +5427,7 @@ void BattleHud::updateUI(float dt){
                 }
             }else{
                 lbl->setPositionX(btn->getContentSize().width/2);
-                lbl->setString(GM->getTimeLeftInString(videoStoreWaitForNextVideoTime - (now - watchedTime)));
+                lbl->setString(GM->getTimeLeftInString(videoStoreWaitForNextVideoTime - (difftime(now, watchedTimeT))));
             }
         }
     }
@@ -5372,6 +5461,7 @@ void BattleHud::showSpecialOfferLastChance(){
     Node* layer = CSLoader::createNode("MessageBox.csb");
     this->addChild(layer, 4);
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     
     Button* btn = (Button*)layer->getChildByName("btnBlock");

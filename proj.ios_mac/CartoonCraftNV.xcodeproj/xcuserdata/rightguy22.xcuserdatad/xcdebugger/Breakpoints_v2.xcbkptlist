@@ -6,11 +6,11 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ios/Ios_BillingManager.mm"
-            timestampString = "579060356.672419"
+            timestampString = "586069146.889057"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "199"
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.989796"
+            timestampString = "587612847.829525"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3188"
-            endingLineNumber = "3188"
+            startingLineNumber = "3110"
+            endingLineNumber = "3110"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -42,11 +42,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.990222"
+            timestampString = "587612847.829627"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3191"
-            endingLineNumber = "3191"
+            startingLineNumber = "3113"
+            endingLineNumber = "3113"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -58,11 +58,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.990496"
+            timestampString = "587612847.8297729"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3197"
-            endingLineNumber = "3197"
+            startingLineNumber = "3119"
+            endingLineNumber = "3119"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -74,11 +74,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.990806"
+            timestampString = "587612847.82988"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3296"
-            endingLineNumber = "3296"
+            startingLineNumber = "3218"
+            endingLineNumber = "3218"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -90,11 +90,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.992074"
+            timestampString = "587612847.829969"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3190"
-            endingLineNumber = "3190"
+            startingLineNumber = "3112"
+            endingLineNumber = "3112"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -106,12 +106,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.992915"
+            timestampString = "587612847.8300689"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3743"
-            endingLineNumber = "3743"
-            landmarkName = "HelloWorld::attackNearHero(EnemyBase* enemy)"
+            startingLineNumber = "3705"
+            endingLineNumber = "3705"
+            landmarkName = "HelloWorld::makeZombiesAttack()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -122,7 +122,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.993271"
+            timestampString = "587612847.8301539"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "6713"
@@ -138,11 +138,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.993526"
+            timestampString = "587612847.830237"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3218"
-            endingLineNumber = "3218"
+            startingLineNumber = "3140"
+            endingLineNumber = "3140"
             landmarkName = "HelloWorld::setStage(experimental::TMXTiledMap* tileMap)"
             landmarkType = "7">
          </BreakpointContent>
@@ -170,11 +170,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/BattleHud.cpp"
-            timestampString = "585708963.9938509"
+            timestampString = "587612847.830359"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1538"
-            endingLineNumber = "1538"
+            startingLineNumber = "1554"
+            endingLineNumber = "1554"
             landmarkName = "BattleHud::onUseGemToFinishBarracksClick(Ref* ref)"
             landmarkType = "7">
          </BreakpointContent>
@@ -186,12 +186,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.994037"
+            timestampString = "587612847.8304"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "5486"
-            endingLineNumber = "5486"
-            landmarkName = "HelloWorld::getCoordinateFromPosition(Point position, experimental::TMXTiledMap* map)"
+            startingLineNumber = "5473"
+            endingLineNumber = "5473"
+            landmarkName = "HelloWorld::getTileMap(Point pos)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -218,12 +218,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.994875"
+            timestampString = "587612847.8304991"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "7321"
             endingLineNumber = "7321"
-            landmarkName = "HelloWorld::updateMenu()"
+            landmarkName = "HelloWorld::updateFoodMaxState()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -234,12 +234,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Title.cpp"
-            timestampString = "585708963.995739"
+            timestampString = "587612847.830606"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1205"
-            endingLineNumber = "1205"
-            landmarkName = "Title::showStageReady(int stage)"
+            startingLineNumber = "2596"
+            endingLineNumber = "2596"
+            landmarkName = "Title::onOptionClick()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -250,11 +250,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/Movable.cpp"
-            timestampString = "585708963.996038"
+            timestampString = "587612847.830729"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2357"
-            endingLineNumber = "2357"
+            startingLineNumber = "2605"
+            endingLineNumber = "2605"
             landmarkName = "Movable::move(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -266,11 +266,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/HelloWorldScene.cpp"
-            timestampString = "585708963.996555"
+            timestampString = "587612847.8313071"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "823"
-            endingLineNumber = "823"
+            startingLineNumber = "826"
+            endingLineNumber = "826"
             landmarkName = "HelloWorld::endGame(bool win)"
             landmarkType = "7">
          </BreakpointContent>
@@ -282,11 +282,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/BattleHud.cpp"
-            timestampString = "585708963.996829"
+            timestampString = "587612847.8314"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2947"
-            endingLineNumber = "2947"
+            startingLineNumber = "2983"
+            endingLineNumber = "2983"
             landmarkName = "BattleHud::update(float dt)"
             landmarkType = "7">
          </BreakpointContent>
@@ -298,11 +298,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../Classes/BattleHud.cpp"
-            timestampString = "585708963.996874"
+            timestampString = "587612847.8314379"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "306"
-            endingLineNumber = "306"
+            startingLineNumber = "314"
+            endingLineNumber = "314"
             landmarkName = "BattleHud::onVideoTabClick(Ref* ref)"
             landmarkType = "7">
          </BreakpointContent>

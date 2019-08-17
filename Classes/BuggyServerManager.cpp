@@ -15,7 +15,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-
+//#include <time.h>
 //#include "Kakao/Common/GameUserInfo.h"
 //#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 //#include "UrlJni.h"
@@ -46,6 +46,7 @@ BuggyServerManager* BuggyServerManager::getInstance()
 bool BuggyServerManager::init()
 {
     Layer::init();
+    receivedWebTimeT = time(0);
 //    serverUrl = "http://118.32.41.70:8091";
 //    serverUrl = "http://192.168.123.165:8091";
 //    serverUrl = "http://222.120.115.95:8101"; // cartoon craft server
@@ -172,11 +173,11 @@ void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
     //        countryCode = "kr";
     //    }
     log("resposeData: %s", responseData.c_str());
-    time_t currentLocalTime;
-    struct tm * timeinfo;
-    time (&currentLocalTime);
-    timeinfo = localtime (&currentLocalTime);
-    double theTime = currentLocalTime;
+//    time_t currentLocalTime;
+//    struct tm * timeinfo;
+//    time (&currentLocalTime);
+//    timeinfo = localtime (&currentLocalTime);
+//    double theTime = currentLocalTime;
     
     setTime(responseData);
     
@@ -230,71 +231,111 @@ void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
      time (&startLocalTime);
      timeinfo = localtime (&startLocalTime);*/
 }
-double BuggyServerManager::getTimeFromStr(std::string strTime){
+
+std::string BuggyServerManager::getStrFromTime(time_t timet){
+    std::time_t now = std::time(NULL);
+    std::tm * ptm = std::localtime(&now);
+    char bufferr[32];
+    // Format: Mo, 15.06.2009 20:20:00
+    std::strftime(bufferr, 32, "%a, %d.%m.%Y %H:%M:%S", ptm);
+    
+    struct tm * timeinfo;
+    timeinfo = localtime (&timet);
+    
+    char buffer [19];
+    strftime (buffer,19,"%F %X", timeinfo);
+    return std::string(buffer);
+}
+time_t BuggyServerManager::getTimeTFromStr(std::string strTime){
+    if(strTime.size() < 19){
+        return receivedWebTimeT; // test 
+    }
     std::string year = Value(strTime.substr(0, 4)).asString();
     std::string month = Value(strTime.substr(5, 2)).asString();
     std::string date = Value(strTime.substr(8, 2)).asString();
-    //    std::string timeStr = Value(strTime.substr(0, 4)).asString();
     
-    //    ValueVector timeVector = GameManager::getInstance()->split(timeStr, ":");
-    //    log("timeVector size %d, %s, %s", (int)timeVector.size(), timeVector.at(0).asString().c_str(), timeStr.c_str());
     std::string hour = Value(strTime.substr(11, 2)).asString();
     std::string min = Value(strTime.substr(14, 2)).asString();
     std::string sec = Value(strTime.substr(17, 2)).asString();
     
     struct tm theTime;
     theTime.tm_year = Value(year).asInt()-1900;
-    theTime.tm_mon = Value(getMonthIndex(month)).asInt();
+    theTime.tm_mon = Value(month).asInt()-1;
     theTime.tm_mday = Value(date).asInt();
     theTime.tm_hour = Value(hour).asInt();
     theTime.tm_min = Value(min).asInt();
     theTime.tm_sec = Value(sec).asInt();
+    theTime.tm_isdst = 0;
+    
     time_t what = mktime(&theTime); // UTC time - 1 hour can diff for summertime
-    double tempWebTime = what;
-    tempWebTime += tz_offset(); // + local timezone diff
-    return tempWebTime;
+    return what;
 }
+//double BuggyServerManager::getTimeFromStr(std::string strTime){
+//    time_t what = getTimeTFromStr(strTime);//mktime(&theTime); // UTC time - 1 hour can diff for summertime
+//    double tempWebTime = what;
+//    tempWebTime += tz_offset(); // + local timezone diff
+//    return tempWebTime;
+//}return p;
+//}
 void BuggyServerManager::setTime(std::string strTime){
-    double tempWebTime = getTimeFromStr(strTime);
-    double tick = tempWebTime;
+    receivedWebTimeT = getTimeTFromStr(strTime);
+//    log("now: %s", strTime.c_str());
     
-    webTime = tempWebTime;
-    log("** web time: %lf", tempWebTime);
-    time_t now;
-    now = webTime;
     
-    receivedTime = *localtime(&now); // 지역표준시로 변환한다 (대한민국은 KST)
+//    double tempWebTime = getTimeFromStr(strTime);
+//    double tick = tempWebTime;
+//    webTime = receivedWebTimeT;//tempWebTime;
+//    log("** web time: %lf", receivedWebTimeT);
+//    time_t now;
+//    now = webTime;
+    
+//    receivedTime = *localtime(&now); // 지역표준시로 변환한다 (대한민국은 KST)
+    
+//    log("now2: %s", getStrFromTime(receivedWebTimeT).c_str());
+    
     //ts = gmtime(&now);  // 국제표준시 GMT로 변환한다
     //    struct tm etet = *localtime(&
-    uint64_t yesterdayTimeInInt = tick - 60*60*24;
+    uint64_t yesterdayTimeInInt = receivedWebTimeT - 60*60*24;
     time_t yesterdayNow;
     yesterdayNow = yesterdayTimeInInt;
     receivedYesterdayTime = *localtime(&yesterdayNow);
-    
-    struct tm * timeinfo;
-    time (&startLocalTime);
-    timeinfo = localtime (&startLocalTime);
-    startLocalTimeDouble = startLocalTime;
+
+    startLocalTime = time(0);
+//    log("now3: %s", getStrFromTime(receivedWebTimeT).c_str());
+//    log("now4: %s", getStrFromTime(getCurrentTimeT()).c_str());
+//    struct tm * timeinfo;
+//    time (&startLocalTime);
+//    timeinfo = localtime (&startLocalTime);
+//    startLocalTimeDouble = startLocalTime;
     
     //    log("http time-> %d/%d/%d %d:%d:%d", receivedTime->tm_year,receivedTime->tm_mon, receivedTime->tm_mday, receivedTime->tm_hour, receivedTime->tm_min, receivedTime->tm_sec);
     timeEstablished = true;
 }
-double BuggyServerManager::getCurrentTime(){
-    if(!timeEstablished){
-        log("internet not connected");
-    }
-    time_t currentLocalTime;
-    struct tm * timeinfo;
-    time (&currentLocalTime);
-    timeinfo = localtime (&currentLocalTime);
-    double currentLocalTimeDouble = currentLocalTime;
-    if (getLocalTime) {
-        return currentLocalTime;
-    }
-//        log("** get current time web: %lf, startLocalTime: %lf, currentLocalTime: %lf", webTime, startLocalTimeDouble, currentLocalTimeDouble);
-    return webTime + (currentLocalTimeDouble - startLocalTimeDouble);
-    //    return GameUserInfo::getInstance()->serverTime + (currentLocalTime - startLocalTime);
+time_t BuggyServerManager::getCurrentTimeT(){
+    time_t currentLocalTime = time(0);
+    double timeDiff = difftime(currentLocalTime, startLocalTime);
+    
+//    receivedWebTimeT = getTimeTFromStr(strTime);
+//    log("now: %s, diff: %lf", getStrFromTime(receivedWebTimeT).c_str(), timeDiff);
+    
+    return receivedWebTimeT + timeDiff;
 }
+//double BuggyServerManager::getCurrentTime(){
+//    if(!timeEstablished){
+//        log("internet not connected");
+//    }
+//    time_t currentLocalTime;
+//    struct tm * timeinfo;
+//    time (&currentLocalTime);
+//    timeinfo = localtime (&currentLocalTime);
+//    double currentLocalTimeDouble = currentLocalTime;
+//    if (getLocalTime) {
+//        return currentLocalTime;
+//    }
+////        log("** get current time web: %lf, startLocalTime: %lf, currentLocalTime: %lf", webTime, startLocalTimeDouble, currentLocalTimeDouble);
+//    return webTime + (currentLocalTimeDouble - startLocalTimeDouble);
+//    //    return GameUserInfo::getInstance()->serverTime + (currentLocalTime - startLocalTime);
+//}
 
 int BuggyServerManager::getDay(){
     return receivedTime.tm_mday;
@@ -560,8 +601,8 @@ void BuggyServerManager::onGetOtherUserDataComplete(cocos2d::Node *sender, void 
     }
     if(document.HasMember("shield_end")){
         std::string strTime = document["shield_end"].GetString();
-        double shieldEndTime = getTimeFromStr(strTime);
-        double now = getCurrentTime();
+        double shieldEndTime = getTimeTFromStr(strTime);
+        double now = (double)getCurrentTimeT();
         if(shieldEndTime > now){
             GM->raidEnemyGold = 0;
             GM->raidEnemyTree = 0;
@@ -762,7 +803,9 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     }
     if(document.HasMember("post")) UDSetStr(KEY_POST_MESSAGE, document["post"].GetString());
     if(document.HasMember("ban")) isBannedUser = document["ban"].GetInt() == 1;
-    if(document.HasMember("shield_end")) UDSetInt(KEY_SHIELD_END_TIME, getTimeFromStr(document["shield_end"].GetString()));
+    if(document.HasMember("shield_end")) {
+        UDSetStr(KEY_SHIELD_END_TIME, document["shield_end"].GetString());
+    }
     if(document.HasMember("last_launch_date")) UDSetStr(KEY_LAST_LAUNCH_DATE, document["last_launch_date"].GetString());
     if(document.HasMember("first_launch_date")) {
         std::string strFirstDay = document["first_launch_date"].GetString();
@@ -908,7 +951,7 @@ void BuggyServerManager::onGetArenaRewardComplete(cocos2d::Node *sender, void *d
     if (document.HasMember("error")) {
         log("server data error: %s", document["error"].GetString());
     }
-    if(document.HasMember("arena_reward")) {
+    if(TITLE && TITLE != nullptr && document.HasMember("arena_reward")) {
         TITLE->arenaRecord = document["arena_reward"].GetString();
         TITLE->isArenaRecordRecieved = true;
     }
@@ -934,7 +977,7 @@ void BuggyServerManager::onAddShieldComplete(cocos2d::Node *sender, void *data){
     if(BHUD != nullptr){
         if(document.HasMember("result")) {
             std::string strTime = document["result"].GetString();
-            BHUD->shieldEndTime = getTimeFromStr(strTime);
+            BHUD->shieldEndTimeT = getTimeTFromStr(strTime);
             log("shield end time: %s", strTime.c_str());
         }
         BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
@@ -1021,4 +1064,15 @@ void BuggyServerManager::onCheckPlayID(cocos2d::Node *sender, void *data){
             TITLE->isUserIDExistCheckArrived = true;
         }
     }
+}
+int BuggyServerManager::getTimeLeftToNewDay(){
+    time_t now = getCurrentTimeT();
+    struct tm nextDay;
+    double seconds;
+    time(&now);
+    nextDay = *localtime(&now);
+    nextDay.tm_hour = 0; nextDay.tm_min = 0; nextDay.tm_sec = 0;
+    nextDay.tm_mon = 0;  nextDay.tm_mday = nextDay.tm_mday + 1;
+    seconds = difftime(mktime(&nextDay), now);
+    return (int)seconds;
 }

@@ -78,8 +78,6 @@
 		EC45565E2193175C00B8F9C9 /* Ios_BillingManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = EC45565D2193175C00B8F9C9 /* Ios_BillingManager.mm */; };
 		EC455668219338B500B8F9C9 /* UnityAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC455667219338B500B8F9C9 /* UnityAds.framework */; };
 		EC4D67B322C3C9FF00DB94F9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = EC4D67B522C3C9FF00DB94F9 /* InfoPlist.strings */; };
-		EC4EDC852178CA51001C1C7E /* ServerManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC4EDC512178CA4C001C1C7E /* ServerManager.cpp */; };
-		EC4EDC862178CA51001C1C7E /* ServerManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC4EDC512178CA4C001C1C7E /* ServerManager.cpp */; };
 		EC4EDC872178CA51001C1C7E /* SneakyJoystick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC4EDC522178CA4C001C1C7E /* SneakyJoystick.cpp */; };
 		EC4EDC882178CA51001C1C7E /* SneakyJoystick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC4EDC522178CA4C001C1C7E /* SneakyJoystick.cpp */; };
 		EC4EDC892178CA51001C1C7E /* LanguageManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC4EDC532178CA4C001C1C7E /* LanguageManager.cpp */; };
@@ -280,7 +278,6 @@
 		EC4D67B422C3C9FF00DB94F9 /* English */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		EC4D67B622C3CA0200DB94F9 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		EC4EDC502178CA4C001C1C7E /* LegendDaryButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendDaryButton.h; sourceTree = "<group>"; };
-		EC4EDC512178CA4C001C1C7E /* ServerManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ServerManager.cpp; sourceTree = "<group>"; };
 		EC4EDC522178CA4C001C1C7E /* SneakyJoystick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SneakyJoystick.cpp; sourceTree = "<group>"; };
 		EC4EDC532178CA4C001C1C7E /* LanguageManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LanguageManager.cpp; sourceTree = "<group>"; };
 		EC4EDC542178CA4C001C1C7E /* EditorHud.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorHud.h; sourceTree = "<group>"; };
@@ -324,7 +321,6 @@
 		EC4EDC802178CA51001C1C7E /* EditorHud.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EditorHud.cpp; sourceTree = "<group>"; };
 		EC4EDC822178CA51001C1C7E /* Laser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Laser.cpp; sourceTree = "<group>"; };
 		EC4EDC832178CA51001C1C7E /* AwesomeDialogBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AwesomeDialogBox.h; sourceTree = "<group>"; };
-		EC4EDC842178CA51001C1C7E /* ServerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerManager.h; sourceTree = "<group>"; };
 		EC4EDCB92178CA62001C1C7E /* CartoonCraftNumber.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CartoonCraftNumber.png; sourceTree = "<group>"; };
 		EC4EDCBA2178CA62001C1C7E /* cartoonCraft.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cartoonCraft.png; sourceTree = "<group>"; };
 		EC4EDCBB2178CA62001C1C7E /* cartoonCraft.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = cartoonCraft.plist; sourceTree = "<group>"; };
@@ -597,8 +593,6 @@
 				EC36973A221D9BCC00681881 /* Node_Class.h */,
 				EC4EDC682178CA4D001C1C7E /* PPLabel.cpp */,
 				EC4EDC772178CA4F001C1C7E /* PPLabel.h */,
-				EC4EDC512178CA4C001C1C7E /* ServerManager.cpp */,
-				EC4EDC842178CA51001C1C7E /* ServerManager.h */,
 				EC4EDC522178CA4C001C1C7E /* SneakyJoystick.cpp */,
 				EC4EDC6C2178CA4E001C1C7E /* SneakyJoystick.h */,
 				EC4EDC792178CA4F001C1C7E /* SneakyJoystickSkinnedBase.cpp */,
@@ -858,7 +852,6 @@
 				EC4EDC992178CA51001C1C7E /* GameSharing.cpp in Sources */,
 				EC36973E221D9BCC00681881 /* Location_Node_Class.cpp in Sources */,
 				EC4EDC952178CA51001C1C7E /* Title.cpp in Sources */,
-				EC4EDC852178CA51001C1C7E /* ServerManager.cpp in Sources */,
 				EC4EDC872178CA51001C1C7E /* SneakyJoystick.cpp in Sources */,
 				EC4106412244422600F2748B /* BattleHud.cpp in Sources */,
 				EC4EDC8D2178CA51001C1C7E /* Enemies.cpp in Sources */,
@@ -902,7 +895,6 @@
 				EC4EDCB82178CA51001C1C7E /* Laser.cpp in Sources */,
 				EC4EDCAE2178CA51001C1C7E /* HelloWorldScene.cpp in Sources */,
 				EC4EDC902178CA51001C1C7E /* Intro.cpp in Sources */,
-				EC4EDC862178CA51001C1C7E /* ServerManager.cpp in Sources */,
 				EC4EDCA42178CA51001C1C7E /* Inventory.cpp in Sources */,
 				503AE10517EB98FF00D1A890 /* main.cpp in Sources */,
 				EC6B1DFB21B286B100C2081C /* CCUrlSprite.cpp in Sources */,

@@ -41,6 +41,9 @@
 
 
 #define AURA_LIGHTNING 0
+#define AURA_FIRE 1
+#define AURA_ICE 2
+#define AURA_GREEN 3
 
 #define MISSILE_SLASH 0
 #define MISSILE_ARROW 1
@@ -97,6 +100,11 @@
 #define UNIT_GOBLIN_WORKER 45
 #define UNIT_BARBECUE 46
 #define UNIT_HERO_ORC 47
+#define UNIT_HERO_GOBLIN 48
+#define UNIT_HERO_SPEARMAN 49
+#define UNIT_HERO_LIZARDMAN 50
+#define UNIT_HERO_ARCHER 51
+#define UNIT_HERO_WEREWOLF 52
 
 #define WEAPON_DAGGER 0
 #define WEAPON_SWORD 1
@@ -144,6 +152,7 @@ struct UnitInfo
 {
     int unitType;
     int level=0;
+    int rank=0;
     float x=-1;
     float y=-1;
     double endTime = 0;
@@ -238,6 +247,7 @@ public:
     float oneWayCancelY;
     int energy;
     int maxEnergy;
+    int skillRate = 0;
     int ap = 5;
     int dp = 1;
     int gp = 1;
@@ -357,7 +367,7 @@ public:
     static Movable* createMovable(int unit, int eng, float extraSpd, const char* sptName);
     static Movable* createMovable(int unit, int eng, float extraSpd, const char* sptName, const char* animationName);
     static Movable* createMovable(int unit, int eng, float extraSpd, const char* sptName, const char* animationName, bool repeat);
-
+    
     virtual cocos2d::Point getGravityPosition();
     void blinkForAWhile();
     void blinkForSec(int sec);
@@ -462,13 +472,13 @@ public:
     spine::SkeletonAnimation* spine = nullptr;
     
     bool isSkillOn = false; // test 
-    void startSkillAura(int aura);
+    void startSkillAuraAndSkillEffect(int aura);
     void updateSkillAura(float dt);
     void showSkillEffect();
     void stopSkillAura();
     int selectedSkillAura = -1;
     int skillEffectIndex = -1;
-    int skillCounter = 0;
+    
     Movable* skillTarget = nullptr;
     
     bool checkAttackTargetReturnSuccess(float dt);

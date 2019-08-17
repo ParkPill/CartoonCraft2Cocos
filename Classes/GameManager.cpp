@@ -14,7 +14,7 @@
 //#endif
 
 #include "Title.h"
-#include "ServerManager.h"
+
 #include "Movable.h"
 
 //#include "NativeInterface.h"
@@ -702,6 +702,33 @@ void GameManager::setFacebookReady(bool ready){
         CCLOG("setFacebookReaday false");
     }
 }
+void GameManager::addWoodKey(int amount){
+    int value = getWoodKey();
+    value += amount;
+    UDSetInt(KEY_WOOD_KEY_COUNT, value);
+    UDSetStr(KEY_KEYS, strmake("%d/%d", getWoodKey(), getGoldKey()));
+}
+void GameManager::addGoldKey(int amount){
+    int value = getGoldKey();
+    value += amount;
+    UDSetInt(KEY_GOLD_KEY_COUNT, value);
+    UDSetStr(KEY_KEYS, strmake("%d/%d", getWoodKey(), getGoldKey()));
+}
+void GameManager::setWoodKey(int amount){
+    UDSetInt(KEY_WOOD_KEY_COUNT, amount);
+    UDSetStr(KEY_KEYS, strmake("%d/%d", getWoodKey(), getGoldKey()));
+}
+void GameManager::setGoldKey(int amount){
+    UDSetInt(KEY_GOLD_KEY_COUNT, amount);
+    UDSetStr(KEY_KEYS, strmake("%d/%d", getWoodKey(), getGoldKey()));
+}
+int GameManager::getWoodKey(){
+    return UDGetInt(KEY_WOOD_KEY_COUNT, 0);
+}
+int GameManager::getGoldKey(){
+    return UDGetInt(KEY_GOLD_KEY_COUNT, 0);
+}
+    
 void GameManager::addCoin(int howMuch){
     int coin = getCoin();
     coin += howMuch;
@@ -935,7 +962,7 @@ void GameManager::stopSoundEffect(int sound){
     }*/
 }
 long GameManager::getTodaysRandom(){
-    int seed = ServerManager::getInstance()->getCurrentTime()/(60*60*24);
+    int seed = ((int)(double)BSM->getCurrentTimeT())/(60*60*24);
     log("today's seed: %d", seed);
     return 1234 + seed;
 }
@@ -3443,13 +3470,14 @@ std::string GameManager::getTimeLeftInString(int time){
     int oneHour = 60*60;
     int oneMin = 60;
     if (time >= oneDay*2) {
-        return __String::createWithFormat("%dD", (int)(time/oneDay))->getCString();
+        int hour = (int)((int)time%oneDay)/oneHour;
+        return __String::createWithFormat("%dD %dH", (int)(time/oneDay), hour)->getCString();
     }else if(time >= oneDay) {
         int hour = (int)((int)time%oneDay)/oneHour;
         if (hour == 0) {
             return __String::createWithFormat("1D")->getCString();
         }else{
-            return __String::createWithFormat("1D%dH", hour)->getCString();
+            return __String::createWithFormat("1D %dH", hour)->getCString();
         }
     }else {
         int sec = (int)((time%oneHour)%oneMin);
@@ -3465,7 +3493,8 @@ std::string GameManager::getTimeLeftInStringHMS(int time){
     int oneHour = 60*60;
     int oneMin = 60;
     if (time >= oneDay*2) {
-        return __String::createWithFormat("%dD", (int)(time/oneDay))->getCString();
+        int hour = (int)((int)time%oneDay)/oneHour;
+        return __String::createWithFormat("%dD %dH", (int)(time/oneDay), hour)->getCString();
     }else if(time >= oneDay) {
         int hour = (int)(time%oneDay)/oneHour;
         if (hour == 0) {
@@ -3821,7 +3850,7 @@ Movable* GameManager::getUnitFromData(UnitInfo* info){
     unit->level = info->level;
     unit->setName(getUnitName(info->unitType));
     unit->buildingCompleteTime = info->endTime;
-    unit->buildingCompleteTimeLeft = info->endTime - BSM->getCurrentTime();
+    unit->buildingCompleteTimeLeft = info->endTime - (double)BSM->getCurrentTimeT();
     unit->energy = getUnitHP(info->unitType, info->level);
     unit->maxEnergy = unit->energy;
     unit->ap = getUnitATT(info->unitType, info->level);
@@ -3832,7 +3861,8 @@ UnitInfo* GameManager::getUnitInfoFromString(std::string str){
     ValueVector datas = GM->split(str, "/");
     UnitInfo* info = new UnitInfo();
     info->unitType = datas.at(0).asInt();
-    info->level = datas.at(1).asInt();
+    info->level = datas.at(1).asInt()%100;
+    info->rank = datas.at(1).asInt()/100;
     if(datas.size() > 2){
         info->x = datas.at(2).asInt();
         info->y = datas.at(3).asInt();
@@ -3843,6 +3873,22 @@ UnitInfo* GameManager::getUnitInfoFromString(std::string str){
     }
     
     return info;
+}
+std::string GameManager::getSpineFileName(int unitType){
+    if(unitType == UNIT_HERO_LIZARDMAN){
+        return "lizard";
+    }else if(unitType == UNIT_HERO_SPEARMAN){
+        return "spearMan";
+    }else if(unitType == UNIT_HERO_WEREWOLF){
+        return "werewolf";
+    }else if(unitType == UNIT_HERO_ORC){
+        return "orc";
+    }else if(unitType == UNIT_HERO_GOBLIN){
+        return "goblin";
+    }else if(unitType == UNIT_HERO_ARCHER){
+        return "archer";
+    }
+    return "";
 }
 std::string GameManager::getUnitName(int index){
     if(index == UNIT_CASTLE){
@@ -3909,6 +3955,16 @@ std::string GameManager::getUnitName(int index){
         return "zombie swordman";
     }else if(index == UNIT_HERO_ORC){
         return "hero orc";
+    }else if(index == UNIT_HERO_GOBLIN){
+        return "hero goblin";
+    }else if(index == UNIT_HERO_SPEARMAN){
+        return "hero spearman";
+    }else if(index == UNIT_HERO_LIZARDMAN){
+        return "hero lizardman";
+    }else if(index == UNIT_HERO_WEREWOLF){
+        return "hero werewolf";
+    }else if(index == UNIT_HERO_ARCHER){
+        return "hero archer";
     }
     return "worker";
 }
@@ -3998,6 +4054,8 @@ void GameManager::addConsumedItem(std::string strSkuName){
 void GameManager::onRestored(std::string strSkuID){
     if(strSkuID.compare(IAP_DETAIL_CHAPTER2) == 0){
         UDSetBool(KEY_CHAPTER_2_PURCHASED, true);
+    }else if(strSkuID.compare(IAP_DETAIL_CHAPTER3) == 0){
+        UDSetBool(KEY_CHAPTER_3_PURCHASED, true);
     }else if(strSkuID.compare(IAP_DETAIL_PREMIUM_RETRY) == 0){
         UDSetBool(KEY_PREMIUM_START, true);
     }

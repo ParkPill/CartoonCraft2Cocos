@@ -225,7 +225,7 @@ protected:
     void receivingData(float dt);
 public:
     bool isBlockExistBetween(Vec2 start, Vec2 end);
-    bool blackSheepWell = false; // test
+    bool blackSheepWell = false; // test 
     bool testSuper = false; // test no
     Movable* getGroundOwner(Vec2 pos);
     Vector<EnemyBase*> unitsToCreateArray;
@@ -241,6 +241,8 @@ public:
     
     experimental::TMXTiledMap* theMap;
     Movable* createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, cocos2d::Point pos, bool isFromEnemy, std::string weaponName = "");
+    void createMissile(std::string strMsName, std::string strArrivedMsName, Vec2 startPos, Vec2 endPos, float moveTime, int damage, float delay);
+    void missileMoveDone
     EnemyBase* getEncounteredNPC(cocos2d::Point pos);
     EnemyBase* talkingNPC = nullptr;
     void movePlayer(int direction);
@@ -289,6 +291,10 @@ public:
     int itemCount=0;
     PointArray* enemyPointArray;
     PointArray* supportPointArray;
+    PointArray* heroPointArray;
+    UnitInfo* getHeroAt(int index);
+    
+    void setHeroLevelInfo(EnemyBase* hero, int level);
     Vector<EnemyBase*> enemiesToLoad;
     void loadEnemies();
     void addAppearEffect(Sprite* parent);
@@ -354,6 +360,7 @@ public:
     void setOccupy(cocos2d::Point pos, int width, int height, bool occupy);
     void setOccupy(cocos2d::Point pos, int width, int height, bool occupy, EnemyBase* building);
     bool isOccupied(cocos2d::Point coordinate);
+    
     NodeGrid* nodeGrid;
 //    SpriteBatchNode* spriteBatchForHero;
 //    SpriteBatchNode* coinSpriteBatch;
@@ -500,6 +507,7 @@ public:
     Sprite* getLightSpin(float persistTime);
     Sprite* getShining(float delayTime);
 //    void fireLoop(float dt);
+    void checkMissileHit(Ref* ref);
     void missileMoveDone(Ref* obj);
     void spriteMoveDone(Ref* obj);
     void coinWaitDone(Ref* obj);
@@ -595,9 +603,6 @@ public:
     cocos2d::Point center;
     Sprite* cursor;
     Sprite* getLight();
-    bool isWaterBoy;
-    bool isWaterBoyFlip;
-    float waterBoyAngle;
     
     void showStageClearLayer(bool threeStars);
     void onUpdateResultComplete();
@@ -826,7 +831,7 @@ public:
     
     int getAttackPriority(Movable* unit);
     bool canAttack(Movable* attacker, Movable* target);
-    bool isSpotAvailable(bool isEnemy, cocos2d::Point pos);
+    bool isThisSpotAvailable(cocos2d::Point pos);
     
     int totalEarnedGold = 0;
     int totalEarnedLumber = 0;
@@ -865,6 +870,8 @@ public:
     void setTileGID(experimental::TMXLayer* layer, int gid, Vec2 pos);
 
     bool isBuildingExistWhenStartTheGame = true;
+    void placeDeckUnitForRaid(Vec2 pos);
+    
 };
 
 

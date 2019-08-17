@@ -31,9 +31,18 @@
     <Item Key="TabsParamsKey">
       <Value ctype="TabsInfo">
         <OpenedDocuments>
+          <FilePathData Path="HeroPopup.csd" />
+          <FilePathData Path="Title.csd" />
+          <FilePathData Path="HeroPage.csd" />
+          <FilePathData Path="UnitDetail.csd" />
+          <FilePathData Path="UnitTrainInfo.csd" />
+          <FilePathData Path="FusionPage.csd" />
           <FilePathData Path="ChapterSelect.csd" />
+          <FilePathData Path="Shop.csd" />
+          <FilePathData Path="MessageBox.csd" />
+          <FilePathData Path="HeroAlert.csd" />
         </OpenedDocuments>
-        <ActiveDocument Path="ChapterSelect.csd" />
+        <ActiveDocument Path="FusionPage.csd" />
       </Value>
     </Item>
   </Properties>

@@ -492,7 +492,7 @@
                 <PreSize X="0.0000" Y="0.0000" />
                 <FileData Type="Normal" Path="uiBoxTiny.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="Image_3_0_0" ActionTag="2075383895" Tag="402" IconVisible="False" LeftMargin="1164.7053" RightMargin="-1261.7053" TopMargin="-539.3221" BottomMargin="461.3221" LeftEage="24" RightEage="24" TopEage="26" BottomEage="26" Scale9OriginX="24" Scale9OriginY="26" Scale9Width="49" Scale9Height="26" ctype="ImageViewObjectData">
+              <AbstractNodeData Name="imgGoldStorage" ActionTag="2075383895" Tag="402" IconVisible="False" LeftMargin="1164.7053" RightMargin="-1261.7053" TopMargin="-539.3221" BottomMargin="461.3221" LeftEage="24" RightEage="24" TopEage="26" BottomEage="26" Scale9OriginX="24" Scale9OriginY="26" Scale9Width="49" Scale9Height="26" ctype="ImageViewObjectData">
                 <Size X="97.0000" Y="78.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                 <Position X="1213.2053" Y="500.3221" />

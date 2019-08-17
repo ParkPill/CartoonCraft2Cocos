@@ -6,13 +6,13 @@
       <ObjectData Name="Scene" Tag="155" ctype="GameNodeObjectData">
         <Size X="2368.0000" Y="1334.0000" />
         <Children>
-          <AbstractNodeData Name="btnBlock" ActionTag="1035062124" Alpha="179" Tag="156" IconVisible="False" LeftMargin="-395.2032" RightMargin="-1229.5498" TopMargin="-612.3170" BottomMargin="-450.3417" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnBlock" ActionTag="1035062124" Alpha="179" Tag="156" IconVisible="False" LeftMargin="-746.6198" RightMargin="-878.1333" TopMargin="-551.4945" BottomMargin="-511.1642" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="3992.7529" Y="2396.6587" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-            <Position X="1601.1732" Y="747.9877" />
+            <Position X="1249.7567" Y="687.1652" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="0" G="0" B="0" />
-            <PrePosition X="0.6762" Y="0.5607" />
+            <PrePosition X="0.5278" Y="0.5151" />
             <PreSize X="1.6861" Y="1.7966" />
             <TextColor A="255" R="65" G="65" B="70" />
             <DisabledFileData Type="Default" Path="Default/Button_Disable.png" Plist="" />
@@ -588,10 +588,10 @@
           <AbstractNodeData Name="ndPopulation" ActionTag="-245414660" Tag="1016" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
             <Size X="0.0000" Y="0.0000" />
             <Children>
-              <AbstractNodeData Name="lblPopulation" ActionTag="332779099" Tag="1017" IconVisible="False" LeftMargin="1544.1306" RightMargin="-1603.1306" TopMargin="-487.5446" BottomMargin="415.5446" FontSize="50" LabelText="19" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lblPopulation" ActionTag="332779099" Tag="1017" IconVisible="False" LeftMargin="1338.6465" RightMargin="-1397.6465" TopMargin="-481.7402" BottomMargin="409.7402" FontSize="50" LabelText="19" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="59.0000" Y="72.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="1573.6306" Y="451.5446" />
+                <Position X="1368.1465" Y="445.7402" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
                 <PrePosition />
@@ -600,10 +600,10 @@
                 <OutlineColor A="255" R="0" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
-              <AbstractNodeData Name="imgPopulation" ActionTag="878987984" Tag="1018" IconVisible="False" LeftMargin="1425.6777" RightMargin="-1498.6777" TopMargin="-496.1894" BottomMargin="415.1894" LeftEage="24" RightEage="24" TopEage="26" BottomEage="26" Scale9OriginX="24" Scale9OriginY="26" Scale9Width="25" Scale9Height="29" ctype="ImageViewObjectData">
+              <AbstractNodeData Name="imgPopulation" ActionTag="878987984" Tag="1018" IconVisible="False" LeftMargin="1220.1930" RightMargin="-1293.1930" TopMargin="-490.3851" BottomMargin="409.3851" LeftEage="24" RightEage="24" TopEage="26" BottomEage="26" Scale9OriginX="24" Scale9OriginY="26" Scale9Width="25" Scale9Height="29" ctype="ImageViewObjectData">
                 <Size X="73.0000" Y="81.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="1462.1777" Y="455.6894" />
+                <Position X="1256.6930" Y="449.8851" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
                 <PrePosition />

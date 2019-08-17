@@ -744,12 +744,15 @@ void GameSharing::setupIAB(){
     list.push_back(IAP_DETAIL_GEM_50);
     list.push_back(IAP_DETAIL_GEM_100);
     list.push_back(IAP_DETAIL_CHAPTER2);
+    list.push_back(IAP_DETAIL_CHAPTER3);
     list.push_back(IAP_DETAIL_UNIT_PACK_2);
     list.push_back(IAP_DETAIL_UNIT_PACK_5);
     list.push_back(IAP_DETAIL_UNIT_PACK_8);
+    list.push_back(IAP_DETAIL_STARTER_KEY);
     for (int i = 0; i < list.size(); i++) {
         addSkuItemForStore(list.at(i));
         if(list.at(i).compare(IAP_DETAIL_CHAPTER2) == 0 ||
+           list.at(i).compare(IAP_DETAIL_CHAPTER3) == 0 ||
            list.at(i).compare(IAP_DETAIL_PREMIUM_RETRY) == 0){ // non-consumable
             addNonConsumableSkuItemForStore(list.at(i));
         }

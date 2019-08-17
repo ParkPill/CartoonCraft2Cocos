@@ -20,7 +20,7 @@
 //#endif
 #include "GameManager.h"
 #include "LanguageManager.h"
-#include "ServerManager.h"
+#include "BuggyServerManager.h"
 #include "Intro.h"
 USING_NS_CC;
 
@@ -102,7 +102,10 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1334, 750));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1334, 750));
+        float rate = 0.8f;
+        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1500*rate, 750*rate));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1024, 768));
 //        glview = GLViewImpl::createWithFullScreen("Cartoon Craft");
 //        glview = GLViewImpl::create("Cartoon Craft");
 #else
@@ -148,12 +151,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     
     // Set the design resolution
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::SHOW_ALL);
-//    Size frameSize = glview->getFrameSize();
-//    if (frameSize.height/frameSize.width > designResolutionSize.height/designResolutionSize.width){
-//        glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
-//    }else{
-//        glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_HEIGHT);
-//    }
+    Size frameSize = glview->getFrameSize();
+    if (frameSize.height/frameSize.width > designResolutionSize.height/designResolutionSize.width){
+        glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
+    }else{
+        glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_HEIGHT);
+    }
     /*Size frameSize = glview->getFrameSize();
      // if the frame's height is larger than the height of medium size.
      if (frameSize.height > mediumResolutionSize.height)
@@ -201,7 +204,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     
     srand((uint)time(NULL));
     
-    ServerManager::getInstance()->getHttpTime();
+    BSM->getHttpTime();
     GM->loadBattleData();
     GameSharing::init(); // for ios
     
@@ -228,7 +231,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    Scene* scene = Scene::create();
 //    scene->addChild(Title::create());
     // title end
-    
     
     int startX = 0;
     int max=0;
@@ -290,17 +292,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
     
     GM->nextScene = STAGE_FIELD; // test
-//    auto scene = HelloWorld::scene(27, false); // test
+    auto scene = HelloWorld::scene(36, false); // test now
 //    GM->nextScene = STAGE_LOBBY; // test
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
 //    GM->nextScene = STAGE_SINGLEPLAY; // test
 //    GM->singlePlayStageIndex = 0;
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
-    GM->version = "2.51";
-    auto scene = Scene::create();
-    Intro* intro = Intro::create();
-    scene->addChild(intro);
+    GM->version = "2.61";
+//    auto scene = Scene::create();
+//    Intro* intro = Intro::create();
+//    scene->addChild(intro);
     // intro end
 
 //    scene->addChild(FifteenSixLogo::create());

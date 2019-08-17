@@ -29,6 +29,57 @@ public:
     virtual bool init();
     CREATE_FUNC(Title);
     
+    Node* ndTopBar;
+    Text* lblGemInHud = nullptr;
+    int lastGemUpdated;
+    Text* lblGoldInHud = nullptr;
+    int lastGoldUpdated;
+    Text* lblTreeInHud = nullptr;
+    int lastTreeUpdated;
+    void onCloseShop();
+    int getMaxGold(int level);
+    int getMaxGold();
+    int getMaxTree();
+    int getMaxTree(int level);
+    void onMoveToDeckUnitClick();
+    void onRemoveFromDeckUnitClick();
+    void onSortByRarity();
+    void onSortBySlot();
+    void onFusionClick();
+    void onEquipedHeroClick(Ref* ref);
+    void onFusionButtonClick();
+    std::vector<UnitInfo*> unitInfoListHeroInventory;
+    std::vector<UnitInfo*> unitInfoListHeroDeck;
+    std::vector<UnitInfo*> unitInfoListHeroInventoryArrangedForFusion;
+    std::vector<UnitInfo*> unitInfoListHeroSelectedForFusion;
+    void updateUnitListForFusion();
+    void onSelectedHeroClickForFusion(Ref* ref);
+    void onOkFusionResult();
+    void onHeroInFusionClick(Ref* ref);
+    void onHeroWoodChestGachaAgainClick();
+    void onHeroGoldChestGachaAgainClick();
+    Color3B getRankColor(int rank);
+    void onHeroInInventoryClick(Ref* ref);
+    void showHeroDetail(UnitInfo* info, bool showLightning = false);
+    void onUpgradeUnitClick();
+    UnitInfo* selectedUnitInfo;
+    void updateHeroInventorySaveData();
+    void updateHeroDeckSaveData();
+    void onChestClick(Ref* ref);
+    void pickHero(int minRank, int maxRank);
+    void saveUserData(std::vector<int>& datas);
+    int getMineGoldPerHour(int level);
+    void onBuyTree(Ref* ref);
+    void onBuyGold(Ref* ref);
+    void onBuyGem(Ref* ref);
+    void onBuyStartKeys();
+    void onHeroShopTabClick(Ref* ref);
+    void onHeroShopClick();
+    void onHeroMoreGemClick();
+    void onHeroMoreResourceClick();
+    void onHeroClick();
+    void onNeverShowHeroAlertClick();
+    void showHeroPage(bool showAlert = false);
     void onChapterClick(Ref* ref);
     void showChapterSelect();
     void onOptionClick();
@@ -37,9 +88,9 @@ public:
     void onOkFromLoadData();
     void goToLoadedStage();
     void onArenaClick();
-    void onUpgradeClick();
+    
     int selectedSaveSlot;
-    void onShopClick();
+    
     void showInstanceMessage(std::string msg, int offset = 0);
     bool isGameCenterLoginRequestedFromShowColosseum = false;
 
@@ -172,6 +223,7 @@ public:
     void onPurchaseChapterClick(Ref* ref);
     
     void onCommunityClick();
+    void onFacebookClick();
     
     void checkPlayerIDExist();
     bool isUserIDExistCheckRequested = false;
@@ -180,5 +232,7 @@ public:
     void onLanguageClick();
     void onLanguageOkClick();
     void onLanguageButtonClick(Ref* ref);
+    
+    void onHardModeClick();
 };
 #endif /* Title_hpp */

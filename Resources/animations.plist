@@ -31,6 +31,35 @@
 				<string>lightning7.png</string>
 			</array>
 		</dict>
+		<key>firebomb</key>
+		<dict>
+			<key>delay</key>
+			<real>0.06</real>
+			<key>frames</key>
+			<array>
+				<string>explosionDirection0.png</string>
+				<string>explosionDirection1.png</string>
+				<string>explosionDirection2.png</string>
+				<string>explosionDirection3.png</string>
+				<string>explosionDirection4.png</string>
+				<string>explosionDirection5.png</string>
+				<string>explosionDirection6.png</string>
+				<string>explosionDirection7.png</string>
+			</array>
+		</dict>
+		<key>blueslash</key>
+		<dict>
+			<key>delay</key>
+			<real>0.05</real>
+			<key>frames</key>
+			<array>
+				<string>blueSlash0.png</string>
+				<string>blueSlash1.png</string>
+				<string>blueSlash2.png</string>
+				<string>blueSlash3.png</string>
+				<string>blueSlash4.png</string>
+			</array>
+		</dict>
 		<key>workerAttack02</key>
 		<dict>
 			<key>delay</key>

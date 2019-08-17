@@ -14,7 +14,6 @@
 //#include "NativeInterface.h"
 #include "LanguageManager.h"
 #include "BuggyServerManager.h"
-#include "ServerManager.h"
 #include "Title.h"
 #include "ui/UITextBMFont.h"
 #include "ui/UIScrollView.h"
@@ -275,7 +274,7 @@ bool HudLayer::init()
     if(GM->nextScene == STAGE_FIELD || isRaid){
         int offsetX = 0;
         if(size.height/size.width < 700.0f/1334.0f){
-            offsetX = 100;
+//            offsetX = 100;
         }
         if(GM->nextScene == STAGE_FIELD){
             btn = Button::create("uiBoxSmallBlue.png");
@@ -369,8 +368,9 @@ bool HudLayer::init()
             lbl->setPositionX(btn->getContentSize().width/2 + 40);
         }
         
-        rightBottomPanel = CSLoader::createNode("RightBottomPanel.csb");
+        rightBottomPanel = CSLoader::createNodeWithVisibleSize("RightBottomPanel.csb");
         this->addChild(rightBottomPanel, 5);
+        rightBottomPanel->setContentSize(size);
         Node* ndBattle = rightBottomPanel->getChildByName("ndBattle");
         for (int i =0; i < 3; i++) {
             img = (ImageView*)ndBattle->getChildByName(strmake("imgStar%d", i));
@@ -529,7 +529,7 @@ void HudLayer::setRaid(){
                 unit->level = info->level;
                 WORLD->setOccupy(occupyPos, occupySize.width, occupySize.height, true, unit);
                 
-                unit->buildingCompleteTimeLeft = info->endTime - BSM->getCurrentTime();
+                unit->buildingCompleteTimeLeft = info->endTime - BSM->getCurrentTimeT();
                 unit->unitState = info->unitState;
 //                buildings.pushBack(unit);
                 if (info->unitState == UNIT_STATE_BUILDING || info->unitState == UNIT_STATE_UPGRADE || unit->unitState == UNIT_STATE_REMOVING) {
@@ -681,7 +681,7 @@ void HudLayer::showRaidResult(bool saveRecord){
         GM->raidRewardTree = -tree;
         GM->raidRewardTrophy = trophyGet;
         
-        GM->restingForBattleEndTime = BSM->getCurrentTime() + 60;
+        GM->restingForBattleEndTime = BSM->getCurrentTimeT() + 60;
     }else if(GM->currentStageIndex == STAGE_SINGLEPLAY){
         bool isRewardGiven = UDGetBool(strmake(KEY_SINGLE_PLAY_CLEAR_FORMAT, GM->singlePlayStageIndex).c_str(), false);
         trophy = 0;
@@ -769,7 +769,6 @@ void HudLayer::showRaidResult(bool saveRecord){
     GM->showNode(layer->getChildByName("btnOk"), delayTime); // test
     lbl = (Text*)layer->getChildByName("btnOk")->getChildByName("lbl");
     LM->setLocalizedString(lbl, "ok");
-    
 }
 
 void HudLayer::onDragSelectClick(Ref* ref){
@@ -890,11 +889,10 @@ void HudLayer::showSupportOffer(){
             if(GM->currentStageIndex >= 12 && GM->currentStageIndex <= 24){
                 unitType = UNIT_WIZARD;
             }
-            spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(UNIT_CATAPULT));
+            spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
             btn->addChild(spt);
             spt->setPosition(Point(300, 200));
         }
-        
         
         if(GM->isColosseum){
             lbl = PPLabel::create(LM->getText("select support"), btn->getContentSize().height*2/6, DARK_GRAY_3B, LM->getLanguageType() != LanguageType::ENGLISH, false, TextHAlignment::CENTER, false);
@@ -3322,7 +3320,7 @@ void HudLayer::removeUsedAssets(){
 void HudLayer::toMain(Ref* pSender, ui::Widget::TouchEventType eEventType){
     if(TouchEventType::TOUCH_EVENT_ENDED != (TouchEventType)eEventType) return;
     
-    ServerManager::getInstance()->getHttpTime();
+    BSM->getHttpTime();
     GameManager::getInstance()->getWorld()->saveCoinIfStarCollected();
     whereToGo = CLOSE_TO_MAIN;
     this->scheduleOnce(schedule_selector(HudLayer::closeSchedule), 0.01);
@@ -3330,7 +3328,7 @@ void HudLayer::toMain(Ref* pSender, ui::Widget::TouchEventType eEventType){
 void HudLayer::toStageSelect(Ref* pSender, ui::Widget::TouchEventType eEventType){
     if(TouchEventType::TOUCH_EVENT_ENDED != (TouchEventType)eEventType) return;
     
-    ServerManager::getInstance()->getHttpTime();
+    BSM->getHttpTime();
     GameManager::getInstance()->getWorld()->saveCoinIfStarCollected();
     
     whereToGo = CLOSE_TO_STAGES;
@@ -4861,9 +4859,9 @@ void HudLayer::showAlchyShop(){
 //    Label* newLbl = changeTextWithLabel(lbl, 313);
     lbl->setString(strmake("A.%s   B.%s", LM->getText("combine").c_str(), LM->getText("cancel").c_str()));
     
-    this->schedule(schedule_selector(HudLayer::alchyUpdate), 1);
+    
     updateAlchyShop();
-    alchyUpdate(0);
+    
 }
 void HudLayer::updateAlchyShop(){
     
@@ -4918,43 +4916,6 @@ int HudLayer::getAlchyWeaponCombineMinutes(int weaponIndex){
 }
 void HudLayer::onAcceptCombineInAlchyShop(){
     
-}
-void HudLayer::alchyUpdate(float dt){
-    std::string startTime = UDGetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-    if(startTime.size() == 0){
-        
-    }else{
-        double now = SM->getCurrentTime();
-        double startedTime = Value(startTime).asDouble();
-        int minutesToComplete = getAlchyWeaponCombineMinutes(alchyNextWeaponLevel);
-        int seconds = (startedTime + minutesToComplete*60 - now);
-        int minutesLeft = seconds/60;
-        int gemPrice = getGemForMinute(minutesLeft);
-        
-        if (seconds <= 0) {
-            UDSetStr(KEY_ALCHY_COMBINING_ITEM_NAME, "");
-            showInstanceMessage(LM->getText("weapon combined"));
-            UDSetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-            this->unschedule(schedule_selector(HudLayer::alchyUpdate));
-            inventory->addItem(alchyIngredientNextWeaponName, ITEM_TYPE_WEAPON);
-            
-            showAlchyShop();
-            return;
-        }else{
-            Text* lbl = (Text*)alchyShopLayer->getChildByName("lblDescription");
-            std::string dots;
-            for (int i = 0; i < 3 - seconds%4; i++) {
-                dots.append(".");
-            }
-            lbl->setString(strmake("%s%s\n%s:%s", LM->getText("weapon combining").c_str(), dots.c_str(), LM->getText("time left").c_str(), GM->getTimeLeftInString(seconds).c_str()));
-        }
-    
-        Text* lbl = (Text*)alchyShopLayer->getChildByName("lblResultDescription");
-        lbl->setString(strmake(LM->getText("press a to complete now format").c_str(), gemPrice));
-        
-        lbl = (Text*)alchyShopLayer->getChildByName("lblTip");
-        lbl->setString(strmake("A.%s   B.%s", strmake(LM->getText("complete now format").c_str(), gemPrice).c_str(), LM->getText("cancel").c_str()));
-    }
 }
 void HudLayer::selectSamShopItem(Ref* ref){
     
@@ -5079,26 +5040,10 @@ void HudLayer::onConfirmInsurancePlan(Ref* ref){
         
     }else if(lbl->getTag() == 1){
         GM->addGem(-5);
-        addInsurance(6);
+        
     }else if(lbl->getTag() == 2){
         // purchase
     }
-}
-void HudLayer::addInsurance(int hour){
-    std::string startTime = UDGetStr(KEY_INSURANCE_END_TIME, "");
-    double endTime;
-    if(startTime.size() == 0){
-        endTime = SM->getCurrentTime() + hour*60*60;
-    }else{
-        endTime = Value(startTime).asDouble();
-        if(endTime < SM->getCurrentTime()){
-            endTime = SM->getCurrentTime() + hour*60*60;
-        }else{
-            endTime += hour*60*60;
-        }
-    }
-    UDSetStr(KEY_INSURANCE_END_TIME, Value(endTime).asString());
-    
 }
 void HudLayer::showPVP(){
     

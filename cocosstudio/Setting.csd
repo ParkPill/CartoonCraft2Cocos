@@ -263,6 +263,43 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
+          <AbstractNodeData Name="btnRestore_0" ActionTag="-749096161" Tag="77" IconVisible="False" LeftMargin="1216.0289" RightMargin="677.4210" TopMargin="1483.7903" BottomMargin="-285.0403" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="67" Scale9Height="75" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+            <Size X="474.5500" Y="135.2500" />
+            <Children>
+              <AbstractNodeData Name="img" ActionTag="-1230351978" Tag="78" IconVisible="False" LeftMargin="40.3679" RightMargin="350.1821" TopMargin="20.1159" BottomMargin="20.1341" LeftEage="39" RightEage="39" TopEage="36" BottomEage="36" Scale9OriginX="39" Scale9OriginY="36" Scale9Width="6" Scale9Height="23" ctype="ImageViewObjectData">
+                <Size X="84.0000" Y="95.0000" />
+                <AnchorPoint ScaleX="0.5182" ScaleY="0.5296" />
+                <Position X="83.8967" Y="70.4461" />
+                <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                <CColor A="255" R="255" G="255" B="255" />
+                <PrePosition X="0.1768" Y="0.5209" />
+                <PreSize X="0.1770" Y="0.7024" />
+                <FileData Type="Normal" Path="iconCup.png" Plist="" />
+              </AbstractNodeData>
+              <AbstractNodeData Name="lbl" ActionTag="1158140260" Tag="79" IconVisible="False" LeftMargin="231.2939" RightMargin="98.2561" TopMargin="55.7043" BottomMargin="45.5457" FontSize="30" LabelText="RESTORE" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="145.0000" Y="34.0000" />
+                <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                <Position X="303.7939" Y="62.5457" />
+                <Scale ScaleX="1.5000" ScaleY="1.5000" />
+                <CColor A="255" R="14" G="14" B="14" />
+                <PrePosition X="0.6402" Y="0.4624" />
+                <PreSize X="0.3056" Y="0.2514" />
+                <OutlineColor A="255" R="255" G="0" B="0" />
+                <ShadowColor A="255" R="110" G="110" B="110" />
+              </AbstractNodeData>
+            </Children>
+            <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+            <Position X="1453.3040" Y="-217.4153" />
+            <Scale ScaleX="1.0000" ScaleY="1.0000" />
+            <CColor A="255" R="255" G="255" B="255" />
+            <PrePosition X="0.6137" Y="-0.1630" />
+            <PreSize X="0.2004" Y="0.1014" />
+            <TextColor A="255" R="65" G="65" B="70" />
+            <PressedFileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
+            <NormalFileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
         </Children>
       </ObjectData>
     </Content>

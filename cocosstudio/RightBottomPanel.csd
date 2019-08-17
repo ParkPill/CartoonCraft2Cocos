@@ -6,7 +6,7 @@
       <ObjectData Name="Scene" Tag="109" ctype="GameNodeObjectData">
         <Size X="2368.0000" Y="1334.0000" />
         <Children>
-          <AbstractNodeData Name="Image_1" ActionTag="329294218" Tag="110" IconVisible="False" LeftMargin="1923.0000" TopMargin="889.0000" Scale9Enable="True" LeftEage="86" RightEage="86" TopEage="77" BottomEage="77" Scale9OriginX="86" Scale9OriginY="77" Scale9Width="89" Scale9Height="80" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="Image_1" ActionTag="329294218" Tag="110" IconVisible="False" HorizontalEdge="RightEdge" VerticalEdge="BottomEdge" LeftMargin="1923.0000" TopMargin="889.0000" Scale9Enable="True" LeftEage="86" RightEage="86" TopEage="77" BottomEage="77" Scale9OriginX="86" Scale9OriginY="77" Scale9Width="89" Scale9Height="80" ctype="ImageViewObjectData">
             <Size X="445.0000" Y="445.0000" />
             <AnchorPoint ScaleX="1.0000" />
             <Position X="2368.0000" />
@@ -16,7 +16,7 @@
             <PreSize X="0.1879" Y="0.3336" />
             <FileData Type="Normal" Path="uiBox.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="ndMission" ActionTag="-1775489287" Tag="111" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
+          <AbstractNodeData Name="ndMission" ActionTag="-1775489287" Tag="111" IconVisible="True" HorizontalEdge="RightEdge" VerticalEdge="BottomEdge" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
             <Size X="0.0000" Y="0.0000" />
             <Children>
               <AbstractNodeData Name="imgMission" ActionTag="-1589820458" Tag="112" IconVisible="False" LeftMargin="1996.4607" RightMargin="-2292.5149" TopMargin="-404.1131" BottomMargin="351.1889" LeftEage="120" RightEage="120" TopEage="26" BottomEage="26" Scale9OriginX="120" Scale9OriginY="26" Scale9Width="126" Scale9Height="28" ctype="ImageViewObjectData">
@@ -73,7 +73,7 @@
             <PrePosition />
             <PreSize X="0.0000" Y="0.0000" />
           </AbstractNodeData>
-          <AbstractNodeData Name="ndInfo" ActionTag="-1893634703" Tag="116" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
+          <AbstractNodeData Name="ndInfo" ActionTag="-1893634703" Tag="116" IconVisible="True" HorizontalEdge="RightEdge" VerticalEdge="BottomEdge" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
             <Size X="0.0000" Y="0.0000" />
             <Children>
               <AbstractNodeData Name="imgIconBack" ActionTag="855849087" Tag="117" IconVisible="False" LeftMargin="1937.6115" RightMargin="-2186.2468" TopMargin="-435.7625" BottomMargin="200.7625" Scale9Enable="True" LeftEage="32" RightEage="32" TopEage="32" BottomEage="32" Scale9OriginX="32" Scale9OriginY="32" Scale9Width="33" Scale9Height="33" ctype="ImageViewObjectData">
@@ -86,7 +86,7 @@
                 <PreSize X="0.0000" Y="0.0000" />
                 <FileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="sv" ActionTag="-1665936818" Tag="124" IconVisible="False" LeftMargin="1943.1383" RightMargin="-2348.1382" TopMargin="-168.6208" BottomMargin="16.6208" TouchEnable="True" ClipAble="True" BackColorAlpha="0" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ScrollDirectionType="Vertical" ctype="ScrollViewObjectData">
+              <AbstractNodeData Name="sv" ActionTag="-1665936818" Tag="124" IconVisible="False" LeftMargin="1943.1382" RightMargin="-2348.1382" TopMargin="-168.6208" BottomMargin="16.6208" TouchEnable="True" ClipAble="True" BackColorAlpha="0" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ScrollDirectionType="Vertical" ctype="ScrollViewObjectData">
                 <Size X="405.0000" Y="152.0000" />
                 <Children>
                   <AbstractNodeData Name="lblDescription" ActionTag="1958421432" Tag="118" IconVisible="False" LeftMargin="3.3226" RightMargin="-1.0070" TopMargin="-3.1108" BottomMargin="143.8670" IsCustomSize="True" FontSize="30" LabelText="Text Label" OutlineSize="0" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
@@ -103,7 +103,7 @@
                   </AbstractNodeData>
                 </Children>
                 <AnchorPoint />
-                <Position X="1943.1383" Y="16.6208" />
+                <Position X="1943.1382" Y="16.6208" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
                 <PrePosition />
@@ -205,7 +205,7 @@
               </AbstractNodeData>
             </Children>
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-            <Position X="221.5016" Y="580.2487" />
+            <Position X="221.5015" Y="580.2487" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="255" G="0" B="0" />
             <PrePosition X="0.0935" Y="0.4350" />
@@ -216,7 +216,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="ndBattle" ActionTag="-1165746478" Tag="1202" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
+          <AbstractNodeData Name="ndBattle" ActionTag="-1165746478" Tag="1202" IconVisible="True" HorizontalEdge="RightEdge" VerticalEdge="BottomEdge" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
             <Size X="0.0000" Y="0.0000" />
             <Children>
               <AbstractNodeData Name="Image_2" ActionTag="1282078468" Tag="1203" IconVisible="False" LeftMargin="2046.8420" RightMargin="-2226.8420" TopMargin="-407.4134" BottomMargin="221.4134" LeftEage="59" RightEage="59" TopEage="61" BottomEage="61" Scale9OriginX="59" Scale9OriginY="61" Scale9Width="62" Scale9Height="64" ctype="ImageViewObjectData">

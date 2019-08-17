@@ -32,19 +32,23 @@ private:
     
     //Instance of the singleton
     static BuggyServerManager* m_mySingleton;
-   
+//    time_t receivedTimeT;
     struct tm receivedTime;
     struct tm receivedYesterdayTime;
 public:
     std::string apiName;
     bool getLocalTime = false;
+    time_t getTimeTFromStr(std::string strTime);
+    time_t receivedWebTimeT;
     time_t startLocalTime;
     double startLocalTimeDouble = 0;
     double webTime;
     bool timeEstablished;
     bool isTrying;
     int retryCount=0;
-    double getCurrentTime();
+//    double getCurrentTime();
+    time_t getCurrentTimeT();
+    
     const char* getRemainTime(double targetTime);
     static BuggyServerManager* getInstance();
     
@@ -122,7 +126,8 @@ public:
     
     void sendPost(std::string method, std::string requestData, cocos2d::network::SEL_HttpResponse pSelector);
     
-    double getTimeFromStr(std::string strTime);
+//    double getTimeFromStr(std::string strTime);
+    std::string getStrFromTime(time_t timet);
     int getIntIfUndefineZero(std::string str);
     
     std::string resultMessage;
@@ -150,7 +155,7 @@ public:
     int goldLimit = 1000000;
     int treeLimit = 1000000;
     
-    
+    int getTimeLeftToNewDay();
 };
 
 #endif /* defined(__LegendDaryKakao__BuggyServerManager__) */

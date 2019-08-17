@@ -153,6 +153,9 @@ bool HelloWorld::init()
     supportPointArray = PointArray::create(100);
     supportPointArray->retain();
     
+    heroPointArray = PointArray::create(100);
+    heroPointArray->retain();
+    
     labelPoolCount = 10;
     labelPoolIndex = 0;
     for (int i = 0; i < labelPoolCount; i++) {
@@ -243,7 +246,7 @@ void HelloWorld::updateUnitMoveNew(float dt){
                 if (unit->target == nullptr) {
                     if(unit->unitAct == UNIT_ACT_NONE){
                         unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
-                        unit->restingTime = 1;
+                        unit->restingTime = 0.1f*(rand()%100);
                     }
                 }else{
                     unit->unitAct = UNIT_ACT_ATTACK;
@@ -274,7 +277,7 @@ void HelloWorld::updateUnitMoveNew(float dt){
             }
                     if (unit->target == nullptr) {
                         unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
-                        unit->restingTime = 1 + 0.1f*(rand()%100);
+                        unit->restingTime = 0.1f*(rand()%100);
                     }else{
                         unit->unitAct = UNIT_ACT_ATTACK;
                         unit->moveToPos = Vec2::ZERO;
@@ -403,6 +406,20 @@ void HelloWorld::updateUnitMove(float dt){
         // move
         enemy->move(dt);
     }
+}
+void HelloWorld::createMissile(std::string strMsName, std::string strArrivedMsName, Vec2 startPos, Vec2 endPos, float moveTime, int damage, float delay){
+    Sprite* spt = Sprite::createWithSpriteFrameName(strMsName);
+    spriteBatch->addChild(spt);
+    spt->setPosition(startPos);
+    spt->runAction(Sequence::create(DelayTime::create(delay), MoveTo::create(moveTime, endPos), CallFuncN::create(CC_CALLBACK_1(HelloWorld::checkMissileHit, this)), NULL));
+    spt->setName(strArrivedMsName);
+}
+void HelloWorld::checkMissileHit(Ref* ref){
+    Sprite* spt = (Sprite*)ref;
+    if(spt->getName().size() > 0){
+        
+    }
+    spt->removeFromParent();
 }
 Movable* HelloWorld::createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, Point pos, bool isFromEnemy, std::string weaponName){
     Movable* sptMissile;
@@ -1836,122 +1853,38 @@ void HelloWorld::runEffect(int effect, Point point, float angle){
         addChild(spt, WORLD->spriteBatch->getLocalZOrder() + 1);
         spt->setAnchorPoint(Vec2(0.5, 0));
         spt->setPosition(point + Vec2(0, -49));
-        spt->runAction(Sequence::create(DelayTime::create(0.06f*5), FadeTo::create(0, 30), DelayTime::create(0.1f), FadeOut::create(0.3f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
-    }
-    
-    return;
-    if(effect == EFFECT_BULLET_WALL_SMALL){
-        Sprite* explode = Sprite::createWithSpriteFrameName("bulletSmallEffectWall0.png");
-        spriteBatch->addChild(explode);
-        explode->setPosition(point);
-        explode->setRotation(angle);
-        Animation* animation = AnimationCache::getInstance()->getAnimation("bulletSmallEffectWall");
+        spt->runAction(Sequence::create(DelayTime::create(0.06f*5), FadeTo::create(0, 30), DelayTime::create(0.1f), FadeOut::create(0.3f), SPT_REMOVE_FUNC, NULL));
+    }else if(effect == EFFECT_FIREBOMB){
+        Sprite* spt = Sprite::createWithSpriteFrameName("explosionDirection0.png");
+        spriteBatch->addChild(spt, 11);
+        Animation* animation = AnimationCache::getInstance()->getAnimation("firebomb");
         Animate* animate = Animate::create(animation);
-        explode->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-        explode->setRotation(angle);
-        if (angle < -90 || angle > 90) {
-            explode->setFlippedY(true);
-        }
-        
-    }else if(effect == EFFECT_BULLET_WALL){
-        Sprite* explode = Sprite::createWithSpriteFrameName("bulletEffectWall0.png");
-        spriteBatch->addChild(explode);
-        explode->setPosition(point);
-        Animation* animation = AnimationCache::getInstance()->getAnimation("bulletEffectWall");
-        Animate* animate = Animate::create(animation);
-        explode->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-        
-    }else if(effect == EFFECT_BOMB_WALL){
-        Sprite* explode = Sprite::createWithSpriteFrameName("bombEffectWall0.png");
-        spriteBatch->addChild(explode);
-        explode->setPosition(point);
-        Animation* animation = AnimationCache::getInstance()->getAnimation("bombEffectWall");
-        Animate* animate = Animate::create(animation);
-        explode->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-    }else if(effect == EFFECT_EXPLODE_SMALL){
-//        float scale = 0.5f;
-        duration = 0.15;
-        Sprite* explode = Sprite::createWithSpriteFrameName("bombSmallEffect0.png");
-        spriteBatch->addChild(explode);
-        Animation* animation = AnimationCache::getInstance()->getAnimation("bombSmallEffect");
-        Animate* animate = Animate::create(animation);
-        explode->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, explode)), NULL));
-        explode->setPosition(point);
-    }else if(effect == EFFECT_EXPLODE_MIDDLE){
-        int particleCount = 3;
-        int range = 30;
-        float easeRate = 2;
-        float scale = 1.2f;
-        
-        Sprite* explode = Sprite::createWithSpriteFrameName("whiteExplode.png");
-        spriteBatch->addChild(explode);
-        explode->setScale(scale + (rand()%4 + 1)*0.1f - 0.2f);
-        explode->setColor(Color3B(237, 70, 37));
-        explode->runAction(Sequence::create(DelayTime::create(duration*0.8f), TintTo::create(duration*0.4f, 255, 205, 52), TintTo::create(duration/2, 127, 110, 105), NULL));
-        explode->runAction(Sequence::create(DelayTime::create(duration*1.3f), ScaleTo::create(duration, 0.1), NULL));
-        explode->runAction(Sequence::create(DelayTime::create(duration*2), CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-        explode->setPosition(point);
-        
-        for (int i = 0; i < particleCount; i++) {
-            Sprite* particle = Sprite::createWithSpriteFrameName("whiteExplode.png");
-            spriteBatch->addChild(particle);
-            int angle = rand()%360;
-            float x = cos(angle*3.14/180)*range*1.1f;
-            float y = sin(angle*3.14/180)*range*1.1f;
-            particle->setScale(0.3);
-            particle->setColor(Color3B(237, 70, 37));
-            particle->runAction(FadeOut::create(baseDuration));
-            particle->setPosition(point);
-            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(baseDuration, Point(x, y)), easeRate), CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-        }
-    }else if(effect == EFFECT_EXPLODE_HUGE){
-        Sprite* explode = Sprite::createWithSpriteFrameName("bombEffect0.png");
-        spriteBatch->addChild(explode);
-        explode->setPosition(point);
-        Animation* animation = AnimationCache::getInstance()->getAnimation("bombEffect");
-        Animate* animate = Animate::create(animation);
-        explode->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
-    }else if(effect == EFFECT_GREEN_SMOKE){
-        float duration = 0.5;
-        Sprite* spt = Sprite::createWithSpriteFrameName("whiteExplode.png");
-        spriteBatch->addChild(spt, -1);
+        spt->runAction(Sequence::create(animate, SPT_REMOVE_FUNC, NULL));
         spt->setPosition(point);
-        spt->setRotation(rand()%360);
-        spt->setScale(0.3);
-        spt->setColor(Color3B(130,250,130));
-        spt->runAction(Sequence::create(EaseIn::create(ScaleTo::create(duration, 0.05), 2), CallFuncN::create(CC_CALLBACK_1(HelloWorld::enemyBaseMoveDone, this)), NULL));
-        spt->runAction(EaseIn::create(FadeOut::create(duration), 2));
-        //        spt->runAction(RotateBy::create(duration, 160));
-    }else if(effect == EFFECT_RED_SMOKE){
-        float duration = 0.5;
-        Sprite* spt = Sprite::createWithSpriteFrameName("whiteExplode.png");
-        spriteBatch->addChild(spt, -1);
-        spt->setPosition(point);
-        spt->setRotation(rand()%360);
-        spt->setScale(0.5);
-        spt->setColor(Color3B(237, 70, 37));
-        spt->runAction(Sequence::create(EaseIn::create(MoveBy::create(duration, Point(0, 7)), 2), CallFuncN::create(CC_CALLBACK_1(HelloWorld::enemyBaseMoveDone, this)), NULL));
-        spt->runAction(EaseIn::create(FadeOut::create(duration), 2));
-        spt->runAction(RotateBy::create(duration, 160));
-    }else if(effect == EFFECT_TWINKLE){
-        int initRange = 10;
-        int range = initRange;
-        baseDuration = 0.3f;
-        float duration = 0;
-        for (int i = 0; i < 15; i++) {
-            Sprite* particle = Sprite::createWithSpriteFrameName("particle.png");
-            spriteBatch->addChild(particle, 1);
-            int angle = rand()%360;
-            range = initRange + initRange*(rand()%50)*0.02;
-            float x = cos(angle*3.14/180)*range*1.1f;
-            float y = sin(angle*3.14/180)*range*1.1f;
-            particle->setScale(0.5 + (rand()%10)*0.05);
-            particle->setColor(Color3B::YELLOW);
-            duration = baseDuration + baseDuration*(rand()%10)*0.1;
-            particle->runAction(FadeOut::create(duration));
-            particle->setPosition(point);
-            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(duration, Point(x, y)), 1.6f), CallFuncN::create(CC_CALLBACK_1(HelloWorld::spriteMoveDone, this)), NULL));
+    }else if (effect == EFFECT_BLUE_TEETH) {
+        for (int i = 0; i < 2; i++) {
+            Sprite* spt = Sprite::createWithSpriteFrameName("whiteSharpTeeth.png");
+            spriteBatchEffect->addChild(spt, 5);
+            spt->setPosition(point);
+            spt->setColor(Color3B(0, 240, 255));
+            spt->setScale(2);
+            spt->runAction(EaseBackOut::create(ScaleTo::create(0.2f, 1)));
+            spt->setOpacity(100);
+            spt->runAction(FadeIn::create(0.1f));
+            spt->runAction(Sequence::create(DelayTime::create(0.3), FadeOut::create(0.6f), SPT_REMOVE_FUNC, nullptr));
+            spt->setAnchorPoint(Vec2(0.5, 0));
+            if(i == 0){
+                spt->setRotation(180);
+            }else{
+                
+            }
         }
+    }else if (effect == EFFECT_BLUE_SLASH) {
+        Sprite* spt = Sprite::createWithSpriteFrameName("blueSlash0.png");
+        spriteBatchEffect->addChild(spt, 5);
+        GM->runAnimation(spt, "blueslash", false, true);
+        spt->setPosition(point);
+        spt->setRotation(angle);
     }
 }
 void HelloWorld::runEffect(int effect, Point point)
@@ -2178,7 +2111,7 @@ void HelloWorld::setEntireMap(int stage){
         log("size: %f", size.width);
         int offsetX = 0;
         if(size.height/size.width < 700.0f/1334.0f){
-            offsetX = 100;
+//            offsetX = 100;
         }
         miniMapFrameWidth = 400;
         miniMapFrameHeight = 400;
@@ -2495,7 +2428,7 @@ void HelloWorld::updateMiniMapForNonMoving(){
         for (int j = 0; j < mapSize.height; j++) {
             fogCoordinate = Point(i*TILE_SIZE/FOG_SIZE, (mapSize.height - j - 1)*TILE_SIZE/FOG_SIZE);
             fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-            if (fogAboveUnit->appliedState > FOG_SEEN_NOT && decoLayer->getTileGIDAt(Point(i, j)) == 49) {
+            if (fogAboveUnit->appliedState > FOG_SEEN_NOT && (decoLayer->getTileGIDAt(Point(i, j)) == 49 || isSoilBlock(soilLayer->getTileGIDAt(Vec2(i, j))))) {
                 startPos = miniMapDrawStartPos + Point(i, mapSize.height - j - 1)*TILE_SIZE*miniMapScale;
                 drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit, miniMapBit), Color4F(0.2f, 0.2f, 0.2f, 1));
             }
@@ -3165,6 +3098,9 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
                     }
                     unit->canFindTarget = true;
                     setOccupy(pos, 2, 2, true, unit);
+                }else if(gid == 81){ // temple
+                    EnemyBase* unit = createUnit(UNIT_TEMPLE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos + Point(50, 0), "temple", 1, "bunker.png");
+                    setOccupy(pos, 3, 3, true, unit);
                 }else if(gid == 70 || gid == 80 || gid == 79 || gid == 78 || gid == 90 || gid == 46){ // hq
                     EnemyBase* unit = createUnit(UNIT_ORC_HQ, gid == 90?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(150, -50), "hq", 1, "hq.png");
                     if (gid == 90) {
@@ -3312,6 +3248,8 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
                     unit->extraSpeed = unit->extraSpeed - rand()%60;
                 }else if(gid == 129){ // hero orc general
                     createUnit(UNIT_HERO_ORC, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, GM->getUnitName(UNIT_HERO_ORC));
+                }else if(gid == 130){ // heros pos
+                    heroPointArray->addControlPoint(pos);
                 }
                 
                 if((enemy != NULL && enemy->energy > 0) || (fEnemy != NULL && fEnemy->energy > 0)){
@@ -3676,7 +3614,43 @@ void HelloWorld::setStage(experimental::TMXTiledMap* tileMap)
     
     isBuildingExistWhenStartTheGame = isBuildingExist;
     
+    std::string strEquipped = UDGetStr(KEY_UNITS_HERO_DECK, "");
+    strEquipped = "51/1"; // test now
+    ValueVector units = GM->split(strEquipped, "_");
+    UnitInfo* info;
+    int index = 0;
+    for(int i = 0; i < units.size(); i++){
+        std::string str = units.at(i).asString();
+        if(str.length() <= 0){
+            continue;
+        }
+        info = GM->getUnitInfoFromString(units.at(i).asString());
+        Vec2 heroPos = heroPointArray->getControlPointAtIndex(index);
+//        UnitInfo* info = getHeroAt(i);
+        index++;
+        if(info != nullptr && info && units.size() >= i){
+            int unitType = info->unitType;
+            int unitLevel = info->level;
+            if(unitType >= 0){
+                EnemyBase* createdHero = createUnit(unitType, WHICH_SIDE_HERO, ITS_NOT_BUILDING, heroPos, GM->getUnitName(unitType));
+                setHeroLevelInfo(createdHero, unitLevel);
+            }
+        }
+    }
+    
     CCLOG("setStage done");
+}
+void HelloWorld::setHeroLevelInfo(EnemyBase* hero, int level){
+    hero->level = level;
+    hero->ap = GM->getUnitATT(hero->unitType, level)*getUnitAttackCoolTime(hero->unitType);
+    hero->maxEnergy = GM->getUnitHP(hero->unitType, level);
+    hero->energy = hero->maxEnergy;
+//    hero->skillRate = 10 + level;
+    hero->skillRate = 100; // test now
+}
+UnitInfo* HelloWorld::getHeroAt(int index){
+    
+    return nullptr;
 }
 cocos2d::Size HelloWorld::getBuildingOccupySize(int unit){
     if(unit == UNIT_ORC_BUNKER){
@@ -3718,7 +3692,9 @@ void HelloWorld::checkBirdFly(){
         if(stageIndex == 24 || stageIndex == 25){
             return;
         }
-        HUD->showSupportOffer();
+        if(GM->isAdsUser() || GM->isColosseum){
+            HUD->showSupportOffer();
+        }
     }
     
     GM->isLoadingGame = false;
@@ -3757,17 +3733,6 @@ void HelloWorld::attackNearHero(EnemyBase* enemy){
         }
     }
 }
-bool HelloWorld::isSpotAvailable(bool isEnemy, cocos2d::Point pos){
-    if (isEnemy) {
-        Point coordinate = getCoordinateFromPosition(pos);
-        for(auto unit: enemyArray){
-            if (getCoordinateFromPosition(unit->getPosition()) == coordinate) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
 void HelloWorld::setOccupy(cocos2d::Point pos, int width, int height, bool occupy, EnemyBase* building){
     setOccupy(pos, width, height, occupy);
     building->buildingStartCoordinate = getCoordinateFromPosition(pos, theMap);
@@ -3790,10 +3755,13 @@ void HelloWorld::setTileGID(experimental::TMXLayer* layer, int gid, Vec2 pos){
     }
 }
 bool HelloWorld::isOccupied(cocos2d::Point coordinate){
-    bool valid = isCoordinateValid(coordinate);
-    if(!valid) return true;
-    int gid = decoLayer->getTileGIDAt(coordinate);
-    return gid == 48 || gid == 49;
+    return GM->tileState[(int)coordinate.x][(int)coordinate.y] > 0;
+//    bool valid = isCoordinateValid(coordinate);
+//    if(!valid) return true;
+//    return isDecoBlock(decoLayer->getTileGIDAt(coordinate)) || isSoilBlock(soilLayer->getTileGIDAt(coordinate));
+//    int dgid = decoLayer->getTileGIDAt(coordinate);
+//    int sgid = soilLayer->getTileGIDAt(coordinate);
+//    return dgid == 48 || dgid == 49;
 }
 void HelloWorld::addSprite(std::string sptName, cocos2d::Point pos){
     Sprite* spt = Sprite::createWithSpriteFrameName(sptName);
@@ -3851,7 +3819,14 @@ void HelloWorld::resetPathState(){
         
 //            gid = stageLayer->getTileGIDAt(Point(i, j));
 //            if (gid) {
-                isBlocked = (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Point(i, j)))) || (soilLayer && isSoilBlock(soilLayer->getTileGIDAt(Point(i, j))));
+            if(decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Point(i, j)))){
+                isBlocked = true;
+            }else if(isSoilBlock(soilLayer->getTileGIDAt(Point(i, j)))){
+                isBlocked = true;
+            }else{
+                isBlocked = false;
+            }
+//                isBlocked = () ||  ;
 //                ?TILE_STATE_OCCUPIED:TILE_STATE_EMPTY
                 GM->setPathState(i, j, isBlocked);
 //                GM->astar.m.map[i][j] = isBlocked;
@@ -3864,6 +3839,7 @@ void HelloWorld::resetPathState(){
         }
     }
 }
+
 void HelloWorld::createTrap(EnemyBase* enemy, cocos2d::Point pos){
     enemy->setPosition(pos);
     enemy->ap = getHeroMaxHP(0)/4;
@@ -4013,7 +3989,7 @@ int HelloWorld::getUnitDP(int unit){
     }else if(unit == UNIT_ORC_SPEAR){
         return 1;
     }else if(unit == UNIT_HERO_ORC){
-        return 3;
+        return 1;
     }
     return 0;
 }
@@ -4044,6 +4020,12 @@ int HelloWorld::getUnitSP(int unit){
         return 250;
     }else if(unit == UNIT_HERO_ORC){
         return 650;
+    }else if(unit == UNIT_HERO_ARCHER){
+        return 550;
+    }else if(unit == UNIT_HERO_GOBLIN){
+        return 800;
+    }else if(unit == UNIT_HERO_WEREWOLF){
+        return 700;
     }
     return 450;
 }
@@ -4103,8 +4085,7 @@ float HelloWorld::getUnitCreateTime(int index){
     return 10;
 }
 float HelloWorld::getUnitMonitoringDistance(int index){
-    if(index == UNIT_ARCHER ||
-       index == UNIT_HERO_ORC){
+    if(index == UNIT_ARCHER){
         return 600000;
     }else if(index == UNIT_WATCHERTOWER || index == UNIT_ORC_BUNKER || index == UNIT_ORC_HQ){
         return 350000;
@@ -4134,11 +4115,11 @@ float HelloWorld::getUnitAttackRange(int index){
     return 200000;
 }
 int HelloWorld::getUnitAttackType(int index){
-    if (index == UNIT_ARCHER ||index == UNIT_ORC_SPEAR || index == UNIT_CATAPULT || index == UNIT_WATCHERTOWER || index == UNIT_ORC_BUNKER || index == UNIT_ORC_HQ || index == UNIT_HELICOPTER || index == UNIT_WIZARD) {
+    if (index == UNIT_ARCHER ||index == UNIT_ORC_SPEAR || index == UNIT_CATAPULT || index == UNIT_WATCHERTOWER || index == UNIT_ORC_BUNKER || index == UNIT_ORC_HQ || index == UNIT_HELICOPTER || index == UNIT_WIZARD || index == UNIT_HERO_ARCHER) {
         return ATTACK_TYPE_RANGE;
     }else if (index == UNIT_SWORDMAN ||index == UNIT_WORKER || index == UNIT_GOBLIN_WORKER || index == UNIT_GOBLIN_BOMB || index == UNIT_GOBLIN || index == UNIT_ORC_AXE || index == UNIT_TROLL || index == UNIT_ZOMBIE_ORC_AXE ||
               index == UNIT_ZOMBIE_SWORDSMAN ||
-              index == UNIT_HERO_ORC) {
+              index == UNIT_HERO_ORC || index == UNIT_HERO_GOBLIN || index == UNIT_HERO_LIZARDMAN || index == UNIT_HERO_SPEARMAN || index == UNIT_HERO_WEREWOLF) {
         return ATTACK_TYPE_NEAR;
     }
     return ATTACK_TYPE_NONE;
@@ -4176,6 +4157,12 @@ float HelloWorld::getUnitAttackCoolTime(int index){
         return 2.0f;
     }else if(index == UNIT_HERO_ORC){
         return 2.0f;
+    }else if(index == UNIT_HERO_SPEARMAN){
+        return 1.56f;
+    }else if(index == UNIT_HERO_WEREWOLF){
+        return 2;
+    }else if(index == UNIT_HERO_GOBLIN){
+        return 1.6f;
     }
     
     return 2.0f;
@@ -4193,6 +4180,16 @@ float HelloWorld::getUnitAttackHappenTime(int index){
         return 0.4f;
     }else if(index == UNIT_HERO_ORC){
         return 1.3f;
+    }else if(index == UNIT_HERO_ARCHER){
+        return 1.2f;
+    }else if(index == UNIT_HERO_GOBLIN){
+        return 1.13f;
+    }else if(index == UNIT_HERO_LIZARDMAN){
+        return 1.33f;
+    }else if(index == UNIT_HERO_SPEARMAN){
+        return 0.73f;
+    }else if(index == UNIT_HERO_WEREWOLF){
+        return 0.76f;
     }
     return 0.2f;
 }
@@ -5054,7 +5051,7 @@ void HelloWorld::gravityUpdate(float dt)
         //        }
     }
     
-    isWaterBoy = false;
+    
     for(auto drop: MovableMissileArray){
         drop->updatePosition(dt);
         if(checkMovableMissileCollision(drop)) break;
@@ -5230,7 +5227,11 @@ void HelloWorld::updateFog(){
             }
         }else{
             fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-            fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
+            int fogIndex = (int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width;
+            if(fogIndex >= fogArray.size()){
+                continue;
+            }
+            fogAboveUnit = fogArray.at(fogIndex);
             fogAboveUnit->newState = FOG_SEEN_NOW;
             for(auto fog:fogAboveUnit->adjacentFogs){
                 fog->newState = FOG_SEEN_NOW;
@@ -5720,22 +5721,25 @@ void HelloWorld::addListener(){
                 resetPathState();
                 Vec2 newPos = buildingTemplate->getPosition() + Vec2(buildingTemplateSize.width*TILE_SIZE/2, buildingTemplateSize.height*TILE_SIZE/2);
                 if(unit->unitType == UNIT_MINE){
-                    std::string name = strmake("mineButton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE);
-                    double previousTime = UDGetDouble(name.c_str(), 0);
+                    std::string name = strmake("newminebutton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE);
+                    std::string strPreviousTime = UDGetStr(name.c_str(), "");
                     Node* ndMineButton = WORLD->getChildByName(name);
                     ndMineButton->setPosition(newPos + Vec2(0, 150));
-                    std::string newKey = strmake("mineButton%d_%d", (int)newPos.x/TILE_SIZE, (int)newPos.y/TILE_SIZE);
+                    std::string newKey = strmake("newminebutton%d_%d", (int)newPos.x/TILE_SIZE, (int)newPos.y/TILE_SIZE);
                     ndMineButton->setName(newKey);
-                    UDSetDouble(newKey.c_str(), previousTime);
+//                    UDSetDouble(newKey.c_str(), previousTime);
+//                    strCollectStartTime = BSM->getStrFromTime(now - 60*60*24*50);
+                    UDSetStr(newKey.c_str(), strPreviousTime);
+                    
                     log("on mine moved");
                 }else if(unit->unitType == UNIT_LUMBERMILL){
                     std::string name = strmake("treeButton%d_%d", (int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE);
-                    double previousTime = UDGetDouble(name.c_str(), 0);
+                    std::string strPreviousTime = UDGetStr(name.c_str(), "");
                     Node* ndMineButton = WORLD->getChildByName(name);
                     ndMineButton->setPosition(newPos + Vec2(0, 150));
                     std::string newKey = strmake("treeButton%d_%d", (int)newPos.x/TILE_SIZE, (int)newPos.y/TILE_SIZE);
                     ndMineButton->setName(newKey);
-                    UDSetDouble(newKey.c_str(), previousTime);
+                    UDSetStr(newKey.c_str(), strPreviousTime);
                     log("on lumbermill moved");
                 }
                 unit->setPosition(newPos);
@@ -6004,7 +6008,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
         if (selectedUnit == nullptr){
             Vector<EnemyBase*> selectedArray;
             for(auto unit: heroArray){ // select hero
-                if(!unit->isVisible()) continue;
+                if(!unit || unit == nullptr || !unit->isVisible()) continue;
                 if(unit->spine){
                     if(unit->spine->getBoundingBox().containsPoint(pos - unit->getPosition())){
                         selectedArray.pushBack(unit);
@@ -6022,19 +6026,22 @@ void HelloWorld::doClick(cocos2d::Point pos){
             }
             selectedArray.clear();
         }
-        for (auto unit: enemyArray){ // select enemy
-            if(!unit->isVisible()) continue;
-            if(unit->Sprite::getBoundingBox().containsPoint(pos)){
-                selectedUnit = unit;
-                doubleClickTimerForAttackDdaing = 0;
-                doubleClickTimerForSelectTheSame = 0;
-                break;
+        if (selectedUnit == nullptr){
+            for (auto unit: enemyArray){ // select enemy
+                if(!unit || unit == nullptr || !unit->isVisible()) continue;
+                if(unit->Sprite::getBoundingBox().containsPoint(pos)){
+                    selectedUnit = unit;
+                    doubleClickTimerForAttackDdaing = 0;
+                    doubleClickTimerForSelectTheSame = 0;
+                    break;
+                }
             }
         }
         
         EnemyBase* mutual = nullptr;
         if(selectedUnit == nullptr || selectedUnit->isCarryingGold){
             for(auto unit: mutualArray){
+                if(!unit || unit == nullptr || !unit->isVisible()) continue;
     //            Rect rect = Rect(pos.x - 10, pos.y - 10, unit->getContentSize().width + 20, unit->getContentSize().height + 20);
                 if(unit->getBoundingBox().containsPoint(pos)){
     //            if(unit->getBoundingBox().intersectsRect(rect)){
@@ -6050,6 +6057,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
         }
         if(mutual != nullptr){
             for(auto unit: selectedArray){
+                if(!unit || unit == nullptr || !unit->isVisible()) continue;
                 if(unit->alliSide == WHICH_SIDE_ENEMY) continue;
                 if(unit->unitType == UNIT_WORKER || unit->unitType == UNIT_GOBLIN_WORKER){
                     if(mutual->unitType == UNIT_MINE){
@@ -6060,7 +6068,9 @@ void HelloWorld::doClick(cocos2d::Point pos){
                             unit->isTemporaryFlying = true;
                             if (isNewCommandSystem) {
                                 unit->unitAct = UNIT_ACT_GATHER_GOLD;
-                                unit->moveFlagPos = unit->returningPlace->getPosition();
+                                if(unit->returningPlace){
+                                    unit->moveFlagPos = unit->returningPlace->getPosition();
+                                }
                                 unit->moveToPos = Vec2::ZERO;
                             }else{
                                 unit->moveToTarget(unit->returningPlace);
@@ -6093,8 +6103,10 @@ void HelloWorld::doClick(cocos2d::Point pos){
                             unit->failedFindPathEnd = Point::ZERO;
                             unit->isTemporaryFlying = true;
                             if (isNewCommandSystem) {
-                                unit->unitAct = UNIT_ACT_GATHER_GOLD;
-                                unit->moveFlagPos = unit->returningPlace->getPosition();
+                                unit->unitAct = UNIT_ACT_GATHER_TREE;
+                                if(unit->returningPlace){
+                                    unit->moveFlagPos = unit->returningPlace->getPosition();
+                                }
                                 unit->moveToPos = Vec2::ZERO;
                             }else{
                                 unit->moveToTarget(unit->returningPlace);
@@ -6102,7 +6114,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
                         }else{
                             Point coordinate = WORLD->getCoordinateFromPosition(unit->getPosition());
                             Point destCoordinate = WORLD->getCoordinateFromPosition(mutual->getApproachingPoint(unit->getPosition()));
-                            PointArray* array = GM->getPath(coordinate, destCoordinate);
+//                            PointArray* array = GM->getPath(coordinate, destCoordinate);
                            
                             if(mutual != nullptr){
                                 unit->gatherTree(mutual);
@@ -6191,6 +6203,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
         }else if(!selectedUnit->isEnemy){ // hero selected
             bool isWorkingWorkerSelected = false;
             for(auto unit: selectedArray){
+                if(!unit || unit == nullptr || !unit->isVisible()) continue;
                 if(unit->unitType == UNIT_WORKER || unit->unitType == UNIT_GOBLIN_WORKER){
                     if (unit->isCarryingTree && (selectedUnit->unitType == UNIT_CASTLE || selectedUnit->unitType == UNIT_LUMBERMILL))  {
                         unit->returningPlace = selectedUnit;
@@ -6219,6 +6232,7 @@ void HelloWorld::doClick(cocos2d::Point pos){
                     
                     if (doubleClickTimerForSelectTheSame > 0 && !selectedUnit->isBuilding) {
                         for(auto unit:heroArray){
+                            if(!unit || unit == nullptr || !unit->isVisible()) continue;
                             if(unit->unitType == selectedUnit->unitType && viewRect.containsPoint(unit->getPosition())){
                                 selectUnit(unit);
                             }
@@ -6248,100 +6262,104 @@ void HelloWorld::doClick(cocos2d::Point pos){
         }
         
         if(HUD && HUD->isRaid && !HUD->isRaidStarted && selectedUnit == nullptr && !GM->isVisiting){
-            if(isOccupied(WORLD->getCoordinateFromPosition(pos))){
-                log("the spot clicked is occupied");
-                return;
-            }
-            HUD->rightBottomPanel->getChildByName("ndBattle")->getChildByName("btnFindMatch")->removeFromParent();
-//            HUD->rightBottomPanel->getChildByName("ndBattle")->getChildByName("btnSurrender")->removeFromParent();
-            HUD->bottomUnitBar->runAction(EaseBackIn::create(MoveBy::create(0.5f, Vec2(0, -600))));
-            Vec2 originalCoordinate = getCoordinateFromPosition(pos);
-            HUD->isRaidStarted = true;
-            int startX = 0;
-            int max=0;
-            int x=startX;
-            int y=max;
-            int direction = -1;//0:E 1:S 2:W 3:N
-            bool changeDirection = false;
-            Vector<Movable*> unitList;
-//            for(int i = 0; i < 100; i++){ // test
-//                UnitInfo* info = new UnitInfo();
-//                info->unitType = UNIT_ARCHER;
-//                HUD->deckUnitList.push_back(info);
-//            }
-            
-            for(auto info : HUD->deckUnitList){
-                Vec2 posFromCoordinate = getPositionFromTileCoordinate(originalCoordinate.x + x, originalCoordinate.y + y);
-                info->x = posFromCoordinate.x;
-                info->y = posFromCoordinate.y;
-                Movable* unit = GM->getUnitFromData(info);
-//                unit->setPosition(posFromCoordinate);
-//                addUnit(unit);
-                if(unit->getPositionX() < TILE_SIZE){
-                    unit->setPositionX(TILE_SIZE);
-                }else if(unit->getPositionY() < TILE_SIZE){
-                    unit->setPositionY(TILE_SIZE);
-                }else if(unit->getPositionX() >= mapSize.width*TILE_SIZE - TILE_SIZE){
-                    unit->setPositionX(mapSize.width*TILE_SIZE - TILE_SIZE);
-                }else if(unit->getPositionY() >= mapSize.height*TILE_SIZE - TILE_SIZE){
-                    unit->setPositionY(mapSize.height*TILE_SIZE - TILE_SIZE);
-                }
-                
-                do{
-                    if (direction < 0 || (x == 0 && y == max)) {
-                        y++;
-                        x++;
-                        max++;
-                        if(direction < 0){
-                            direction = 0;
-                        }
-                    }else if(direction == 0){
-                        x++;
-                        if(x > max){
-                            changeDirection = true;
-                        }
-                    }else if(direction == 1){
-                        y--;
-                        if(y < -max){
-                            changeDirection = true;
-                        }
-                    }else if(direction == 2){
-                        x--;
-                        if(x < -max){
-                            changeDirection = true;
-                        }
-                    }else if(direction == 3){
-                        y++;
-                        if(y > max){
-                            changeDirection = true;
-                        }
-                    }
-                    if(changeDirection){
-                        changeDirection = false;
-                        if(direction == 0){
-                            x--;
-                            y--;
-                        }else if(direction == 1){
-                            x--;
-                            y++;
-                        }else if(direction == 2){
-                            x++;
-                            y++;
-                        }else if(direction == 3){
-                            x++;
-                            y--;
-                        }
-                        direction++;
-                        if(direction>3){
-                            direction = 0;
-                        }
-                    }
-                }while(isOccupied(originalCoordinate + Vec2(x, y)));
-            }
+            placeDeckUnitForRaid(pos);
         }
     }
     catch(...){
         
+    }
+}
+
+void HelloWorld::placeDeckUnitForRaid(Vec2 pos){
+    if(isOccupied(WORLD->getCoordinateFromPosition(pos))){
+        log("the spot clicked is occupied");
+        return;
+    }
+    HUD->rightBottomPanel->getChildByName("ndBattle")->getChildByName("btnFindMatch")->removeFromParent();
+    //            HUD->rightBottomPanel->getChildByName("ndBattle")->getChildByName("btnSurrender")->removeFromParent();
+    HUD->bottomUnitBar->runAction(EaseBackIn::create(MoveBy::create(0.5f, Vec2(0, -600))));
+    Vec2 originalCoordinate = getCoordinateFromPosition(pos);
+    HUD->isRaidStarted = true;
+    int startX = 0;
+    int max=0;
+    int x=startX;
+    int y=max;
+    int direction = -1;//0:E 1:S 2:W 3:N
+    bool changeDirection = false;
+    Vector<Movable*> unitList;
+    //            for(int i = 0; i < 100; i++){ // test
+    //                UnitInfo* info = new UnitInfo();
+    //                info->unitType = UNIT_ARCHER;
+    //                HUD->deckUnitList.push_back(info);
+    //            }
+    
+    for(auto info : HUD->deckUnitList){
+        Vec2 posFromCoordinate = getPositionFromTileCoordinate(originalCoordinate.x + x, originalCoordinate.y + y);
+        info->x = posFromCoordinate.x;
+        info->y = posFromCoordinate.y;
+        Movable* unit = GM->getUnitFromData(info);
+        //                unit->setPosition(posFromCoordinate);
+        //                addUnit(unit);
+        if(unit->getPositionX() < TILE_SIZE){
+            unit->setPositionX(TILE_SIZE);
+        }else if(unit->getPositionY() < TILE_SIZE){
+            unit->setPositionY(TILE_SIZE);
+        }else if(unit->getPositionX() >= mapSize.width*TILE_SIZE - TILE_SIZE){
+            unit->setPositionX(mapSize.width*TILE_SIZE - TILE_SIZE);
+        }else if(unit->getPositionY() >= mapSize.height*TILE_SIZE - TILE_SIZE){
+            unit->setPositionY(mapSize.height*TILE_SIZE - TILE_SIZE);
+        }
+        
+        do{
+            if (direction < 0 || (x == 0 && y == max)) {
+                y++;
+                x++;
+                max++;
+                if(direction < 0){
+                    direction = 0;
+                }
+            }else if(direction == 0){
+                x++;
+                if(x > max){
+                    changeDirection = true;
+                }
+            }else if(direction == 1){
+                y--;
+                if(y < -max){
+                    changeDirection = true;
+                }
+            }else if(direction == 2){
+                x--;
+                if(x < -max){
+                    changeDirection = true;
+                }
+            }else if(direction == 3){
+                y++;
+                if(y > max){
+                    changeDirection = true;
+                }
+            }
+            if(changeDirection){
+                changeDirection = false;
+                if(direction == 0){
+                    x--;
+                    y--;
+                }else if(direction == 1){
+                    x--;
+                    y++;
+                }else if(direction == 2){
+                    x++;
+                    y++;
+                }else if(direction == 3){
+                    x++;
+                    y--;
+                }
+                direction++;
+                if(direction>3){
+                    direction = 0;
+                }
+            }
+        }while(isOccupied(originalCoordinate + Vec2(x, y)));
     }
 }
 bool HelloWorld::isCoordinateValid(Vec2 coordinate){
@@ -6575,15 +6593,11 @@ bool HelloWorld::isThisSpotAvailable(Movable* me){
             return false;
         }
     }
-    
     Vec2 tileCoordinate = getCoordinateFromPosition(me->getPosition());
-    if(tileCoordinate.x >= theMap->getMapSize().width){
-        tileCoordinate.x = theMap->getMapSize().width - 1;
-    }
-    if(tileCoordinate.y >= theMap->getMapSize().height){
-        tileCoordinate.y = theMap->getMapSize().height - 1;
-    }
     
+    return isThisSpotAvailable(tileCoordinate);
+}
+bool HelloWorld::isThisSpotAvailable(cocos2d::Point tileCoordinate){
     if(!isCoordinateValid(tileCoordinate) || isDecoBlock(decoLayer->getTileGIDAt(tileCoordinate)) || isSoilBlock(soilLayer->getTileGIDAt(tileCoordinate))){
         return false;
     }
@@ -8609,6 +8623,7 @@ void HelloWorld::showTalkText(std::string text, int whoseTalk, std::string npcNa
         imgTalkBox->removeFromParent();
         sptPointer->removeFromParent();
     }
+    log("text: %s", text.c_str());
     imgTalkBox = ImageView::create("talkBoxFrame.png", ImageView::TextureResType::PLIST);
     imgTalkBox->setAnchorPoint(Point(0.5, 0));
     float splitPadding = 10;
@@ -9145,6 +9160,9 @@ void HelloWorld::addFoodMax(int amount){
         return;
     }
     foodMax += amount;
+    if(foodMax > 100){
+        foodMax = 100;
+    }
     PPLabel* lbl = HUD->lblFood;
     std::string str = strmake("%d/%d", foodInUse, foodMax);
     lbl->setString(str);
@@ -9322,7 +9340,7 @@ EnemyBase* HelloWorld::getNearestTree(cocos2d::Point pos){
 void HelloWorld::setClearCondition(int stage){
     int offsetX = 0;
     if(size.height/size.width < 700.0f/1334.0f){
-        offsetX = 100;
+//        offsetX = 100;
     }
 //    Sprite* sptMission = Sprite::create("mission.png");
 //    HUD->addChild(sptMission);
