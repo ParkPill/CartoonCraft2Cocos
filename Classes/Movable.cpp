@@ -45,24 +45,13 @@ Movable::Movable()
 }
 void Movable::init(int unit, int eng, float extraSpd, const char* sptName)
 {
-    if (unit == UNIT_HERO_ORC) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("orc.json", "orc.atlas", 1);
-    }else if (unit == UNIT_HERO_SPEARMAN) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("spearMan.json", "spearMan.atlas", 1);
-    }else if (unit == UNIT_HERO_ARCHER) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("archer.json", "archer.atlas", 1);
-    }else if (unit == UNIT_HERO_GOBLIN) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("goblin.json", "goblin.atlas", 1);
-    }else if (unit == UNIT_HERO_LIZARDMAN) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("lizard.json", "lizard.atlas", 1);
-    }else if (unit == UNIT_HERO_WEREWOLF) {
-        spine = spine::SkeletonAnimation::createWithJsonFile("werewolf.json", "werewolf.atlas", 1);
-        spine->setSkin("werewolf");
+    if (unit >= UNIT_HERO_ORC && unit <= UNIT_HERO_REAPER) {
+        spine = GM->getHeroSpine(unit);
     }else{
         this->Sprite::initWithSpriteFrameName(sptName);
     }
     if (spine) {
-        this->addChild(spine);
+        this->addChild(spine, 1);
         spine->setAnimation(0, "idle", true);
         spine->setPosition(Vec2(60, 15));
         this->Sprite::initWithFile("shadow.png");
@@ -798,7 +787,6 @@ std::string Movable::getCharacterName(int unitType){
 }
 void Movable::attackUpdate(float dt){
 //    if(isBuilding) return; // test
-    attackCoolTime -= dt;
     if(!target || target->energy <= 0 || target->untouchable){
         stopNew();
         target = nullptr;
@@ -819,24 +807,28 @@ void Movable::attackUpdate(float dt){
     
     if (rand()%100 <= skillRate) { // test
         isSkillOn = true;
+        if (unitType == UNIT_HERO_REAPER) {
+            attackCoolTime += 23.0f/30;
+        }
+    }
+    
+    if(unitType == UNIT_HERO_SKELETON){
+        isSkillOn = true; // test
     }
     
     runAnimation(ANIMATION_TYPE_ATTACK);
     
-    
     if (isSkillOn){
-        if (unitType == UNIT_HERO_ORC){
+        if (GM->getElement(unitType) == ELEMENT_LIGHTNING){
             startSkillAuraAndSkillEffect(AURA_LIGHTNING); // test
-        }else if (unitType == UNIT_HERO_GOBLIN){
-            startSkillAuraAndSkillEffect(AURA_FIRE); // test
-        }else if (unitType == UNIT_HERO_LIZARDMAN){
-            startSkillAuraAndSkillEffect(AURA_ICE);
-        }else if (unitType == UNIT_HERO_WEREWOLF){
+        }else if (GM->getElement(unitType) == ELEMENT_GROUND){
             startSkillAuraAndSkillEffect(AURA_GREEN);
-        }else if (unitType == UNIT_HERO_SPEARMAN){
+        }else if (GM->getElement(unitType) == ELEMENT_WATER){
             startSkillAuraAndSkillEffect(AURA_ICE);
-        }else if (unitType == UNIT_HERO_ARCHER){
-            startSkillAuraAndSkillEffect(AURA_GREEN);
+        }else if (GM->getElement(unitType) == ELEMENT_FIRE){
+            startSkillAuraAndSkillEffect(AURA_FIRE);
+        }else if (GM->getElement(unitType) == ELEMENT_LIGHT){
+            startSkillAuraAndSkillEffect(AURA_LIGHT);
         }
     }
     if(canMove)
@@ -854,24 +846,72 @@ void Movable::attackUpdate(float dt){
             happenTime = 33.0f/30;
         }else if (unitType == UNIT_HERO_SPEARMAN) {
             happenTime = 21.0f/30;
-            for (int i = 0; i < 3; i++) {
+//            for (int i = 0; i < 3; i++) {
                 Sequence* seq = Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
                                                  DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
                                                  DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
                 seq->setTag(attackTag);
                 this->runAction(seq);
-            }
+//            }
         }else if (unitType == UNIT_HERO_ARCHER){
-            
+            happenTime = 48.0f/30;
+        }else if (unitType == UNIT_HERO_MONK){
+            happenTime = 27.0f/30;
+        }else if (unitType == UNIT_HERO_FIGHTER){
+            happenTime = 36.0f/30;
+//            for (int i = 0; i < 3; i++) {
+                Sequence* seq = Sequence::create(DelayTime::create(40.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                                 DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                                 DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+                seq->setTag(attackTag);
+                this->runAction(seq);
+//            }
+        }else if (unitType == UNIT_HERO_BEAR) {
+            happenTime = 32.0f/30;
+        }else if (unitType == UNIT_HERO_KNIGHT) {
+            happenTime = 21.0f/30;
+            Sequence* seq = Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+            seq->setTag(attackTag);
+            this->runAction(seq);
+        }else if (unitType == UNIT_HERO_ELF_SWORDMAN) {
+            happenTime = 45.0f/30;
+        }else if (unitType == UNIT_HERO_ASSASSIN){
+            happenTime = 42.0f/30;
+        }else if (unitType == UNIT_HERO_LION) {
+            happenTime = 19.0f/30;
+            Sequence* seq = Sequence::create(DelayTime::create(30.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(11.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(0), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+            seq->setTag(attackTag);
+            this->runAction(seq);
+        }else if (unitType == UNIT_HERO_WIZARD){
+            happenTime = 26.0f/30;
+        }else if (unitType == UNIT_HERO_TANKER){
+            happenTime = 25.0f/30;
+        }else if (unitType == UNIT_HERO_SKELETON){
+            happenTime = 42.0f/30;
+            Sequence* seq = Sequence::create(DelayTime::create(46.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+            seq->setTag(attackTag);
+            this->runAction(seq);
+        }else if (unitType == UNIT_HERO_REAPER){
+            happenTime = 25.0f/30;
+            Sequence* seq = Sequence::create(DelayTime::create(30.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+            seq->setTag(attackTag);
+            this->runAction(seq);
         }
-    }
-    // skip attack
-    if(unitType == UNIT_HERO_ARCHER && isSkillOn){
-        return;
     }
     Sequence* seq = Sequence::create(DelayTime::create(happenTime), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
     seq->setTag(attackTag);
     this->runAction(seq);
+}
+void Movable::healNearFriend(){
+    WORLD->healHeroNearPoint(getPosition(), 100);
 }
 void Movable::startSkillAuraAndSkillEffect(int aura){
     selectedSkillAura = aura;
@@ -909,14 +949,49 @@ void Movable::startSkillAuraAndSkillEffect(int aura){
         this->runAction(Sequence::create(DelayTime::create(48.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
                                          DelayTime::create(2.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
                                          DelayTime::create(2.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
-                                         DelayTime::create(2.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+                                         DelayTime::create(2.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),nullptr));
         skillEffectIndex = EFFECT_BLUE_SLASH;
         if(skillTarget){
             for (int i = 0; i < 4; i++) {
                 float x = rand()%100-50;
-                WORLD->createMissile("heroArrow.png", "arrowBuried.png", skillTarget->getPosition() + Vec2(x, 200), skillTarget->getPosition() + Vec2(x, 0), 0.1f, ap, 1 + i*0.06f);
+                WORLD->createMissile("heroArrow.png", "arrowBuried.png", skillTarget->getPosition() + Vec2(x, 200), skillTarget->getPosition() + Vec2(x, 0), 0.1f, ap, isEnemy, -90, this, 2.8 + i*0.06f);
             }
         }
+    }else if (unitType == UNIT_HERO_MONK) {
+        this->runAction(Sequence::create(DelayTime::create(27.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
+    }else if (unitType == UNIT_HERO_FIGHTER) {
+        this->runAction(Sequence::create(DelayTime::create(48.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
+    }else if (unitType == UNIT_HERO_BEAR) {
+        this->runAction(Sequence::create(DelayTime::create(32.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_RED_TEETH;
+    }else if (unitType == UNIT_HERO_HEALER) {
+        this->runAction(Sequence::create(DelayTime::create(35.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HEAL;
+    }else if (unitType == UNIT_HERO_KNIGHT) {
+        this->runAction(Sequence::create(DelayTime::create(19.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),nullptr));
+        skillEffectIndex = EFFECT_BLUE_SLASH;
+    }else if (unitType == UNIT_HERO_ELF_SWORDMAN) {
+        this->runAction(Sequence::create(DelayTime::create(45.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_GREEN_HIT;
+    }else if (unitType == UNIT_HERO_ASSASSIN) {
+        this->runAction(Sequence::create(DelayTime::create(45.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_BLUE_SLASH;
+    }else if (unitType == UNIT_HERO_LION) {
+        this->runAction(Sequence::create(DelayTime::create(19.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(11.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(11.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
+    }else if (unitType == UNIT_HERO_TANKER) {
+        this->runAction(Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE_ON_GROUND;
+    }else if (unitType == UNIT_HERO_REAPER) {
+        this->runAction(Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_PURPLE_SLASH;
     }
 }
 void Movable::updateSkillAura(float dt){
@@ -924,7 +999,7 @@ void Movable::updateSkillAura(float dt){
     if(selectedSkillAura == AURA_LIGHTNING){
         Sprite* spt = Sprite::createWithSpriteFrameName("lightningAura0.png");
         GM->runAnimation(spt, "auraLightning", false, true);
-        this->addChild(spt);
+        this->addChild(spt, 2);
         spt->setRotation(rand()%360);
         if (spine) {
             spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), spine->getBoundingBox().size.height/2 + diff - rand()%(diff*2)));
@@ -940,7 +1015,7 @@ void Movable::updateSkillAura(float dt){
             spt->runAction(MoveBy::create(0.3, Vec2(0, 60)));
             spt->setScale(0.2f + (rand()%10)*0.01f);
             spt->runAction(Sequence::create(DelayTime::create(0.2f), ScaleTo::create(0.1f, spt->getScale()*1.4f), NULL));
-            this->addChild(spt);
+            this->addChild(spt, 2);
             if (spine) {
                 spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%30));
             }else{
@@ -959,7 +1034,7 @@ void Movable::updateSkillAura(float dt){
             spt->runAction(JumpBy::create(2, Vec2::ZERO, 20, 1));
             spt->setScale(0.2f + (rand()%10)*0.01f);
             spt->runAction(Sequence::create(DelayTime::create(2), ScaleTo::create(1, spt->getScale()*1.4f), NULL));
-            this->addChild(spt);
+            this->addChild(spt, 2);
             if (spine) {
                 spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%10));
             }else{
@@ -986,8 +1061,24 @@ void Movable::updateSkillAura(float dt){
             spt->setPosition(spine->getPosition() + Vec2(x, rand()%30));
             spt->runAction(MoveBy::create(0.3, Vec2(rand()%2==0?-50:50, 60)));
             spt->setScale(0.2f + (rand()%10)*0.01f);
-            this->addChild(spt);
+            this->addChild(spt, 2);
             
+        }
+    }else if(selectedSkillAura == AURA_LIGHT){
+        Sprite* spt = Sprite::createWithSpriteFrameName("yellowBall.png");
+        this->addChild(spt);
+        spt->runAction(Sequence::create(FadeIn::create(0.18f), FadeOut::create(0.14f), SPT_REMOVE_FUNC, NULL));
+        float widthScale = getContentSize().width*1.3f/spt->getContentSize().width;
+        spt->setScale(widthScale, widthScale*0.3f);
+        spt->setPosition(spine->getPosition());
+        for(int i = 0; i < 3; i++){
+            spt = Sprite::createWithSpriteFrameName("yellowBall.png");
+            spt->runAction(Sequence::create(DelayTime::create(0.18f), FadeOut::create(0.14f), SPT_REMOVE_FUNC, NULL));
+            spt->runAction(MoveBy::create(0.3, Vec2(0, 60)));
+            spt->setScale(0.8f + (rand()%6)*0.1f);
+            spt->runAction(Sequence::create(DelayTime::create(0.2f), ScaleTo::create(0.1f, spt->getScale()*1.4f), NULL));
+            this->addChild(spt, 2);
+            spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%30));
         }
     }
 }
@@ -1030,9 +1121,19 @@ void Movable::showSkillEffect(){
         WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 50), 180);
     }else if (skillEffectIndex == EFFECT_BLUE_SLASH){
         if (unitType == UNIT_HERO_ARCHER) {
-            WORLD->runEffect(skillEffectIndex, getPosition() + Vec2(rand()%100-50, 100), 90 + rand()%10-5);
+            WORLD->runEffect(skillEffectIndex, getPosition() + Vec2(rand()%100-50, 100), -90 + rand()%10-5);
         }else{
             WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 50 + rand()%100-50), (isFlippedX()?0:180) + rand()%30-15);
+        }
+    }else if (skillEffectIndex == EFFECT_EXPLODE_MIDDLE && skillTarget){
+        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 180);
+    }else if (skillEffectIndex == EFFECT_FIRE_SLASH && skillTarget){
+        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 30 + rand()%30);
+    }else if (skillEffectIndex == EFFECT_HEAL && skillTarget){
+        healNearFriend();
+    }else{
+        if(skillTarget){
+            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 180);
         }
     }
 }
@@ -1044,20 +1145,6 @@ void Movable::attack(){
             stopNew();
         }
         return;
-    }
-    if (isSkillOn){
-        if (spine){
-            stopSkillAura(); // test
-        }
-        if(skillTarget){
-            if (unitType == UNIT_HERO_ORC || unitType == UNIT_HERO_GOBLIN || unitType == UNIT_HERO_LIZARDMAN){
-                WORLD->splashDamage(skillTarget->getPosition(), 10500, ap, isEnemy, this);
-            }else if(unitType == UNIT_HERO_WEREWOLF){
-                WORLD->splashDamage(skillTarget->getPosition(), 100, ap*2, isEnemy, this);
-            }
-            WORLD->shakeScreenOnce();
-            isSkillOn = false;
-        }
     }
     if(target->getParent() == nullptr){
         stopNew();
@@ -1072,6 +1159,46 @@ void Movable::attack(){
     if (isBuilding && !isBuildingComplete) {
         return;
     }
+    // skip attack
+    if( isSkillOn &&
+       (unitType == UNIT_HERO_ARCHER ||
+        unitType == UNIT_HERO_HEALER)){
+        stopSkillAura();
+        isSkillOn = false;
+           
+        return;
+    }
+    if (isSkillOn){
+        if (spine){
+            stopSkillAura(); // test
+        }
+        if(skillTarget){
+            if (unitType == UNIT_HERO_ORC ||
+                unitType == UNIT_HERO_GOBLIN ||
+                unitType == UNIT_HERO_LIZARDMAN ||
+                unitType == UNIT_HERO_TANKER){
+                WORLD->splashDamage(skillTarget->getPosition(), 10500, ap*1.5f, isEnemy, this);
+            }else if(unitType == UNIT_HERO_WEREWOLF ||
+                     unitType == UNIT_HERO_BEAR ||
+                     unitType == UNIT_HERO_MONK ||
+                     unitType == UNIT_HERO_ELF_SWORDMAN){
+                WORLD->splashDamage(skillTarget->getPosition(), 100, ap*3, isEnemy, this);
+            }else if(unitType == UNIT_HERO_ASSASSIN){
+                if(skillTarget && skillTarget->getHitAndIsDead(ap*6, this)){
+                    WORLD->removeDeadUnit((EnemyBase*)target);
+                    stopNew();
+                }
+            }
+            WORLD->shakeScreenOnce();
+        }
+    }
+    if (unitType == UNIT_HERO_REAPER) {
+        if(skillTarget){
+            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 180);
+        }else if(target){
+            WORLD->runEffect(skillEffectIndex, target->getPosition() + Vec2(0, 30), 180);
+        }
+    }
     if (attackType == ATTACK_TYPE_NEAR) {
         if(target->getHitAndIsDead(ap, this)){
             WORLD->removeDeadUnit((EnemyBase*)target);
@@ -1079,6 +1206,7 @@ void Movable::attack(){
         }
     }else if(attackType == ATTACK_TYPE_RANGE){
         float speed = 1000;
+        float apValue = ap;
         if(unitType == UNIT_ARCHER || unitType == UNIT_WATCHERTOWER || unitType == UNIT_HERO_ARCHER){
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "arrow.png");
             if(unitType == UNIT_WATCHERTOWER){
@@ -1094,6 +1222,30 @@ void Movable::attack(){
         }else if(unitType == UNIT_WIZARD){
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "fireBall0.png");
             speed = 300;
+        }else if(unitType == UNIT_WIZARD || unitType == UNIT_HERO_WIZARD){
+            if(isSkillOn){
+                apValue *= 2;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "fireBall0.png");
+            if(unitType == UNIT_WIZARD){
+                speed = 300;
+            }else if(unitType == UNIT_HERO_WIZARD){
+                if(isSkillOn){
+                    missile->setScale(2);
+                }
+                speed = 600;
+            }
+        }else if(unitType == UNIT_HERO_HEALER){
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "yellowBall.png");
+            speed = 300;
+        }else if(unitType == UNIT_HERO_REAPER){
+            if(target->getHitAndIsDead(ap, this)){
+                WORLD->removeDeadUnit((EnemyBase*)target);
+                stopNew();
+            }
+            WORLD->runEffect(EFFECT_PURPLE_SLASH, target->getPosition());
+            isSkillOn = false;
+            return;
         }else{
             return;
         }
@@ -1103,7 +1255,7 @@ void Movable::attack(){
             GM->playSoundEffect(SOUND_ARROW, 0.1f);
         }
         
-        missile->ap = ap;
+        missile->ap = apValue;
         missile->target = target;
         missile->attackTargetType = attackTargetType;
         WORLD->spriteBatch->addChild(missile, 100);
@@ -1138,6 +1290,10 @@ void Movable::attack(){
         missile->isEnemy = isEnemy;
         missile->runAction(Sequence::create(MoveTo::create(dur, target->getPosition()), CallFunc::create(CC_CALLBACK_0(Movable::onMissileMoveDone, missile)), NULL));
     }
+    
+    if (isSkillOn) {
+        isSkillOn = false;
+    }
 }
 void Movable::updateMissileAngle(float dt){
     if(lastMissilePosition != Point::ZERO)
@@ -1148,7 +1304,7 @@ void Movable::updateMissileAngle(float dt){
 void Movable::onMissileMoveDone(){
     removeFromParent();
     if (attackTargetType == ATTACK_TARGET_TYPE_SPLASH) {
-        if(this->shooter && this->shooter->unitType == UNIT_WIZARD){
+        if(this->shooter && (this->shooter->unitType == UNIT_WIZARD || this->shooter->unitType == UNIT_HERO_WIZARD)){
             WORLD->runEffect(EFFECT_FIREBALL_EXPLOSION, getPosition());
         }else{
             WORLD->runEffect(EFFECT_EXPLODE_MIDDLE, getPosition());
@@ -1422,6 +1578,7 @@ void Movable::attackDdangTo(Vec2 pos){
     moveFlagPos = pos;
     log("attackddang: %f, %f", pos.x, pos.y);
     moveToPos = Vec2::ZERO;
+    attackDdangPos = pos;
     unitAct = UNIT_ACT_ATTACK_DDANG;
     unitActDetail = UNIT_ACT_DETAIL_IDLE;
     runAnimation(ANIMATION_TYPE_IDLE);
@@ -1818,6 +1975,7 @@ void Movable::updateProductButtons(){
     }
 }
 void Movable::stopNew(){
+    stopSkillAura();
     canRevengeAttack = true;
     unitAct = UNIT_ACT_NONE;
     unitActDetail = UNIT_ACT_DETAIL_IDLE;
@@ -1828,6 +1986,9 @@ void Movable::stopNew(){
         unitAct = UNIT_ACT_ATTACK_DDANG;
         moveFlagPos = attackFlagPos;
         moveToPos = Vec2::ZERO;
+    }
+    if (attackDdangPos != Vec2::ZERO) {
+        attackDdangTo(attackDdangPos);
     }
     // check multiple units in the same spot
     if (!isGatheringGold && !WORLD->isThisSpotAvailable(this) && canMove && !isFlying) {
@@ -1846,6 +2007,7 @@ void Movable::stopNew(){
             GM->directionStatic = GM->directionStatic%8;
 //            bool changeDirection = false;
             int counter = 0;
+            Vec2 pos;
             do{
                 counter++;
                 if(counter > 8){
@@ -1881,7 +2043,9 @@ void Movable::stopNew(){
                 if(originalCoordinate.y + y >= WORLD->mapSize.height) {
                     y = 0;
                 }
-                if(!WORLD->isOccupied(originalCoordinate + Vec2(x, y)) && counter > 1){
+                pos = originalCoordinate + Vec2(x, y);
+                if(GM->tileState[(int)pos.x][(int)pos.y] == 0 && counter > 1){
+//                if(!WORLD->isOccupied(originalCoordinate + Vec2(x, y)) && counter > 1){
                     PointArray* array = GM->getPath(originalCoordinate, originalCoordinate + Vec2(x, y));
                     if(array && array->count() > 0){
                         coordinate = originalCoordinate + Vec2(x, y);
@@ -1974,6 +2138,8 @@ void Movable::cancelAttackSchedule(){
     this->stopActionByTag(attackTag);
 }
 void Movable::moveNew(float dt){// movenew start
+    
+    attackCoolTime -= dt;
     Vec2 prePos = getPosition();
     int previousAct = unitAct;
     if(unreachableTarget != nullptr && unreachableTarget == target){
@@ -2104,7 +2270,9 @@ void Movable::moveNew(float dt){// movenew start
                 addRoute(WORLD->getPositionFromTileCoordinate(pos.x, pos.y));
             }
             if (routePositionArray != nullptr && routePositionArray->count() > 0) {
-                if(!WORLD->isDecoBlock(WORLD->decoLayer->getTileGIDAt(WORLD->getCoordinateFromPosition(targetPos)))){
+                Vec2 coordinate = WORLD->getCoordinateFromPosition(targetPos);
+                if(!WORLD->isDecoBlock(WORLD->decoLayer->getTileGIDAt(coordinate)) &&
+                   !WORLD->isSoilBlock(WORLD->soilLayer->getTileGIDAt(coordinate))){
                     routePositionArray->removeControlPointAtIndex(routePositionArray->count() - 1); // remove last tile pos
                     addRoute(targetPos); // test
                 }
@@ -2147,6 +2315,7 @@ void Movable::moveNew(float dt){// movenew start
         }
         if (isArrived && unitActDetail != UNIT_ACT_DETAIL_ATTACK && unitAct != UNIT_ACT_GATHER_GOLD){ // arrived
             attackFlagPos = Vec2::ZERO;
+            attackDdangPos = Vec2::ZERO;
             if (unitAct == UNIT_ACT_ATTACK) {
                 checkAttackTargetReturnSuccess(dt);
             }else{

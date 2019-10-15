@@ -368,6 +368,12 @@ void Director::drawScene()
 #endif
     }
 }
+void Director::setTimeScale(float scale){
+    _scheduler->setTimeScale(scale);
+}
+float Director::getTimeScale(){
+    return _scheduler->getTimeScale();
+}
 
 void Director::calculateDeltaTime()
 {

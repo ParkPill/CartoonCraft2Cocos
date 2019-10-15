@@ -44,6 +44,8 @@
 #define AURA_FIRE 1
 #define AURA_ICE 2
 #define AURA_GREEN 3
+#define AURA_LIGHT 4
+#define AURA_DARK 5
 
 #define MISSILE_SLASH 0
 #define MISSILE_ARROW 1
@@ -105,6 +107,28 @@
 #define UNIT_HERO_LIZARDMAN 50
 #define UNIT_HERO_ARCHER 51
 #define UNIT_HERO_WEREWOLF 52
+#define UNIT_HERO_MONK 53
+#define UNIT_HERO_FIGHTER 54
+#define UNIT_HERO_BEAR 55
+#define UNIT_HERO_HEALER 56
+#define UNIT_HERO_KNIGHT 57
+#define UNIT_HERO_ELF_SWORDMAN 58
+#define UNIT_HERO_ASSASSIN 59
+#define UNIT_HERO_LION 60
+#define UNIT_HERO_WIZARD 61
+#define UNIT_HERO_TANKER 62
+#define UNIT_HERO_SKELETON 63
+#define UNIT_HERO_REAPER 64
+#define UNIT_HERO_ENT 65
+#define UNIT_HERO_SALAMANDER 66
+#define UNIT_HERO_UNDINE 67
+#define UNIT_HERO_CRAZY_WEREWOLF 68
+#define UNIT_HERO_CRAZY_BEAR 69
+#define UNIT_HERO_CRAZY_LION 70
+#define UNIT_HERO_LADY_WEREWOLF 71
+#define UNIT_HERO_LADY_LION 72
+#define UNIT_HERO_LADY_BEAR 73
+#define UNIT_MISSILE_NOTHING 100
 
 #define WEAPON_DAGGER 0
 #define WEAPON_SWORD 1
@@ -150,7 +174,7 @@
 
 struct UnitInfo
 {
-    int unitType;
+    int unitType=-1;
     int level=0;
     int rank=0;
     float x=-1;
@@ -182,6 +206,7 @@ public:
     Vec2 moveToPos = Vec2::ZERO;
     Vec2 moveFlagPos = Vec2::ZERO;
     void attackDdangTo(Vec2 pos);
+    Vec2 attackDdangPos = Vec2::ZERO;
     bool isInAttackMotion = false;
 
     cocos2d::Point centerPosition;
@@ -465,6 +490,7 @@ public:
     ProgressTimer* processTimer = nullptr;
     void resetProcessTimer();
     int level = 0;
+    int rank = 0;
     int unitState = 0;
     ui::Text* lblTimeLeft = nullptr;
     Sprite* sptUpgradeArrow = nullptr;
@@ -488,6 +514,8 @@ public:
     void cancelAttackSchedule();
     Movable* unreachableTarget = nullptr;
     bool canRevengeAttack = true;
+    
+    void healNearFriend();
 };
 
 #endif

@@ -14,8 +14,8 @@ android {
         applicationId "com.magmon.cartooncraft"
         minSdkVersion PROP_MIN_SDK_VERSION
         targetSdkVersion PROP_TARGET_SDK_VERSION
-        versionCode 148
-        versionName "2.62"
+        versionCode 167
+        versionName "2.82"
 
         externalNativeBuild {
             if (PROP_BUILD_TYPE == 'ndk-build') {

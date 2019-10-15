@@ -30,6 +30,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameSharing.cpp \
                    $(LOCAL_PATH)/../../../Classes/HelloWorldScene.cpp \
+                   $(LOCAL_PATH)/../../../Classes/HeroPage.cpp \
                    $(LOCAL_PATH)/../../../Classes/HudLayer.cpp \
                    $(LOCAL_PATH)/../../../Classes/Intro.cpp \
                    $(LOCAL_PATH)/../../../Classes/Inventory.cpp \
@@ -37,10 +38,13 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Laser.cpp \
                    $(LOCAL_PATH)/../../../Classes/LegendDaryButton.cpp \
                    $(LOCAL_PATH)/../../../Classes/PPLabel.cpp \
+                   $(LOCAL_PATH)/../../../Classes/PageBase.cpp \
                    $(LOCAL_PATH)/../../../Classes/Movable.cpp \
                    $(LOCAL_PATH)/../../../Classes/ServerManager.cpp \
+                   $(LOCAL_PATH)/../../../Classes/ShopLayer.cpp \
                    $(LOCAL_PATH)/../../../Classes/SneakyJoystick.cpp \
                    $(LOCAL_PATH)/../../../Classes/SneakyJoystickSkinnedBase.cpp \
+                   $(LOCAL_PATH)/../../../Classes/TopBar.cpp \
                    $(LOCAL_PATH)/../../../Classes/Title.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../Classes \

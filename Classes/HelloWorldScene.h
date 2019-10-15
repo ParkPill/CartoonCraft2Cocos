@@ -35,6 +35,10 @@ using namespace sdkbox;
 #define MAX_DROP_SPEED -10
 #define MAX_COIN_COUNT 691
 
+#define GAME_MODE_NORMAL 0
+#define GAME_MODE_HARD 1
+#define GAME_MODE_PVP6 6
+#define GAME_MODE_PVP12 12
 
 #define MAP_FOUND 0
 #define MAP_NORMAL -1
@@ -225,8 +229,9 @@ protected:
     void receivingData(float dt);
 public:
     bool isBlockExistBetween(Vec2 start, Vec2 end);
-    bool blackSheepWell = false; // test 
-    bool testSuper = false; // test no
+    bool blackSheepWell = true; // test now
+    bool testSuper = false; // test
+    bool isHardMode = false;
     Movable* getGroundOwner(Vec2 pos);
     Vector<EnemyBase*> unitsToCreateArray;
     Vector<EnemyBase*> heroArray;
@@ -241,8 +246,8 @@ public:
     
     experimental::TMXTiledMap* theMap;
     Movable* createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, cocos2d::Point pos, bool isFromEnemy, std::string weaponName = "");
-    void createMissile(std::string strMsName, std::string strArrivedMsName, Vec2 startPos, Vec2 endPos, float moveTime, int damage, float delay);
-    void missileMoveDone
+    void createMissile(std::string strMsName, std::string strArrivedMsName, Vec2 startPos, Vec2 endPos, float moveTime, int damage, bool isEnemy, float angle, Movable* attacker, float delay);
+    
     EnemyBase* getEncounteredNPC(cocos2d::Point pos);
     EnemyBase* talkingNPC = nullptr;
     void movePlayer(int direction);
@@ -350,7 +355,7 @@ public:
     bool isMapMoveDown = false;
     cocos2d::Size mapSize;
     // there's no 'id' in cpp, so we recommend to return the class instance cocos2d::Pointer
-    static cocos2d::Scene* scene(int stage, bool boss);
+    static cocos2d::Scene* scene(int stage, int mode);
 //    SpriteBatchNode* spriteBatch;
 //    SpriteBatchNode* spriteBatchBuilding;
 //    SpriteBatchNode* spriteBatchEffect;
@@ -392,7 +397,7 @@ public:
     void setPlayerPosition(cocos2d::Point position);
     void bubbleUpdate(float dt);
     void gravityUpdate(float dt);
-    void gravityUpdateForCoins(float dt);
+    void gravityUpdateHandler(float dt);
     void gravityUpdateForStraight(float dt);
     void gravityUpdateForCustomMoving(float dt);
     bool hitPlayer(int damage);
@@ -415,7 +420,6 @@ public:
     void enemyUpdate(float dt);
     void destructableUpdate();
     void missileUpdate(float dt);
-    void talkUpdate(float dt);
     void updateFireStick(float dt);
     void helperAndTrapUpdate(float dt);
     
@@ -498,7 +502,6 @@ public:
     void getOffVehicle();
     bool isCameraInCustomMoving = false;
     void addRide(int unit, cocos2d::Point pos);
-    void makeSomeBubbles(float dt);
     void fire();
     void enemyFireLoop(float dt);
     //int collectedKeyCount=0;
@@ -669,11 +672,9 @@ public:
     int lastTick = 0;
     bool isGameClear = false;
     int getHeroLevel(int slot);
-    void setHeroLevel(int slot, int level);
     int getHeroExp(int slot);
     int getMaxExp(int level);
     void addHeroExp(int slot, int exp);
-    void setHeroExp(int slot, int exp);
     int getHeroMaxLevel(int slot);
     std::string getHeroName(int slot);
     int getHeroMaxHP(int slot);
@@ -712,13 +713,9 @@ public:
     cocos2d::Size getBuildingOccupySize(int unit);
     bool isBuildingReadyToBuild = false;
     std::string getHeroWeapon(int slot);
-    void setHeroWeapon(int slot, std::string weapon);
     std::string getHeroHelmet(int slot);
-    void setHeroHelmet(int slot, std::string helmet);
     std::string getHeroShield(int slot);
-    void setHeroShield(int slot, std::string shield);
     std::string getHeroShoes(int slot);
-    void setHeroShoes(int slot, std::string shoes);
     void loadUnitSheet();
     ValueMap unitStatTable;
     ValueMap weaponStatTable;
@@ -802,6 +799,7 @@ public:
     void splashDamage(cocos2d::Point pos, int radius, int damage, bool isFromEnemy, Movable* attacker);
     void removeDeadUnit(EnemyBase* unit);
     void updateFog();
+    void processNewFogState();
     EnemyBase* getNearestCastle(cocos2d::Point pos);
     EnemyBase* getNearestLumberTank(cocos2d::Point pos);
     EnemyBase* getNearestTree(cocos2d::Point pos);
@@ -871,7 +869,20 @@ public:
 
     bool isBuildingExistWhenStartTheGame = true;
     void placeDeckUnitForRaid(Vec2 pos);
+    void hardModeUpdate(float dt);
+    float hardModeTimer = 0;
+    int cloneCounter = 0;
+    bool isHardModeEnded = false;
+    void healHeroNearPoint(Vec2 point, int hp);
+    int gameSpeed = 1;
     
+    int gameMode = GAME_MODE_NORMAL;
+    void updatePvp(float dt);
+    void setPvpMode(int mode);
+    Vector<EnemyBase*> heroList;
+    Vector<EnemyBase*> enemyHeroList;
+    Vector<EnemyBase*> heroListToCreate;
+    Vector<EnemyBase*> enemyHeroListToCreate;
 };
 
 

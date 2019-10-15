@@ -98,6 +98,9 @@ enum class MATRIX_STACK_TYPE
 class CC_DLL Director : public Ref
 {
 public:
+    
+    void setTimeScale(float scale); // sppark
+    float getTimeScale(); // sppark
     /** Director will trigger an event before set next scene. */
     static const char* EVENT_BEFORE_SET_NEXT_SCENE;
     /** Director will trigger an event after set next scene. */

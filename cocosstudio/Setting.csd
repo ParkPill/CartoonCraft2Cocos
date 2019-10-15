@@ -204,13 +204,13 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lblGPSID" ActionTag="331157389" Tag="4970" IconVisible="False" LeftMargin="534.7980" RightMargin="1731.2020" TopMargin="1014.5567" BottomMargin="285.4433" FontSize="30" LabelText="GPSID:" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lblGPSID" ActionTag="331157389" Tag="4970" IconVisible="False" LeftMargin="1216.0350" RightMargin="1049.9650" TopMargin="827.6390" BottomMargin="472.3610" FontSize="30" LabelText="GPSID:" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="102.0000" Y="34.0000" />
             <AnchorPoint ScaleY="0.5243" />
-            <Position X="534.7980" Y="303.2695" />
+            <Position X="1216.0350" Y="490.1872" />
             <Scale ScaleX="1.5000" ScaleY="1.5000" />
             <CColor A="255" R="14" G="14" B="14" />
-            <PrePosition X="0.2258" Y="0.2273" />
+            <PrePosition X="0.5135" Y="0.3675" />
             <PreSize X="0.0431" Y="0.0255" />
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
@@ -297,6 +297,80 @@
             <TextColor A="255" R="65" G="65" B="70" />
             <PressedFileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
             <NormalFileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
+          <AbstractNodeData Name="btnFacebook" ActionTag="501044195" Tag="1417" IconVisible="False" LeftMargin="1666.6932" RightMargin="438.5397" TopMargin="1610.8905" BottomMargin="-526.8905" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+            <Size X="262.7670" Y="250.0000" />
+            <Children>
+              <AbstractNodeData Name="Image_1" ActionTag="-1312057641" Tag="1418" IconVisible="False" LeftMargin="57.9867" RightMargin="71.1493" TopMargin="43.1765" BottomMargin="58.3748" LeftEage="27" RightEage="27" TopEage="31" BottomEage="31" Scale9OriginX="27" Scale9OriginY="31" Scale9Width="30" Scale9Height="33" ctype="ImageViewObjectData">
+                <Size X="133.6310" Y="148.4487" />
+                <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                <Position X="124.8022" Y="132.5991" />
+                <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                <CColor A="255" R="255" G="255" B="255" />
+                <PrePosition X="0.4750" Y="0.5304" />
+                <PreSize X="0.5086" Y="0.5938" />
+                <FileData Type="Normal" Path="iconFacebook.png" Plist="" />
+              </AbstractNodeData>
+            </Children>
+            <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+            <Position X="1798.0768" Y="-401.8905" />
+            <Scale ScaleX="0.8000" ScaleY="0.8000" />
+            <CColor A="255" R="255" G="255" B="255" />
+            <PrePosition X="0.7593" Y="-0.3013" />
+            <PreSize X="0.1110" Y="0.1874" />
+            <TextColor A="255" R="65" G="65" B="70" />
+            <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <NormalFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
+          <AbstractNodeData Name="btnCommunity" ActionTag="765892375" Tag="1419" IconVisible="False" LeftMargin="1440.9226" RightMargin="668.1282" TopMargin="1610.8905" BottomMargin="-526.8905" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+            <Size X="258.9493" Y="250.0000" />
+            <Children>
+              <AbstractNodeData Name="Image_1" ActionTag="-2034796437" Tag="1420" IconVisible="False" LeftMargin="60.4445" RightMargin="77.4251" TopMargin="43.4234" BottomMargin="66.2569" LeftEage="27" RightEage="27" TopEage="31" BottomEage="31" Scale9OriginX="27" Scale9OriginY="31" Scale9Width="30" Scale9Height="33" ctype="ImageViewObjectData">
+                <Size X="121.0797" Y="140.3197" />
+                <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                <Position X="120.9844" Y="136.4168" />
+                <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                <CColor A="255" R="255" G="255" B="255" />
+                <PrePosition X="0.4672" Y="0.5457" />
+                <PreSize X="0.4676" Y="0.5613" />
+                <FileData Type="Normal" Path="iconCup.png" Plist="" />
+              </AbstractNodeData>
+            </Children>
+            <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+            <Position X="1570.3972" Y="-401.8905" />
+            <Scale ScaleX="0.8000" ScaleY="0.8000" />
+            <CColor A="255" R="255" G="255" B="255" />
+            <PrePosition X="0.6632" Y="-0.3013" />
+            <PreSize X="0.1094" Y="0.1874" />
+            <TextColor A="255" R="65" G="65" B="70" />
+            <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <NormalFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
+          <AbstractNodeData Name="lblID" ActionTag="-810087921" Tag="1421" IconVisible="False" LeftMargin="1216.0350" RightMargin="1030.9650" TopMargin="889.6746" BottomMargin="410.3254" FontSize="30" LabelText="Game ID" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+            <Size X="121.0000" Y="34.0000" />
+            <AnchorPoint ScaleY="0.5243" />
+            <Position X="1216.0350" Y="428.1516" />
+            <Scale ScaleX="1.5000" ScaleY="1.5000" />
+            <CColor A="255" R="14" G="14" B="14" />
+            <PrePosition X="0.5135" Y="0.3210" />
+            <PreSize X="0.0511" Y="0.0255" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
+          <AbstractNodeData Name="lblVersion" ActionTag="1089127795" Tag="1422" IconVisible="False" LeftMargin="1216.0350" RightMargin="1099.9650" TopMargin="951.7102" BottomMargin="348.2898" FontSize="30" LabelText="Ver." ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+            <Size X="52.0000" Y="34.0000" />
+            <AnchorPoint ScaleY="0.5243" />
+            <Position X="1216.0350" Y="366.1160" />
+            <Scale ScaleX="1.5000" ScaleY="1.5000" />
+            <CColor A="255" R="14" G="14" B="14" />
+            <PrePosition X="0.5135" Y="0.2744" />
+            <PreSize X="0.0220" Y="0.0255" />
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>

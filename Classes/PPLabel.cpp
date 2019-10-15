@@ -107,6 +107,7 @@ void PPLabel::setString(std::string txt){
             this->addChild(lblNormal);
         }
         lblNormal->setString(txt);
+        lblNormal->setTextColor(Color4B(fontColor));
         if(hAlign == TextHAlignment::LEFT){
             lblNormal->setAnchorPoint(Point(0, lblNormal->getAnchorPoint().y));
         }else if(hAlign == TextHAlignment::CENTER){

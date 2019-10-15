@@ -14,9 +14,9 @@
 		<key>lightningAura0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>1</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>807</integer>
+			<integer>211</integer>
 			<key>width</key>
 			<integer>70</integer>
 			<key>height</key>
@@ -33,9 +33,9 @@
 		<key>lightningAura1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>1</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>393</integer>
 			<key>width</key>
 			<integer>92</integer>
 			<key>height</key>
@@ -52,9 +52,9 @@
 		<key>lightningAura2.png</key>
 		<dict>
 			<key>x</key>
-			<integer>317</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>812</integer>
 			<key>width</key>
 			<integer>76</integer>
 			<key>height</key>
@@ -71,9 +71,9 @@
 		<key>sandCube0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>785</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>301</integer>
 			<key>width</key>
 			<integer>65</integer>
 			<key>height</key>
@@ -90,9 +90,9 @@
 		<key>sandCude1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>851</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>367</integer>
 			<key>width</key>
 			<integer>60</integer>
 			<key>height</key>
@@ -109,9 +109,9 @@
 		<key>lightning0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>72</integer>
+			<integer>827</integer>
 			<key>y</key>
-			<integer>807</integer>
+			<integer>1</integer>
 			<key>width</key>
 			<integer>21</integer>
 			<key>height</key>
@@ -128,9 +128,9 @@
 		<key>lightning1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>818</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>851</integer>
 			<key>width</key>
 			<integer>32</integer>
 			<key>height</key>
@@ -147,9 +147,9 @@
 		<key>lightning2.png</key>
 		<dict>
 			<key>x</key>
-			<integer>94</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>431</integer>
 			<key>width</key>
 			<integer>53</integer>
 			<key>height</key>
@@ -166,9 +166,9 @@
 		<key>lightning3.png</key>
 		<dict>
 			<key>x</key>
-			<integer>912</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>239</integer>
 			<key>width</key>
 			<integer>65</integer>
 			<key>height</key>
@@ -185,9 +185,9 @@
 		<key>lightning4.png</key>
 		<dict>
 			<key>x</key>
-			<integer>405</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>454</integer>
 			<key>width</key>
 			<integer>86</integer>
 			<key>height</key>
@@ -204,7 +204,7 @@
 		<key>lightning5.png</key>
 		<dict>
 			<key>x</key>
-			<integer>281</integer>
+			<integer>643</integer>
 			<key>y</key>
 			<integer>1</integer>
 			<key>width</key>
@@ -223,9 +223,9 @@
 		<key>lightning6.png</key>
 		<dict>
 			<key>x</key>
-			<integer>178</integer>
+			<integer>479</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>378</integer>
 			<key>width</key>
 			<integer>129</integer>
 			<key>height</key>
@@ -242,9 +242,9 @@
 		<key>lightning7.png</key>
 		<dict>
 			<key>x</key>
-			<integer>308</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>1</integer>
 			<key>width</key>
 			<integer>197</integer>
 			<key>height</key>
@@ -261,9 +261,9 @@
 		<key>blueSlash0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>878</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>881</integer>
 			<key>width</key>
 			<integer>75</integer>
 			<key>height</key>
@@ -280,9 +280,9 @@
 		<key>blueSlash1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>572</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>738</integer>
 			<key>width</key>
 			<integer>167</integer>
 			<key>height</key>
@@ -299,9 +299,9 @@
 		<key>blueSlash2.png</key>
 		<dict>
 			<key>x</key>
-			<integer>394</integer>
+			<integer>479</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>554</integer>
 			<key>width</key>
 			<integer>125</integer>
 			<key>height</key>
@@ -318,9 +318,9 @@
 		<key>blueSlash3.png</key>
 		<dict>
 			<key>x</key>
-			<integer>740</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>777</integer>
 			<key>width</key>
 			<integer>77</integer>
 			<key>height</key>
@@ -337,9 +337,9 @@
 		<key>blueSlash4.png</key>
 		<dict>
 			<key>x</key>
-			<integer>94</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>807</integer>
+			<integer>786</integer>
 			<key>width</key>
 			<integer>39</integer>
 			<key>height</key>
@@ -356,9 +356,9 @@
 		<key>explosionDirection0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>675</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>339</integer>
 			<key>width</key>
 			<integer>176</integer>
 			<key>height</key>
@@ -375,9 +375,9 @@
 		<key>explosionDirection1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>1</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>514</integer>
 			<key>width</key>
 			<integer>176</integer>
 			<key>height</key>
@@ -394,9 +394,9 @@
 		<key>explosionDirection2.png</key>
 		<dict>
 			<key>x</key>
-			<integer>492</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>158</integer>
 			<key>width</key>
 			<integer>182</integer>
 			<key>height</key>
@@ -413,9 +413,9 @@
 		<key>explosionDirection3.png</key>
 		<dict>
 			<key>x</key>
-			<integer>651</integer>
-			<key>y</key>
 			<integer>1</integer>
+			<key>y</key>
+			<integer>675</integer>
 			<key>width</key>
 			<integer>255</integer>
 			<key>height</key>
@@ -432,9 +432,9 @@
 		<key>explosionDirection4.png</key>
 		<dict>
 			<key>x</key>
-			<integer>391</integer>
-			<key>y</key>
 			<integer>1</integer>
+			<key>y</key>
+			<integer>358</integer>
 			<key>width</key>
 			<integer>259</integer>
 			<key>height</key>
@@ -470,9 +470,9 @@
 		<key>explosionDirection6.png</key>
 		<dict>
 			<key>x</key>
-			<integer>1</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>774</integer>
 			<key>width</key>
 			<integer>166</integer>
 			<key>height</key>
@@ -489,9 +489,9 @@
 		<key>explosionDirection7.png</key>
 		<dict>
 			<key>x</key>
-			<integer>242</integer>
+			<integer>479</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>47</integer>
 			<key>width</key>
 			<integer>162</integer>
 			<key>height</key>
@@ -508,9 +508,9 @@
 		<key>explosionRing.png</key>
 		<dict>
 			<key>x</key>
-			<integer>168</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>358</integer>
+			<integer>1</integer>
 			<key>width</key>
 			<integer>73</integer>
 			<key>height</key>
@@ -527,9 +527,9 @@
 		<key>iceCrystal.png</key>
 		<dict>
 			<key>x</key>
-			<integer>706</integer>
+			<integer>643</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>706</integer>
 			<key>width</key>
 			<integer>78</integer>
 			<key>height</key>
@@ -546,9 +546,9 @@
 		<key>iceCrystalPart0.png</key>
 		<dict>
 			<key>x</key>
-			<integer>520</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>487</integer>
 			<key>width</key>
 			<integer>51</integer>
 			<key>height</key>
@@ -565,9 +565,9 @@
 		<key>iceCrystalPart1.png</key>
 		<dict>
 			<key>x</key>
-			<integer>851</integer>
+			<integer>753</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>974</integer>
 			<key>width</key>
 			<integer>26</integer>
 			<key>height</key>
@@ -584,9 +584,9 @@
 		<key>whiteSharpTeeth.png</key>
 		<dict>
 			<key>x</key>
-			<integer>549</integer>
+			<integer>479</integer>
 			<key>y</key>
-			<integer>571</integer>
+			<integer>251</integer>
 			<key>width</key>
 			<integer>156</integer>
 			<key>height</key>
@@ -599,32 +599,13 @@
 			<integer>156</integer>
 			<key>originalHeight</key>
 			<integer>79</integer>
-		</dict>
-		<key>arrowBuried.png</key>
-		<dict>
-			<key>x</key>
-			<integer>506</integer>
-			<key>y</key>
-			<integer>571</integer>
-			<key>width</key>
-			<integer>42</integer>
-			<key>height</key>
-			<integer>102</integer>
-			<key>offsetX</key>
-			<real>0</real>
-			<key>offsetY</key>
-			<real>-0.5</real>
-			<key>originalWidth</key>
-			<integer>42</integer>
-			<key>originalHeight</key>
-			<integer>103</integer>
 		</dict>
 		<key>heroArrow.png</key>
 		<dict>
 			<key>x</key>
-			<integer>148</integer>
+			<integer>281</integer>
 			<key>y</key>
-			<integer>746</integer>
+			<integer>689</integer>
 			<key>width</key>
 			<integer>168</integer>
 			<key>height</key>
@@ -637,6 +618,462 @@
 			<integer>170</integer>
 			<key>originalHeight</key>
 			<integer>50</integer>
+		</dict>
+		<key>arrowBuried.png</key>
+		<dict>
+			<key>x</key>
+			<integer>643</integer>
+			<key>y</key>
+			<integer>350</integer>
+			<key>width</key>
+			<integer>102</integer>
+			<key>height</key>
+			<integer>42</integer>
+			<key>offsetX</key>
+			<real>-0.5</real>
+			<key>offsetY</key>
+			<real>0</real>
+			<key>originalWidth</key>
+			<integer>103</integer>
+			<key>originalHeight</key>
+			<integer>42</integer>
+		</dict>
+		<key>fireSlash0.png</key>
+		<dict>
+			<key>x</key>
+			<integer>479</integer>
+			<key>y</key>
+			<integer>516</integer>
+			<key>width</key>
+			<integer>128</integer>
+			<key>height</key>
+			<integer>37</integer>
+			<key>offsetX</key>
+			<real>-47.5</real>
+			<key>offsetY</key>
+			<real>1.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash1.png</key>
+		<dict>
+			<key>x</key>
+			<integer>1</integer>
+			<key>y</key>
+			<integer>931</integer>
+			<key>width</key>
+			<integer>197</integer>
+			<key>height</key>
+			<integer>49</integer>
+			<key>offsetX</key>
+			<real>-7</real>
+			<key>offsetY</key>
+			<real>0.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash2.png</key>
+		<dict>
+			<key>x</key>
+			<integer>281</integer>
+			<key>y</key>
+			<integer>109</integer>
+			<key>width</key>
+			<integer>186</integer>
+			<key>height</key>
+			<integer>48</integer>
+			<key>offsetX</key>
+			<real>3.5</real>
+			<key>offsetY</key>
+			<real>-1</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash3.png</key>
+		<dict>
+			<key>x</key>
+			<integer>479</integer>
+			<key>y</key>
+			<integer>1</integer>
+			<key>width</key>
+			<integer>163</integer>
+			<key>height</key>
+			<integer>45</integer>
+			<key>offsetX</key>
+			<real>17</real>
+			<key>offsetY</key>
+			<real>1.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash4.png</key>
+		<dict>
+			<key>x</key>
+			<integer>479</integer>
+			<key>y</key>
+			<integer>331</integer>
+			<key>width</key>
+			<integer>149</integer>
+			<key>height</key>
+			<integer>46</integer>
+			<key>offsetX</key>
+			<real>35</real>
+			<key>offsetY</key>
+			<real>-2</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash5.png</key>
+		<dict>
+			<key>x</key>
+			<integer>479</integer>
+			<key>y</key>
+			<integer>631</integer>
+			<key>width</key>
+			<integer>112</integer>
+			<key>height</key>
+			<integer>45</integer>
+			<key>offsetX</key>
+			<real>43.5</real>
+			<key>offsetY</key>
+			<real>1.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash6.png</key>
+		<dict>
+			<key>x</key>
+			<integer>479</integer>
+			<key>y</key>
+			<integer>592</integer>
+			<key>width</key>
+			<integer>114</integer>
+			<key>height</key>
+			<integer>38</integer>
+			<key>offsetX</key>
+			<real>46.5</real>
+			<key>offsetY</key>
+			<real>4</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash7.png</key>
+		<dict>
+			<key>x</key>
+			<integer>643</integer>
+			<key>y</key>
+			<integer>647</integer>
+			<key>width</key>
+			<integer>83</integer>
+			<key>height</key>
+			<integer>33</integer>
+			<key>offsetX</key>
+			<real>60</real>
+			<key>offsetY</key>
+			<real>4.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash8.png</key>
+		<dict>
+			<key>x</key>
+			<integer>643</integer>
+			<key>y</key>
+			<integer>681</integer>
+			<key>width</key>
+			<integer>80</integer>
+			<key>height</key>
+			<integer>24</integer>
+			<key>offsetX</key>
+			<real>58.5</real>
+			<key>offsetY</key>
+			<real>4</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash9.png</key>
+		<dict>
+			<key>x</key>
+			<integer>643</integer>
+			<key>y</key>
+			<integer>861</integer>
+			<key>width</key>
+			<integer>75</integer>
+			<key>height</key>
+			<integer>19</integer>
+			<key>offsetX</key>
+			<real>57</real>
+			<key>offsetY</key>
+			<real>4.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash10.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>628</integer>
+			<key>width</key>
+			<integer>47</integer>
+			<key>height</key>
+			<integer>22</integer>
+			<key>offsetX</key>
+			<real>75</real>
+			<key>offsetY</key>
+			<real>3</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash11.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>915</integer>
+			<key>width</key>
+			<integer>30</integer>
+			<key>height</key>
+			<integer>27</integer>
+			<key>offsetX</key>
+			<real>89.5</real>
+			<key>offsetY</key>
+			<real>2.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>fireSlash12.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>885</integer>
+			<key>width</key>
+			<integer>31</integer>
+			<key>height</key>
+			<integer>29</integer>
+			<key>offsetX</key>
+			<real>89</real>
+			<key>offsetY</key>
+			<real>2.5</real>
+			<key>originalWidth</key>
+			<integer>223</integer>
+			<key>originalHeight</key>
+			<integer>50</integer>
+		</dict>
+		<key>greenHit0.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>943</integer>
+			<key>width</key>
+			<integer>30</integer>
+			<key>height</key>
+			<integer>30</integer>
+			<key>offsetX</key>
+			<real>0</real>
+			<key>offsetY</key>
+			<real>1.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit1.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>700</integer>
+			<key>width</key>
+			<integer>43</integer>
+			<key>height</key>
+			<integer>40</integer>
+			<key>offsetX</key>
+			<real>0.5</real>
+			<key>offsetY</key>
+			<real>-0.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit2.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>651</integer>
+			<key>width</key>
+			<integer>45</integer>
+			<key>height</key>
+			<integer>48</integer>
+			<key>offsetX</key>
+			<real>-0.5</real>
+			<key>offsetY</key>
+			<real>4.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit3.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>741</integer>
+			<key>width</key>
+			<integer>43</integer>
+			<key>height</key>
+			<integer>44</integer>
+			<key>offsetX</key>
+			<real>0.5</real>
+			<key>offsetY</key>
+			<real>6.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit4.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>806</integer>
+			<key>width</key>
+			<integer>39</integer>
+			<key>height</key>
+			<integer>44</integer>
+			<key>offsetX</key>
+			<real>1.5</real>
+			<key>offsetY</key>
+			<real>5.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit5.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>576</integer>
+			<key>width</key>
+			<integer>47</integer>
+			<key>height</key>
+			<integer>51</integer>
+			<key>offsetX</key>
+			<real>0.5</real>
+			<key>offsetY</key>
+			<real>5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>greenHit6.png</key>
+		<dict>
+			<key>x</key>
+			<integer>753</integer>
+			<key>y</key>
+			<integer>523</integer>
+			<key>width</key>
+			<integer>48</integer>
+			<key>height</key>
+			<integer>52</integer>
+			<key>offsetX</key>
+			<real>0</real>
+			<key>offsetY</key>
+			<real>5.5</real>
+			<key>originalWidth</key>
+			<integer>48</integer>
+			<key>originalHeight</key>
+			<integer>63</integer>
+		</dict>
+		<key>leaf.png</key>
+		<dict>
+			<key>x</key>
+			<integer>836</integer>
+			<key>y</key>
+			<integer>27</integer>
+			<key>width</key>
+			<integer>39</integer>
+			<key>height</key>
+			<integer>26</integer>
+			<key>offsetX</key>
+			<real>0</real>
+			<key>offsetY</key>
+			<real>0</real>
+			<key>originalWidth</key>
+			<integer>39</integer>
+			<key>originalHeight</key>
+			<integer>26</integer>
+		</dict>
+		<key>yellowBall.png</key>
+		<dict>
+			<key>x</key>
+			<integer>838</integer>
+			<key>y</key>
+			<integer>73</integer>
+			<key>width</key>
+			<integer>34</integer>
+			<key>height</key>
+			<integer>34</integer>
+			<key>offsetX</key>
+			<real>0</real>
+			<key>offsetY</key>
+			<real>0</real>
+			<key>originalWidth</key>
+			<integer>34</integer>
+			<key>originalHeight</key>
+			<integer>34</integer>
+		</dict>
+		<key>purpleBall.png</key>
+		<dict>
+			<key>x</key>
+			<integer>849</integer>
+			<key>y</key>
+			<integer>126</integer>
+			<key>width</key>
+			<integer>43</integer>
+			<key>height</key>
+			<integer>44</integer>
+			<key>offsetX</key>
+			<real>0</real>
+			<key>offsetY</key>
+			<real>0</real>
+			<key>originalWidth</key>
+			<integer>43</integer>
+			<key>originalHeight</key>
+			<integer>44</integer>
 		</dict>
 	</dict>
 </dict>

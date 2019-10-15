@@ -125,6 +125,7 @@ public:
     double firstLocalTime = 0;
     
     void sendPost(std::string method, std::string requestData, cocos2d::network::SEL_HttpResponse pSelector);
+    void sendGet(std::string method, cocos2d::network::SEL_HttpResponse pSelector);
     
 //    double getTimeFromStr(std::string strTime);
     std::string getStrFromTime(time_t timet);
@@ -156,6 +157,43 @@ public:
     int treeLimit = 1000000;
     
     int getTimeLeftToNewDay();
+    void saveUserData(std::vector<int>& datas);
+    
+    void getGameInfo();
+    void onGetGameInfoComplete(cocos2d::Node *sender, void *data);
+    void getRewardInfo();
+    void onGetRewardInfoComplete(cocos2d::Node *sender, void *data);
+    
+    int getTimeLeftToSunday();
+    bool shouldCheckPvp6Result = true;
+    bool shouldGetPvp6Info = true;
+    void getPvp6ResultAndTicket();
+    void onGetPvp6ResultAndTicketComplete(cocos2d::Node *sender, void *data);
+    void getPvp6Info();
+    void onGetPvp6InfoComplete(cocos2d::Node *sender, void *data);
+    void findMatchForPvp6();
+    void onFindMatchForPvp6Complete(cocos2d::Node *sender, void *data);
+    void sendPvp6Result(int trophy);
+    void onSendPvp6ResultComplete(cocos2d::Node *sender, void *data);
+    
+    bool shouldCheckPvp12Result = true;
+    bool shouldGetPvp12Info = true;
+    void getPvp12ResultAndTicket();
+    void onGetPvp12ResultAndTicketComplete(cocos2d::Node *sender, void *data);
+    void getPvp12Info();
+    void onGetPvp12InfoComplete(cocos2d::Node *sender, void *data);
+    void findMatchForPvp12();
+    void onFindMatchForPvp12Complete(cocos2d::Node *sender, void *data);
+    void sendPvp12Result(int trophy);
+    void onSendPvp12ResultComplete(cocos2d::Node *sender, void *data);
+    std::string savedRID = "";
+    int pvp6TicketCount = 0;
+    int pvp12TicketCount = 0;
+    
+    std::string pvpTargetUserID;
+    int pvpTargetTrophy = 1000;
+    std::string pvpTargetData;
+    
 };
 
 #endif /* defined(__LegendDaryKakao__BuggyServerManager__) */

@@ -32,7 +32,7 @@ const char* LanguageManager::getLocalizedFont(){
     }else{
 //        return "visitor1.ttf";
 //        return "arial";
-        return "Helvetica";
+        return "Helveticas";
     }
 }
 cocos2d::Label* LanguageManager::getLocalizedLabel(const char* text, Color4B color, int size){
@@ -106,8 +106,7 @@ std::string LanguageManager::getText(std::string textId){
         str = row.at("german").asString();
     }else if (type == LanguageType::TURKISH) {
         str = row.at("turkish").asString();
-    }
-    else{
+    }else{
         str = row.at("english").asString();
     }
 //    str = row.at("english").asString();
@@ -182,22 +181,49 @@ void LanguageManager::setLocalizedStringNotKey(Text* lbl, std::string text){
     if (text.compare(lbl->getString()) != 0) {
         lbl->setString(text);
         lbl->setFontName(getLocalizedFont());
+        lbl->setFontSize(lbl->getFontSize());
         if (lbl->getOutlineSize() > 0 &&
             getLanguageType() != LanguageType::KOREAN &&
             getLanguageType() != LanguageType::ENGLISH && lbl->getChildren().size() == 0) {
             int outlineSize= lbl->getOutlineSize()*0.5f;
+            Text* lblClone = (Text*)lbl->clone();
+            lbl->addChild(lblClone, -1);
+            lblClone->setTag(3);
+            for (int i = 0; i < 3; i++) {
+                lblClone = (Text*)lblClone->clone();
+                lbl->addChild(lblClone, -1);
+                lblClone->setTag(i);
+            }
+            Vec2 centerPos = Vec2(lblClone->getContentSize().width*lblClone->getAnchorPoint().x, lblClone->getContentSize().height*lblClone->getAnchorPoint().y);
             for (int i = 0; i < 4; i++) {
-                Text* lblClone = (Text*)lbl->clone();
-                lbl->getParent()->addChild(lblClone, lbl->getLocalZOrder());
+                lblClone = (Text*)lbl->getChildByTag(i);
                 if( i == 0){
-                    lblClone->setPosition(lbl->getPosition() + Vec2(-outlineSize, 0));
+                    lblClone->setPosition(centerPos + Vec2(-outlineSize, 0));
                 }else if( i == 1){
-                    lblClone->setPosition(lbl->getPosition() + Vec2(outlineSize, 0));
+                    lblClone->setPosition(centerPos + Vec2(outlineSize, 0));
                 }else if( i == 2){
-                    lblClone->setPosition(lbl->getPosition() + Vec2(0, outlineSize));
+                    lblClone->setPosition(centerPos + Vec2(0, outlineSize));
                 }else if( i == 3){
-                    lblClone->setPosition(lbl->getPosition() + Vec2(0, -outlineSize));
+                    lblClone->setPosition(centerPos + Vec2(0, -outlineSize));
                 }
+//                if( i == 0){
+//                    lblClone->setPosition( Vec2(-outlineSize, 0));
+//                }else if( i == 1){
+//                    lblClone->setPosition( Vec2(outlineSize, 0));
+//                }else if( i == 2){
+//                    lblClone->setPosition(Vec2(0, outlineSize));
+//                }else if( i == 3){
+//                    lblClone->setPosition(Vec2(0, -outlineSize));
+//                }
+//                if( i == 0){
+//                    lblClone->setPosition(lbl->getPosition() + Vec2(-outlineSize, 0));
+//                }else if( i == 1){
+//                    lblClone->setPosition(lbl->getPosition() + Vec2(outlineSize, 0));
+//                }else if( i == 2){
+//                    lblClone->setPosition(lbl->getPosition() + Vec2(0, outlineSize));
+//                }else if( i == 3){
+//                    lblClone->setPosition(lbl->getPosition() + Vec2(0, -outlineSize));
+//                }
                 lblClone->setColor(Color3B::BLACK);
             }
             lbl->setLocalZOrder(lbl->getLocalZOrder() + 1);

@@ -28,18 +28,35 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "HelloWorld::updateUnitMove(float):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "hero-&gt;unitType">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "Movable::stopNew():Movable.cpp">
          <PersistentStrings>
+            <PersistentString
+               value = "unitAct">
+            </PersistentString>
             <PersistentString
                value = "unitType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "HelloWorld::updateUnitMove(float):HelloWorldScene.cpp">
+         contextName = "Movable::checkAttackTarget(float):Movable.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "hero-&gt;unitType">
+               value = "target-&gt;unitType">
+            </PersistentString>
+            <PersistentString
+               value = "unitActDetail">
+            </PersistentString>
+            <PersistentString
+               value = "unitType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -73,20 +90,6 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "Movable::checkAttackTarget(float):Movable.cpp">
-         <PersistentStrings>
-            <PersistentString
-               value = "target-&gt;unitType">
-            </PersistentString>
-            <PersistentString
-               value = "unitActDetail">
-            </PersistentString>
-            <PersistentString
-               value = "unitType">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "HelloWorld::setTileGID(cocos2d::experimental::TMXLayer*, int, cocos2d::Vec2):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
@@ -109,28 +112,36 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "BattleHud::loadData():BattleHud.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unit-&gt;getPosition()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "HelloWorld::updateUnitMoveNew(float):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "hero-&gt;unitActDetail">
+               value = "hero-&gt;unitType">
             </PersistentString>
             <PersistentString
-               value = "hero-&gt;target">
+               value = "unit-&gt;unreachableTarget">
             </PersistentString>
             <PersistentString
                value = "unit-&gt;unitType">
             </PersistentString>
             <PersistentString
-               value = "hero-&gt;unitType">
+               value = "hero-&gt;moveFlagPos">
             </PersistentString>
             <PersistentString
                value = "hero-&gt;target-&gt;getPosition()">
             </PersistentString>
             <PersistentString
-               value = "hero-&gt;moveFlagPos">
+               value = "hero-&gt;unitActDetail">
             </PersistentString>
             <PersistentString
-               value = "unit-&gt;unreachableTarget">
+               value = "hero-&gt;target">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -141,13 +152,13 @@
          contextName = "HelloWorld::gravityUpdate(float):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "unit-&gt;unitType">
-            </PersistentString>
-            <PersistentString
                value = "hero-&gt;getPosition().distanceSquared(unit-&gt;getPosition())">
             </PersistentString>
             <PersistentString
                value = "heroArray">
+            </PersistentString>
+            <PersistentString
+               value = "unit-&gt;unitType">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -175,9 +186,15 @@
          contextName = "HelloWorld::revengeAttack(Movable*, Movable*):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
+               value = "">
+            </PersistentString>
+            <PersistentString
                value = "unit-&gt;attackType">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Title::showHeroDetail(UnitInfo*):Title.cpp">
       </ContextState>
       <ContextState
          contextName = "Movable::moveToTarget(Movable*):Movable.cpp">
@@ -207,10 +224,21 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "Title::onHeroShopTabClick(cocos2d::Ref*):Title.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "lbl-&gt;getScaleY()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "HelloWorld::setStage(cocos2d::experimental::TMXTiledMap*):HelloWorldScene.cpp">
          <PersistentStrings>
             <PersistentString
                value = "unit-&gt;unitType">
+            </PersistentString>
+            <PersistentString
+               value = "Value(strFog.at(counter)).asString()">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -272,6 +300,9 @@
          contextName = "Movable::attackUpdate(float):Movable.cpp">
          <PersistentStrings>
             <PersistentString
+               value = "unitAct">
+            </PersistentString>
+            <PersistentString
                value = "unitType">
             </PersistentString>
          </PersistentStrings>
@@ -294,10 +325,10 @@
                value = "isEnemy">
             </PersistentString>
             <PersistentString
-               value = "target-&gt;energy">
+               value = "unitType">
             </PersistentString>
             <PersistentString
-               value = "unitType">
+               value = "target-&gt;energy">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -314,6 +345,14 @@
          <PersistentStrings>
             <PersistentString
                value = "GameManager::getInstance()-&gt;nextScene">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HelloWorld::findTargetEnemy(Movable*):HelloWorldScene.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "finder-&gt;monitoringDistance">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

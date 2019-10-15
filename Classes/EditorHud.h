@@ -294,7 +294,7 @@ public:
     int reviveCount = 0;
     Layout* messageBox;
     
-    const char* getWeaponName(int index);
+    
     int coinCount;
     int enemyKilledCount;
     void setExp(int level, int exp, int expMax);

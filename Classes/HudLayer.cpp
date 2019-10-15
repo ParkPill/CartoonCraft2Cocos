@@ -269,7 +269,29 @@ bool HudLayer::init()
             spt->setPosition(btn->getContentSize()/2);
             counter++;
         }
+        
+        strEquipped = UDGetStr(KEY_UNITS_HERO_DECK, "");
+        units = GameManager::getInstance()->split(strEquipped, "_");
+        for(int i = 0; i < units.size(); i++){
+            if(units.at(i).asString().length() > 0){
+                UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+                deckUnitList.push_back(info);
+            }
+        }
+        
+        for(auto info : heroDeckUnitList){
+            Button* btn = (Button*)btnTemp->clone();
+            sv->addChild(btn);
+            btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onUnitInBottomDeckClick, this));
+            btn->setTag(counter);
+            btn->setPosition(Vec2(137.05f + counter*267.3f, 122.38f));
+            EnemyBase* unit = EnemyBase::createEnemy(info->unitType, 0, 0, WORLD->getSpriteNameForUnit(info->unitType).c_str());
+            btn->addChild(unit);
+            unit->setPosition(Vec2(btn->getContentSize().width/2, 20));
+            counter++;
+        }
         btnTemp->removeFromParent();
+        sv->setInnerContainerSize(Size(counter*267.3f, sv->getContentSize().height));
     }
     if(GM->nextScene == STAGE_FIELD || isRaid){
         int offsetX = 0;
@@ -285,7 +307,6 @@ bool HudLayer::init()
             btn->setPosition(Point(offsetX + 327, 480));
             addLabelToButton("menu", btn, false, DARK_GRAY_3B);
         }
-        
         
         ImageView* img = ImageView::create("uiBoxSmallBlue.png");
         this->addChild(img, 99);
@@ -305,71 +326,45 @@ bool HudLayer::init()
         
         offsetX = size.width - 440;
         float offsetY = -85;
-        btn = Button::create("uiBoxSmallBlue.png");
-        this->addChild(btn, 99);
-        btn->setContentSize(Size(440, 90));
-        btn->setScale9Enabled(true);
+        
+        
+        Node* ndPanel = CSLoader::createNode("RightBottomPanelForCampaign.csb");
+        rightBottomPanelForCampaign = ndPanel;
+        this->addChild(ndPanel, 99);
+        ndPanel->setPosition(Vec2(size.width, 0));
+        
+        btn = (Button*)ndPanel->getChildByName("btnSelectAll");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
-        btn->setPosition(Point(offsetX + 218, 565 + offsetY));
         
-        Node* lbl = PPLabel::create(LM->getText("select all"), btn->getContentSize().height*2/6, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-        lbl->setPosition(Point(btn->getContentSize().width/2 + 60, btn->getContentSize().height/2));
-        btn->addChild(lbl);
-        
-        Sprite* spt = Sprite::create("iconPopulation.png");
-        btn->addChild(spt);
-        spt->setPosition(Point(100, 50));
-        spt->setScale(0.6f);
-        
-        Node* ndDragButton = CSLoader::createNode("DragButton.csb");
-        this->addChild(ndDragButton, 99);
-        btn = (Button*)ndDragButton->getChildByName("btn");
+        btn = (Button*)ndPanel->getChildByName("btnSelectDrag");
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
-        imgDragSelected = ndDragButton->getChildByName("imgSelected");
-        ndDragButton->setPosition(Point(offsetX + 218, 720 + offsetY));
-        Text* lblOriginal = (Text*)ndDragButton->getChildByName("lbl");
-        if(LM->getLanguageType() == LanguageType::ENGLISH){
-            lbl = PPLabel::create(LM->getText("drag to select"), btn->getContentSize().height*2/6 - 4, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-            lbl->setPosition(lblOriginal->getPosition());
-            ndDragButton->addChild(lbl);
-            lblOriginal->removeFromParent();
-        }else{
-            LM->setLocalizedString(lblOriginal, "drag to select");
-        }
         
+        btn = (Button*)ndPanel->getChildByName("btn2xFast");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::on2xFastClick, this));
+        ndPanel->getChildByName("img2xSelected")->setVisible(false);
+        btn = (Button*)ndPanel->getChildByName("btn3xFast");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::on3xFastClick, this));
+        ndPanel->getChildByName("img3xSelected")->setVisible(false);
         
-        
-        if(LM->getLanguageType() == LanguageType::SPANISH){
-            spt->setPositionX(spt->getPositionX() - 46);
-            spt->setScale(0.45f);
-            lbl->setScaleX(0.9f);
-            lbl->setPositionX(btn->getContentSize().width/2 + 40);
-        }
-        
-        btn = Button::create("uiBoxSmallBlue.png");
-        this->addChild(btn, 99);
-        btn->setContentSize(Size(440, 90));
-        btn->setScale9Enabled(true);
+        btn = (Button*)ndPanel->getChildByName("btnSelectScreen");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectForcesInScreen, this));
-        btn->setPosition(Point(offsetX + 218, 650 + offsetY));
         
-        lbl = PPLabel::create(LM->getText("select screen"), btn->getContentSize().height*2/6 - 4, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-        lbl->setPosition(Point(btn->getContentSize().width/2 + 55, btn->getContentSize().height/2));
-        btn->addChild(lbl);
-        
-        spt = Sprite::create("iconPopulationScreen.png");
-        btn->addChild(spt);
-//        spt->setPosition(Point(56, 46));
-        spt->setPosition(Point(lbl->getPositionX() - ((PPLabel*)lbl)->getSize().width/2 - 60, 46));
-        spt->setScale(0.6f);
-        if(LM->getLanguageType() == LanguageType::SPANISH){
-            spt->setPositionX(spt->getPositionX() + 15);
-            lbl->setScaleX(0.9f);
-            lbl->setPositionX(btn->getContentSize().width/2 + 40);
-        }
+        btn = (Button*)ndPanel->getChildByName("btnShowHide");
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onShowMoreMenuClick, this));
         
         rightBottomPanel = CSLoader::createNodeWithVisibleSize("RightBottomPanel.csb");
         this->addChild(rightBottomPanel, 5);
+        
+        btn = (Button*)rightBottomPanel->getChildByName("btnSelectAll");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
+        
+        btn = (Button*)rightBottomPanel->getChildByName("btnSelectDrag");
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
+        
+        btn = (Button*)rightBottomPanel->getChildByName("btnSelectScreen");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectForcesInScreen, this));
+        
+        
         rightBottomPanel->setContentSize(size);
         Node* ndBattle = rightBottomPanel->getChildByName("ndBattle");
         for (int i =0; i < 3; i++) {
@@ -381,6 +376,14 @@ bool HudLayer::init()
         if (GM->isVisiting) {
             btn->setVisible(false);
         }
+        Text* lblGold = (Text*)btn->getChildByName("lblGold");
+        lblGold->setString(Value((int)(10 * pow(2, GM->matchFindCount+1))).asString());
+        GM->alignToCenter(btn->getChildByName("imgGold"), lblGold, 20, btn->getContentSize().width/2, 0);
+        
+        rightBottomPanel->getChildByName("btnSelectDrag")->setVisible(false);
+        rightBottomPanel->getChildByName("btnSelectScreen")->setVisible(false);
+        rightBottomPanel->getChildByName("btnSelectAll")->setVisible(false);
+        
         Text* lblTitle = (Text*)btn->getChildByName("lbl");
         LM->setLocalizedString(lblTitle, "next match");
         if(GM->nextScene == STAGE_SINGLEPLAY){
@@ -390,7 +393,7 @@ bool HudLayer::init()
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onSurrenderClick, this));
         lblTitle = (Text*)btn->getChildByName("lbl");
         LM->setLocalizedString(lblTitle, "surrender");
-        Node* ndInfo = rightBottomPanel->getChildByName("ndInfo");
+        Node* ndInfo = rightBottomPanelForCampaign->getChildByName("ndInfo");
         if(isRaid){
             rightBottomPanel->getChildByName("ndMission")->setVisible(false);
         }else{
@@ -407,10 +410,21 @@ bool HudLayer::init()
         lblDescription->setWidth(sv->getContentSize().width);
         lblDescription->setAnchorPoint(Vec2(0.5, 1));
         lblDescription->setPosition(Vec2(sv->getContentSize().width/2, 0));
+        
+        if (GM->nextScene == STAGE_FIELD && !isRaid) {
+            rightBottomPanel->setVisible(false);
+            imgDragSelected = rightBottomPanelForCampaign->getChildByName("imgDrawSelected");
+            imgDragSelected->setVisible(false);
+        }
+        if(isRaid){
+            rightBottomPanelForCampaign->setVisible(false);
+            imgDragSelected = rightBottomPanel->getChildByName("imgDrawSelected");
+            imgDragSelected->setVisible(false);
+        }
     }
     
     
-    if (WORLD->stageIndex == 0 && GM->nextScene == STAGE_FIELD && !GM->isColosseum) {
+    if (WORLD->stageIndex == 0 && GM->nextScene == STAGE_FIELD && !GM->isColosseum && !WORLD->isHardMode) {
         tutorialIndex = 0;
         tutorialNode = Node::create();
         this->addChild(tutorialNode, 200);
@@ -456,6 +470,40 @@ bool HudLayer::init()
     // init done
     return true;
 }
+void HudLayer::on2xFastClick(){
+    rightBottomPanelForCampaign->getChildByName("img3xSelected")->setVisible(false);
+    if(WORLD->gameSpeed == 2){
+        WORLD->gameSpeed = 1;
+        rightBottomPanelForCampaign->getChildByName("img2xSelected")->setVisible(false);
+    }else{
+        WORLD->gameSpeed = 2;
+        rightBottomPanelForCampaign->getChildByName("img2xSelected")->setVisible(true);
+    }
+    Director::getInstance()->setTimeScale(WORLD->gameSpeed);
+}
+void HudLayer::on3xFastClick(){
+    rightBottomPanelForCampaign->getChildByName("img2xSelected")->setVisible(false);
+    if(WORLD->gameSpeed == 3){
+        WORLD->gameSpeed = 1;
+        rightBottomPanelForCampaign->getChildByName("img3xSelected")->setVisible(false);
+    }else{
+        WORLD->gameSpeed = 3;
+        rightBottomPanelForCampaign->getChildByName("img3xSelected")->setVisible(true);
+    }
+    Director::getInstance()->setTimeScale(WORLD->gameSpeed);
+}
+void HudLayer::onShowMoreMenuClick(Ref* ref){
+    BTN_FROM_REF
+    bool shouldShow = btn->getTag() == 0;
+    btn->setTag(shouldShow?1:0);
+    btn->getParent()->stopAllActions();
+    if (shouldShow) {
+        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width, 567.30f)), 2));
+    }else{
+        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width, 0)), 2));
+    }
+    btn->getChildByName("img")->runAction(RotateTo::create(0.3f, shouldShow?0:180));
+}
 void HudLayer::onNextMatchClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
     int price = Value(((Text*)btn->getChildByName("lblGold"))->getString()).asInt();
@@ -465,7 +513,7 @@ void HudLayer::onNextMatchClick(Ref* ref){
         this->unscheduleAllCallbacks();
         removeListener();
         GM->setHudLayer(nullptr);
-        
+        GM->matchFindCount++;
         GM->nextScene = STAGE_RAID; // test
         auto scene = Scene::create();
         FindMatch* findMatch = FindMatch::create();
@@ -505,6 +553,7 @@ void HudLayer::setRaid(){
     lbl->setString(Value(GM->raidEnemyTree).asString());
     
     ValueVector units = GM->split(strEquipped, "_");
+    Vec2 castlePos;
     for(int i = 0; i < units.size(); i++){
         ValueVector datas = GM->split(units.at(i).asString(), "/");
         if(datas.size() > 1){
@@ -512,7 +561,22 @@ void HudLayer::setRaid(){
             
             UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
             Size occupySize = WORLD->getBuildingOccupySize(unitType);
-            Vec2 sptPos = Vec2(Value(datas.at(2)).asInt(), Value(datas.at(3)).asInt());
+            float x = Value(datas.at(2)).asInt();
+            float y = Value(datas.at(3)).asInt();
+            Vec2 sptPos = Vec2(x, y);
+            if(x > 100 || y > 100){
+                sptPos = Vec2(x, y);
+            }else{
+                float extraX = 0;
+                if ((int)WORLD->getBuildingOccupySize(unitType).width%2 == 1) {
+                    extraX = 50;
+                }
+                float extraY = 0;
+                if ((int)WORLD->getBuildingOccupySize(unitType).height%2 == 1) {
+                    extraY = 50;
+                }
+                sptPos = Vec2(x*100 + extraX, y*100 + extraY);
+            }
             Vec2 pos = sptPos - Vec2(occupySize.width*TILE_SIZE/2, occupySize.height*TILE_SIZE/2);
             Vec2 occupyPos = pos + Vec2(0, TILE_SIZE*occupySize.height);
             EnemyBase* unit = WORLD->createUnit(unitType, info->unitType == UNIT_TREE_FOR_BATTLE?WHICH_SIDE_MUTUAL:WHICH_SIDE_ENEMY, ITS_BUILDING, sptPos, "name", 1, WORLD->getSpriteNameForUnit(unitType));
@@ -523,7 +587,9 @@ void HudLayer::setRaid(){
             }else{
                 
             }
-            
+            if(i == 0 || unit->unitType == UNIT_CASTLE){
+                castlePos = unit->getPosition();
+            }
             if (unit->isBuilding) {
 //                setupBuilding(unit);
                 unit->level = info->level;
@@ -582,9 +648,38 @@ void HudLayer::setRaid(){
             WORLD->addUnit(unit, false);
 //            unitsDeck.pushBack(unit);
             
+            if(info->x > 100 || info->y > 100){
+                unit->setPosition(Vec2(info->x, info->y));
+            }else{
+                unit->setPosition(Vec2(info->x*100, info->y*100));
+            }
 //            info->belongTo = BELONG_TO_DECK;
 //            info->index = i;
 //            unitInfoListDeck.push_back(info);
+        }
+    }
+    
+    strEquipped = GM->raidEnemyHeroDeck;
+    units = GameManager::getInstance()->split(strEquipped, "_");
+    for(int i = 0; i < units.size(); i++){
+        if(units.at(i).asString().length() > 0){
+            UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+            Movable* unit = GM->getUnitFromData(info);
+            WORLD->addUnit(unit, false);
+            WORLD->setHeroLevelInfo((EnemyBase*)unit, info->level%100);
+            if (unit->getPositionX() < 0 || unit->getPositionY() < 0) {
+                unit->setPosition(castlePos - Vec2(200, 200) + Vec2(i*100, 0));
+                if (unit->getPositionX() < 0 || unit->getPositionY() < 0) {
+                    unit->setPosition(Vec2(50, 50));
+                }
+                WORLD->moveTo((EnemyBase*)unit, unit->getPosition());
+            }else{
+                if(info->x > 100 || info->y > 100){
+                    unit->setPosition(Vec2(info->x, info->y));
+                }else{
+                    unit->setPosition(Vec2(info->x*100, info->y*100));
+                }
+            }
         }
     }
 //    updateUnitInfoInList();
@@ -680,8 +775,6 @@ void HudLayer::showRaidResult(bool saveRecord){
         GM->raidRewardGold = -gold;
         GM->raidRewardTree = -tree;
         GM->raidRewardTrophy = trophyGet;
-        
-        GM->restingForBattleEndTime = BSM->getCurrentTimeT() + 60;
     }else if(GM->currentStageIndex == STAGE_SINGLEPLAY){
         bool isRewardGiven = UDGetBool(strmake(KEY_SINGLE_PLAY_CLEAR_FORMAT, GM->singlePlayStageIndex).c_str(), false);
         trophy = 0;
@@ -775,7 +868,7 @@ void HudLayer::onDragSelectClick(Ref* ref){
     BTN_FROM_REF
     imgDragSelected->setVisible(!imgDragSelected->isVisible());
     if(imgDragSelected->isVisible()){
-        
+        showInstanceMessage(LM->getText("drag to select"));
     }
 }
 void HudLayer::showCancelBuildingButton(){
@@ -794,9 +887,13 @@ void HudLayer::onCancelBuildingClick(){
     }
 }
 void HudLayer::onSelectAllForces(){
+    showInstanceMessage(LM->getText("select all"));
+    imgDragSelected->setVisible(false);
     WORLD->selectAllForces();
 }
 void HudLayer::onSelectForcesInScreen(){
+    showInstanceMessage(LM->getText("select screen"));
+    imgDragSelected->setVisible(false);
     WORLD->onSelectForcesInScreen();
 }
 void HudLayer::showSupportOffer(){
@@ -1248,10 +1345,19 @@ void HudLayer::onSaveClick(){
         if(savedTime == 0){
             lblTime->setVisible(false);
         }
+        
+        std::string strData = UDGetStr(strmake("savedDataExtra%d", btn->getTag()).c_str());
+        datas = GameManager::getInstance()->split(strData.c_str(), ",");
+        if(Value(datas.at(0)).asInt() > 0){
+            btn->setColor(Color3B(215, 0, 0));
+            lblTitle->setFontColor(Color3B::WHITE);
+            lblTime->setFontColor(Color3B::WHITE);
+        }
     }
 }
 void HudLayer::onSaveSlotClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
+    
     std::string data = UDGetStr(strmake("savedData%d", btn->getTag()).c_str());
     int firstComma = (int)data.find(',');
     int secondComma = (int)data.find(',', firstComma+1);
@@ -1316,6 +1422,8 @@ void HudLayer::onSaveSlotClick(Ref* ref){
         
         return;
     }
+    
+    
     
     saveCurrentStageData(btn->getTag());
     closePopup();
@@ -1438,7 +1546,15 @@ void HudLayer::saveCurrentStageData(int slot){
     }
     
     UDSetStr(strmake("savedData%d", slot).c_str(), data);
-    UD->flush();
+    
+    std::string strDataExtra = strmake("%d,", WORLD->isHardMode);
+    std::string strFog = "";
+    for(auto fog: WORLD->fogArray){
+        strFog += Value(fog->appliedState).asString();
+    }
+    strFog += ",";
+    strDataExtra = strmake("%s%s", strDataExtra.c_str(), strFog.c_str());
+    UDSetStr(strmake("savedDataExtra%d", slot).c_str(), strDataExtra);
 }
 
 void HudLayer::onOkFromLoadData(){
@@ -1472,13 +1588,24 @@ void HudLayer::goToLoadedStage(){
         savedStage = datas.at(0).asInt();
         savedTime = datas.at(1).asInt();
     }
+    setGameSpeed(1);
     this->removeListener();
     GM->nextScene = STAGE_FIELD;
     GM->setHudLayer(nullptr);
-    auto scene = HelloWorld::scene(savedStage, false);
+    
+    std::string strData = UDGetStr(strmake("savedDataExtra%d", selectedSaveSlot).c_str());
+    datas = GameManager::getInstance()->split(strData.c_str(), ",");
+    bool isHardMode = false;
+    if(datas.size() > 0){
+        isHardMode = Value(datas.at(0)).asInt();
+    }
+    auto scene = HelloWorld::scene(savedStage, isHardMode);
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
-
+void HudLayer::setGameSpeed(float speed){
+    WORLD->gameSpeed = speed;
+    Director::getInstance()->setTimeScale(speed);
+}
 void HudLayer::onLoadClick(){
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     Layer* layer = Layer::create();
@@ -1514,7 +1641,7 @@ void HudLayer::onLoadClick(){
         btn->setContentSize(Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onLoadSlotClick, this));
         btn->setTag(i);
-//        ValueVector datas = GameManager::getInstance()->split(UDGetStr(strmake("savedData%d", i).c_str()), ",");
+
         std::string data = UDGetStr(strmake("savedData%d", btn->getTag()).c_str());
         int firstComma = (int)data.find(',');
         int secondComma = (int)data.find(',', firstComma+1);
@@ -1561,6 +1688,13 @@ void HudLayer::onLoadClick(){
         lblTime->setPosition(btn->getPosition() + Point(0, -35));
         if(savedTime == 0){
             lblTime->setVisible(false);
+        }
+        std::string strData = UDGetStr(strmake("savedDataExtra%d", btn->getTag()).c_str());
+        datas = GameManager::getInstance()->split(strData.c_str(), ",");
+        if(datas.size() > 0 && Value(datas.at(0)).asInt()){
+            btn->setColor(Color3B(215, 0, 0));
+            lblTitle->setFontColor(Color3B::WHITE);
+            lblTime->setFontColor(Color3B::WHITE);
         }
     }
 }
@@ -1644,22 +1778,22 @@ void HudLayer::onResumeClick(){
     WORLD->resumeLayer();
 }
 void HudLayer::goToTitleScene(){
+    setGameSpeed(1);
     removeListener();
     if(GM->isAdsUser()){
         GameSharing::showInterstitial();
     }
-    
     GM->setHudLayer(nullptr);
     auto scene = Scene::create();
     scene->addChild(Title::create());
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
 void HudLayer::goToBattleScene(){
+    setGameSpeed(1);
     removeListener();
     if(GM->isAdsUser()){
         GameSharing::showInterstitial();
     }
-    
     GM->setHudLayer(nullptr);
     GM->nextScene = STAGE_LOBBY;
     auto scene = HelloWorld::scene(STAGE_LOBBY, false);
@@ -1902,8 +2036,8 @@ void HudLayer::onCommandClick(Ref* ref){
             sptSelected->setPosition(btn->getContentSize()/2);
             selectedMenuName = name;
             
-            rightBottomPanel->getChildByName("ndMission")->setVisible(false);
-            rightBottomPanel->getChildByName("ndInfo")->setVisible(true);
+            rightBottomPanelForCampaign->getChildByName("ndMission")->setVisible(false);
+            rightBottomPanelForCampaign->getChildByName("ndInfo")->setVisible(true);
             WORLD->setPriceInfo(index);
             return;
         }
@@ -1996,8 +2130,8 @@ void HudLayer::onCommandClick(Ref* ref){
         setMenu(4, BTN_TYPE_NONE);
         setMenu(5, BTN_TYPE_NONE);
         WORLD->selectedCommand = COMMAND_NOTHING;
-        HUD->rightBottomPanel->getChildByName("ndMission")->setVisible(true);
-        HUD->rightBottomPanel->getChildByName("ndInfo")->setVisible(false);
+        rightBottomPanelForCampaign->getChildByName("ndMission")->setVisible(true);
+        rightBottomPanelForCampaign->getChildByName("ndInfo")->setVisible(false);
     }else if(index == BTN_TYPE_WORKER){
         WORLD->tryCreateUnit(UNIT_WORKER);
     }else if(index == BTN_TYPE_GOBLIN_WORKER){
@@ -2073,38 +2207,7 @@ void HudLayer::onResetClick(){
     
 }
 void HudLayer::processReset(){
-    WORLD->setHeroLevel(0, 0);
-    WORLD->setHeroExp(0, 0);
-    inventory->reset();
-    WORLD->setHeroWeapon(0, "sword");
-    WORLD->setHeroHelmet(0, "");
-    WORLD->setHeroShoes(0, "");
-    WORLD->setHeroShield(0, "");
-    UD->setStringForKey(KEY_LAST_SAVE_POINT, "0_4_2");
-//    UD->setIntegerForKey(KEY_NEXT_SPAWN_DIRECTION, DIRECTION_E);
-    UD->setIntegerForKey(KEY_LAST_SAVE_HEALTH, 60);
-//    UDSetInt(KEY_CURRENT_QUEST_ID, -1);
-//    for(int i = 0; i < 103; i++){
-//        UDSetBool(strmake(KEY_QUEST_DONE_FORMAT, i).c_str(), false);
-//    }
-    UDSetStr(KEY_ALCHY_COMBINING_ITEM_NAME, "");
-    UDSetStr(KEY_ALCHY_COMBINE_START_TIME, "");
-    WORLD->unscheduleAll();
-    WORLD->pauseLayer();
-    removeListener();
     
-    for (int mapCount = 0; mapCount < 10; mapCount++) {
-        for (int x = 0; x < 5; x++) {
-            for (int y = 0; y < 5; y++) {
-                UDSetBool(strmake(KEY_POT_BROKEN_FORMAT, mapCount, x, y).c_str(), false);
-            }
-        }
-    }
-    UDSetInt(KEY_POT_SOUL_COUNT, 0);
-    
-    GM->setHudLayer(nullptr);
-    auto scene = HelloWorld::scene(STAGE_FIELD, false);
-    Director::getInstance()->replaceScene(scene);
 }
 
 void HudLayer::addLabelToButton(std::string text, Button* btn, bool bordered, Color3B color, bool isSystemLabel){
@@ -2253,10 +2356,6 @@ void HudLayer::onConnectController(Controller* controller, Event* event)
 void HudLayer::onDisconnectedController(Controller* controller, Event* event)
 {
     CCLOG("Game controller disconnected");
-}
-const char* HudLayer::getWeaponName(int index){
-    GameManager::getInstance()->getWeaponName(index);
-    return "";
 }
 void HudLayer::addHeartAnimated(Point pos){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
@@ -4078,31 +4177,7 @@ void HudLayer::selectABCOption(Node* node){
     }
 }
 void HudLayer::equipItem(int slot){
-    std::string name = inventory->getItemName(slot);
-    int itemType = getItemTypeInSlot(slot);
-    std::string equiped;
-    if(itemType == ITEM_TYPE_WEAPON){
-        equiped = WORLD->getHeroWeapon(0);
-        WORLD->setHeroWeapon(0, name);
-    }else if(itemType == ITEM_TYPE_SHIELD){
-        equiped = WORLD->getHeroShield(0);
-        WORLD->setHeroShield(0, name);
-    }else if(itemType == ITEM_TYPE_SHOES){
-        equiped = WORLD->getHeroShoes(0);
-        WORLD->setHeroShoes(0, name);
-    }else if(itemType == ITEM_TYPE_HELMET){
-        equiped = WORLD->getHeroHelmet(0);
-        WORLD->setHeroHelmet(0, name);
-    }else if(itemType == ITEM_TYPE_ETC){
-        
-    }
-    inventory->removeItem(slot);
-    if(equiped.size() == 0){
-        
-    }else{
-        inventory->addItem(equiped, INVENTORY_ITEM_TYPE_EQUIPMENT);
-        updateInventory();
-    }
+    
 }
 void HudLayer::closeABCLayerLater(float dt){
     
@@ -4703,27 +4778,6 @@ void HudLayer::ropeAround(Node* node){
             
         }
 }
-void HudLayer::showBIAndReplaceScene(){
-    ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
-    sptRect->setPosition(Point(size.width/2, size.height - 714));
-    sptRect->setContentSize(Size(750, 750));
-    sptRect->setAnchorPoint(Point(0.5, 0));
-    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
-    sptRect->setScale9Enabled(true);
-    this->addChild(sptRect, 9);
-    sptRect->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.5f, Point(0, 750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), CallFunc::create(CC_CALLBACK_0(HudLayer::letsReplaceScene, this)), NULL));
-    sptRect->setPosition(sptRect->getPosition() - Point(0, 750));
-    
-    Sprite* sptBI = Sprite::create("title_bi.png");
-    sptBI->setPosition(sptRect->getContentSize()/2);
-    sptBI->setScale(2);
-    sptRect->addChild(sptBI);
-}
-void HudLayer::letsReplaceScene(){
-    removeListener();
-    GM->setHudLayer(nullptr);
-    Director::getInstance()->replaceScene(HelloWorld::scene(GM->nextScene, false));
-}
 //void HudLayer::removeItemFromInventory(std::string name, int count){
 //    int slotCount = getItemCountInInventory();
 //
@@ -4780,7 +4834,7 @@ void HudLayer::showIntro(){
     lbl->runAction(MoveBy::create(dur, Point(0, lbl->getBoundingBox().size.height + size.width)));
     
     GM->nextScene = STAGE_TITLE;
-    this->runAction(Sequence::create(DelayTime::create(dur - 2), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
+//    this->runAction(Sequence::create(DelayTime::create(dur - 2), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
     
     Node* layer = CSLoader::createNode("Intro.csb");
     this->addChild(layer, 5);
@@ -5009,7 +5063,7 @@ void HudLayer::showCredit(){
         lbl->setPosition(Point(size.width/2, size.height - 714/2 - 100));
     }
     GM->nextScene = STAGE_FIELD;
-    this->runAction(Sequence::create(DelayTime::create(3*6 + 1), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
+//    this->runAction(Sequence::create(DelayTime::create(3*6 + 1), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
 }
 void HudLayer::showPeterInsuranceShop(){
     
@@ -5115,12 +5169,11 @@ void HudLayer::onReviveByDead(){
         exp = 0;
     }
     GM->isReviving = true;
-    WORLD->setHeroExp(0, exp);
+    
     HUD->setExp(level, WORLD->getHeroExp(0), WORLD->getMaxExp(level));
     
     std::string checkPoint = UDGetStr(KEY_LAST_CHECK_POINT, "0_4_2");
     UDSetStr(KEY_LAST_SAVE_POINT, checkPoint.c_str());
-    showBIAndReplaceScene();
 }
 void HudLayer::showWinPopup(bool win){
     GameSharing::logFB(strmake("STAGE %d %s", GM->currentStageIndex, win?"WIN":"LOSE").c_str());
@@ -5404,7 +5457,7 @@ void HudLayer::updateResultPopup(float dt){
     }
     
     resultPopup->getChildByName("btnOk")->setVisible(true);
-    if(WORLD->isGameOver){
+    if(WORLD->isGameOver && !UDGetBool(KEY_PREMIUM_START, false) && (WORLD->gameMode == GAME_MODE_NORMAL || WORLD->gameMode == GAME_MODE_HARD)){
         showPremiumRetry();
     }
     
@@ -5482,18 +5535,26 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
     int stage = WORLD->stageIndex;
     
     Node* popup = this->getChildByName("winPopup");
-    if(popup != nullptr && popup->getTag() == 1){
-        int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-        if(clearStage < stage){
-            UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+    if(popup != nullptr && popup->getTag() == 1 && !WORLD->isGameOver){
+        
+        if (WORLD->isHardMode) {
+            UDSetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, stage).c_str(), true);
+        }else{
+            int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+            if(clearStage < stage){
+                UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+                std::vector<int> datas;
+                datas.push_back(DATA_TYPE_STAGE_CLEAR);
+                BSM->saveUserData(datas);
+            }
         }
     }
+    setGameSpeed(1);
     if(GM->currentStageIndex == 11 && !WORLD->isGameOver){
         this->removeListener();
         GM->nextScene = STAGE_INTRO;
         scene = HelloWorld::scene(12, false);
     }else{
-        
         scene = Scene::create();
         Title* title = Title::create();
         scene->addChild(title);
@@ -5533,6 +5594,7 @@ void HudLayer::onReivewPopupButtonClick(Ref* ref){
     }
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     GM->setHudLayer(nullptr);
+    setGameSpeed(1);
     Scene* scene;
     if(GM->currentStageIndex == 11 && !WORLD->isGameOver){
         this->removeListener();
@@ -5545,6 +5607,7 @@ void HudLayer::onReivewPopupButtonClick(Ref* ref){
         scene->addChild(title);
         if (!WORLD->isGameOver) {
             int stage = WORLD->stageIndex;
+            UDSetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, stage).c_str(), true);
             int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
             if(clearStage < stage){
                 UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
@@ -5611,12 +5674,12 @@ void HudLayer::update(float dt){
             GM->iapFlag = IAP_FLAG_INIT;
             showInstanceMessage(LM->getText("purchase success"));
             UDSetBool(KEY_PREMIUM_START, true);
-            
+            setGameSpeed(1);
             removeUsedAssets();
             GM->nextScene = STAGE_FIELD;
             GM->isColosseum = false;
             GM->setHudLayer(nullptr);
-            auto scene = HelloWorld::scene(GM->currentStageIndex, false);
+            auto scene = HelloWorld::scene(GM->currentStageIndex, WORLD->isHardMode);
             Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
         }
     }else if(GM->iapFlag == IAP_FLAG_FAILED){

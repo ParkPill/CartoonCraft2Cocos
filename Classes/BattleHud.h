@@ -15,6 +15,8 @@
 #include "ui/UIText.h"
 #include "ui/UIScrollView.h"
 #include "ui/UILoadingBar.h"
+#include "PageBase.h"
+
 #define JOB_NONE 0
 #define JOB_BUILDING 1
 #define JOB_MOVE_BUILDING_TEMPATE 2
@@ -54,19 +56,21 @@
 #define DATA_TYPE_HERO_DECK 11
 #define DATA_TYPE_KEYS 12
 #define DATA_TYPE_KEY_GET_STATE 13
-#define DATA_TYPE_COUNT 14
+#define DATA_TYPE_STAGE_CLEAR 14
+#define DATA_TYPE_STAGE_HARD_CLEAR 15
 using namespace cocos2d;
 using namespace cocos2d::ui;
-class BattleHud : public Layer
+
+class BattleHud : public PageBase
 {
 private:
     cocos2d::Size size;
 public:
-    Vector<Node*> popupArray;
+//    Vector<Node*> popupArray;
     virtual bool init();
     CREATE_FUNC(BattleHud);
     Node* hudLayer;
-    void setAsPopup(Node* node);
+//    void setAsPopup(Node* node);
     void closePopup();
     void onBattleClick();
     void onLocalBattleClick(Ref* ref);
@@ -76,13 +80,13 @@ public:
     void onShopClick();
     void onBuyWorkersClick(Ref* ref);
     
-    void onBuyBuilding(Ref* ref);
-    void onResourceInShopClick();
-    void onBuyResource(Ref* ref);
-    void onGemInShopClick();
-    void onBuyGem(Ref* ref);
-    void onBuyTree(Ref* ref);
-    void onBuyGold(Ref* ref);
+//    void onBuyBuilding(Ref* ref);
+//    void onResourceInShopClick();
+//    void onBuyResource(Ref* ref);
+//    void onGemInShopClick();
+//    void onBuyGem(Ref* ref);
+//    void onBuyTree(Ref* ref);
+//    void onBuyGold(Ref* ref);
     Node* onBackClick();
     void onMissionClick();
     void onDailyMissionClick(Ref* ref);
@@ -116,7 +120,7 @@ public:
     LoadingBar* pbCurrentRemainTime = nullptr;
     Node* buildingTemplate = nullptr;
     void updateStatus(Node* layer);
-    void onTabClick(Ref* ref);
+//    void onTabClick(Ref* ref);
     int getCurrentPopulation();
     int getPopulationMax();
     std::string getBuildingName(int index);
@@ -160,6 +164,7 @@ public:
 //    void saveBuildings();
 //    void saveInventoryAndDeck(bool includeIap = false);
     void updateInventorySaveData();
+    void updateHeroDeckSaveData();
     void updateDeckSaveData();
     void updateBuildingsSaveData();
     void saveUserData(std::vector<int>& datas);
@@ -171,8 +176,11 @@ public:
     Vector<Movable*> buildings;
 //    std::vector<std::string> unitsInventory; // x -1 to save
     Vector<Movable*> unitsDeck;
+    Vector<Movable*> unitsHeroDeck;
+    std::vector<UnitInfo*> unitInfoListHeroDeck;
     std::vector<UnitInfo*> unitInfoListDeck;
     std::vector<UnitInfo*> unitInfoListInventory;
+    std::vector<UnitInfo*> unitInfoListHeroInventory;
     UnitInfo* selectedUnitInfo;
     void updateUnitInfoInList();
     void onConfirmFireClick();
@@ -206,8 +214,8 @@ public:
     void onCompleteUnitTrainClick(Ref* ref);
     bool reopenUnitTrainInfoRequested = false;
     void reopenUnitTrainInfo();
-    void showIndicator();
-    void hideIndicator();
+//    void showIndicator();
+//    void hideIndicator();
     void updateSearchState();
     void onHireClick(Ref* ref);
     int hireIndex;
@@ -317,5 +325,19 @@ public:
     void onUnitClickInUpgradeTab(Ref* ref);
     void onCompleteUpgradeClick(Ref* ref);
     void onFinishUpgradeClick();
+    void showMessageBox(std::string strKey);
+    void onTrainGachaInfoClick();
+    
+    void showTutorialWithBigWorker(std::string text);
+    void onHeroClick();
+    void updateHero();
+    Vec2 castlePos;
+    void onInitComplete();
+    void checkBattlePopupUI(time_t now);
+    void checkSpecialOfferUI(time_t now);
+    void checkVideoStoreUI(time_t now, bool isNewDay, int timeLeftToMidnight);
+    void checkDailyMissionUI(bool isNewDay, int timeLeftToMidnight);
+    void checkTrainLayerUI(time_t now, int timeLeftToMidnight);
+    void checkDefenceRecordPopupUI(time_t now);
 };
 #endif /* BattleHud_h */

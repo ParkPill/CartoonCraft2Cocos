@@ -257,8 +257,9 @@ public:
     bool videoContinued = false;
     int reviveCount = 0;
     Layout* messageBox;
+    void setGameSpeed(float speed);
     
-    const char* getWeaponName(int index);
+    
     int coinCount;
     int enemyKilledCount;
     void setExp(int level, int exp, int expMax);
@@ -321,6 +322,7 @@ public:
     bool isPopupAvailable();
     std::string selectedMenuName = "-1";
     Node* rightBottomPanel;
+    Node* rightBottomPanelForCampaign;
     Node* bottomUnitBar;
     
 //    virtual void keyBackClicked();
@@ -392,8 +394,6 @@ public:
     void selectABCOption(Node* node);
     void closeABCLayerLater(float dt);
     void equipItem(int slot);
-    void showBIAndReplaceScene();
-    void letsReplaceScene();
     
     void showCancelBuildingButton();
     void onCancelBuildingClick();
@@ -521,6 +521,9 @@ public:
     void onMusicClick();
     void onSelectAllForces();
     void onSelectForcesInScreen();
+    void onShowMoreMenuClick(Ref* ref);
+    void on2xFastClick();
+    void on3xFastClick();
     void onReivewPopupButtonClick(Ref* ref);
     void showSupportOffer();
     void onSupportSelected(Ref* ref);
@@ -538,6 +541,7 @@ public:
     Node* imgDragSelected;
     bool isRaid = false;
     std::vector<UnitInfo*> deckUnitList;
+    std::vector<UnitInfo*> heroDeckUnitList;
     void onUnitInBottomDeckClick(Ref* ref);
     bool isRaidStarted = false;
     void showStarForRaid(int starIndex);

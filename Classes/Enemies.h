@@ -53,7 +53,6 @@ public:
     int orderAction;
     int currentAction;
     bool isShieldUp = false;
-    
     int currentMoveType;
     void setCurrentMoveType(int move);
     int moveTypeBeforeFindHero;

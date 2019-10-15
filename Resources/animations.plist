@@ -1103,6 +1103,57 @@
 				<string>cartoonyHitEffect3.png</string>
 			</array>
 		</dict>
+		<key>hitWithCircle</key>
+		<dict>
+			<key>delay</key>
+			<real>0.06</real>
+			<key>frames</key>
+			<array>
+				<string>hitWithCircle0.png</string>
+				<string>hitWithCircle1.png</string>
+				<string>hitWithCircle2.png</string>
+				<string>hitWithCircle3.png</string>
+				<string>hitWithCircle4.png</string>
+				<string>hitWithCircle5.png</string>
+				<string>hitWithCircle6.png</string>
+			</array>
+		</dict>
+		<key>greenHit</key>
+		<dict>
+			<key>delay</key>
+			<real>0.1</real>
+			<key>frames</key>
+			<array>
+				<string>greenHit0.png</string>
+				<string>greenHit1.png</string>
+				<string>greenHit2.png</string>
+				<string>greenHit3.png</string>
+				<string>greenHit4.png</string>
+				<string>greenHit5.png</string>
+				<string>greenHit6.png</string>
+			</array>
+		</dict>
+		<key>fireSlash</key>
+		<dict>
+			<key>delay</key>
+			<real>0.07000000000000001</real>
+			<key>frames</key>
+			<array>
+				<string>fireSlash0.png</string>
+				<string>fireSlash1.png</string>
+				<string>fireSlash2.png</string>
+				<string>fireSlash3.png</string>
+				<string>fireSlash4.png</string>
+				<string>fireSlash5.png</string>
+				<string>fireSlash6.png</string>
+				<string>fireSlash7.png</string>
+				<string>fireSlash8.png</string>
+				<string>fireSlash9.png</string>
+				<string>fireSlash10.png</string>
+				<string>fireSlash11.png</string>
+				<string>fireSlash12.png</string>
+			</array>
+		</dict>
 		<key>underConstrunction</key>
 		<dict>
 			<key>delay</key>

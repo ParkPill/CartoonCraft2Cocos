@@ -69,14 +69,14 @@
                 <PreSize X="0.1824" Y="1.2899" />
                 <FileData Type="Normal" Path="swordIcon.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lbl" ActionTag="2050777663" Tag="105" IconVisible="False" LeftMargin="302.6175" RightMargin="298.4697" TopMargin="14.6707" BottomMargin="11.5317" FontSize="80" LabelText="Chapters" OutlineSize="10" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-                <Size X="386.0000" Y="118.0000" />
+              <AbstractNodeData Name="lbl" ActionTag="2050777663" Tag="105" IconVisible="False" LeftMargin="160.1171" RightMargin="155.9701" TopMargin="29.6660" BottomMargin="20.5364" FontSize="60" LabelText="Chapters (Hard Mode)" OutlineSize="10" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="671.0000" Y="94.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="495.6175" Y="70.5317" />
+                <Position X="495.6171" Y="67.5364" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="242" G="204" B="24" />
-                <PrePosition X="0.5021" Y="0.4891" />
-                <PreSize X="0.3910" Y="0.8183" />
+                <PrePosition X="0.5021" Y="0.4683" />
+                <PreSize X="0.6798" Y="0.6519" />
                 <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                 <OutlineColor A="255" R="0" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
@@ -313,12 +313,12 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblCondition" ActionTag="-1640262823" Tag="850" IconVisible="False" LeftMargin="55.7490" RightMargin="87.5319" TopMargin="62.2456" BottomMargin="330.6249" IsCustomSize="True" FontSize="50" LabelText="OR" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="10" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblCondition" ActionTag="-1640262823" Tag="850" IconVisible="False" LeftMargin="55.7490" RightMargin="87.5319" TopMargin="62.2456" BottomMargin="330.6249" IsCustomSize="True" FontSize="50" LabelText="OR" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="10" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="569.0088" Y="302.9130" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="340.2534" Y="482.0814" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
-                    <CColor A="255" R="255" G="255" B="255" />
+                    <CColor A="255" R="0" G="0" B="0" />
                     <PrePosition X="0.4777" Y="0.6929" />
                     <PreSize X="0.7988" Y="0.4354" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
@@ -522,12 +522,12 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblCondition" ActionTag="-231140838" Tag="87" IconVisible="False" LeftMargin="55.7490" RightMargin="87.5319" TopMargin="62.2456" BottomMargin="330.6249" IsCustomSize="True" FontSize="50" LabelText="OR" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="10" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblCondition" ActionTag="-231140838" Tag="87" IconVisible="False" LeftMargin="55.7490" RightMargin="87.5319" TopMargin="62.2456" BottomMargin="330.6249" IsCustomSize="True" FontSize="50" LabelText="OR" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="10" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="569.0088" Y="302.9130" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="340.2534" Y="482.0814" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
-                    <CColor A="255" R="255" G="255" B="255" />
+                    <CColor A="255" R="0" G="0" B="0" />
                     <PrePosition X="0.4777" Y="0.6929" />
                     <PreSize X="0.7988" Y="0.4354" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
@@ -561,49 +561,49 @@
             <ColorVector ScaleY="1.0000" />
             <InnerNodeSize Width="2400" Height="862" />
           </AbstractNodeData>
-          <AbstractNodeData Name="btnHardMode" ActionTag="126518328" Tag="88" IconVisible="False" LeftMargin="283.6454" RightMargin="1637.4336" TopMargin="1448.6530" BottomMargin="-299.1096" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnHardMode" ActionTag="126518328" Tag="88" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="287.8498" RightMargin="1633.2292" TopMargin="1109.0721" BottomMargin="40.4712" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="446.9210" Y="184.4567" />
             <Children>
-              <AbstractNodeData Name="Image_12" ActionTag="1214282086" Tag="91" IconVisible="False" LeftMargin="31.2712" RightMargin="333.0354" TopMargin="29.4263" BottomMargin="59.6810" LeftEage="43" RightEage="43" TopEage="58" BottomEage="58" Scale9OriginX="43" Scale9OriginY="58" Scale9Width="45" Scale9Height="61" ctype="ImageViewObjectData">
-                <Size X="82.6144" Y="95.3493" />
+              <AbstractNodeData Name="imgIcon" ActionTag="1214282086" Tag="91" IconVisible="False" LeftMargin="36.0784" RightMargin="337.8426" TopMargin="41.8270" BottomMargin="61.6297" LeftEage="24" RightEage="24" TopEage="26" BottomEage="26" Scale9OriginX="24" Scale9OriginY="26" Scale9Width="25" Scale9Height="29" ctype="ImageViewObjectData">
+                <Size X="73.0000" Y="81.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="72.5784" Y="107.3557" />
+                <Position X="72.5784" Y="102.1297" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
-                <PrePosition X="0.1624" Y="0.5820" />
-                <PreSize X="0.1849" Y="0.5169" />
-                <FileData Type="Normal" Path="iconLock.png" Plist="" />
+                <PrePosition X="0.1624" Y="0.5537" />
+                <PreSize X="0.1633" Y="0.4391" />
+                <FileData Type="Normal" Path="evilIcon.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lblTitle_0" ActionTag="620855809" Tag="89" IconVisible="False" LeftMargin="143.2462" RightMargin="59.6748" TopMargin="28.6878" BottomMargin="96.7689" FontSize="40" LabelText="HARD MODE" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lblTitle" ActionTag="620855809" Tag="89" IconVisible="False" LeftMargin="143.2462" RightMargin="59.6748" TopMargin="53.0759" BottomMargin="72.3808" FontSize="40" LabelText="HARD MODE" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="244.0000" Y="59.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="265.2462" Y="126.2689" />
+                <Position X="265.2462" Y="101.8808" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="213" G="0" B="0" />
-                <PrePosition X="0.5935" Y="0.6845" />
+                <PrePosition X="0.5935" Y="0.5523" />
                 <PreSize X="0.5460" Y="0.3199" />
                 <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                 <OutlineColor A="255" R="0" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lblTitle_0_0" ActionTag="-39359604" Tag="90" IconVisible="False" LeftMargin="127.1382" RightMargin="50.7828" TopMargin="87.0734" BottomMargin="38.3833" FontSize="40" LabelText="Coming soon" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lblTitle_0_0" ActionTag="-39359604" Tag="90" IconVisible="False" LeftMargin="124.5645" RightMargin="53.3565" TopMargin="388.2211" BottomMargin="-262.7644" FontSize="40" LabelText="Coming soon" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="269.0000" Y="59.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="261.6382" Y="67.8833" />
+                <Position X="259.0645" Y="-233.2644" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="111" G="180" B="40" />
-                <PrePosition X="0.5854" Y="0.3680" />
+                <PrePosition X="0.5797" Y="-1.2646" />
                 <PreSize X="0.6019" Y="0.3199" />
                 <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                 <OutlineColor A="255" R="0" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
             </Children>
-            <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-            <Position X="507.1060" Y="-206.8813" />
+            <AnchorPoint ScaleX="0.5168" ScaleY="0.4009" />
+            <Position X="518.8175" Y="114.4126" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="255" G="255" B="255" />
-            <PrePosition X="0.2141" Y="-0.1551" />
+            <PrePosition X="0.2191" Y="0.0858" />
             <PreSize X="0.1887" Y="0.1383" />
             <TextColor A="255" R="65" G="65" B="70" />
             <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />
@@ -611,7 +611,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="btnHero" ActionTag="558698986" Tag="349" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="911.8762" RightMargin="911.8794" TopMargin="1109.0723" BottomMargin="40.4711" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnHero" ActionTag="558698986" Tag="349" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1538.8137" RightMargin="284.9417" TopMargin="1109.0721" BottomMargin="40.4712" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="544.2445" Y="184.4567" />
             <Children>
               <AbstractNodeData Name="img0" ActionTag="1498095651" Tag="350" IconVisible="False" LeftMargin="27.9759" RightMargin="433.6542" TopMargin="39.1434" BottomMargin="49.9640" LeftEage="43" RightEage="43" TopEage="58" BottomEage="58" Scale9OriginX="43" Scale9OriginY="58" Scale9Width="45" Scale9Height="61" ctype="ImageViewObjectData">
@@ -656,7 +656,7 @@
                 <PreSize X="0.1518" Y="0.5169" />
                 <FileData Type="Normal" Path="iconLock.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="imgLock" ActionTag="1003149651" Tag="704" IconVisible="False" LeftMargin="57.0935" RightMargin="404.5366" TopMargin="32.3594" BottomMargin="56.7480" LeftEage="43" RightEage="43" TopEage="58" BottomEage="58" Scale9OriginX="43" Scale9OriginY="58" Scale9Width="45" Scale9Height="61" ctype="ImageViewObjectData">
+              <AbstractNodeData Name="imgLock" ActionTag="1003149651" Tag="704" IconVisible="False" LeftMargin="57.0935" RightMargin="404.5366" TopMargin="32.3595" BottomMargin="56.7480" LeftEage="43" RightEage="43" TopEage="58" BottomEage="58" Scale9OriginX="43" Scale9OriginY="58" Scale9Width="45" Scale9Height="61" ctype="ImageViewObjectData">
                 <Size X="82.6144" Y="95.3493" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                 <Position X="98.4007" Y="104.4226" />
@@ -678,10 +678,10 @@
               </AbstractNodeData>
             </Children>
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-            <Position X="1183.9984" Y="132.6994" />
+            <Position X="1810.9360" Y="132.6995" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="255" G="255" B="255" />
-            <PrePosition X="0.5000" Y="0.0995" />
+            <PrePosition X="0.7648" Y="0.0995" />
             <PreSize X="0.2298" Y="0.1383" />
             <TextColor A="255" R="65" G="65" B="70" />
             <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />

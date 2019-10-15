@@ -1000,10 +1000,6 @@ void EditorHud::onDisconnectedController(Controller* controller, Event* event)
 {
     CCLOG("Game controller disconnected");
 }
-const char* EditorHud::getWeaponName(int index){
-    GameManager::getInstance()->getWeaponName(index);
-    return "";
-}
 void EditorHud::addHeartAnimated(Point pos){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
     Sprite* spt = Sprite::create("heart.png");

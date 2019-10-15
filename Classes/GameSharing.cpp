@@ -749,6 +749,10 @@ void GameSharing::setupIAB(){
     list.push_back(IAP_DETAIL_UNIT_PACK_5);
     list.push_back(IAP_DETAIL_UNIT_PACK_8);
     list.push_back(IAP_DETAIL_STARTER_KEY);
+    list.push_back(IAP_DETAIL_MARTIAL_ART_PACKAGE);
+    list.push_back(IAP_DETAIL_CLASSIC_WAR_PACKAGE);
+    list.push_back(IAP_DETAIL_CREW_MANAGER_PACKAGE);
+    list.push_back(IAP_DETAIL_MASTER_CREW_PACKAGE);
     for (int i = 0; i < list.size(); i++) {
         addSkuItemForStore(list.at(i));
         if(list.at(i).compare(IAP_DETAIL_CHAPTER2) == 0 ||

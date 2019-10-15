@@ -70,7 +70,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgGem" ActionTag="1442950631" Tag="845" IconVisible="False" LeftMargin="1050.7443" RightMargin="1220.2557" TopMargin="706.9265" BottomMargin="549.0735" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgGem" ActionTag="1442950631" Tag="845" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1050.7443" RightMargin="1220.2557" TopMargin="706.9265" BottomMargin="549.0735" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
             <Size X="97.0000" Y="78.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="1099.2443" Y="588.0735" />
@@ -80,7 +80,7 @@
             <PreSize X="0.0410" Y="0.0585" />
             <FileData Type="Normal" Path="gem.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lblGemCount" ActionTag="-1294517758" Tag="846" IconVisible="False" LeftMargin="1201.2308" RightMargin="1099.7692" TopMargin="724.2163" BottomMargin="564.7838" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lblGemCount" ActionTag="-1294517758" Tag="846" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1201.2308" RightMargin="1099.7692" TopMargin="724.2163" BottomMargin="564.7838" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="67.0000" Y="45.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.4649" />
             <Position X="1234.7308" Y="585.7042" />
@@ -91,7 +91,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgGold" ActionTag="680506903" Tag="31" IconVisible="False" LeftMargin="1050.7443" RightMargin="1220.2557" TopMargin="803.6262" BottomMargin="452.3738" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgGold" ActionTag="680506903" Tag="31" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1050.7443" RightMargin="1220.2557" TopMargin="803.6262" BottomMargin="452.3738" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
             <Size X="97.0000" Y="78.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="1099.2443" Y="491.3738" />
@@ -101,10 +101,10 @@
             <PreSize X="0.0410" Y="0.0585" />
             <FileData Type="Normal" Path="goldIcon.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lblGold" ActionTag="-970195650" Tag="32" IconVisible="False" LeftMargin="1201.2310" RightMargin="1099.7690" TopMargin="820.9159" BottomMargin="468.0841" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lblGold" ActionTag="-970195650" Tag="32" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1201.2308" RightMargin="1099.7692" TopMargin="820.9159" BottomMargin="468.0841" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="67.0000" Y="45.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.4649" />
-            <Position X="1234.7310" Y="489.0046" />
+            <Position X="1234.7308" Y="489.0046" />
             <Scale ScaleX="1.5000" ScaleY="1.5000" />
             <CColor A="255" R="14" G="14" B="14" />
             <PrePosition X="0.5214" Y="0.3666" />
@@ -112,7 +112,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgTree" ActionTag="1215921982" Tag="35" IconVisible="False" LeftMargin="1060.2443" RightMargin="1229.7557" TopMargin="891.3331" BottomMargin="350.6669" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgTree" ActionTag="1215921982" Tag="35" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1060.2443" RightMargin="1229.7557" TopMargin="891.3331" BottomMargin="350.6669" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
             <Size X="78.0000" Y="92.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="1099.2443" Y="396.6669" />
@@ -122,7 +122,7 @@
             <PreSize X="0.0329" Y="0.0690" />
             <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lblTree" ActionTag="1012571931" Tag="36" IconVisible="False" LeftMargin="1201.2308" RightMargin="1099.7692" TopMargin="915.6228" BottomMargin="373.3772" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lblTree" ActionTag="1012571931" Tag="36" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1201.2308" RightMargin="1099.7692" TopMargin="915.6228" BottomMargin="373.3772" FontSize="40" LabelText="100" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="67.0000" Y="45.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.4649" />
             <Position X="1234.7308" Y="394.2977" />

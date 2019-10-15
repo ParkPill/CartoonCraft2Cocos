@@ -30,7 +30,7 @@
             <PreSize X="0.0000" Y="0.0000" />
             <FileData Type="Normal" Path="iconDrag.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lbl" ActionTag="-1501312064" Tag="583" IconVisible="False" LeftMargin="-96.8111" RightMargin="-192.4110" TopMargin="-45.5146" BottomMargin="-18.9594" IsCustomSize="True" FontSize="26" LabelText="перетащить, чтобы выбрать" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lbl" ActionTag="-1501312064" Tag="583" IconVisible="False" LeftMargin="-96.8112" RightMargin="-192.4109" TopMargin="-45.5146" BottomMargin="-18.9594" IsCustomSize="True" FontSize="26" LabelText="перетащить, чтобы выбрать" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="289.2221" Y="64.4740" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="47.7999" Y="13.2776" />
@@ -42,7 +42,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgSelected" ActionTag="922267004" VisibleForFrame="False" Tag="584" IconVisible="False" LeftMargin="-223.9347" RightMargin="-221.1825" TopMargin="-59.5330" BottomMargin="-31.0675" Scale9Enable="True" LeftEage="37" RightEage="97" TopEage="143" BottomEage="77" Scale9OriginX="37" Scale9OriginY="143" Scale9Width="127" Scale9Height="14" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgSelected" ActionTag="922267004" VisibleForFrame="False" Tag="584" IconVisible="False" LeftMargin="-223.9347" RightMargin="-221.1825" TopMargin="-59.5330" BottomMargin="-31.0676" Scale9Enable="True" LeftEage="37" RightEage="97" TopEage="143" BottomEage="77" Scale9OriginX="37" Scale9OriginY="143" Scale9Width="127" Scale9Height="14" ctype="ImageViewObjectData">
             <Size X="445.1172" Y="90.6005" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="-1.3761" Y="14.2327" />

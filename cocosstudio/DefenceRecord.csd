@@ -73,7 +73,7 @@
             <PreSize X="0.3332" Y="0.4183" />
             <FileData Type="Normal" Path="uiBox.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="svRecord" ActionTag="1502885298" Tag="701" IconVisible="False" LeftMargin="421.9404" RightMargin="1184.0596" TopMargin="382.5051" BottomMargin="420.4949" TouchEnable="True" ClipAble="True" BackColorAlpha="0" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" ScrollDirectionType="Vertical" ctype="ScrollViewObjectData">
+          <AbstractNodeData Name="svRecord" ActionTag="1502885298" Tag="701" IconVisible="False" LeftMargin="421.9404" RightMargin="1184.0596" TopMargin="382.5051" BottomMargin="420.4949" TouchEnable="True" ClipAble="True" BackColorAlpha="0" ComboBoxIndex="1" ColorAngle="90.0000" Scale9Width="1" Scale9Height="1" IsBounceEnabled="True" ScrollDirectionType="Vertical" ctype="ScrollViewObjectData">
             <Size X="762.0000" Y="531.0000" />
             <Children>
               <AbstractNodeData Name="imgTemplate" ActionTag="-848591001" Tag="702" IconVisible="False" LeftMargin="21.5007" RightMargin="15.0966" TopMargin="16.6193" BottomMargin="390.3448" Scale9Enable="True" LeftEage="32" RightEage="32" TopEage="32" BottomEage="32" Scale9OriginX="32" Scale9OriginY="32" Scale9Width="33" Scale9Height="33" ctype="ImageViewObjectData">
@@ -177,7 +177,7 @@
                     <PreSize X="0.2990" Y="0.9065" />
                     <FileData Type="Normal" Path="iconStar.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="btnRevenge" ActionTag="1182652856" Tag="707" IconVisible="False" LeftMargin="477.4894" RightMargin="17.1943" TopMargin="93.5725" BottomMargin="16.4634" TouchEnable="True" FontSize="40" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="67" Scale9Height="75" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+                  <AbstractNodeData Name="btnRevenge" ActionTag="1182652856" Tag="707" IconVisible="False" LeftMargin="477.4894" RightMargin="17.1944" TopMargin="93.5725" BottomMargin="16.4634" TouchEnable="True" FontSize="40" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="67" Scale9Height="75" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
                     <Size X="230.7190" Y="97.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="592.8489" Y="64.9634" />
@@ -191,7 +191,7 @@
                     <OutlineColor A="255" R="255" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgGold" ActionTag="-811347781" Tag="1149" IconVisible="False" LeftMargin="533.0643" RightMargin="144.4802" TopMargin="105.2558" BottomMargin="63.0934" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgGold" ActionTag="-811347781" Tag="1149" IconVisible="False" LeftMargin="533.0644" RightMargin="144.4801" TopMargin="105.2558" BottomMargin="63.0934" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
                     <Size X="47.8583" Y="38.6867" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="556.9935" Y="82.4368" />
@@ -382,7 +382,7 @@
                     <OutlineColor A="255" R="255" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1459281812" Tag="1189" IconVisible="False" LeftMargin="545.2827" RightMargin="62.2512" TopMargin="90.2621" BottomMargin="44.9628" FontSize="30" LabelText="100" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1459281812" Tag="1189" IconVisible="False" LeftMargin="545.2827" RightMargin="62.2511" TopMargin="90.2621" BottomMargin="44.9628" FontSize="30" LabelText="100" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="57.0000" Y="37.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="573.7827" Y="63.4628" />
@@ -406,7 +406,7 @@
                     <OutlineColor A="255" R="255" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgGold" ActionTag="-1642074263" Tag="1187" IconVisible="False" LeftMargin="483.3709" RightMargin="133.3047" TopMargin="85.3175" BottomMargin="48.2207" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgGold" ActionTag="-1642074263" Tag="1187" IconVisible="False" LeftMargin="483.3708" RightMargin="133.3047" TopMargin="85.3174" BottomMargin="48.2208" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="33" Scale9Height="28" ctype="ImageViewObjectData">
                     <Size X="47.8583" Y="38.6867" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="507.3000" Y="67.5641" />

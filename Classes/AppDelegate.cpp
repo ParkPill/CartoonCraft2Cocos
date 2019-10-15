@@ -105,6 +105,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1334, 750));
         float rate = 0.8f;
         glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1500*rate, 750*rate));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1500*rate, 750*rate));
 //        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1024, 768));
 //        glview = GLViewImpl::createWithFullScreen("Cartoon Craft");
 //        glview = GLViewImpl::create("Cartoon Craft");
@@ -292,14 +293,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
     
     GM->nextScene = STAGE_FIELD; // test
-    auto scene = HelloWorld::scene(36, false); // test now
+    auto scene = HelloWorld::scene(1, GAME_MODE_PVP6); // test now
+    BSM->pvpTargetData = "_60/401/8/9_61/401/9/9_62/401/10/9_63/401/11/9_52/100/12/9_53/100/13/9_57/100/14/9_57/100/15/9_55/100/15/6_50/0/17/9_64/401/18/9_54/200/19/9_";
+    WORLD->setPvpMode(6);
 //    GM->nextScene = STAGE_LOBBY; // test
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
 //    GM->nextScene = STAGE_SINGLEPLAY; // test
 //    GM->singlePlayStageIndex = 0;
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
-    GM->version = "2.61";
+    GM->version = "2.82";
+    GM->versionCode = 167;
 //    auto scene = Scene::create();
 //    Intro* intro = Intro::create();
 //    scene->addChild(intro);
@@ -311,6 +315,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    scene->addChild(Title::create());
 //    Scene* sceneTitle = Scene::create();
 //    sceneTitle->addChild(HelloWorld::scene(STAGE_LOBBY, false));
+    
+    log("time: %s", BSM->getStrFromTime(-12342352).c_str());
     
     // run
     director->runWithScene(scene);
@@ -326,8 +332,6 @@ void AppDelegate::applicationDidEnterBackground() {
     log("background entered");
     Director::getInstance()->stopAnimation();
 
-    
-    
     if(BHUD && GM->nextScene == STAGE_LOBBY){
 //        BHUD->saveInventoryAndDeck();
 //        BHUD->saveBuildings();
@@ -337,6 +341,12 @@ void AppDelegate::applicationDidEnterBackground() {
 //        
 //        Director::getInstance()->replaceScene(scene);
         BHUD->checkUnsaved();
+    }
+    if (TITLE == nullptr && WORLD && GM->nextScene == STAGE_FIELD) {
+        HUD->onMenuClick();
+    }
+    if (GM->titleLayer && GM->titleLayer != nullptr) {
+        TITLE->onEnterBackground();
     }
     
     // if you use SimpleAudioEngine, it must be pause
@@ -349,6 +359,7 @@ void AppDelegate::applicationWillEnterForeground() {
 //    sdkbox::sessionStart();
 //#endif
     Director::getInstance()->startAnimation();
+    BSM->getHttpTime();
 //    if(BHUD){
 //        BHUD->getLastAccessTime();
 //    }

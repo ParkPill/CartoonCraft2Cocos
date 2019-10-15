@@ -12,6 +12,7 @@
 //#include "HUD.h"
 //#include "HttpsManager.h"
 #include "json/document.h"
+#include "HeroPage.h"
 #include <ctime>
 #include <iomanip>
 #include <sstream>
@@ -52,13 +53,13 @@ bool BuggyServerManager::init()
 //    serverUrl = "http://222.120.115.95:8101"; // cartoon craft server
 //    serverUrl = "http://222.120.115.95:8102"; // buggyland server
     
-//    serverUrl = "http://localhost:8103"; // cartoon-new server test
+    serverUrl = "http://localhost:8103"; // cartoon-new server test now
 #if CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 //    serverUrl = "http://192.168.0.2:8103"; // cartoon-new server test
 #endif
     
 //    serverUrl = "http://222.120.115.95:8103"; // test
-    serverUrl = "http://54.180.92.125:8103"; // aws
+//    serverUrl = "http://54.180.92.125:8103"; // aws test now
     
 //    gameName = "cartooncraft";
     apiName = "cc";
@@ -181,6 +182,13 @@ void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
     
     setTime(responseData);
     
+    if (GM->heroPage != nullptr) {
+        HeroPage* layer = (HeroPage*)GM->heroPage;
+        if(layer->isTimeRequestedForGacha){
+            layer->onTimeRecievedForGacha();
+        }
+    }
+    
 //    if(firstReceivedTime == 0){
 //        setTime(responseData);
 //        firstReceivedTime = webTime;
@@ -233,6 +241,9 @@ void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
 }
 
 std::string BuggyServerManager::getStrFromTime(time_t timet){
+    if(timet < 0){
+        timet = 0;
+    }
     std::time_t now = std::time(NULL);
     std::tm * ptm = std::localtime(&now);
     char bufferr[32];
@@ -310,8 +321,13 @@ void BuggyServerManager::setTime(std::string strTime){
     
     //    log("http time-> %d/%d/%d %d:%d:%d", receivedTime->tm_year,receivedTime->tm_mon, receivedTime->tm_mday, receivedTime->tm_hour, receivedTime->tm_min, receivedTime->tm_sec);
     timeEstablished = true;
+    
+    getTimeLeftToSunday();
 }
 time_t BuggyServerManager::getCurrentTimeT(){
+    if (!timeEstablished) {
+        return -1;
+    }
     time_t currentLocalTime = time(0);
     double timeDiff = difftime(currentLocalTime, startLocalTime);
     
@@ -399,7 +415,7 @@ void BuggyServerManager::sendPost(std::string method, std::string requestData, S
     request->setUrl(strmake("%s/%s/%s/", serverUrl.c_str(),apiName.c_str(), method.c_str()));
     std::vector<std::string> headers;
     headers.push_back("Content-Type:text/plain;charset=utf-8");
-    
+    log("send post: %s", requestData.c_str());
     request->setRequestType(cocos2d::network::HttpRequest::Type::POST);
     request->setResponseCallback(this, pSelector);
     
@@ -408,8 +424,25 @@ void BuggyServerManager::sendPost(std::string method, std::string requestData, S
     cocos2d::network::HttpClient::getInstance()->send(request);
     request->release();
 }
-void BuggyServerManager::getPostBoxItem(){
-    sendPost("getuserdata", "id=" + requestedID + "&" + "post=1", httpresponse_selector(BuggyServerManager::onGetPostBoxItem));
+void BuggyServerManager::sendGet(std::string method, SEL_HttpResponse pSelector){
+    cocos2d::network::HttpRequest* request = new cocos2d::network::HttpRequest();
+    request->setUrl(strmake("%s/%s/%s/", serverUrl.c_str(),apiName.c_str(), method.c_str()));
+    std::vector<std::string> headers;
+    headers.push_back("Content-Type:text/plain;charset=utf-8");
+    
+    request->setRequestType(cocos2d::network::HttpRequest::Type::GET);
+    request->setResponseCallback(this, pSelector);
+    
+    // write the post data
+    cocos2d::network::HttpClient::getInstance()->send(request);
+    request->release();
+}
+void BuggyServerManager::getPostBoxItem(){std::string savedRID = UDGetStr(KEY_RID, "");
+    if(savedRID.length() > 0){
+        sendPost("getuserdata", "_id=" + savedRID + "&" + "post=1", httpresponse_selector(BuggyServerManager::onGetPostBoxItem));
+    }else{
+        sendPost("getuserdata", "id=" + requestedID + "&" + "post=1", httpresponse_selector(BuggyServerManager::onGetPostBoxItem));
+    }
 }
 void BuggyServerManager::onGetPostBoxItem(cocos2d::Node *sender, void *data){
     SET_DOCUMENT_AND_CHECK_ERROR
@@ -423,12 +456,17 @@ void BuggyServerManager::onGetPostBoxItem(cocos2d::Node *sender, void *data){
     }
 }
 void BuggyServerManager::saveUserData(std::string data){
-    if (GM->getGem() > gemLimit || GM->getCoin() > goldLimit || GM->getTree() > treeLimit) {
-//        isBannedUser = true;
-//        banMe();
-    }else{
-        sendPost("saveuser", "id=" + requestedID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
-    }
+//    if (GM->getGem() > gemLimit || GM->getCoin() > goldLimit || GM->getTree() > treeLimit) {
+////        isBannedUser = true;
+////        banMe();
+//    }else{
+        std::string savedRID = UDGetStr(KEY_RID, "");
+        if(savedRID.length() > 0){
+            sendPost("saveuser", "_id=" + savedRID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+        }else{
+            sendPost("saveuser", "id=" + requestedID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+        }
+//    }
 }
 void BuggyServerManager::onSaveUserData(cocos2d::Node *sender, void *data){
     SET_DOCUMENT_AND_CHECK_ERROR
@@ -446,6 +484,12 @@ void BuggyServerManager::onSaveUserData(cocos2d::Node *sender, void *data){
         if(HUD){
             HUD->hideIndicator();
         }
+        if (document.HasMember("arenarid")) {
+            const char* arenarid = document["arenarid"].GetString();
+            log("arena rid: %s", arenarid);
+            UDSetStr(KEY_ARENA_RID, arenarid);
+        }
+        
 
 //        if (MOBILE_TITLE) {
 //            MOBILE_TITLE->nameHandleState = NETWORK_HANDLE_STATE_ARRIVED;
@@ -474,6 +518,11 @@ void BuggyServerManager::onFindMatches(cocos2d::Node *sender, void *data){
             GM->raidEnemyDeck = document["deck"].GetString();
         }else{
             GM->raidEnemyDeck = "";
+        }
+        if(document.HasMember("hdck")){
+            GM->raidEnemyHeroDeck = document["hdck"].GetString();
+        }else{
+            GM->raidEnemyHeroDeck = "";
         }
         
         GM->raidEnemyBuildings = document["buildings"].GetString();
@@ -504,6 +553,13 @@ void BuggyServerManager::onRegisterNameComplete(cocos2d::Node *sender, void *dat
         requestedID = document["result"].GetString();
         UDSetStr(KEY_SAVED_ID, requestedID);
         resultMessage = requestedID;
+        
+        if (document.HasMember("_id")) {
+            std::string strRID = "";
+            strRID += document["_id"].GetString();
+            UDSetStr(KEY_RID, strRID);
+            savedRID = "" + strRID;
+        }
     }else{
         resultMessage = document["error"].GetString();
     }
@@ -613,6 +669,11 @@ void BuggyServerManager::onGetOtherUserDataComplete(cocos2d::Node *sender, void 
     }else{
         GM->raidEnemyDeck = "";
     }
+    if(document.HasMember("hdck")){
+        GM->raidEnemyHeroDeck = document["hdck"].GetString();
+    }else{
+        GM->raidEnemyHeroDeck = "";
+    }
     GM->raidEnemyBuildings = document["buildings"].GetString();
     
 //    lastDocument = getDocument(sender, data);
@@ -658,7 +719,13 @@ void BuggyServerManager::onGetTopPlayersComplete(cocos2d::Node *sender, void *da
     }
 }
 void BuggyServerManager::getAllUserData(){
+    std::string strRID = "";
+    std::string savedRID = UDGetStr(KEY_RID, "");
+    if(savedRID.length() > 0){
+        strRID = "&_id=" + savedRID;
+    }
     sendPost("getuserdata", "id=" + requestedID +
+             strRID +
              "&name=1"+
              "&trophy=1"+
              "&arena_clr_cnt=1"+
@@ -666,14 +733,16 @@ void BuggyServerManager::getAllUserData(){
              "&buildings=1"+
              "&inventory=1"+
              "&deck=1"+
+             "&hdck=1"+
+//             "&hivt=1"+
              "&gem=1"+
              "&gold=1"+
              "&tree=1"+
-             "&arena_score=1"+
-             "&arena_reward=1"+
+//             "&arena_score=1"+
+//             "&arena_reward=1"+
              "&spc_units=1"+
-             "&under_attack=1"+
-             "&golden_ticket=1"+
+//             "&under_attack=1"+
+//             "&golden_ticket=1"+
              "&defence_record=1"+
              "&search_state=1"+
              "&search_items=1"+
@@ -681,18 +750,23 @@ void BuggyServerManager::getAllUserData(){
              "&gift_day=1"+
              "&iap_list=1"+
              "&iap_total=1"+
-             "&mission=1"+
+//             "&mission=1"+
              "&post=1"+
              "&ban=1"+
-             "&access_reward_receive=1"+
-             "&shield_end=1"+
-             "&last_launch_date=1"+
-             "&first_launch_date=1",
+//             "&access_reward_receive=1"+
+             "&shield_end=1",
+//             "&last_launch_date=1"+
+//             "&first_launch_date=1",
              httpresponse_selector(BuggyServerManager::onGetUserDataComplete));
 }
 
 void BuggyServerManager::getUserData(std::string data){
-    sendPost("getuserdata", "id=" + requestedID + "&" + data.c_str(), httpresponse_selector(BuggyServerManager::onGetUserDataComplete));
+    std::string savedRID = UDGetStr(KEY_RID, "");
+    if(savedRID.length() > 0){
+        sendPost("getuserdata", "_id=" + savedRID + "&" + data.c_str(), httpresponse_selector(BuggyServerManager::onGetUserDataComplete));
+    }else{
+        sendPost("getuserdata", "id=" + requestedID + "&" + data.c_str(), httpresponse_selector(BuggyServerManager::onGetUserDataComplete));
+    }
 }
 void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data){
     rapidjson::Document document = getDocument(sender, data);
@@ -710,6 +784,11 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
         setTime(document["time"].GetString());
     }
     //    SET_DOCUMENT_AND_CHECK_ERROR
+    if(document.HasMember("_id")) {
+        UDSetStr(KEY_RID, document["_id"].GetString());
+        std::string strRID = document["_id"].GetString();
+        savedRID = "" + strRID;
+    }
     if(document.HasMember("name")) {
         UDSetStr(KEY_NAME, document["name"].GetString());
         log("name: %s", UDGetStr(KEY_NAME).c_str());
@@ -753,7 +832,23 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     if(document.HasMember("deck")) {
         std::string str = document["deck"].GetString();
         if(str.length() > 0){
-            UDSetStr(KEY_UNITS_DECK, str);
+            std::string value = "";
+            value += str;
+            UDSetStr(KEY_UNITS_DECK, value);
+        }
+    }
+    if(document.HasMember("hdck")) {
+        std::string str = document["hdck"].GetString();
+        if(str.length() > 0){
+            std::string value = "";
+            value += str;
+            UDSetStr(KEY_UNITS_HERO_DECK, value);
+        }
+    }
+    if(document.HasMember("hivt")) {
+        std::string str = document["hivt"].GetString();
+        if(str.length() > 0){
+            UDSetStr(KEY_UNITS_HERO_INVENTORY, str);
         }
     }
     if(document.HasMember("golden_ticket")) {
@@ -785,7 +880,7 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
 //            }
 //        }
     }
-    if(document.HasMember("gift_day")) UDSetInt(KEY_GIFT_DAY, document["gift_day"].GetInt());
+//    if(document.HasMember("gift_day")) UDSetInt(KEY_GIFT_DAY, document["gift_day"].GetInt());
     
     if(document.HasMember("iap_list")) {
         std::string strIAPList = document["iap_list"].GetString();
@@ -806,7 +901,7 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     if(document.HasMember("shield_end")) {
         UDSetStr(KEY_SHIELD_END_TIME, document["shield_end"].GetString());
     }
-    if(document.HasMember("last_launch_date")) UDSetStr(KEY_LAST_LAUNCH_DATE, document["last_launch_date"].GetString());
+//    if(document.HasMember("last_launch_date")) UDSetStr(KEY_LAST_LAUNCH_DATE, document["last_launch_date"].GetString());
     if(document.HasMember("first_launch_date")) {
         std::string strFirstDay = document["first_launch_date"].GetString();
         UDSetStr(KEY_FIRST_LAUNCH_DATE, strFirstDay);
@@ -818,6 +913,10 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     lastDocument = getDocument(sender, data);
     if(BHUD != nullptr){
         BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
+    }
+    if (GM->titleLayer && GM->titleLayer != nullptr && TITLE->isHeroInfoRequested) {
+        TITLE->isHeroInfoRequested = false;
+        TITLE->isHeroInfoArrived = true;
     }
 }
 int BuggyServerManager::getIntIfUndefineZero(std::string str){
@@ -848,6 +947,53 @@ void BuggyServerManager::onGetMyRankComplete(cocos2d::Node *sender, void *data){
         BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
     }
 }
+void BuggyServerManager::getGameInfo(){
+    cocos2d::network::HttpRequest* request = new cocos2d::network::HttpRequest();
+    request->setUrl(strmake("%s/getgameinfo", serverUrl.c_str()));
+    std::vector<std::string> headers;
+    headers.push_back("Content-Type:text/plain;charset=utf-8");
+    
+    request->setRequestType(cocos2d::network::HttpRequest::Type::GET);
+    request->setResponseCallback(this, httpresponse_selector(BuggyServerManager::onGetGameInfoComplete));
+    
+    // write the post data
+    cocos2d::network::HttpClient::getInstance()->send(request);
+    request->release();
+}
+void BuggyServerManager::onGetGameInfoComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if(document.HasMember("iv") && TITLE) {
+        TITLE->iv = document["iv"].GetInt();
+    }
+    if(document.HasMember("av") && TITLE) {
+        TITLE->av = document["av"].GetInt();
+    }
+    if(document.HasMember("ri") && TITLE) {
+        TITLE->rewardIndex = document["ri"].GetInt();
+    }
+    TITLE->isGameInfoRecieved = true;
+}
+void BuggyServerManager::getRewardInfo(){
+    cocos2d::network::HttpRequest* request = new cocos2d::network::HttpRequest();
+    request->setUrl(strmake("%s/getrewardcontent", serverUrl.c_str()));
+    std::vector<std::string> headers;
+    headers.push_back("Content-Type:text/plain;charset=utf-8");
+    
+    request->setRequestType(cocos2d::network::HttpRequest::Type::GET);
+    request->setResponseCallback(this, httpresponse_selector(BuggyServerManager::onGetRewardInfoComplete));
+    
+    // write the post data
+    cocos2d::network::HttpClient::getInstance()->send(request);
+    request->release();
+}
+void BuggyServerManager::onGetRewardInfoComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if(document.HasMember("rc") && TITLE) {
+        TITLE->rewardInfo = document["rc"].GetString();
+    }
+    TITLE->isRewardInfoReceived = true;
+}
+
 void BuggyServerManager::isThisAppFree(){
     cocos2d::network::HttpRequest* request = new cocos2d::network::HttpRequest();
     std::string isThisAppFreeAddress = strmake("%s/%s/", serverUrl.c_str(), "isCartoonCraftFree");;
@@ -899,7 +1045,7 @@ void BuggyServerManager::onIsThisAppFree(cocos2d::Node *sender, void *data){
     log("should handle free");
 }
 void BuggyServerManager::getArenaRank(){
-    sendPost("getarenarank", "id=" + UDGetStr(KEY_SAVED_ID), httpresponse_selector(BuggyServerManager::onGetArenaComplete));
+    sendPost("getarnrank", "_id=" + UDGetStr(KEY_RID), httpresponse_selector(BuggyServerManager::onGetArenaComplete));
 }
 void BuggyServerManager::onGetArenaComplete(cocos2d::Node *sender, void *data){
     rapidjson::Document document = getDocument(sender, data);
@@ -931,15 +1077,27 @@ void BuggyServerManager::onGetArenaComplete(cocos2d::Node *sender, void *data){
     }
 }
 void BuggyServerManager::sendArenaScore(int score){
-    int clearCount = UDGetInt(KEY_ARENA_CLEAR_COUNT, 0);
-    saveUserData("arena_score="+Value(score).asString() + "&arena_clr_cnt=" + Value(clearCount).asString());
+    std::string savedRID = UDGetStr(KEY_RID, "");
+    std::string data = "score="+Value(score).asString() + "&name=" + UDGetStr(KEY_NAME);
+    std::string arenaRID = UDGetStr(KEY_ARENA_RID, "");
+    if(arenaRID.length() > 0){
+        data += "&arenarid=" + arenaRID;
+    }
+    BSM->sendPost("arnsv", "_id=" + savedRID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+    
+//    saveUserData("arena_score="+Value(score).asString() + "&arena_clr_cnt=" + Value(clearCount).asString());
 }
 void BuggyServerManager::onSENDArenaScoreComplete(cocos2d::Node *sender, void *data){
     log("send arena score complete");
     HUD->hideIndicator();
 }
 void BuggyServerManager::getArenaReward(){
-    sendPost("getuserdata", "id=" + requestedID + "&arena_reward=1", httpresponse_selector(BuggyServerManager::onGetArenaRewardComplete));
+    std::string savedRID = UDGetStr(KEY_RID, "");
+    if(savedRID.length() > 0){
+        sendPost("getuserdata", "_id=" + savedRID + "&arena_reward=1", httpresponse_selector(BuggyServerManager::onGetArenaRewardComplete));
+    }else{
+        sendPost("getuserdata", "id=" + requestedID + "&arena_reward=1", httpresponse_selector(BuggyServerManager::onGetArenaRewardComplete));
+    }
 }
 void BuggyServerManager::onGetArenaRewardComplete(cocos2d::Node *sender, void *data){
     rapidjson::Document document = getDocument(sender, data);
@@ -1067,12 +1225,183 @@ void BuggyServerManager::onCheckPlayID(cocos2d::Node *sender, void *data){
 }
 int BuggyServerManager::getTimeLeftToNewDay(){
     time_t now = getCurrentTimeT();
-    struct tm nextDay;
-    double seconds;
-    time(&now);
-    nextDay = *localtime(&now);
-    nextDay.tm_hour = 0; nextDay.tm_min = 0; nextDay.tm_sec = 0;
-    nextDay.tm_mon = 0;  nextDay.tm_mday = nextDay.tm_mday + 1;
-    seconds = difftime(mktime(&nextDay), now);
-    return (int)seconds;
+//    struct tm nextDay;
+//    double seconds;
+//    time(&now);
+    int timeLeft = 86400 - now%86400;
+    return timeLeft;
+//    nextDay = *localtime(&now);
+//    nextDay.tm_hour = 0; nextDay.tm_min = 0; nextDay.tm_sec = 0;
+//    nextDay.tm_mon = 0;  nextDay.tm_mday = nextDay.tm_mday + 1;
+//    seconds = difftime(mktime(&nextDay), now);
+//    return (int)seconds;
+}
+void BuggyServerManager::saveUserData(std::vector<int>& datas){
+    std::string strData = "";
+    for(int i = 0; i < datas.size();i++){
+        if (datas.at(i) == DATA_TYPE_GEM) {
+            strData = strmake("%s&gem=%d", strData.c_str(), GM->getGem());
+        }else if (datas.at(i) == DATA_TYPE_GOLD) {
+            strData = strmake("%s&gold=%d", strData.c_str(), GM->getCoin());
+        }else if (datas.at(i) == DATA_TYPE_TREE) {
+            strData = strmake("%s&tree=%d", strData.c_str(), GM->getTree());
+        }else if (datas.at(i) == DATA_TYPE_BUILDING) {
+            strData = strmake("%s&buildings=%s", strData.c_str(), UDGetStr(KEY_BUILDINGS, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_INVENTORY) {
+            strData = strmake("%s&inventory=%s", strData.c_str(), UDGetStr(KEY_UNITS_INVENTORY, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_DECK) {
+            strData = strmake("%s&deck=%s", strData.c_str(), UDGetStr(KEY_UNITS_DECK, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_KEYS) {
+            //            strData = strmake("%s&keys=%s", strData.c_str(), UDGetStr(KEY_KEYS, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_KEY_GET_STATE) {
+            //            strData = strmake("%s&keygetstate=%s", strData.c_str(), UDGetStr(KEY_KEY_GET_STATE, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_IAP) {
+            strData = strmake("%s&iap_list=%s&iap_total=%d", strData.c_str(), UDGetStr(KEY_IAP_LIST, "").c_str(), UDGetInt(KEY_IAP_TOTAL, 0));
+        }else if (datas.at(i) == DATA_TYPE_SEARCH_STATE) {
+            strData = strmake("%s&search_state=%s", strData.c_str(), UDGetStr(KEY_SEARCH_STATE, "000").c_str());
+        }else if (datas.at(i) == DATA_TYPE_HERO_INVENTORY) {
+            strData = strmake("%s&hivt=%s", strData.c_str(), UDGetStr(KEY_UNITS_HERO_INVENTORY, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_HERO_DECK) {
+            strData = strmake("%s&hdck=%s", strData.c_str(), UDGetStr(KEY_UNITS_HERO_DECK, "").c_str());
+        }else if (datas.at(i) == DATA_TYPE_STAGE_CLEAR) {
+            strData = strmake("%s&stage_clr_idx=%d", strData.c_str(), UDGetInt(KEY_LAST_CLEAR_STAGE, -1));
+        }
+    }
+    strData = strData.substr(1); // remove first &
+    BSM->saveUserData(strData);
+    log("save data: %s", strData.c_str());
+    datas.clear();
+}
+
+void BuggyServerManager::getPvp6ResultAndTicket(){
+    if(savedRID.length() > 0){
+        sendPost("getuserdata", "_id=" + savedRID + "&pvp6Ticket=1&pvp_rwd_6=1", httpresponse_selector(BuggyServerManager::onGetPvp6ResultAndTicketComplete));
+    }
+}
+void BuggyServerManager::onGetPvp6ResultAndTicketComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if (document.HasMember("pvp_rwd_6")) {
+        std::string strReward = document["pvp_rwd_6"].GetString();
+        HEROPAGE->pvp6Reward = "" + strReward;
+        if(HEROPAGE->pvp6Reward.length() > 1){
+            sendPost("saveuser", "_id=" + savedRID + "&pvp_rwd_6=_", httpresponse_selector(BuggyServerManager::onSaveUserData));
+        }
+    }
+    if (document.HasMember("pvp6Ticket")) {
+        BSM->pvp6TicketCount = document["pvp6Ticket"].GetInt();
+        HEROPAGE->pvpNetworkState = NETWORK_HANDLE_STATE_ARRIVED;
+    }
+}
+void BuggyServerManager::getPvp6Info(){
+    sendPost("getp6rank", "_id=" + UDGetStr(KEY_RID, "_"), httpresponse_selector(BuggyServerManager::onGetPvp6InfoComplete));
+}
+void BuggyServerManager::onGetPvp6InfoComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if (document.HasMember("names")) {
+        std::string strData = document["names"].GetString();
+        ValueVector list = GM->split(strData, ",");
+        for (int i = 0; i < list.size(); i++) {
+            if(i == 0){
+                ValueVector smallList = GM->split(list.at(i).asString(), "|");
+                if(smallList.size() >= 0){
+                    HEROPAGE->pvp6RankInfoName.push_back(smallList.at(0).asString());
+                }
+                if(smallList.size() >= 1){
+                    HEROPAGE->pvp6RankInfoTrohpy.push_back(smallList.at(1).asInt());
+                }
+                if(smallList.size() >= 2){
+                    HEROPAGE->pvp6RankInfoData.push_back(smallList.at(2).asString());
+                }
+            }
+        }
+    }
+    if (document.HasMember("you")) {
+        std::string meInfo = document["you"].GetString();
+        ValueVector list = GM->split(meInfo, "|");
+        HEROPAGE->pvp6MyRank = list.at(0).asInt();
+        HEROPAGE->pvp6MyTrophy = list.at(1).asInt();
+    }
+    if (document.HasMember("total")) {
+        HEROPAGE->pvp6TotalUserCount = document["total"].GetInt();
+    }
+    
+    if (shouldCheckPvp6Result) {
+        shouldCheckPvp6Result = false;
+        getPvp6ResultAndTicket();
+    }else{
+        HEROPAGE->pvpNetworkState = NETWORK_HANDLE_STATE_ARRIVED;
+    }
+}
+void BuggyServerManager::findMatchForPvp6(){
+    sendPost("p6findmatch", "trophy=" + Value(UDGetInt(KEY_PVP6_TROPHY)).asString(), httpresponse_selector(BuggyServerManager::onFindMatchForPvp6Complete));
+}
+void BuggyServerManager::onFindMatchForPvp6Complete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if (document.HasMember("userid")) {
+        std::string strUserID = document["userid"].GetString();
+        pvpTargetUserID = "" + strUserID;
+        pvpTargetTrophy = document["trophy"].GetInt();
+        pvpTargetData = document["data"].GetString();
+        HEROPAGE->pvpNetworkState = NETWORK_HANDLE_STATE_ARRIVED;
+    }
+}
+void BuggyServerManager::sendPvp6Result(int trophy){
+    std::string key = UDGetStr(KEY_PVP6RID, "");
+    if(key.length() > 0){
+        sendPost("p6sv", "pvp6rid=" + key + "&trophy=" + Value(trophy).asString() + "&data=" + UDGetStr(KEY_UNITS_HERO_DECK, "_"), httpresponse_selector(BuggyServerManager::onSendPvp6ResultComplete));
+    }else{
+        sendPost("p6sv", "_id=" + UDGetStr(KEY_RID, "_") + "&name=" + UDGetStr(KEY_NAME, "Unknown") + "&trophy=" + Value(trophy).asString() + "&data=" + UDGetStr(KEY_UNITS_HERO_DECK, "_"), httpresponse_selector(BuggyServerManager::onSendPvp6ResultComplete));
+    }
+}
+void BuggyServerManager::onSendPvp6ResultComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if (document.HasMember("result")) {
+        std::string strID = document["pvp6rid"].GetString();
+        std::string strRID = "" + strID;
+        UDSetStr(KEY_PVP6RID, strRID);
+    }
+}
+void BuggyServerManager::getPvp12ResultAndTicket(){
+    
+}
+void BuggyServerManager::onGetPvp12ResultAndTicketComplete(cocos2d::Node *sender, void *data){
+    
+}
+void BuggyServerManager::getPvp12Info(){
+    
+}
+void BuggyServerManager::onGetPvp12InfoComplete(cocos2d::Node *sender, void *data){
+    
+}
+void BuggyServerManager::findMatchForPvp12(){
+    
+}
+void BuggyServerManager::onFindMatchForPvp12Complete(cocos2d::Node *sender, void *data){
+    
+}
+void BuggyServerManager::sendPvp12Result(int trophy){
+    std::string key = UDGetStr(KEY_PVP12RID, "");
+    if(key.length() > 0){
+        sendPost("p12sv", "pvp12rid=" + key + "&trophy=" + Value(trophy).asString(), httpresponse_selector(BuggyServerManager::onGetPvp12InfoComplete));
+    }else{
+        sendPost("p12sv", "_id=" + UDGetStr(KEY_RID, "_") + "&name=" + UDGetStr(KEY_NAME, "Unknown") + "&trophy=" + Value(trophy).asString(), httpresponse_selector(BuggyServerManager::onSendPvp12ResultComplete));
+    }
+}
+void BuggyServerManager::onSendPvp12ResultComplete(cocos2d::Node *sender, void *data){
+    SET_DOCUMENT_AND_CHECK_ERROR
+    if (document.HasMember("result")) {
+        std::string strID = document["pvp12rid"].GetString();
+        std::string strRID = "" + strID;
+        UDSetStr(KEY_PVP12RID, strRID);
+    }
+}
+int BuggyServerManager::getTimeLeftToSunday(){
+    struct tm *tminfo;
+    time_t rawTime = getCurrentTimeT();
+    tminfo = localtime ( &rawTime);
+    
+    int timeLeft = 86400 - (tminfo->tm_hour*60*60 + tminfo->tm_min*60 + tminfo->tm_sec);
+    timeLeft += 86400*(6 - tminfo->tm_wday);
+    
+    return timeLeft;
 }

@@ -44,6 +44,12 @@
 		EC08EB9F2281550A0024D60B /* GoogleAppMeasurement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC08EB9B2281550A0024D60B /* GoogleAppMeasurement.framework */; };
 		EC08EBA02281550A0024D60B /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC08EB9C2281550A0024D60B /* GoogleMobileAds.framework */; };
 		EC08EBA12281550A0024D60B /* GoogleUtilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC08EB9D2281550A0024D60B /* GoogleUtilities.framework */; };
+		EC10DCED230C030100D3C023 /* ShopLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCEB230C030100D3C023 /* ShopLayer.cpp */; };
+		EC10DCEE230C030100D3C023 /* ShopLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCEB230C030100D3C023 /* ShopLayer.cpp */; };
+		EC10DCF2230C049A00D3C023 /* TopBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCF0230C049A00D3C023 /* TopBar.cpp */; };
+		EC10DCF3230C049A00D3C023 /* TopBar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCF0230C049A00D3C023 /* TopBar.cpp */; };
+		EC10DCF6230C098A00D3C023 /* PageBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCF4230C098A00D3C023 /* PageBase.cpp */; };
+		EC10DCF7230C098A00D3C023 /* PageBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC10DCF4230C098A00D3C023 /* PageBase.cpp */; };
 		EC36973C221D9BCC00681881 /* Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC369738221D9BCC00681881 /* Node_Class.cpp */; };
 		EC36973D221D9BCC00681881 /* Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC369738221D9BCC00681881 /* Node_Class.cpp */; };
 		EC36973E221D9BCC00681881 /* Location_Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC36973B221D9BCC00681881 /* Location_Node_Class.cpp */; };
@@ -163,6 +169,10 @@
 		EC6B1E4021C327EC00C2081C /* FBSDKCoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC6B1E3E21C327EC00C2081C /* FBSDKCoreKit.framework */; };
 		EC6B1E4121C327EC00C2081C /* Bolts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC6B1E3F21C327EC00C2081C /* Bolts.framework */; };
 		EC72B55921D4DC9800AF4010 /* BattleLobby.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC72B55721D4DC9800AF4010 /* BattleLobby.cpp */; };
+		EC9A34F42320DE3A00E4A0F3 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9A34F22320DE3A00E4A0F3 /* HeroPage.cpp */; };
+		EC9A34F52320DE3A00E4A0F3 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9A34F22320DE3A00E4A0F3 /* HeroPage.cpp */; };
+		ECF86A17233A0BA600FB1B7D /* QuestLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ECF86A15233A0BA600FB1B7D /* QuestLayer.cpp */; };
+		ECF86A18233A0BA700FB1B7D /* QuestLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = ECF86A15233A0BA600FB1B7D /* QuestLayer.cpp */; };
 		ED545A7C1B68A1F400C3958E /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED545A7B1B68A1F400C3958E /* libiconv.dylib */; };
 		ED545A7E1B68A1FA00C3958E /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = ED545A7D1B68A1FA00C3958E /* libiconv.dylib */; };
 /* End PBXBuildFile section */
@@ -248,6 +258,12 @@
 		EC08EB9B2281550A0024D60B /* GoogleAppMeasurement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleAppMeasurement.framework; path = ios/GoogleAppMeasurement.framework; sourceTree = "<group>"; };
 		EC08EB9C2281550A0024D60B /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleMobileAds.framework; path = ios/GoogleMobileAds.framework; sourceTree = "<group>"; };
 		EC08EB9D2281550A0024D60B /* GoogleUtilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleUtilities.framework; path = ios/GoogleUtilities.framework; sourceTree = "<group>"; };
+		EC10DCEB230C030100D3C023 /* ShopLayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShopLayer.cpp; sourceTree = "<group>"; };
+		EC10DCEC230C030100D3C023 /* ShopLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShopLayer.h; sourceTree = "<group>"; };
+		EC10DCF0230C049A00D3C023 /* TopBar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TopBar.cpp; sourceTree = "<group>"; };
+		EC10DCF1230C049A00D3C023 /* TopBar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TopBar.h; sourceTree = "<group>"; };
+		EC10DCF4230C098A00D3C023 /* PageBase.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = PageBase.cpp; sourceTree = "<group>"; };
+		EC10DCF5230C098A00D3C023 /* PageBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PageBase.h; sourceTree = "<group>"; };
 		EC369738221D9BCC00681881 /* Node_Class.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Node_Class.cpp; sourceTree = "<group>"; };
 		EC369739221D9BCC00681881 /* Location_Node_Class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Location_Node_Class.h; sourceTree = "<group>"; };
 		EC36973A221D9BCC00681881 /* Node_Class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node_Class.h; sourceTree = "<group>"; };
@@ -348,6 +364,10 @@
 		EC6B1E3F21C327EC00C2081C /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Bolts.framework; sourceTree = "<group>"; };
 		EC72B55721D4DC9800AF4010 /* BattleLobby.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BattleLobby.cpp; sourceTree = "<group>"; };
 		EC72B55821D4DC9800AF4010 /* BattleLobby.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BattleLobby.h; sourceTree = "<group>"; };
+		EC9A34F22320DE3A00E4A0F3 /* HeroPage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = HeroPage.cpp; sourceTree = "<group>"; };
+		EC9A34F32320DE3A00E4A0F3 /* HeroPage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HeroPage.h; sourceTree = "<group>"; };
+		ECF86A15233A0BA600FB1B7D /* QuestLayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = QuestLayer.cpp; sourceTree = "<group>"; };
+		ECF86A16233A0BA600FB1B7D /* QuestLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = QuestLayer.h; sourceTree = "<group>"; };
 		ED545A7B1B68A1F400C3958E /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/usr/lib/libiconv.dylib; sourceTree = DEVELOPER_DIR; };
 		ED545A7D1B68A1FA00C3958E /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -593,12 +613,22 @@
 				EC36973A221D9BCC00681881 /* Node_Class.h */,
 				EC4EDC682178CA4D001C1C7E /* PPLabel.cpp */,
 				EC4EDC772178CA4F001C1C7E /* PPLabel.h */,
+				EC10DCEB230C030100D3C023 /* ShopLayer.cpp */,
+				EC10DCEC230C030100D3C023 /* ShopLayer.h */,
 				EC4EDC522178CA4C001C1C7E /* SneakyJoystick.cpp */,
 				EC4EDC6C2178CA4E001C1C7E /* SneakyJoystick.h */,
 				EC4EDC792178CA4F001C1C7E /* SneakyJoystickSkinnedBase.cpp */,
 				EC4EDC7C2178CA50001C1C7E /* SneakyJoystickSkinnedBase.h */,
 				EC4EDC622178CA4D001C1C7E /* Title.cpp */,
 				EC4EDC7E2178CA50001C1C7E /* Title.h */,
+				EC10DCF0230C049A00D3C023 /* TopBar.cpp */,
+				EC10DCF1230C049A00D3C023 /* TopBar.h */,
+				EC10DCF4230C098A00D3C023 /* PageBase.cpp */,
+				EC10DCF5230C098A00D3C023 /* PageBase.h */,
+				EC9A34F22320DE3A00E4A0F3 /* HeroPage.cpp */,
+				EC9A34F32320DE3A00E4A0F3 /* HeroPage.h */,
+				ECF86A15233A0BA600FB1B7D /* QuestLayer.cpp */,
+				ECF86A16233A0BA600FB1B7D /* QuestLayer.h */,
 			);
 			name = Classes;
 			path = ../Classes;
@@ -856,10 +886,12 @@
 				EC4106412244422600F2748B /* BattleHud.cpp in Sources */,
 				EC4EDC8D2178CA51001C1C7E /* Enemies.cpp in Sources */,
 				EC4EDCAB2178CA51001C1C7E /* GameManager.cpp in Sources */,
+				EC10DCF2230C049A00D3C023 /* TopBar.cpp in Sources */,
 				EC6B1DFA21B286B100C2081C /* CCUrlSprite.cpp in Sources */,
 				1AF87B781F6F77F7007BE51C /* AppController.mm in Sources */,
 				1AF87B8B1F6F782A007BE51C /* RootViewController.mm in Sources */,
 				EC4EDC9B2178CA51001C1C7E /* EditorWorld.cpp in Sources */,
+				ECF86A17233A0BA600FB1B7D /* QuestLayer.cpp in Sources */,
 				1AF87B8A1F6F7822007BE51C /* main.m in Sources */,
 				EC6B1DFE21B2882700C2081C /* CrossPromotion.cpp in Sources */,
 				EC4EDC912178CA51001C1C7E /* EventInfo.cpp in Sources */,
@@ -870,11 +902,14 @@
 				EC45565E2193175C00B8F9C9 /* Ios_BillingManager.mm in Sources */,
 				EC45565B2193144300B8F9C9 /* GameCenterHelper.mm in Sources */,
 				EC4EDCAD2178CA51001C1C7E /* HelloWorldScene.cpp in Sources */,
+				EC10DCF6230C098A00D3C023 /* PageBase.cpp in Sources */,
 				EC4EDCAF2178CA51001C1C7E /* AwesomeDialogBox.cpp in Sources */,
+				EC9A34F42320DE3A00E4A0F3 /* HeroPage.cpp in Sources */,
 				EC72B55921D4DC9800AF4010 /* BattleLobby.cpp in Sources */,
 				EC410649224D15FC00F2748B /* BuggyServerManager.cpp in Sources */,
 				EC4EDCB52178CA51001C1C7E /* EditorHud.cpp in Sources */,
 				EC4EDC9D2178CA51001C1C7E /* PPLabel.cpp in Sources */,
+				EC10DCED230C030100D3C023 /* ShopLayer.cpp in Sources */,
 				EC4EDCA52178CA51001C1C7E /* Movable.cpp in Sources */,
 				EC4EDCB72178CA51001C1C7E /* Laser.cpp in Sources */,
 				EC4EDCB32178CA51001C1C7E /* HudLayer.cpp in Sources */,
@@ -894,12 +929,14 @@
 			files = (
 				EC4EDCB82178CA51001C1C7E /* Laser.cpp in Sources */,
 				EC4EDCAE2178CA51001C1C7E /* HelloWorldScene.cpp in Sources */,
+				EC10DCF3230C049A00D3C023 /* TopBar.cpp in Sources */,
 				EC4EDC902178CA51001C1C7E /* Intro.cpp in Sources */,
 				EC4EDCA42178CA51001C1C7E /* Inventory.cpp in Sources */,
 				503AE10517EB98FF00D1A890 /* main.cpp in Sources */,
 				EC6B1DFB21B286B100C2081C /* CCUrlSprite.cpp in Sources */,
 				EC4EDCB02178CA51001C1C7E /* AwesomeDialogBox.cpp in Sources */,
 				EC4EDC942178CA51001C1C7E /* Fog.cpp in Sources */,
+				EC10DCF7230C098A00D3C023 /* PageBase.cpp in Sources */,
 				EC36976B221DB12600681881 /* AStar.cpp in Sources */,
 				EC4EDC962178CA51001C1C7E /* Title.cpp in Sources */,
 				EC4EDCAC2178CA51001C1C7E /* GameManager.cpp in Sources */,
@@ -913,11 +950,14 @@
 				EC4EDC922178CA51001C1C7E /* EventInfo.cpp in Sources */,
 				EC6B1DFF21B2882700C2081C /* CrossPromotion.cpp in Sources */,
 				EC4EDC9E2178CA51001C1C7E /* PPLabel.cpp in Sources */,
+				EC10DCEE230C030100D3C023 /* ShopLayer.cpp in Sources */,
+				EC9A34F52320DE3A00E4A0F3 /* HeroPage.cpp in Sources */,
 				EC36973D221D9BCC00681881 /* Node_Class.cpp in Sources */,
 				EC4EDCB62178CA51001C1C7E /* EditorHud.cpp in Sources */,
 				EC4EDCB22178CA51001C1C7E /* SneakyJoystickSkinnedBase.cpp in Sources */,
 				EC4EDC982178CA51001C1C7E /* AppDelegate.cpp in Sources */,
 				EC4EDCB42178CA51001C1C7E /* HudLayer.cpp in Sources */,
+				ECF86A18233A0BA700FB1B7D /* QuestLayer.cpp in Sources */,
 				EC4EDC882178CA51001C1C7E /* SneakyJoystick.cpp in Sources */,
 				EC4EDC9C2178CA51001C1C7E /* EditorWorld.cpp in Sources */,
 				EC4EDC8C2178CA51001C1C7E /* LegendDaryButton.cpp in Sources */,

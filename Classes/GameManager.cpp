@@ -102,6 +102,7 @@ GameManager::GameManager()
     CCLOG("GameManager created");
 }
 void GameManager::initGameManager(){
+    preLoadAllSoundEffect();
     float musicVolumn = UserDefault::getInstance()->getFloatForKey(KEY_MUSIC_VOLUMN, 0.3f);
     setMusicVolumn(musicVolumn);
     float soundVolumn = UserDefault::getInstance()->getFloatForKey(KEY_SOUND_VOLUMN, 1);
@@ -110,7 +111,6 @@ void GameManager::initGameManager(){
 //    log("init game music: %f, sound: %f", CocosDenshion::SimpleAudioEngine::getInstance()->getBackgroundMusicVolume(), CocosDenshion::SimpleAudioEngine::getInstance()->getEffectsVolume());
     
     initAchievement();
-    preLoadAllSoundEffect();
 }
 int GameManager::getGemForCoin(int coinCount){
     if(coinCount/100 == coinCount/100.0f){
@@ -985,8 +985,15 @@ float GameManager::getDistance(Node* target, Node* source){
     return sqrtf(powf(target->getPositionX() - getPositionX(), 2) + powf(target->getPositionY() - getPositionY(), 2));
 }
 void GameManager::playSoundEffect(int sound, float gain, float pan){
+    if (sound == SOUND_BGM_DUAL || sound == SOUND_BGM_MAYDAY) {
+        
+    }else{
+        if(getSoundVolumn() <= 0){
+            return;
+        }
+    }
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
-    return;
+//    return;
 #endif
 //    log("music: %f, sound: %f", CocosDenshion::SimpleAudioEngine::getInstance()->getBackgroundMusicVolume(), CocosDenshion::SimpleAudioEngine::getInstance()->getEffectsVolume());
     switch(sound)
@@ -1249,7 +1256,20 @@ const char* GameManager::getCharacterDesc(int costume){
 
 
 
-
+void GameManager::showSpriteExplosion(Node* parent, const char* sptName, Vec2 pos, int sptCount, float radius, float dur){
+    for (int i = 0; i < sptCount; i++) {
+        Sprite* spt = Sprite::createWithSpriteFrameName(sptName);
+        parent->addChild(spt);
+        spt->setPosition(pos);
+        int angle = rand()%360;
+        spt->setRotation(angle);
+        float radian = angle*3.14f/180;
+//        dur = dur + dur*(rand()%10)*0.1f;
+        spt->runAction(EaseOut::create(MoveBy::create(dur, Vec2(cos(radian)*radius, sin(radian)*radius)), 2));
+        spt->runAction(RotateBy::create(dur, -180 + rand()%360));
+        spt->runAction(Sequence::create(DelayTime::create(dur*2/3), FadeOut::create(dur/3), SPT_REMOVE_FUNC, NULL));
+    }
+}
 void GameManager::showParticleExplosion(Node* prt, const char* sptName, Point pos, float scale){
     ParticleExplosion* particle = ParticleExplosion::create();
     particle->setPosition(pos);        // 위치
@@ -1518,59 +1538,7 @@ int GameManager::getWeaponPrice(int index){
     int priceUnit = 500;
     return index*priceUnit;
 }
-std::string GameManager::getWeaponName(int index){
-    return LanguageManager::getInstance()->getText(StringUtils::format("weaponName%d", index).c_str());
-    if (index == 0) {
-        return "PISTOL";
-    }else if(index == 1) {
-        return "MAGNUM";
-    }else if(index == 2) {
-        return "UZI";
-    }else if(index == 3) {
-        return "RIFLE";
-    }else if(index == 4) {
-        return "FIRE BOTTLER";
-    }else if(index == 5) {
-        return "ANTI BAT";
-    }else if(index == 6) {
-        return "SNIPER RIFLE";
-    }else if(index == 7) {
-        return "GRENADE RIFLE";
-    }else if(index == 8) {
-        return "CROSS BOW";
-    }else if(index == 9) {
-        return "MACHINE GUN";
-    }else if(index == 10) {
-        return "STRIKER";
-    }else if(index == 11) {
-        return "NIFE THROWER";
-    }else if(index == 12) {
-        return "BALL SHOOTER";
-    }else if(index == 13) {
-        return "FLAME THROWER";
-    }else if(index == 14) {
-        return "ROCKET LAUNCHER";
-    }else if(index == 15) {
-        return "BAZOOKA";
-    }else if(index == 16) {
-        return "MATT-A4";
-    }else if(index == 17) {
-        return "LASER GUN";
-    }else if(index == 18) {
-        return "ENERGY GUN";
-    }else if(index == 19) {
-        return "G.R.L";
-    }else if(index == 20) {
-        return "SLUGGER";
-    }else if(index == 21) {
-        return "R.DRAGON";
-    }else if(index == 22) {
-        return "SLUGGER NG";
-    }else if(index == 22) {
-        return "SLUGGER NG";
-    }
-    return "";
-}
+
 void GameManager::showInterstitialAds(){
     if (UserDefault::getInstance()->getBoolForKey(KEY_IAP_USER, false)) {
 //        return;
@@ -2758,6 +2726,9 @@ PointArray* GameManager::getPath(cocos2d::Point start, cocos2d::Point end){
 }
 void GameManager::setPathState(int x, int y, int state){
 //    tileState[x + y*(int)mapSize.width] = state;
+    if(x < 0 || y < 0 || x >= mapSize.width || y >= mapSize.height){
+        return;
+    }
     tileState[x][y] = state;
     astar->setPathState(x, y, state > 0?PATH_OCCUPIED:PATH_EMPTY);
 //    ASTAR::Cordinate::blockState[x][y] = state==1;
@@ -3859,6 +3830,9 @@ Movable* GameManager::getUnitFromData(UnitInfo* info){
 }
 UnitInfo* GameManager::getUnitInfoFromString(std::string str){
     ValueVector datas = GM->split(str, "/");
+    if(datas.size() < 2){
+        return nullptr;
+    }
     UnitInfo* info = new UnitInfo();
     info->unitType = datas.at(0).asInt();
     info->level = datas.at(1).asInt()%100;
@@ -3887,7 +3861,38 @@ std::string GameManager::getSpineFileName(int unitType){
         return "goblin";
     }else if(unitType == UNIT_HERO_ARCHER){
         return "archer";
+    }else if(unitType == UNIT_HERO_MONK){
+        return "monk";
+    }else if(unitType == UNIT_HERO_FIGHTER){
+        return "fighter";
+    }else if(unitType == UNIT_HERO_BEAR){
+        return "bear";
+    }else if(unitType == UNIT_HERO_HEALER){
+        return "healer";
+    }else if(unitType == UNIT_HERO_KNIGHT){
+        return "knight";
+    }else if(unitType == UNIT_HERO_ELF_SWORDMAN){
+        return "elfSwordMan";
+    }else if(unitType == UNIT_HERO_ASSASSIN){
+        return "assassin";
+    }else if(unitType == UNIT_HERO_LION){
+        return "lion";
+    }else if(unitType == UNIT_HERO_WIZARD){
+        return "wizard";
+    }else if(unitType == UNIT_HERO_TANKER){
+        return "tanker";
+    }else if(unitType == UNIT_HERO_SKELETON){
+        return "skeleton";
+    }else if(unitType == UNIT_HERO_REAPER){
+        return "necromancer";
+    }else if(unitType == UNIT_HERO_ENT){
+        return "ent";
+    }else if(unitType == UNIT_HERO_SALAMANDER){
+        return "salamander";
+    }else if(unitType == UNIT_HERO_UNDINE){
+        return "undine";
     }
+    
     return "";
 }
 std::string GameManager::getUnitName(int index){
@@ -3965,6 +3970,48 @@ std::string GameManager::getUnitName(int index){
         return "hero werewolf";
     }else if(index == UNIT_HERO_ARCHER){
         return "hero archer";
+    }else if(index == UNIT_HERO_MONK){
+        return "hero monk";
+    }else if(index == UNIT_HERO_FIGHTER){
+        return "hero fighter";
+    }else if(index == UNIT_HERO_BEAR){
+        return "hero bear";
+    }else if(index == UNIT_HERO_HEALER){
+        return "hero healer";
+    }else if(index == UNIT_HERO_KNIGHT){
+        return "hero knight";
+    }else if(index == UNIT_HERO_ELF_SWORDMAN){
+        return "hero elf swordman";
+    }else if(index == UNIT_HERO_ASSASSIN){
+        return "hero assassin";
+    }else if(index == UNIT_HERO_LION){
+        return "hero lion";
+    }else if(index == UNIT_HERO_CRAZY_WEREWOLF){
+        return "hero crazy werewolf";
+    }else if(index == UNIT_HERO_CRAZY_BEAR){
+        return "hero crazy bear";
+    }else if(index == UNIT_HERO_CRAZY_LION){
+        return "hero crazy lion";
+    }else if(index == UNIT_HERO_LADY_WEREWOLF){
+        return "hero lady werewolf";
+    }else if(index == UNIT_HERO_LADY_LION){
+        return "hero lady lion";
+    }else if(index == UNIT_HERO_LADY_BEAR){
+        return "hero lady bear";
+    }else if(index == UNIT_HERO_WIZARD){
+        return "hero wizard";
+    }else if(index == UNIT_HERO_TANKER){
+        return "hero tanker";
+    }else if(index == UNIT_HERO_SKELETON){
+        return "hero skeleton";
+    }else if(index == UNIT_HERO_REAPER){
+        return "hero reaper";
+    }else if(index == UNIT_HERO_ENT){
+        return "hero ent";
+    }else if(index == UNIT_HERO_SALAMANDER){
+        return "hero salamander";
+    }else if(index == UNIT_HERO_UNDINE){
+        return "hero undine";
     }
     return "worker";
 }
@@ -4129,5 +4176,102 @@ void GameManager::addLightStormEffect(Node* node){
         spt->setPosition(Vec2(isFromRight?(size.width + radius):-radius, rand()%(int)size.height));
         float moveScale = (rand()%30 + 70)*0.01f;
         spt->runAction(Sequence::create(DelayTime::create(backLightStartTime + (backLightEndTime-backLightStartTime)*(rand()%100)*0.01f), MoveBy::create((backLightMoveTimeMax - backLightMoveTimeMin)*moveScale + backLightMoveTimeMin, Vec2((size.width+radius*2)*(isFromRight?-1:1), 0)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+    }
+}
+
+spine::SkeletonAnimation* GameManager::getHeroSpine(int unitType){
+    std::string strFile = GM->getSpineFileName(unitType);
+    spine::SkeletonAnimation* spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+    if (unitType == UNIT_HERO_WEREWOLF) {
+        spChar->setSkin("werewolf");
+    }else if (unitType == UNIT_HERO_BEAR) {
+        spChar->setSkin("bear");
+    }else if (unitType == UNIT_HERO_LION) {
+        spChar->setSkin("lion");
+    }
+    return spChar;
+}
+int GameManager::getMaxGold(int level){
+    string str = castleStorageForCastleLevelTable[Value(level).asString().c_str()].asValueMap()["resources"].asString();
+    if(str.length() > 0){
+        return Value(GM->split(str, "_").at(0)).asInt();
+    }else{
+        return 400000;
+    }
+}
+int GameManager::getMaxGold(){
+    return getMaxGold(UDGetInt(KEY_CASTLE_LEVEL, 0));
+}
+int GameManager::getMaxTree(){
+    return getMaxTree(UDGetInt(KEY_CASTLE_LEVEL, 0));
+}
+int GameManager::getMaxTree(int level){
+    string str = castleStorageForCastleLevelTable[Value(level).asString().c_str()].asValueMap()["resources"].asString();
+    if(str.length() > 0){
+        return Value(GM->split(str, "_").at(1)).asInt();
+    }else{
+        return 600000;
+    }
+}
+int GameManager::getElement(int unit){
+    if(unit == UNIT_HERO_WEREWOLF ||
+       unit == UNIT_HERO_ARCHER ||
+       unit == UNIT_HERO_MONK ||
+       unit == UNIT_HERO_ELF_SWORDMAN ||
+       unit == UNIT_HERO_CRAZY_WEREWOLF ||
+       unit == UNIT_HERO_LADY_WEREWOLF ||
+       unit == UNIT_HERO_TANKER ||
+       unit == UNIT_HERO_ENT){
+        return ELEMENT_GROUND;
+    }else if(unit == UNIT_HERO_LIZARDMAN ||
+             unit == UNIT_HERO_SPEARMAN ||
+             unit == UNIT_HERO_ASSASSIN ||
+             unit == UNIT_HERO_UNDINE){
+        return ELEMENT_WATER;
+    }else if(unit == UNIT_HERO_GOBLIN ||
+             unit == UNIT_HERO_BEAR ||
+             unit == UNIT_HERO_LION ||
+             unit == UNIT_HERO_CRAZY_BEAR ||
+             unit == UNIT_HERO_CRAZY_LION ||
+             unit == UNIT_HERO_LADY_BEAR ||
+             unit == UNIT_HERO_LADY_LION ||
+             unit == UNIT_HERO_WIZARD ||
+             unit == UNIT_HERO_SALAMANDER){
+        return ELEMENT_FIRE;
+    }else if(unit == UNIT_HERO_ORC ||
+             unit == UNIT_HERO_FIGHTER ||
+             unit == UNIT_HERO_KNIGHT){
+        return ELEMENT_LIGHTNING;
+    }else if(unit == UNIT_HERO_SKELETON ||
+             unit == UNIT_HERO_REAPER){
+        return ELEMENT_DARK;
+    }else if(unit == UNIT_HERO_HEALER){
+        return ELEMENT_LIGHT;
+    }
+    return ELEMENT_NONE;
+}
+void GameManager::addYellowRisingBallEffect(Node* parent){
+    Sprite* spt;
+    for (int i = 0; i < 50; i++) {
+        if(rand()%2 == 0){
+            spt = Sprite::create("whiteSmallCircle.png");
+        }else{
+            spt = Sprite::create("whiteGlowCircle.png");
+        }
+        parent->addChild(spt);
+        spt->setScale((rand()%10)*0.1f);
+        int opa = rand()%200;
+        spt->setOpacity(opa);
+        Vec2 pos = Vec2(rand()%(int)parent->getBoundingBox().size.width, rand()%(int)parent->getBoundingBox().size.height);
+        spt->setPosition(pos);
+        float riseDur = (rand()%10)*0.1f + 1;
+        spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(riseDur, Vec2(0, 60 + rand()%60)), MoveTo::create(0, pos), nullptr)));
+        if (rand()%2 == 0) {
+            spt->runAction(RepeatForever::create(Sequence::create(FadeTo::create(riseDur/4, opa),DelayTime::create(riseDur/4), FadeOut::create(riseDur/2), nullptr)));
+        }else{
+            spt->runAction(RepeatForever::create(Sequence::create(FadeIn::create(riseDur/4),DelayTime::create(riseDur/4), FadeOut::create(riseDur/2), nullptr)));
+        }
+        spt->setColor(Color3B(255, 251, 141));
+        spt->setBlendFunc(BlendFunc::ADDITIVE);
     }
 }
