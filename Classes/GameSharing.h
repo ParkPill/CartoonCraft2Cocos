@@ -90,6 +90,7 @@ public:
     static void showVideoAdsIOS();
     static std::string getSignedDataForIOS();
     static void buyItemIOS(std::string skuID);
+    static void restoreIOS();
     static void initGameSharing_iOS(void *initObj);
     static std::string getPriceLocaleIOS(std::string str);
     static std::string getPriceAmountIOS(std::string str);
@@ -125,6 +126,7 @@ public:
     static std::string getPriceLocale(const char* sku);
 //    static std::string getSkuByItemIndex(int index);
     static void restoreIAP();
+    static void clearCacheForSmartPass();
     static void onIAPSuccess();
     static void onIAPFailed();
     static void showRewardedVideoAds();

@@ -31,8 +31,8 @@
             <PreSize X="0.0000" Y="0.0000" />
             <FileData Type="Normal" Path="pointerDown.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lbl" ActionTag="804057012" Tag="578" IconVisible="False" LeftMargin="-44.3612" RightMargin="-172.6388" TopMargin="-48.6022" BottomMargin="-27.3978" FontSize="54" LabelText="234234" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-            <Size X="217.0000" Y="76.0000" />
+          <AbstractNodeData Name="lbl" ActionTag="804057012" Tag="578" IconVisible="False" LeftMargin="45.6388" RightMargin="-82.6388" TopMargin="-48.6022" BottomMargin="-27.3978" FontSize="54" LabelText="-" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+            <Size X="37.0000" Y="76.0000" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="64.1388" Y="10.6022" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
@@ -63,7 +63,7 @@
             <PreSize X="0.0000" Y="0.0000" />
             <FileData Type="Normal" Path="uiBoxTiny.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="pbCollect" ActionTag="1962662291" Tag="576" IconVisible="False" LeftMargin="-160.3897" RightMargin="53.4160" TopMargin="26.8694" BottomMargin="-39.3861" ProgressInfo="100" ctype="LoadingBarObjectData">
+          <AbstractNodeData Name="pbCollect" ActionTag="1962662291" Tag="576" IconVisible="False" LeftMargin="-160.3898" RightMargin="53.4160" TopMargin="26.8694" BottomMargin="-39.3861" ProgressInfo="100" ctype="LoadingBarObjectData">
             <Size X="106.9737" Y="12.5167" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="-106.9029" Y="-33.1277" />

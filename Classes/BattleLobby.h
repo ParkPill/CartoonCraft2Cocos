@@ -20,7 +20,7 @@ using namespace cocos2d::ui;
 class BattleLobby : public Layer
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     Sprite* sptBackground;
     Sprite* sptTitle;

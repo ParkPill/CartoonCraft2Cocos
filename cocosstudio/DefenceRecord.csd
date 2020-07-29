@@ -244,6 +244,18 @@
                 <PreSize X="0.9520" Y="0.3372" />
                 <FileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
               </AbstractNodeData>
+              <AbstractNodeData Name="lblRecordNone" ActionTag="-869565706" Tag="3012" IconVisible="False" LeftMargin="61.0336" RightMargin="42.0684" TopMargin="65.8510" BottomMargin="117.4706" IsCustomSize="True" FontSize="30" LabelText="Предотвращения потери ресурсов" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="5" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="658.8981" Y="430.6784" />
+                <AnchorPoint ScaleX="0.5000" ScaleY="0.4906" />
+                <Position X="390.4826" Y="328.7614" />
+                <Scale ScaleX="1.0000" ScaleY="1.0000" />
+                <CColor A="255" R="0" G="0" B="0" />
+                <PrePosition X="0.5124" Y="0.5354" />
+                <PreSize X="0.8647" Y="0.7014" />
+                <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
+                <OutlineColor A="255" R="0" G="0" B="0" />
+                <ShadowColor A="255" R="110" G="110" B="110" />
+              </AbstractNodeData>
             </Children>
             <AnchorPoint ScaleX="0.5000" ScaleY="1.0000" />
             <Position X="802.9404" Y="951.4949" />

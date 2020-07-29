@@ -58,6 +58,7 @@
 #define DATA_TYPE_KEY_GET_STATE 13
 #define DATA_TYPE_STAGE_CLEAR 14
 #define DATA_TYPE_STAGE_HARD_CLEAR 15
+
 using namespace cocos2d;
 using namespace cocos2d::ui;
 
@@ -164,8 +165,10 @@ public:
 //    void saveBuildings();
 //    void saveInventoryAndDeck(bool includeIap = false);
     void updateInventorySaveData();
-    void updateHeroDeckSaveData();
-    void updateDeckSaveData();
+//    void updateHeroDeckSaveData();
+    void updateDeckPosSaveData();
+    void updateHeroPosSaveData();
+    void updateDeckSaveData(bool allowZero = false);
     void updateBuildingsSaveData();
     void saveUserData(std::vector<int>& datas);
     bool isBuilding(int unit);
@@ -181,6 +184,9 @@ public:
     std::vector<UnitInfo*> unitInfoListDeck;
     std::vector<UnitInfo*> unitInfoListInventory;
     std::vector<UnitInfo*> unitInfoListHeroInventory;
+    std::vector<std::string> topRankIDs;
+    std::vector<std::string> topRankNames;
+    std::vector<int> topRankTrophys;
     UnitInfo* selectedUnitInfo;
     void updateUnitInfoInList();
     void onConfirmFireClick();
@@ -188,6 +194,7 @@ public:
     void onUnitInInventoryClick(Ref* ref);
 //    Vector<Text*> timeLeftLabels;
     Movable* getUnitFromData(std::string str);
+    Movable* getUnitFromInfo(UnitInfo* info);
     int getUnitUpgradeTime(int unit, int level);
     Movable* addBuildingCreating(int index, float timeLeft);
     Node* ndTopBar;
@@ -204,6 +211,7 @@ public:
     bool isLoadAllUserDataRequested = false;
     bool isTopRankRequested = false;
     bool isMyRankRequested = false;
+    bool isMyRankReceived = false;
     void onVisitTopRankerClick(Ref* ref);
     void addUpgradeEffect(Movable* node, bool isWorld);
     void updateMineName(Movable* mine);
@@ -240,9 +248,6 @@ public:
     void showDefenceRecord();
     void onRevengeClick(Ref* ref);
     
-    std::vector<std::string> topRankIDs;
-    std::vector<std::string> topRankNames;
-    std::vector<int> topRankTrophys;
     int myRank=999;
     bool isVisitRequested = false;
     
@@ -294,9 +299,9 @@ public:
     Color3B getCardColorForLevel(int level);
     float svUpgardeX = 0;
     bool isTimeHackChecked = false;
-    bool shouldSaveBuilding = false;
+//    bool shouldSaveBuilding = false;
     bool shouldSaveDeckAndInventoryWhenExitTrainPopup = false;
-    bool shouldSaveDeck = false;
+//    bool shouldSaveDeck = false;
     void onCloseTrainPopup();
     void checkUnsaved();
     
@@ -339,5 +344,10 @@ public:
     void checkDailyMissionUI(bool isNewDay, int timeLeftToMidnight);
     void checkTrainLayerUI(time_t now, int timeLeftToMidnight);
     void checkDefenceRecordPopupUI(time_t now);
+    
+    void updateTrainLayer(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady);
+    void checkTutorial();
+    void updateGacha(Node* layer, time_t now);
+    void updateUpgrade(Node* layer, time_t now);
 };
 #endif /* BattleHud_h */

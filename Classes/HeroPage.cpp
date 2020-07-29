@@ -9,6 +9,7 @@
 #include "TopBar.h"
 #include "LanguageManager.h"
 #include "BuggyServerManager.h"
+#include "GameManager.h"
 #include "ShopLayer.h"
 #include <editor-support/spine/spine-cocos2dx.h>
 #include <editor-support/spine/SkeletonAnimation.h>
@@ -31,7 +32,13 @@ bool HeroPage::init()
     Button* btn;
     btn = (Button*)layer->getChildByName("btnPvp");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroPvpClick, this));
+    btn->setScale(0.2f);
+    btn->runAction(EaseBackOut::create(ScaleTo::create(0.3f, 1)));
     
+    for (int i = 0; i < 12; i++) {
+        btn = (Button*)layer->getChildByName(strmake("btnEquip%d", i));
+        btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onEquipedHeroClick, this));
+    }
     TopBar* topBar = TopBar::create();
     layer->addChild(topBar, POPUP_ZORDER);
     
@@ -41,6 +48,9 @@ bool HeroPage::init()
     
     btn = (Button*)layer->getChildByName("btnLimited");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onLimitedPacakgeForHeroClick, this));
+    if (GM->market == MARKET_SMARTPASS) {
+        btn->setVisible(false);
+    }
     spine::SkeletonAnimation* spChar;
     Text* lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "limited package");
@@ -60,11 +70,13 @@ bool HeroPage::init()
         spChar->setScale(0.5f);
     }
     
-    
     btn = (Button*)layer->getChildByName("btnBack");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onCloseHeroPage, this));
     btn = (Button*)layer->getChildByName("btnShop");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroShopClick, this));
+    if (GM->market == MARKET_SMARTPASS) {
+        btn->setVisible(false);
+    }
     
     btn = (Button*)layer->getChildByName("btnInfo");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroDrawRateInfoClick, this));
@@ -74,11 +86,11 @@ bool HeroPage::init()
     btn = (Button*)layer->getChildByName("btnGacha0");
     btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onChestClick, this));
     lbl = (Text*)btn->getChildByName("lblDescription");
-    lbl->setString(strmake("%s, %s, %s", LM->getText("common hero").c_str(), LM->getText("good hero").c_str(), LM->getText("great hero").c_str()));
+    LM->setLocalizedStringNotKey(lbl, strmake("%s, %s, %s", LM->getText("common hero").c_str(), LM->getText("good hero").c_str(), LM->getText("great hero").c_str()));
     btn = (Button*)layer->getChildByName("btnGacha1");
     btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onChestClick, this));
     lbl = (Text*)btn->getChildByName("lblDescription");
-    lbl->setString(strmake("%s, %s, %s", LM->getText("great hero").c_str(), LM->getText("rare hero").c_str(), LM->getText("epic hero").c_str()));
+    LM->setLocalizedStringNotKey(lbl, strmake("%s, %s, %s", LM->getText("great hero").c_str(), LM->getText("rare hero").c_str(), LM->getText("epic hero").c_str()));
     
     btn = (Button*)layer->getChildByName("btnArrangeRarity");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onSortByRarity, this));
@@ -135,14 +147,21 @@ bool HeroPage::init()
     update(0);
     this->schedule(schedule_selector(HeroPage::update));
     
+
     
 //    if (iapList.find(IAP_DETAIL_CREW_MANAGER_PACKAGE) == std::string::npos) {
 //        value += BSM->getStrFromTime(now + 60*60*23 + 60*55);
 //    }else{
 //        value += BSM->getStrFromTime(now + 60*60*1);
 //    }
-//    UDSetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value);
+//    time_t now = BSM->getCurrentTimeT();
+//    std::string value = "";
+//    value += BSM->getStrFromTime(now - 1);
+//    UDSetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value); // test
     
+//    pvp6Reward = "13_100_1234"; // test
+//    GM->setWoodKey(0);// test
+//    GM->setGoldKey(0);// test
     // init done
     return true;
 }
@@ -192,7 +211,7 @@ void HeroPage::update(float dt){
         if(GM->getWoodKey() > 0){
             lbl->setString(Value(GM->getWoodKey()).asString());
             img->loadTexture("keyWood.png");
-            img->setContentSize(Size(31, 60));
+            img->setContentSize(cocos2d::Size(31, 60));
         }else{
             if(isWoodChestGachaFreeReady){
                 LM->setLocalizedString(lbl, "free");
@@ -202,13 +221,13 @@ void HeroPage::update(float dt){
             }
             
             img->loadTexture("gem.png");
-            img->setContentSize(Size(97, 78));
+            img->setContentSize(cocos2d::Size(97, 78));
         }
         GM->alignToCenter(img, lbl, 30, 422, 0);
         
         Text* lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
         lblTimeLeft->setVisible(!isWoodChestGachaFreeReady);
-        lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextWoodChestGachaFreeTimeT, now)).c_str()));
+        LM->setLocalizedStringNotKey(lblTimeLeft, strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextWoodChestGachaFreeTimeT, now)).c_str()));
         
         btn = (Button*)layer->getChildByName("btnGacha1");
         btn->getChildByName("imgRedDot")->setVisible(isGoldChestGachaFreeReady);
@@ -218,7 +237,7 @@ void HeroPage::update(float dt){
         if(GM->getGoldKey() > 0){
             lbl->setString(Value(GM->getGoldKey()).asString());
             img->loadTexture("keyGold.png");
-            img->setContentSize(Size(31, 60));
+            img->setContentSize(cocos2d::Size(31, 60));
         }else{
             if(isGoldChestGachaFreeReady){
                 LM->setLocalizedString(lbl, "free");
@@ -228,14 +247,18 @@ void HeroPage::update(float dt){
             }
             
             img->loadTexture("gem.png");
-            img->setContentSize(Size(97, 78));
+            img->setContentSize(cocos2d::Size(97, 78));
         }
         GM->alignToCenter(img, lbl, 30, 422, 0);
         lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
         lblTimeLeft->setVisible(!isGoldChestGachaFreeReady);
-        lblTimeLeft->setString(strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextGoldChestGachaFreeTimeT, now)).c_str()));
+        LM->setLocalizedStringNotKey(lblTimeLeft, strmake("%s: %s", LM->getText("next free pick").c_str(), GM->getTimeLeftInStringHMS(difftime(nextGoldChestGachaFreeTimeT, now)).c_str()));
     }
-    
+    if (BSM->isServerFailed) {
+        BSM->isServerFailed = false;
+        showInstanceMessage(LM->getText("server fail try again"));
+        hideIndicator();
+    }
     if (pvpNetworkState == NETWORK_HANDLE_STATE_ARRIVED) {
         pvpNetworkState = NETWORK_HANDLE_STATE_COMPLETE;
         hideIndicator();
@@ -243,12 +266,44 @@ void HeroPage::update(float dt){
             isPvpInfoRequested = false;
             showPvpInfo(pvpNumber);
         }else if(isPvpFindMatchRequested){
+            long now = (long)BSM->getCurrentTimeT();
+            if (pvpNumber == 6) {
+                if (BSM->pvp6TicketCount == BSM->pvpTicketMax) {
+                    BSM->pvp6TicketRefillStartTime = std::to_string(now);
+                }
+                BSM->pvp6TicketCount--;
+                BSM->saveUserData(strmake("pvp6Ticket=%d&pvp6_refill_start_time=%s", BSM->pvp6TicketCount, BSM->pvp6TicketRefillStartTime.c_str()));
+            }else if (pvpNumber == 12) {
+                if (BSM->pvp12TicketCount == BSM->pvpTicketMax) {
+                    BSM->pvp12TicketRefillStartTime = std::to_string(now);
+                }
+                BSM->pvp12TicketCount--;
+                BSM->saveUserData(strmake("pvp12Ticket=%d&pvp12_refill_start_time=%s", BSM->pvp12TicketCount, BSM->pvp12TicketRefillStartTime.c_str()));
+            }
             isPvpFindMatchRequested = false;
             this->unschedule(schedule_selector(HeroPage::update));
             GM->nextScene = STAGE_FIELD; // test
-            auto scene = HelloWorld::scene(1, GAME_MODE_PVP6); // test
+            if(WORLD){
+                WORLD->removeUsedAssets();
+            }
+//            if(BHUD){
+//                BHUD = nullptr;
+//                removeUsedAssets();
+//            }
+//            if(TITLE){
+//                TITLE->clearAssets();
+//                GameManager::getInstance()->titleLayer = nullptr;
+//               cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(TITLE->listener);
+//            }
+            clearVectors();
+            if(BHUD){
+                GM->isPvpFromBHUD = true;
+                BHUD = nullptr;
+            }
+            auto scene = HelloWorld::scene(1, pvpNumber); // test
             Director::getInstance()->replaceScene(scene);
             WORLD->setPvpMode(pvpNumber);
+            GM->resetAsset();
         }
     }
     
@@ -256,13 +311,54 @@ void HeroPage::update(float dt){
     if(layer && layer != nullptr){
         int timeLeftToMidnight = 86400 - (long)now%86400;
         Text* lbl = (Text*)layer->getChildByName("lblTimeLeft");
-        lbl->setString(strmake("%s: %s", LM->getText("time left").c_str(), GM->getTimeLeftInString(BSM->getTimeLeftToSunday()).c_str()));
+        LM->setLocalizedStringNotKey(lbl, strmake("%s: %s", LM->getText("time left").c_str(), GM->getTimeLeftInString(BSM->getTimeLeftToSunday()).c_str()));
+        
+        
+        if(BSM->getTimeLeftToSunday() < 60*5){
+            Button* btnPlay = (Button*)layer->getChildByName("btnPlay");
+            btnPlay->setEnabled(false);
+        }
         
         lbl = (Text*)layer->getChildByName("lblTicketTimeLeft");
         lbl->setString(strmake("(%s)", GM->getTimeLeftInString(timeLeftToMidnight).c_str()));
         
         lbl = (Text*)layer->getChildByName("lblTicket");
-        lbl->setString(Value(layer->getTag()==6?BSM->pvp6TicketCount:BSM->pvp12TicketCount).asString());
+        lbl->setString(strmake("%d/%d", layer->getTag()==6?BSM->pvp6TicketCount:BSM->pvp12TicketCount, BSM->pvpTicketMax).c_str());
+        
+        Button* btn = (Button*)layer->getChildByName("btnVideo");
+        std::string strWatchedTime = UDGetStr(layer->getTag()==6?KEY_LAST_VIDEO_FOR_PVP6_TICKET_WATCHED_TIME:KEY_LAST_VIDEO_FOR_PVP12_TICKET_WATCHED_TIME, "2019-10-30T15:46:00");
+        
+        time_t videoWatchedTime = BSM->getTimeTFromStr(strWatchedTime);
+        bool isVideoReady = videoWatchedTime + 60*60 <= now;
+        btn->setEnabled(isVideoReady);
+        if (GM->market == MARKET_SMARTPASS) {
+            btn->setVisible(false);
+        }
+        std::string value = "";
+        value += BSM->getStrFromTime(now);
+        lbl = (Text*)btn->getChildByName("lblTimeLeft");
+        lbl->setVisible(!isVideoReady);
+        if (!isVideoReady) {
+            lbl->setString(GM->getTimeLeftInString(videoWatchedTime + 60*60 - now));
+        }
+        lbl = (Text*)btn->getChildByName("lbl");
+        lbl->setVisible(isVideoReady);
+        ImageView* img = (ImageView*)btn->getChildByName("imgTicket");
+        img->setVisible(isVideoReady);
+        
+        if(isVideoDoneForPvpTicket){
+            isVideoDoneForPvpTicket = false;
+            
+            if(layer->getTag() == 6){
+                UDSetStr(KEY_LAST_VIDEO_FOR_PVP6_TICKET_WATCHED_TIME, value);
+                BSM->pvp6TicketCount++;
+                BSM->saveUserData(strmake("pvp6Ticket=%d", BSM->pvp6TicketCount));
+            }else if(layer->getTag() == 12){
+                UDSetStr(KEY_LAST_VIDEO_FOR_PVP12_TICKET_WATCHED_TIME, value);
+                BSM->pvp12TicketCount++;
+                BSM->saveUserData(strmake("pvp12Ticket=%d", BSM->pvp12TicketCount));
+            }
+        }
     }
     
     if (pvpNetworkState == NETWORK_HANDLE_STATE_ARRIVED) {
@@ -271,8 +367,169 @@ void HeroPage::update(float dt){
             log("MAATCH!!!");
         }
     }
+    
+    if (pvp6Reward.length() > 1) {
+        showPvpReward(pvp6Reward);
+        pvp6Reward = "";
+        UDSetInt(KEY_PVP6_TROPHY, 1000);
+    }
+    if (pvp12Reward.length() > 1) {
+        showPvpReward(pvp12Reward);
+        pvp12Reward = "";
+        UDSetInt(KEY_PVP12_TROPHY, 1000);
+    }
+    layer = this->getChildByName("heroPvpDetail");
+    if (layer && layer != nullptr) {
+        // pvp 6
+        long startTime = Value(BSM->pvp6TicketRefillStartTime).asDouble();
+        int timePassed = now - startTime;
+        int refillTime = 3600;
+//        int refillTime = 60; // test
+        
+        if(BSM->pvpTicketMax > BSM->pvp6TicketCount){
+            if (timePassed >= refillTime) {
+                startTime += refillTime;
+                timePassed -= refillTime;
+                BSM->pvp6TicketCount++;
+                if(BSM->pvp6TicketCount > BSM->pvpTicketMax){
+                    BSM->pvp6TicketCount = BSM->pvpTicketMax;
+                }
+                BSM->pvp6TicketRefillStartTime = std::to_string(startTime);
+            }
+        }
+        Text* lbl = (Text*)layer->getChildByName("lblTicketTimeLeft");
+        if(layer->getTag() == 6){
+            lbl->setString(GM->getTimeLeftInString(refillTime - timePassed));
+            lbl->setVisible(BSM->pvp6TicketCount < BSM->pvpTicketMax);
+        }
+        
+        // pvp 12
+        startTime = Value(BSM->pvp12TicketRefillStartTime).asDouble();
+        timePassed = now - startTime;
+        if(BSM->pvpTicketMax > BSM->pvp12TicketCount){
+            if (timePassed >= refillTime) {
+                startTime += refillTime;
+                timePassed -= refillTime;
+                BSM->pvp12TicketCount++;
+                if(BSM->pvp12TicketCount > BSM->pvpTicketMax){
+                    BSM->pvp12TicketCount = BSM->pvpTicketMax;
+                }
+                BSM->pvp12TicketRefillStartTime = std::to_string(startTime);
+            }
+        }
+        if(layer->getTag() == 12){
+            lbl->setString(GM->getTimeLeftInString(refillTime - timePassed));
+            lbl->setVisible(BSM->pvp12TicketCount < BSM->pvpTicketMax);
+        }
+    }
+    
+    if (isTimeReceivedForGacha) {
+        isTimeReceivedForGacha = false;
+        handleTimeReceivedForGacha();
+    }
 }
-
+void HeroPage::handleTimeReceivedForGacha(){
+    std::string value = "";
+    std::string iapList = UDGetStr(KEY_IAP_LIST, "");
+    time_t now = BSM->getCurrentTimeT();
+    bool shouldInventorySave = false;
+    if (requestedChestType == CHEST_WOOD) {
+        std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
+        time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
+        bool isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
+        if(isWoodChestGachaFreeReady){
+            if (iapList.find(IAP_DETAIL_CREW_MANAGER_PACKAGE) == std::string::npos) {
+                value += BSM->getStrFromTime(now + 60*60*23 + 60*55);
+            }else{
+                value += BSM->getStrFromTime(now + 60*60*1);
+            }
+            
+            UDSetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value);
+            log("value: %s", value.c_str());
+            pickHero(0, 2);
+            shouldInventorySave = true;
+        }
+    }else if(requestedChestType == CHEST_GOLD){
+        std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
+        time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
+        bool isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
+        if (isGoldChestGachaFreeReady) {
+            if (iapList.find(IAP_DETAIL_MASTER_CREW_PACKAGE) == std::string::npos){
+                value += BSM->getStrFromTime(now + 60*60*24*7 - 60*30);
+            }else{
+                value += BSM->getStrFromTime(now + 60*60*12);
+            }
+            log("value: %s", value.c_str());
+            UDSetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, value);
+            
+            pickHero(2, 4);
+            shouldInventorySave = true;
+        }
+    }
+    
+    if(shouldInventorySave){
+        std::vector<int> datas;
+        updateHeroInventorySaveData();
+        datas.push_back(DATA_TYPE_HERO_INVENTORY);
+        BSM->saveUserData(datas);
+        updateHeroes();
+    }
+}
+void HeroPage::showPvpReward(std::string strReward){
+    ValueVector list = GM->split(strReward, "_");
+    Node* layer = CSLoader::createNodeWithVisibleSize("PvpReward.csb");
+    this->addChild(layer, POPUP_ZORDER);
+    setAsPopup(layer);
+    layer->setTag(-1);
+    Node* ndPanel = layer->getChildByName("imgPanel");
+    ndPanel->setScale(0.1f);
+    ndPanel->runAction(Sequence::create(ScaleTo::create(0.2, 1.1), ScaleTo::create(0.05, 0.95),ScaleTo::create(0.05, 1), NULL));
+    GM->addGlowBack(ndPanel);
+    Button* btn = (Button*)ndPanel->getChildByName("btnOk");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
+    Text* lbl = (Text*)ndPanel->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "result");
+    lbl = (Text*)ndPanel->getChildByName("lblReward");
+    LM->setLocalizedString(lbl, "reward");
+    lbl = (Text*)ndPanel->getChildByName("lblTrophy");
+    lbl->setString(Value(list.at(2)).asString());
+    lbl = (Text*)ndPanel->getChildByName("lblRank");
+    lbl->setString(strmake("No.%d / %d", Value(list.at(0)).asInt(), Value(list.at(1)).asInt()));
+    int reward = 0;
+    int goldKeyCount = 0;
+    int silverKeyCount = 0;
+    float percent = list.at(0).asFloat()*100/list.at(1).asFloat();
+    if (percent < 1) {
+        reward = 300;
+        goldKeyCount = 3;
+    }else if (percent < 5) {
+        reward = 200;
+        goldKeyCount = 2;
+    }else if (percent < 20) {
+        reward = 100;
+        goldKeyCount = 1;
+    }else if (percent < 50) {
+        reward = 50;
+        silverKeyCount = 3;
+    }else{
+        reward = 30;
+        silverKeyCount = 2;
+    }
+    lbl = (Text*)ndPanel->getChildByName("lblGem");
+    lbl->setString(strmake("%d", reward));
+    lbl = (Text*)ndPanel->getChildByName("lblKey");
+    if (goldKeyCount > 0) {
+        ImageView* img = (ImageView*)ndPanel->getChildByName("imgKey");
+        img->loadTexture("keyGold.png");
+        lbl->setString(strmake("%d", goldKeyCount));
+        GM->addGoldKey(goldKeyCount);
+    }else if(silverKeyCount > 0){
+        lbl->setString(strmake("%d", silverKeyCount));
+        GM->addWoodKey(silverKeyCount);
+    }
+    GM->addGem(reward);
+    BSM->saveUserData(strmake("gem=%d", GM->getGem()));
+}
 void HeroPage::onHeroPvpClick(){
     int heroInDeckCount = unitInfoListHeroDeck.size();
     if(heroInDeckCount < 12){
@@ -344,16 +601,26 @@ void HeroPage::onHeroPvpClick(){
 }
 void HeroPage::onPlayPvpClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
-    showIndicator();
     Node* layer = this->getChildByName("heroPvpDetail");
     if(layer->getTag() == 6){
-        BSM->findMatchForPvp6();
+        if (BSM->pvp6TicketCount > 0) {
+            showIndicator();
+            BSM->findMatchForPvp6();
+        }else{
+            showInstanceMessage(LM->getText("not enough ticket"));
+        }
     }else{
-        BSM->findMatchForPvp12();
+        if (BSM->pvp12TicketCount > 0) {
+            showIndicator();
+            BSM->findMatchForPvp12();
+        }else{
+            showInstanceMessage(LM->getText("not enough ticket"));
+        }
     }
     isPvpFindMatchRequested = true;
 }
 void HeroPage::onPvpModeClick(Ref* ref){
+    GM->pvpOpenDate = BSM->getDay();
     Button* btn = (Button*)ref;
     if(btn->getTag() == 0){
         pvpNumber = 6;
@@ -361,7 +628,7 @@ void HeroPage::onPvpModeClick(Ref* ref){
             showIndicator();
             pvpNetworkState = NETWORK_HANDLE_STATE_REQUESTED;
             isPvpInfoRequested = true;
-            BSM->getPvp6Info();
+            BSM->getPvp6Rank();
         }else{
             showPvpInfo(6);
         }
@@ -371,7 +638,7 @@ void HeroPage::onPvpModeClick(Ref* ref){
             showIndicator();
             pvpNetworkState = NETWORK_HANDLE_STATE_REQUESTED;
             isPvpInfoRequested = true;
-            BSM->getPvp12Info();
+            BSM->getPvp12Rank();
         }else{
             showPvpInfo(12);
         }
@@ -379,6 +646,7 @@ void HeroPage::onPvpModeClick(Ref* ref){
 }
 void HeroPage::showPvpInfo(int number){
     Node* layer = CSLoader::createNode("HeroPvpDetail.csb");
+    
     layer->setTag(number);
     this->addChild(layer, POPUP_ZORDER);
     setAsPopup(layer);
@@ -389,11 +657,16 @@ void HeroPage::showPvpInfo(int number){
     btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onPlayPvpClick, this));
     Text* lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "find match");
+    btn = (Button*)layer->getChildByName("btnVideo");
+    btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onVideoForTicketClick, this));
     btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
+    ImageView* img = (ImageView*)layer->getChildByName("Image_14");
+    img->setTouchEnabled(true);
+    btn = (Button*)layer->getChildByName("imgBack");
     btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
     ImageView* imgTicket = (ImageView*)layer->getChildByName("imgTicket");
     imgTicket->loadTexture(strmake("ticketPvp%d.png", number));
-    
     
     Text* lblTitle = (Text*)layer->getChildByName("btnTitle")->getChildByName("lbl");
     lblTitle->setString(strmake("%d vs %d", number, number));
@@ -401,7 +674,7 @@ void HeroPage::showPvpInfo(int number){
     LM->setLocalizedString(lbl, "reward");
     lbl = (Text*)layer->getChildByName("lblRank");
     LM->setLocalizedString(lbl, "top rank");
-    ImageView* img;UnitInfo* info;
+    UnitInfo* info;
     
     for (int i = 0; i < 12; i++) {
         img = (ImageView*)layer->getChildByName(strmake("img_%d", i));
@@ -427,9 +700,8 @@ void HeroPage::showPvpInfo(int number){
         if(scrollHeight < sv->getContentSize().height){
             scrollHeight = sv->getContentSize().height;
         }
-        sv->setInnerContainerSize(Size(sv->getContentSize().width, scrollHeight));
         for (int i = 0; i < pvp6RankInfoName.size(); i++) {
-            if (pvp6RankInfoName.at(i).length() < 2) {
+            if (pvp6RankInfoName.at(i).length() < 1) {
                 continue;
             }
             Button* btn = (Button*)btnTemp->clone();
@@ -441,11 +713,39 @@ void HeroPage::showPvpInfo(int number){
             btn->setTag(i);
         }
         lbl = (Text*)layer->getChildByName("btnMe")->getChildByName("lbl");
-        lbl->setString(strmake("%d. %s(%d)", pvp6MyRank + 1, UDGetStr(KEY_NAME, "").c_str(), pvp6MyTrophy));
+        lbl->setString(strmake("%d. %s(%d)", pvp6MyRank + 1, UDGetStr(KEY_NAME, "").c_str(), UDGetInt(KEY_PVP6_TROPHY, 1000)));
     }else if(number == 12){
-        
+        scrollHeight = gapY*pvp12RankInfoName.size();
+        if(scrollHeight < sv->getContentSize().height){
+            scrollHeight = sv->getContentSize().height;
+        }
+        for (int i = 0; i < pvp12RankInfoName.size(); i++) {
+            if (pvp12RankInfoName.at(i).length() < 2) {
+                continue;
+            }
+            Button* btn = (Button*)btnTemp->clone();
+            sv->addChild(btn);
+            btn->setPosition(Vec2(3, scrollHeight - i*gapY - 50));
+            lbl = (Text*)btn->getChildByName("lbl");
+            lbl->setString(strmake("%d. %s(%d)", i + 1, pvp12RankInfoName.at(i).c_str(), pvp12RankInfoTrohpy.at(i)));
+            btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onRankerClick, this));
+            btn->setTag(i);
+        }
+        lbl = (Text*)layer->getChildByName("btnMe")->getChildByName("lbl");
+        lbl->setString(strmake("%d. %s(%d)", pvp12MyRank + 1, UDGetStr(KEY_NAME, "").c_str(), UDGetInt(KEY_PVP12_TROPHY, 1000)));
     }
+    sv->setInnerContainerSize(cocos2d::Size(sv->getContentSize().width, scrollHeight));
     btnTemp->setVisible(false);
+    
+    update(0);
+}
+void HeroPage::onVideoForTicketClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
+    Node* layer = this->getChildByName("heroPvpDetail");
+    GM->showVideo(layer->getTag() == 6?VIDEO_PVP6_TICKET:VIDEO_PVP12_TICKET);
+}
+void HeroPage::onPvpTicketVideoDone(){
+    isVideoDoneForPvpTicket = true;
 }
 void HeroPage::onRankerClick(Ref* ref){
     BTN_FROM_REF
@@ -520,17 +820,22 @@ void HeroPage::onHeroDrawRateInfoClick(){
     x = gapUnitX;
     float gapUnitY = gapUnitX*1.0f;
     y = gapUnitY*1.5f;
-    int start = UNIT_HERO_ORC;
-    int end = UNIT_HERO_ENT;
-    int heroCount = end - start;
+    
+    int totalRate = 0;
+    std::vector<int> list = getPickPossibleHeroes();
+    for (int i = 0; i < list.size(); i++) {
+        totalRate += getPickRate(list.at(i));
+    }
+    
+    int heroCount = (int)list.size();
     float svHeight = (heroCount/columnCount + 1)*gapUnitY*2;
     if(svHeight > sv->getContentSize().height){
-        sv->setInnerContainerSize(Size(sv->getContentSize().width, svHeight));
+        sv->setInnerContainerSize(cocos2d::Size(sv->getContentSize().width, svHeight));
     }
     svHeight = sv->getInnerContainerSize().height;
     
-    for (int i = start; i <= end; i++) {
-        spine::SkeletonAnimation* spChar = GM->getHeroSpine(i);
+    for (int j = 0; j < list.size(); j++) {
+        spine::SkeletonAnimation* spChar = GM->getHeroSpine(list.at(j));
         sv->addChild(spChar);
         spChar->setPosition(Vec2(x, svHeight - y));
         x += gapUnitX*2;
@@ -538,33 +843,34 @@ void HeroPage::onHeroDrawRateInfoClick(){
             x = gapUnitX;
             y += gapUnitY*2;
         }
-        Label* lbl = LM->getLocalizedLabel(LM->getText(GM->getUnitName(i)).c_str(), Color4B::WHITE, 40);
+        Label* lbl = LM->getLocalizedLabel(LM->getText(GM->getUnitName(list.at(j))).c_str(), Color4B::WHITE, 40);
         lbl->enableOutline(Color4B::BLACK, 4);
         sv->addChild(lbl);
         lbl->setPosition(spChar->getPosition() + Vec2(0, -30));
-        Label* lblPercent = LM->getLocalizedLabel(strmake("(%.2f%%)", 100.0f/(end - start - 1)).c_str(), Color4B::GRAY, 30);
+        float percent = getPickRate(list.at(j))*100.0f/totalRate;
+        Label* lblPercent = LM->getLocalizedLabel(strmake("(%.2f%%)", percent).c_str(), Color4B::GRAY, 30);
         lblPercent->enableOutline(Color4B::BLACK, 3);
         sv->addChild(lblPercent);
         lblPercent->setPosition(spChar->getPosition() + Vec2(0, -75));
         spChar->setAnimation(0, "idle", true);
         bool contains = false;
         for(auto unitInfo : unitInfoListHeroDeck){
-            if(unitInfo->unitType == i){
+            if(unitInfo->unitType == list.at(j)){
                 contains = true;
             }
         }
         for(auto unitInfo : unitInfoListHeroInventory){
-            if(unitInfo->unitType == i){
+            if(unitInfo->unitType == list.at(j)){
                 contains = true;
             }
         }
         
-        if(!UDGetBool(strmake(KEY_COLLECTION_UNLOCKED_FORMAT, i).c_str(), false) && !contains){
+        if(!UDGetBool(strmake(KEY_COLLECTION_UNLOCKED_FORMAT, list.at(j)).c_str(), false) && !contains){
             spChar->setColor(Color3B::BLACK);
             lbl->setString("???");
         }
         
-        if(i >= UNIT_HERO_ENT){
+        if(list.at(j) >= UNIT_HERO_ENT){
             spChar->setColor(Color3B::BLACK);
             lbl->setString("Coming soon");
             lblPercent->setVisible(false);
@@ -574,6 +880,7 @@ void HeroPage::onHeroDrawRateInfoClick(){
     
     Text* lbl = (Text*)layer->getChildByName("imgTitle")->getChildByName("lbl");
     LM->setLocalizedString(lbl, "draw rate");
+    list.clear();
 }
 void HeroPage::showHeroPageTutorial(std::string text){
     heroPageTutorialNode = Node::create();
@@ -585,20 +892,20 @@ void HeroPage::showHeroPageTutorial(std::string text){
     img->setScale(100, 100);
     img->setColor(Color3B::BLACK);
     img->setOpacity(50);
-    img->setPosition(Point(size.width/2, size.height/2));
+    img->setPosition(Vec2(size.width/2, size.height/2));
     img->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroPageTutorialBoxClick, this));
     
     img = ImageView::create("uiBox.png");
     heroPageTutorialNode->addChild(img);
     img->setScale9Enabled(true);
     img->setTouchEnabled(true);
-    img->setContentSize(Size(2000, 500));
-    img->setPosition(Point(size.width/2, 330));
+    img->setContentSize(cocos2d::Size(2000, 500));
+    img->setPosition(Vec2(size.width/2, 330));
     img->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroPageTutorialBoxClick, this));
     
     Label* lbl = LM->getLocalizedLabel(text.c_str(), Color4B::BLACK, 60);
     heroPageTutorialNode->addChild(lbl);
-    lbl->setPosition(img->getPosition() + Point(200, 0));
+    lbl->setPosition(img->getPosition() + Vec2(200, 0));
     lbl->setDimensions(1500, 450);
     lbl->setName("lbl");
     lbl->setVerticalAlignment(TextVAlignment::CENTER);
@@ -612,7 +919,7 @@ void HeroPage::showHeroPageTutorial(std::string text){
     sptShadow->setOpacity(0);
     
     heroPageTutorialNode->addChild(spChar);
-    spChar->setPosition(Point(size.width/2 - 750, 210));
+    spChar->setPosition(Vec2(size.width/2 - 750, 210));
 }
 void HeroPage::addGreenArrowToButton(Node* btn){
     Sprite* spt = Sprite::create("greenArrow.png");
@@ -705,7 +1012,7 @@ void HeroPage::onSortByRarity(){
         nd->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), 122));
         
         Node* ndChar = sv->getChildByTag(indexList.at(i) + 100000);
-        ndChar->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), 122 - 45));
+        ndChar->setPosition(nd->getPosition() + Vec2(0, -45));
     }
 }
 void HeroPage::onSortBySlot(){
@@ -714,10 +1021,10 @@ void HeroPage::onSortBySlot(){
     ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
     for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
         Node* nd = sv->getChildByTag(i);
-        nd->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2));
+        nd->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), 122));
         
         Node* ndChar = sv->getChildByTag(i + 100000);
-        ndChar->setPosition(Vec2(nd->getContentSize().width*(0.45f + i), sv->getContentSize().height/2 - 45));
+        ndChar->setPosition(nd->getPosition() + Vec2(0, -45));
     }
 }
 void HeroPage::onFusionClick(){
@@ -750,7 +1057,7 @@ void HeroPage::onFusionClick(){
     std::string str;
     ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
     sv->setClippingEnabled(true);
-//    sv->setContentSize(Size(size.width, 244));
+//    sv->setContentSize(cocos2d::Size(size.width, 244));
     std::vector<UnitInfo*> candidateList;
     std::vector<UnitInfo*> candidatePoolList;
     for (int i = 0; i < unitInfoListHeroInventory.size(); i++) {
@@ -803,7 +1110,20 @@ void HeroPage::onCloseHeroPage(){
     GM->heroPage = nullptr;
     checkChangesForHeroes();
 //    closePopup();
+    clearVectors();
     closeThis();
+}
+void HeroPage::clearVectors(){
+    unitInfoListHeroInventory.clear();
+    unitInfoListHeroDeck.clear();
+    unitInfoListHeroInventoryArrangedForFusion.clear();
+    unitInfoListHeroSelectedForFusion.clear();
+    pvp6RankInfoName.clear();
+    pvp6RankInfoTrohpy.clear();
+    pvp6RankInfoData.clear();
+    pvp12RankInfoName.clear();
+    pvp12RankInfoTrohpy.clear();
+    pvp12RankInfoData.clear();
 }
 void HeroPage::onSelectedHeroClickForFusion(Ref* ref){
     BTN_FROM_REF
@@ -826,6 +1146,25 @@ void HeroPage::onHeroInFusionClick(Ref* ref){
 }
 void HeroPage::onFusionButtonClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
+    bool allRegistered = unitInfoListHeroSelectedForFusion.size() == 3;
+    if(unitInfoListHeroSelectedForFusion.size() > 0){
+        int theUnitType = unitInfoListHeroSelectedForFusion.at(0)->unitType;
+        int theRank = unitInfoListHeroSelectedForFusion.at(0)->rank;
+        for (int i = 1; i < unitInfoListHeroSelectedForFusion.size(); i++) {
+            if (theUnitType != unitInfoListHeroSelectedForFusion.at(i)->unitType ||
+                theRank != unitInfoListHeroSelectedForFusion.at(i)->rank) {
+                allRegistered = false;
+                break;
+            }
+        }
+    }
+    
+    if(!allRegistered){
+        btn->setEnabled(true);
+        showInstanceMessage(LM->getText("fusion alert"));
+        return;
+    }
+    
     int rank = unitInfoListHeroSelectedForFusion.at(0)->rank;
     int unitType = unitInfoListHeroSelectedForFusion.at(0)->unitType;
     int level = unitInfoListHeroSelectedForFusion.at(0)->level;
@@ -937,27 +1276,28 @@ void HeroPage::onOkFusionResult(){
 void HeroPage::updateHeroes(){
     Node* layer = this->getChildByName("heroPage");
     std::string str;Button* btn;Text* lbl;
-    std::string strEquippedDeck = UDGetStr(KEY_UNITS_HERO_DECK, "");
-    ValueVector unitsDeck = GM->split(strEquippedDeck, "_");
+//    std::string strEquippedDeck = UDGetStr(KEY_UNITS_HERO_DECK, "");
+//    ValueVector unitsDeck = GM->split(strEquippedDeck, "_");
     UnitInfo* info;
     int index = 0;
     unitInfoListHeroDeck.clear();
-    for (int i = 0; i < unitsDeck.size(); i++){
-        str = unitsDeck.at(i).asString();
-        if(str.length() <= 1){
-            continue;
-        }
+    unitInfoListHeroDeck = GM->getHeroDeck();
+    for (int i = 0; i < unitInfoListHeroDeck.size(); i++){
+//        str = unitsDeck.at(i).asString();
+//        if(str.length() <= 1){
+//            continue;
+//        }
         btn = (Button*)layer->getChildByName(strmake("btnEquip%d", index));
-        if(str.length() > 0){
-            info = GM->getUnitInfoFromString(unitsDeck.at(i).asString());
+//        if(str.length() > 0){
+            info = unitInfoListHeroDeck.at(i);//GM->getUnitInfoFromString(unitsDeck.at(i).asString());
             if(info->unitType < 0){
                 continue;
             }
-            unitInfoListHeroDeck.push_back(info);
-            btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onEquipedHeroClick, this));
-        }else{
-            continue;
-        }
+//            unitInfoListHeroDeck.push_back(info);
+//            btn->addClickEventListener(CC_CALLBACK_1(HeroPage::onEquipedHeroClick, this));
+//        }else{
+//            continue;
+//        }
         
         lbl = (Text*)btn->getChildByName("lblLevel");
         
@@ -992,32 +1332,34 @@ void HeroPage::updateHeroes(){
     }
     
     ScrollView* sv = (ScrollView*)layer->getChildByName("svInventory");
+    int inventoryScrollX = sv->getInnerContainerPosition().x;
     sv->removeAllChildren();
     //    sv->setClippingEnabled(true);
     //    UDSetStr(KEY_UNITS_HERO_INVENTORY, "_50/101_49/0_49/0_49/0_50/101_49/200_49/200_49/200"); // test
-    std::string strEquippedIvt = UDGetStr(KEY_UNITS_HERO_INVENTORY, "");
-    ValueVector unitsIvt = GM->split(strEquippedIvt, "_");
-//    sv->setContentSize(Size(size.width, 244));
+//    std::string strEquippedIvt = UDGetStr(KEY_UNITS_HERO_INVENTORY, "");
+//    ValueVector unitsIvt = GM->split(strEquippedIvt, "_");
+//    sv->setContentSize(cocos2d::Size(size.width, 244));
     
     unitInfoListHeroInventory.clear();
+    unitInfoListHeroInventory = GM->getHeroInventory();
     ImageView* img;
     ImageView* imgTemp = (ImageView*)layer->getChildByName("btnEquip0");
     index = 0;
-    for(int i = 0; i < unitsIvt.size(); i++){
-        str = unitsIvt.at(i).asString();
-        if(str.length() <= 1){
-            continue;
-        }
+    for(int i = 0; i < unitInfoListHeroInventory.size(); i++){
+//        str = unitsIvt.at(i).asString();
+//        if(str.length() <= 1){
+//            continue;
+//        }
         UnitInfo* info;
-        if(str.length() > 1){
-            info = GM->getUnitInfoFromString(unitsIvt.at(i).asString());
+//        if(str.length() > 1){
+            info = unitInfoListHeroInventory.at(i);//GM->getUnitInfoFromString(unitsIvt.at(i).asString());
             if(info->unitType < 0){
                 continue;
             }
-            unitInfoListHeroInventory.push_back(info);
-        }else{
-            continue;
-        }
+//            unitInfoListHeroInventory.push_back(info);
+//        }else{
+//            continue;
+//        }
         
         img = (ImageView*)imgTemp->clone();
         sv->addChild(img);
@@ -1042,12 +1384,14 @@ void HeroPage::updateHeroes(){
         spChar->setTag(100000 + index);
         index++;
     }
+    
     float totalWidth = (unitInfoListHeroInventory.size() + 0.3f)*261;
     if (totalWidth > size.width) {
-        sv->setInnerContainerSize(Size(totalWidth, sv->getContentSize().height));
+        sv->setInnerContainerSize(cocos2d::Size(totalWidth, sv->getContentSize().height));
     }else{
-        sv->setInnerContainerSize(Size(size.width, sv->getContentSize().height));
+        sv->setInnerContainerSize(cocos2d::Size(size.width, sv->getContentSize().height));
     }
+    sv->setInnerContainerPosition(Vec2(inventoryScrollX, sv->getInnerContainerPosition().y));
     int arrangeType = UDGetInt(KEY_HERO_ARRANGE_TYPE, 0);
     if(arrangeType == 1){
         onSortByRarity();
@@ -1108,9 +1452,9 @@ void HeroPage::updateUnitListForFusion(){
     }
     float totalWidth = (unitInfoListHeroInventory.size() + 0.3f)*261;
     if (totalWidth > size.width) {
-        sv->setInnerContainerSize(Size(totalWidth, sv->getContentSize().height));
+        sv->setInnerContainerSize(cocos2d::Size(totalWidth, sv->getContentSize().height));
     }else{
-        sv->setInnerContainerSize(Size(size.width, sv->getContentSize().height));
+        sv->setInnerContainerSize(cocos2d::Size(size.width, sv->getContentSize().height));
     }
     for (int i = 0; i < 3; i++) {
         Node* spine = layer->getChildByName(strmake("selectedHeroSpine%d", i));
@@ -1154,7 +1498,8 @@ void HeroPage::updateUnitListForFusion(){
             }
         }
     }
-    btnFusion->setEnabled(allRegistered);
+    
+//    btnFusion->setEnabled(allRegistered);
 }
 void HeroPage::onHeroInInventoryClick(Ref* ref){
     ImageView* img = (ImageView*)ref;
@@ -1162,6 +1507,11 @@ void HeroPage::onHeroInInventoryClick(Ref* ref){
     showHeroDetail(info);
 }
 void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
+    const char* popupName = "heroDetail";
+    Node* previousPopup = this->getChildByName(popupName);
+    if(previousPopup){
+        closePopup();
+    }
     bool isFromInventory = false;
     for(auto thisInfo : unitInfoListHeroInventory){
         if(thisInfo == info){
@@ -1179,7 +1529,7 @@ void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
     selectedUnitInfo = info;
     Node* layer = CSLoader::createNode("UnitTrainInfo.csb");
     this->addChild(layer, 4);
-    layer->setName("unitTrainLayer");
+    layer->setName(popupName);
     setAsPopup(layer);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn = (Button*)layer->getChildByName("btnClose");
@@ -1210,11 +1560,15 @@ void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
     lbl = (Text*)btnRemoveFromDeck->getChildByName("lblTitle");
     LM->setLocalizedString(lbl, "remove from deck");
     Button* btnFire = (Button*)layer->getChildByName("btnFire");
-    btnFire->setVisible(false);
+    btnFire->addClickEventListener(CC_CALLBACK_0(HeroPage::onFireHeroClick, this));
+    btnFire->setVisible(isFromInventory);
+//    btnFire->setPosition(Vec2(-300, 0) + btnFire->getPosition());
+    btnFire->setPosition(btnMoveToDeck->getPosition());
+    
     lbl = (Text*)btnFire->getChildByName("lblTitle");
     LM->setLocalizedString(lbl, "fire");
     btn = (Button*)layer->getChildByName("btnComplete");
-    btn->setVisible(false);
+//    btn->setVisible(false);
     //    btn->setPosition(btnUpgrade->getPosition());
     
     Node* nd = layer->getChildByName("ndUpgradeTime");
@@ -1246,7 +1600,16 @@ void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
     LM->setLocalizedString(lbl, strmake("%s desc", GM->getUnitName(unit).c_str()));
     Node* ndAttack = layer->getChildByName("ndAttack");
     lbl = (Text*)ndAttack->getChildByName("lblAttack");
-    lbl->setString(Value((int)(GM->getUnitATT(unit, level)*(1 + info->rank*0.2f))).asString());
+    float att = GM->getUnitATT(unit, level)*(1 + info->rank*0.2f);
+    if(info->unitType == UNIT_HERO_HEALER){
+        att *= 10;
+    }
+    lbl->setString(Value((int)(att)).asString());
+    if(info->unitType == GM->getMidMonthHeroType() ||
+       info->unitType == GM->getMonthlyHeroType()){
+        lbl->setString(lbl->getString() + strmake("(+%d)",(int)att/2));
+    }
+    
     lbl = (Text*)ndAttack->getChildByName("lblAttackAdd");
     lbl->setVisible(false);//popupType == 1);
     lbl->setString(strmake("+%d", GM->getUnitATT(unit, level+1) - GM->getUnitATT(unit, level)));
@@ -1256,9 +1619,15 @@ void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
     Node* ndPopulation = layer->getChildByName("ndPopulation");
     ImageView* img = (ImageView*)ndPopulation->getChildByName("imgPopulation");
     img->loadTexture("iconSkill.png");
-    img->setContentSize(Size(100, 100));
+    img->setContentSize(cocos2d::Size(100, 100));
     lbl = (Text*)ndPopulation->getChildByName("lblPopulation");
-    lbl->setString(strmake("%s%%", Value(10 + 3*info->rank).asString().c_str()));
+    int skill = 10 + 3*info->rank;
+    lbl->setString(strmake("%s%%", Value(skill).asString().c_str()));
+    if(info->unitType == GM->getMidMonthHeroType() ||
+       info->unitType == GM->getMonthlyHeroType()){
+        lbl->setString(lbl->getString() + strmake("(+%d)",skill/2));
+    }
+    
     layer->getChildByName("ndUpgradeTimer")->setVisible(false);
     img = (ImageView*)layer->getChildByName("imgIconBack");
     img->setColor(getRankColor(info->rank));
@@ -1275,7 +1644,7 @@ void HeroPage::showHeroDetail(UnitInfo* info, bool showLightning){
     layer->addChild(spChar);
     spChar->setPosition(layer->getChildByName("imgIconBack")->getPosition() + Vec2(0, -100));
     
-    //    btnMoveToDeck->setPosition(btnHire->getPosition());
+    btnMoveToDeck->setPosition(btnHire->getPosition());
     btnRemoveFromDeck->setPosition(btnHire->getPosition());
     
     if(showLightning){
@@ -1342,13 +1711,37 @@ void HeroPage::onRemoveFromDeckUnitClick(){
         }
         index++;
     }
-    
     unitInfoListHeroInventory.push_back(selectedUnitInfo);
     
     shouldSaveHeroInventoryInfo = true;
     updateHeroInventorySaveData();
     shouldSaveHeroDeckInfo = true;
     updateHeroDeckSaveData();
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_HERO_DECK);
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    BSM->saveUserData(datas);
+    
+    closePopup();
+    updateHeroes();
+}
+void HeroPage::onFireHeroClick(){
+    int index= 0;
+    for(auto info: unitInfoListHeroInventory){
+        if(info == selectedUnitInfo){
+            unitInfoListHeroInventory.erase(unitInfoListHeroInventory.begin() + index);
+            break;
+        }
+        index++;
+    }
+    
+    shouldSaveHeroInventoryInfo = true;
+    updateHeroInventorySaveData();
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    BSM->saveUserData(datas);
     
     closePopup();
     updateHeroes();
@@ -1372,6 +1765,11 @@ void HeroPage::onMoveToDeckUnitClick(){
     updateHeroInventorySaveData();
     shouldSaveHeroDeckInfo = true;
     updateHeroDeckSaveData();
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_HERO_DECK);
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    BSM->saveUserData(datas);
     
     closePopup();
     updateHeroes();
@@ -1443,7 +1841,7 @@ void HeroPage::onUpgradeUnitClick(){
     }else if(isFromInventory){
         showHeroDetail(unitInfoListHeroInventory.at(inventoryIndex), true);
     }
-    Node* spChar = this->getChildByName("unitTrainLayer")->getChildByName("spChar");
+    Node* spChar = this->getChildByName("heroDetail")->getChildByName("spChar");
     float originalScale = spChar->getScaleX();
     spChar->runAction(Sequence::create(ScaleTo::create(0.15f, originalScale*1.2f), EaseIn::create(ScaleTo::create(0.12f, originalScale*1), 2), nullptr));
 }
@@ -1457,6 +1855,7 @@ void HeroPage::onChestClick(Ref* ref){
     bool saveKey = false;
     bool saveGem = false;
     bool saveInventory = false;
+    
     if(btn->getTag() == 0){
         if (GM->getWoodKey() > 0) {
             GM->addWoodKey(-1);
@@ -1469,10 +1868,7 @@ void HeroPage::onChestClick(Ref* ref){
         }else{
             int price = Value(lbl->getString()).asInt();
             if(price <= GM->getGem()){
-                GM->addGem(-price);
-                pickHero(0, 2);
-                saveGem = true;
-                saveInventory = true;
+                showChestOpenWithGemAskPopup(price);
             }else{
                 showInstanceMessage(LM->getText("not enough gems"));
             }
@@ -1489,10 +1885,7 @@ void HeroPage::onChestClick(Ref* ref){
         }else{
             int price = Value(lbl->getString()).asInt();
             if(price <= GM->getGem()){
-                GM->addGem(-price);
-                pickHero(2, 4);
-                saveInventory = true;
-                saveGem = true;
+                showChestOpenWithGemAskPopup(price);
             }else{
                 showInstanceMessage(LM->getText("not enough gems"));
             }
@@ -1514,65 +1907,87 @@ void HeroPage::onChestClick(Ref* ref){
         updateHeroes();
     }
 }
+void HeroPage::showChestOpenWithGemAskPopup(int price){
+    chestOpenPrice = price;
+    Node* layer = CSLoader::createNode("GemRewardMessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("chestOpenWithGemAskPopup");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
+    GM->rollOpenScroll(imgBack);
+    
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onConfirmChestOpenWithGem, this));
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "yes");
+    
+    btn = (Button*)layer->getChildByName("btnNo");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
+    btn->setVisible(true);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "no");
+    
+    lbl = (Text*)layer->getChildByName("lblGold");
+    Node* img = layer->getChildByName("imgGold");
+    img->setVisible(false);
+    lbl->setVisible(false);
+    layer->getChildByName("lblGemCount")->setPositionY(img->getPositionY());
+    layer->getChildByName("imgGem")->setPositionY(img->getPositionY());
+    
+    lbl = (Text*)layer->getChildByName("lblTree");
+    img = layer->getChildByName("imgTree");
+    img->setVisible(false);
+    lbl->setVisible(false);
+    
+    lbl = (Text*)layer->getChildByName("lblGemCount");
+    lbl->setString(Value(chestOpenPrice).asString());
+    GM->alignToCenter(layer->getChildByName("imgGem"), lbl, 50, layer->getContentSize().width/2, 0);
+    
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedString(lbl, "use gem to open chest");
+}
+void HeroPage::onConfirmChestOpenWithGem(){
+    closePopup();
+    GM->addGem(-chestOpenPrice);
+    if(chestOpenPrice >= 300){
+        pickHero(2, 4);
+    }else{
+        pickHero(0, 2);
+    }
+    
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    updateHeroInventorySaveData();
+    datas.push_back(DATA_TYPE_HERO_INVENTORY);
+    BSM->saveUserData(datas);
+    updateHeroes();
+}
 void HeroPage::requestTimeForGacha(){
     isTimeRequestedForGacha = true;
     BSM->getHttpTime();
 }
 void HeroPage::onTimeRecievedForGacha(){
     isTimeRequestedForGacha = false;
-    std::string value = "";
-    std::string iapList = UDGetStr(KEY_IAP_LIST, "");
-    time_t now = BSM->getCurrentTimeT();
-    bool shouldInventorySave = false;
-    if (requestedChestType == CHEST_WOOD) {
-        std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
-        time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
-        bool isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
-        if(isWoodChestGachaFreeReady){
-            if (iapList.find(IAP_DETAIL_CREW_MANAGER_PACKAGE) == std::string::npos) {
-                value += BSM->getStrFromTime(now + 60*60*23 + 60*55);
-            }else{
-                value += BSM->getStrFromTime(now + 60*60*1);
-            }
-            
-            UDSetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, value);
-            log("value: %s", value.c_str());
-            pickHero(0, 2);
-            shouldInventorySave = true;
-        }
-    }else if(requestedChestType == CHEST_GOLD){
-        std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
-        time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
-        bool isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
-        if (isGoldChestGachaFreeReady) {
-            if (iapList.find(IAP_DETAIL_MASTER_CREW_PACKAGE) == std::string::npos){
-                value += BSM->getStrFromTime(now + 60*60*24*7 - 60*30);
-            }else{
-                value += BSM->getStrFromTime(now + 60*60*12);
-            }
-            log("value: %s", value.c_str());
-            UDSetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, value);
-            
-            pickHero(2, 4);
-            shouldInventorySave = true;
-        }
-    }
-    
-    if(shouldInventorySave){
-        std::vector<int> datas;
-        updateHeroInventorySaveData();
-        datas.push_back(DATA_TYPE_HERO_INVENTORY);
-        BSM->saveUserData(datas);
-        updateHeroes();
-    }
+    isTimeReceivedForGacha = true;
 }
 void HeroPage::pickHero(int minRank, int maxRank){
     int rankRate[5];
-    rankRate[0] = 80;
-    rankRate[1] = 50;
-    rankRate[2] = 30;
-    rankRate[3] = 10;
-    rankRate[4] = 2;
+    if (maxRank < 3) {
+        rankRate[0] = 85;
+        rankRate[1] = 10;
+        rankRate[2] = 5;
+//        rankRate[3] = 10;
+//        rankRate[4] = 2;
+    }else{
+//        rankRate[0] = 80;
+//        rankRate[1] = 50;
+        rankRate[2] = 90;
+        rankRate[3] = 8;
+        rankRate[4] = 2;
+    }
+//    _64/417/22/9_54/417/21/8_64/417/21/9_64/417/21/9_47/417/28/10_55/417/19/9_54/417/19/11_64/417/19/17_65/215/-1/-1_58/417/26/15_56/213/-1/-1_52/417/22/9_
     int rateSum = 0;
     for (int i = minRank; i <= maxRank; i++) {
         rateSum += rankRate[i];
@@ -1588,45 +2003,24 @@ void HeroPage::pickHero(int minRank, int maxRank){
     }
     log("picked: %d", pickedRank);
     std::vector<int> array;
-    int kind = UNIT_HERO_REAPER - UNIT_HERO_ORC;
-    int index = rand()%(kind);
-    if(index == 0){
-        array.push_back(UNIT_HERO_GOBLIN);
-    }else if(index == 1){
-        array.push_back(UNIT_HERO_ORC);
-    }else if(index == 2){
-        array.push_back(UNIT_HERO_LIZARDMAN);
-    }else if(index == 3){
-        array.push_back(UNIT_HERO_ARCHER);
-    }else if(index == 4){
-        array.push_back(UNIT_HERO_SPEARMAN);
-    }else if(index == 5){
-        array.push_back(UNIT_HERO_WEREWOLF);
-    }else if(index == 6){
-        array.push_back(UNIT_HERO_MONK);
-    }else if(index == 7){
-        array.push_back(UNIT_HERO_FIGHTER);
-    }else if(index == 8){
-        array.push_back(UNIT_HERO_BEAR);
-    }else if(index == 9){
-        array.push_back(UNIT_HERO_HEALER);
-    }else if(index == 10){
-        array.push_back(UNIT_HERO_KNIGHT);
-    }else if(index == 11){
-        array.push_back(UNIT_HERO_ELF_SWORDMAN);
-    }else if(index == 12){
-        array.push_back(UNIT_HERO_ASSASSIN);
-    }else if(index == 13){
-        array.push_back(UNIT_HERO_LION);
-    }else if(index == 14){
-        array.push_back(UNIT_HERO_WIZARD);
-    }else if(index == 15){
-        array.push_back(UNIT_HERO_TANKER);
-    }else if(index == 16){
-        array.push_back(UNIT_HERO_SKELETON);
-    }else if(index == 17){
-        array.push_back(UNIT_HERO_REAPER);
+//    int kind = UNIT_HERO_REAPER - UNIT_HERO_ORC;
+    
+    int totalRate = 0;
+    std::vector<int> list = getPickPossibleHeroes();
+    for (int i = 0; i < list.size(); i++) {
+        totalRate += getPickRate(list.at(i));
     }
+    int pickedNum = rand()%(totalRate);
+    int pickedHero = -1;
+    for (int i = 0; i < list.size(); i++) {
+        pickedNum -= getPickRate(list.at(i));
+        if(pickedNum <= 0){
+            pickedHero = list.at(i);
+            break;
+        }
+    }
+    
+    array.push_back(pickedHero);
     
     for(int i = 0; i < array.size(); i++){
         UnitInfo* info = new UnitInfo();
@@ -1780,6 +2174,7 @@ void HeroPage::pickHero(int minRank, int maxRank){
     //    BHUD->showIndicator();
     
     shouldSaveHeroInventoryInfo = true;
+    list.clear();
 }
 void HeroPage::onClosePickHero(){
     closePopup();
@@ -1789,19 +2184,132 @@ void HeroPage::onClosePickHero(){
         this->getChildByName("heroPage")->getChildByName("btnGacha0")->removeChildByName("arrow");
     }
 }
-Color3B HeroPage::getRankColor(int rank){
-    if (rank == 0) {
-        return Color3B(255, 255, 255);
-    }else if (rank == 1) {
-        return Color3B(57, 211, 205);
-    }else if (rank == 2) {
-        return Color3B(0, 180, 241);
-    }else if (rank == 3) {
-        return Color3B(255, 148, 183);
-    }else if (rank == 4) {
-        return Color3B(179, 22, 135);
+int HeroPage::getPickRate(int unit){
+    if(unit == UNIT_HERO_ORC){
+        return 581;
     }
-    return Color3B::WHITE;
+    if(unit == UNIT_HERO_GOBLIN){
+        return 881;
+    }
+    if(unit == UNIT_HERO_SPEARMAN){
+        return 581;
+    }
+    if(unit == UNIT_HERO_LIZARDMAN){
+        return 781;
+    }
+    if(unit == UNIT_HERO_ARCHER){
+        return 211;
+    }
+    if(unit == UNIT_HERO_WEREWOLF){
+        return 211;
+    }
+    if(unit == UNIT_HERO_MONK){
+        return 211;
+    }
+    if(unit == UNIT_HERO_FIGHTER){
+        return 211;
+    }
+    if(unit == UNIT_HERO_BEAR){
+        return 211;
+    }
+    if(unit == UNIT_HERO_HEALER){
+        return 11;
+    }
+    if(unit == UNIT_HERO_KNIGHT){
+        return 211;
+    }
+    if(unit == UNIT_HERO_ELF_SWORDMAN){
+        return 211;
+    }
+    if(unit == UNIT_HERO_ASSASSIN){
+        return 23;
+    }
+    if(unit == UNIT_HERO_LION){
+        return 23;
+    }
+    if(unit == UNIT_HERO_WIZARD){
+        return 14;
+    }
+    if(unit == UNIT_HERO_TANKER){
+        return 63;
+    }
+    if(unit == UNIT_HERO_SKELETON){
+        return 525;
+    }
+    if(unit == UNIT_HERO_REAPER){
+        return 14;
+    }
+    if(unit == UNIT_HERO_ENT){
+        return 10;
+    }
+    if(unit == UNIT_HERO_SANTA){
+        return 7;
+    }
+    if(unit == UNIT_HERO_RUDOLPH){
+        return 14;
+    }
+    if(unit == UNIT_HERO_SANTADOG){
+        return 14;
+    }
+    if(unit == UNIT_HERO_SALAMANDER){
+        return 14;
+    }
+    if(unit == UNIT_HERO_UNDINE){
+        return 9;
+    }
+    if(unit == UNIT_HERO_CRAZY_WEREWOLF){
+        return 14;
+    }
+    if(unit == UNIT_HERO_CRAZY_BEAR){
+        return 14;
+    }
+    if(unit == UNIT_HERO_CRAZY_LION){
+        return 14;
+    }
+    if(unit == UNIT_HERO_LADY_WEREWOLF){
+        return 23;
+    }
+    if(unit == UNIT_HERO_LADY_LION){
+        return 23;
+    }
+    if(unit == UNIT_HERO_LADY_BEAR){
+        return 23;
+    }
+    return 500;
+}
+std::vector<int> HeroPage::getPickPossibleHeroes(){
+    std::vector<int> list;
+    list.push_back(UNIT_HERO_ORC);
+    list.push_back(UNIT_HERO_GOBLIN);
+    list.push_back(UNIT_HERO_SPEARMAN);
+    list.push_back(UNIT_HERO_LIZARDMAN);
+    list.push_back(UNIT_HERO_ARCHER);
+    list.push_back(UNIT_HERO_WEREWOLF);
+    list.push_back(UNIT_HERO_MONK);
+    list.push_back(UNIT_HERO_FIGHTER);
+    list.push_back(UNIT_HERO_BEAR);
+    list.push_back(UNIT_HERO_HEALER);
+    list.push_back(UNIT_HERO_KNIGHT);
+    list.push_back(UNIT_HERO_ELF_SWORDMAN);
+    list.push_back(UNIT_HERO_ASSASSIN);
+    list.push_back(UNIT_HERO_LION);
+    list.push_back(UNIT_HERO_WIZARD);
+    list.push_back(UNIT_HERO_TANKER);
+    list.push_back(UNIT_HERO_SKELETON);
+    list.push_back(UNIT_HERO_REAPER);
+//    list.push_back(UNIT_HERO_ENT);
+//    list.push_back(UNIT_HERO_SALAMANDER);
+//    list.push_back(UNIT_HERO_UNDINE);
+//    list.push_back(UNIT_HERO_CRAZY_WEREWOLF);
+//    list.push_back(UNIT_HERO_CRAZY_BEAR);
+//    list.push_back(UNIT_HERO_CRAZY_LION);
+//    list.push_back(UNIT_HERO_LADY_WEREWOLF);
+//    list.push_back(UNIT_HERO_LADY_LION);
+//    list.push_back(UNIT_HERO_LADY_BEAR);
+    return list;
+}
+Color3B HeroPage::getRankColor(int rank){
+    return GM->getRankColor(rank);
 }
 void HeroPage::onHeroWoodChestGachaAgainClick(){
     int woodChestPrice = 60 - 10;
@@ -1845,16 +2353,18 @@ void HeroPage::updateHeroInventorySaveData(){
     for(auto unitInfo: unitInfoListHeroInventory){
         strInventory += strmake("%d/%d_",unitInfo->unitType, unitInfo->level + unitInfo->rank*100);
     }
-    UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory);
+    
+    UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory + "");
+    GM->saveHeroInventory(unitInfoListHeroInventory);
 }
-
 void HeroPage::updateHeroDeckSaveData(){
     std::string strDeck = "_";
     for(auto unitInfo: unitInfoListHeroDeck){
-        strDeck += strmake("%d/%d_",unitInfo->unitType, unitInfo->level + unitInfo->rank*100);
+        strDeck += strmake("%d/%d/%d/%d_",unitInfo->unitType, unitInfo->level + unitInfo->rank*100, (int)unitInfo->x, (int)unitInfo->y);
     }
     
-    UDSetStr(KEY_UNITS_HERO_DECK, strDeck);
+    UDSetStr(KEY_UNITS_HERO_DECK, strDeck + "");
+    GM->saveHeroDeck(unitInfoListHeroDeck);
 }
 void HeroPage::onHeroShopClick(){
     if(this->getChildByName("shopLayer") != nullptr){

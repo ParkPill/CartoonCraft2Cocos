@@ -114,9 +114,9 @@ private:
 public:
     Label* lblCommand;
     Inventory* inventory;
-    cocos2d::Point btnJumpPos;
-    cocos2d::Point btnReloadPos;
-    cocos2d::Point btnWeaponPos;
+    cocos2d::Vec2 btnJumpPos;
+    cocos2d::Vec2 btnReloadPos;
+    cocos2d::Vec2 btnWeaponPos;
     
     Vector<Button*> menus;
     DrawNode* draw;
@@ -124,7 +124,6 @@ public:
     void onDialogDone();
     void showNextTalk();
     void showDialog(std::string str);
-    void facebookSafe(float dt);
     EventListenerKeyboard* listener;
 //    EventListenerTouchOneByOne* touchListener;
     EventListenerTouchAllAtOnce* touchListener;
@@ -168,6 +167,7 @@ public:
     virtual bool init();
     CREATE_FUNC(HudLayer);
     void showTalk(const char* talk);
+    Text* lblVs = nullptr;
 
     void hideTalk();
     Layer* bombLayer;
@@ -197,7 +197,7 @@ public:
     void reduceBulletCount();
     void setBulletCount(int count, int maxCount);
     void keyCollected(int count);
-    void starCollectedFancy(int count, cocos2d::Point collectedPos);
+    void starCollectedFancy(int count, cocos2d::Vec2 collectedPos);
     void starCollected(int count);
     void starChange(float dt);
     void showPauseLayer();
@@ -298,7 +298,7 @@ public:
     void showAchievementComplete(const char* text);
     void achievementEffect(Node* node);
     void nodeMoveDone(Ref* obj);
-    void addHeartAnimated(cocos2d::Point pos);
+    void addHeartAnimated(cocos2d::Vec2 pos);
     void addListener();
     void onStartClick();
     void onSelectClick();
@@ -307,7 +307,6 @@ public:
     void playBackgroundMusicLater(float dt);
     int whereToGo;
     void closeSchedule(float dt);
-    void shareFacebook();
     void showDialog(const char* message, const char* btn1, const char* btn2);
     void messageBoxClosed(Node* sender);
     void recommandCoinShopClosed(Node* sender);
@@ -454,7 +453,7 @@ public:
     
     void showPVP();
     void oneSecUpdate(float dt);
-    void showPotSoul(cocos2d::Point pos);
+    void showPotSoul(cocos2d::Vec2 pos);
     void onPotSoulMoveDone();
     
     bool isSceneChanging = false;
@@ -486,7 +485,7 @@ public:
     
     PPLabel* lblTimer;
     void onOkFromWinPopup(Ref* ref);
-    void arrangeMenu(cocos2d::Point pos);
+    void arrangeMenu(cocos2d::Vec2 pos);
     
     Node* priceInfo = nullptr;
     void showPriceInfo(std::string msg, int gold, int lumber, int food);
@@ -553,5 +552,23 @@ public:
     void setRaid();
     void onNextMatchClick(Ref* ref);
     void onSurrenderClick(Ref* ref);
+    
+    void setPvpUI(int playerHPMax, int enemyHPMax);
+    void updatePvpUI(int playerHP, int enemyHP);
+    ImageView* imgPvpPlayerEnergy;
+    ImageView* imgPvpEnemyEnergy;
+    Text* lblPvpCount;
+    float pvpTimeLeftToStart = 4;
+    float playerHpMax = 0;
+    float enemyHpMax = 0;
+    void onPvpResultOk(Ref* ref);
+    bool isWon = false;
+    void onOpenCampaignChestClick(Ref* ref);
+    void onOkCampaignChestClick();
+    void onOpenCampaignChest();
+    
+    void onOkFromRaidWinPopup(Ref* ref);
+    bool hideIndicatorRequested = false;
+    int offsetRight;
 };
 #endif

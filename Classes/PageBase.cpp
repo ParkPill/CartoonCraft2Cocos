@@ -17,11 +17,16 @@ bool PageBase::init()
     }
     
     size = Director::getInstance()->getWinSize();
-    
+    this->schedule(schedule_selector(PageBase::update), 0.1f);
     log("init done");
     return true;
 }
-
+void PageBase::update(float dt){
+    if(hideIndicatorRequested){
+        hideIndicatorRequested = false;
+        hideIndicator();
+    }
+}
 Node* PageBase::getPopup(){
     if(popupArray.size() > 0){
         return popupArray.at(popupArray.size() - 1);
@@ -54,12 +59,19 @@ void PageBase::showInstanceMessage(std::string msg, int offset){
     lbl->enableShadow();
     lbl->enableOutline(Color4B(28, 28, 28, 255), 3);
     lbl->setTag(77);
-    lbl->setPosition(Point(size.width/2, -100 + offset));
+    lbl->setPosition(Vec2(size.width/2, -100 + offset));
     float dur = 0.3f;
     float distanceToMove = 360;
-    lbl->runAction(Sequence::create(EaseInOut::create(MoveBy::create(dur, Point(0, distanceToMove)), 3), DelayTime::create(2), EaseInOut::create(MoveBy::create(dur, Point(0, -distanceToMove)), 3), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, lbl)), nullptr));
+    lbl->runAction(Sequence::create(EaseInOut::create(MoveBy::create(dur, Vec2(0, distanceToMove)), 3), DelayTime::create(2), EaseInOut::create(MoveBy::create(dur, Vec2(0, -distanceToMove)), 3), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, lbl)), nullptr));
+    
+    Sprite* spt = Sprite::create("whiteBigCircle.png");
+    spt->setColor(Color3B::BLACK);
+    this->addChild(spt, 299);
+    spt->setPosition(lbl->getPosition());
+    spt->setScale(10, 1);
+    spt->setOpacity(150);
+    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(dur, Vec2(0, distanceToMove)), 3), DelayTime::create(2), EaseInOut::create(MoveBy::create(dur, Vec2(0, -distanceToMove)), 3), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, spt)), nullptr));
 }
-
 void PageBase::showIndicator(){
     Button* btn = Button::create("uiBoxSmall.png");
     this->addChild(btn, 1000);
@@ -75,11 +87,21 @@ void PageBase::showIndicator(){
     lbl->setName("lblIndicator");
 }
 void PageBase::hideIndicator(){
+    int counter = 0;
     while(this->getChildByName("btnIndicator") != nullptr){
         this->removeChildByName("btnIndicator");
+        counter++;
+        if(counter > 10){
+            break;
+        }
     }
+    counter = 0;
     while(this->getChildByName("lblIndicator") != nullptr){
         this->removeChildByName("lblIndicator");
+        counter++;
+        if(counter > 10){
+            break;
+        }
     }
 }
 void PageBase::closeThis(){

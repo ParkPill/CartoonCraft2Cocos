@@ -78,6 +78,8 @@ cocos2d::LanguageType LanguageManager::getLanguageType(){
             type = LanguageType::GERMAN;
         }else if(type == LanguageType::FRENCH){
             type = LanguageType::FRENCH;
+        }else if(type == LanguageType::JAPANESE){
+            type = LanguageType::JAPANESE;
         }else{
             type = LanguageType::ENGLISH;
         }
@@ -106,6 +108,8 @@ std::string LanguageManager::getText(std::string textId){
         str = row.at("german").asString();
     }else if (type == LanguageType::TURKISH) {
         str = row.at("turkish").asString();
+    }else if (type == LanguageType::JAPANESE) {
+        str = row.at("japanese").asString();
     }else{
         str = row.at("english").asString();
     }
@@ -182,9 +186,10 @@ void LanguageManager::setLocalizedStringNotKey(Text* lbl, std::string text){
         lbl->setString(text);
         lbl->setFontName(getLocalizedFont());
         lbl->setFontSize(lbl->getFontSize());
-        if (lbl->getOutlineSize() > 0 &&
+        if ((lbl->getOutlineSize() > 0 || lbl->getChildren().size() > 0) &&
             getLanguageType() != LanguageType::KOREAN &&
-            getLanguageType() != LanguageType::ENGLISH && lbl->getChildren().size() == 0) {
+            getLanguageType() != LanguageType::ENGLISH) {
+            lbl->removeAllChildren();
             int outlineSize= lbl->getOutlineSize()*0.5f;
             Text* lblClone = (Text*)lbl->clone();
             lbl->addChild(lblClone, -1);
@@ -206,24 +211,6 @@ void LanguageManager::setLocalizedStringNotKey(Text* lbl, std::string text){
                 }else if( i == 3){
                     lblClone->setPosition(centerPos + Vec2(0, -outlineSize));
                 }
-//                if( i == 0){
-//                    lblClone->setPosition( Vec2(-outlineSize, 0));
-//                }else if( i == 1){
-//                    lblClone->setPosition( Vec2(outlineSize, 0));
-//                }else if( i == 2){
-//                    lblClone->setPosition(Vec2(0, outlineSize));
-//                }else if( i == 3){
-//                    lblClone->setPosition(Vec2(0, -outlineSize));
-//                }
-//                if( i == 0){
-//                    lblClone->setPosition(lbl->getPosition() + Vec2(-outlineSize, 0));
-//                }else if( i == 1){
-//                    lblClone->setPosition(lbl->getPosition() + Vec2(outlineSize, 0));
-//                }else if( i == 2){
-//                    lblClone->setPosition(lbl->getPosition() + Vec2(0, outlineSize));
-//                }else if( i == 3){
-//                    lblClone->setPosition(lbl->getPosition() + Vec2(0, -outlineSize));
-//                }
                 lblClone->setColor(Color3B::BLACK);
             }
             lbl->setLocalZOrder(lbl->getLocalZOrder() + 1);

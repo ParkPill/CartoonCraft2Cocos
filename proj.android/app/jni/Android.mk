@@ -20,11 +20,13 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/BattleLobby.cpp \
                    $(LOCAL_PATH)/../../../Classes/BuggyServerManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/Cell.h \
+                   $(LOCAL_PATH)/../../../Classes/ChatRoom.cpp \
                    $(LOCAL_PATH)/../../../Classes/EditorHud.cpp \
                    $(LOCAL_PATH)/../../../Classes/EditorWorld.cpp \
                    $(LOCAL_PATH)/../../../Classes/EndingCredit.cpp \
                    $(LOCAL_PATH)/../../../Classes/Enemies.cpp \
                    $(LOCAL_PATH)/../../../Classes/EventInfo.cpp \
+                   $(LOCAL_PATH)/../../../Classes/EventPopup.cpp \
                    $(LOCAL_PATH)/../../../Classes/FindMatch.cpp \
                    $(LOCAL_PATH)/../../../Classes/Fog.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameManager.cpp \
@@ -37,9 +39,13 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/LanguageManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/Laser.cpp \
                    $(LOCAL_PATH)/../../../Classes/LegendDaryButton.cpp \
+                   $(LOCAL_PATH)/../../../Classes/MonthlyEventPopup.cpp \
+                   $(LOCAL_PATH)/../../../Classes/Movable.cpp \
+                   $(LOCAL_PATH)/../../../Classes/MultiplayLobby.cpp \
+                   $(LOCAL_PATH)/../../../Classes/NetworkWebSocket.cpp \
                    $(LOCAL_PATH)/../../../Classes/PPLabel.cpp \
                    $(LOCAL_PATH)/../../../Classes/PageBase.cpp \
-                   $(LOCAL_PATH)/../../../Classes/Movable.cpp \
+                   $(LOCAL_PATH)/../../../Classes/RoulettePopup.cpp \
                    $(LOCAL_PATH)/../../../Classes/ServerManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/ShopLayer.cpp \
                    $(LOCAL_PATH)/../../../Classes/SneakyJoystick.cpp \
@@ -48,7 +54,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Title.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../Classes \
-                    $(LOCAL_PATH)/../../../Classes/plugincafe
+                    $(LOCAL_PATH)/../../../Source
 
 # _COCOS_HEADER_ANDROID_BEGIN
 # _COCOS_HEADER_ANDROID_END

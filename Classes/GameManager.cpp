@@ -1,7 +1,7 @@
 
 #include "GameManager.h"
 #include "LanguageManager.h"
-
+#include "SimpleAudioEngine.h"
 #include "Location_Node_Class.h"
 #include "Node_Class.h"
 #include "BuggyServerManager.h"
@@ -12,7 +12,7 @@
 //#ifdef SDKBOX_ENABLED
 //#include "PluginUnityAds/PluginUnityAds.h"
 //#endif
-
+#include "HeroPage.h"
 #include "Title.h"
 
 #include "Movable.h"
@@ -94,7 +94,6 @@ GameManager::GameManager()
     
     hudLayer = NULL;
     
-    market = MARKET_PLAYSTORE_PAID;
 //    priceArray = __Dictionary::create();
 //    priceArray->retain();
     CCLOG("GameManager almost created");
@@ -299,20 +298,20 @@ const char* GameManager::getWeaponImageFileName(int infoType){
             break;
     }
 }
-double GameManager::getAngle(Point pos1, Point pos2){
+double GameManager::getAngle(Vec2 pos1, Vec2 pos2){
     float xGap = pos1.x - pos2.x;
     float yGap = pos1.y - pos2.y;
     return atan2(yGap, xGap)*180/3.14;
 }
 void GameManager::makeItScaleUpAndDown(Node* node){
-    float duration = 0.3f;
+    float duration = 0.6f;
     node->runAction(RepeatForever::create(Sequence::create(ScaleTo::create(duration, 1.1f), ScaleTo::create(duration, 0.9f), NULL)));
 }
-void GameManager::makeItSiluk(Node* node){
+void GameManager::makeItSiluk(Node* node, float delay, float dur){
     float originalScaleX = node->getScaleX();
     float originalScaleY = node->getScaleY();
     
-    float duration = 0.3f;
+    float duration = dur;
     float scaleBit;
     if(node->getContentSize().width > node->getContentSize().height){
         scaleBit = node->getContentSize().height*0.05;
@@ -320,6 +319,9 @@ void GameManager::makeItSiluk(Node* node){
         scaleBit = node->getContentSize().width*0.05;
     }
     node->runAction(RepeatForever::create(Sequence::create(ScaleTo::create(duration, (1+scaleBit/node->getContentSize().width)*originalScaleX, (1-scaleBit/node->getContentSize().width)*originalScaleY), ScaleTo::create(duration, (1-scaleBit/node->getContentSize().width)*originalScaleX, (1+scaleBit/node->getContentSize().width)*originalScaleY), NULL)));
+}
+void GameManager::makeItSiluk(Node* node){
+    makeItSiluk(node, 0, 0.3f);
 }
 bool GameManager::DoesWeaponExist(int weaponType){
     switch (weaponType) {
@@ -599,68 +601,60 @@ void GameManager::buttonUp(int buttonType)
 
     }
 }
-void GameManager::shakeIt(Node* node){
-    //node->stopAllActionsByTag(ACTION_TAG_ANIMATION);
-    //node->setPosition(Point::ZERO);
-    Sequence* seq = Sequence::create(MoveBy::create(0.05, Point(0.5,0.5)), MoveBy::create(0.05, Point(-1, -0.5)), MoveBy::create(0.03, Point(0.5, 0)), NULL);
-    
-    seq->setTag(ACTION_TAG_ANIMATION);
-    node->runAction(seq);
-}
 const char* GameManager::getAchievementId(int achievementIndex){
-    if (GameManager::getInstance()->market == MARKET_APPSTORE_PAID ||
-        GameManager::getInstance()->market == MARKET_APPSTORE_FREE) {
-        
-        switch (achievementIndex) {
-            case ACHIEVEMENT_COMPLETE_TUTORIAL:
-                return "starcollecter";
-            case ACHIEVEMENT_BEAT_BOSS:
-                return "brkeeper";
-            case ACHIEVEMENT_OPEN_GOLD_SUITCASE:
-                return "brfirstfruit";
-            case ACHIEVEMENT_PERFECT_SCORE:
-                return "brrichman";
-            case ACHIEVEMENT_WHO_IS_THE_HOOD :
-                return "brkiller";
-            case ACHIEVEMENT_WEAPON_MASTER:
-                return "brangrykettel";
-            case ACHIEVEMENT_DUNGEON_MASTER:
-                return "brwhosboss";
-            case ACHIEVEMENT_WHERE_IS_THE_PRINCESS:
-                return "brweaponmaster";
-            case ACHIEVEMENT_OPEN_JEWELRY_BOX:
-                return "brleadership";
-            case ACHIEVEMENT_COLLECT_RELICS:
-                return "belegendary";
-            default:
-                break;
-        }
-    }else{
-        switch (achievementIndex) {
-            case ACHIEVEMENT_COMPLETE_TUTORIAL:
-                return "CgkIjOjFydEdEAIQAQ";
-            case ACHIEVEMENT_BEAT_BOSS:
-                return "CgkIjOjFydEdEAIQAg";
-            case ACHIEVEMENT_OPEN_GOLD_SUITCASE:
-                return "CgkIjOjFydEdEAIQAw";
-            case ACHIEVEMENT_PERFECT_SCORE:
-                return "CgkIjOjFydEdEAIQBA";
-            case ACHIEVEMENT_WHO_IS_THE_HOOD :
-                return "CgkIjOjFydEdEAIQBQ";
-            case ACHIEVEMENT_WEAPON_MASTER:
-                return "CgkIjOjFydEdEAIQBg";
-            case ACHIEVEMENT_DUNGEON_MASTER:
-                return "CgkIjOjFydEdEAIQBw";
-            case ACHIEVEMENT_WHERE_IS_THE_PRINCESS:
-                return "CgkIjOjFydEdEAIQCA";
-            case ACHIEVEMENT_OPEN_JEWELRY_BOX:
-                return "CgkIjOjFydEdEAIQCQ";
-            case ACHIEVEMENT_COLLECT_RELICS:
-                return "CgkIjOjFydEdEAIQCg";
-            default:
-                break;
-        }
-    }
+//    if (GameManager::getInstance()->market == MARKET_APPSTORE_PAID ||
+//        GameManager::getInstance()->market == MARKET_APPSTORE_FREE) {
+//        
+//        switch (achievementIndex) {
+//            case ACHIEVEMENT_COMPLETE_TUTORIAL:
+//                return "starcollecter";
+//            case ACHIEVEMENT_BEAT_BOSS:
+//                return "brkeeper";
+//            case ACHIEVEMENT_OPEN_GOLD_SUITCASE:
+//                return "brfirstfruit";
+//            case ACHIEVEMENT_PERFECT_SCORE:
+//                return "brrichman";
+//            case ACHIEVEMENT_WHO_IS_THE_HOOD :
+//                return "brkiller";
+//            case ACHIEVEMENT_WEAPON_MASTER:
+//                return "brangrykettel";
+//            case ACHIEVEMENT_DUNGEON_MASTER:
+//                return "brwhosboss";
+//            case ACHIEVEMENT_WHERE_IS_THE_PRINCESS:
+//                return "brweaponmaster";
+//            case ACHIEVEMENT_OPEN_JEWELRY_BOX:
+//                return "brleadership";
+//            case ACHIEVEMENT_COLLECT_RELICS:
+//                return "belegendary";
+//            default:
+//                break;
+//        }
+//    }else{
+//        switch (achievementIndex) {
+//            case ACHIEVEMENT_COMPLETE_TUTORIAL:
+//                return "CgkIjOjFydEdEAIQAQ";
+//            case ACHIEVEMENT_BEAT_BOSS:
+//                return "CgkIjOjFydEdEAIQAg";
+//            case ACHIEVEMENT_OPEN_GOLD_SUITCASE:
+//                return "CgkIjOjFydEdEAIQAw";
+//            case ACHIEVEMENT_PERFECT_SCORE:
+//                return "CgkIjOjFydEdEAIQBA";
+//            case ACHIEVEMENT_WHO_IS_THE_HOOD :
+//                return "CgkIjOjFydEdEAIQBQ";
+//            case ACHIEVEMENT_WEAPON_MASTER:
+//                return "CgkIjOjFydEdEAIQBg";
+//            case ACHIEVEMENT_DUNGEON_MASTER:
+//                return "CgkIjOjFydEdEAIQBw";
+//            case ACHIEVEMENT_WHERE_IS_THE_PRINCESS:
+//                return "CgkIjOjFydEdEAIQCA";
+//            case ACHIEVEMENT_OPEN_JEWELRY_BOX:
+//                return "CgkIjOjFydEdEAIQCQ";
+//            case ACHIEVEMENT_COLLECT_RELICS:
+//                return "CgkIjOjFydEdEAIQCg";
+//            default:
+//                break;
+//        }
+//    }
     return "";
 }
 void GameManager::saveCoin()
@@ -733,6 +727,7 @@ void GameManager::addCoin(int howMuch){
     int coin = getCoin();
     coin += howMuch;
     UserDefault::getInstance()->setIntegerForKey(KEY_COIN_COUNT, coin);
+    BSM->shouldSaveGold = true;
 //    int one = (char)c0;
 //    int ten = (char)c1;
 //    int hun = (char)c2;
@@ -812,24 +807,30 @@ int GameManager::getSoul(){
 void GameManager::addGem(int howMuch){
     int gem = getGem();
     gem += howMuch;
+    lastGem = gem;
     UDSetInt(KEY_GEM_COUNT, gem);
+    BSM->shouldSaveGem = true;
 }
 void GameManager::setGem(int howMuch){
+    lastGem = howMuch;
     UD->setIntegerForKey(KEY_GEM_COUNT, howMuch);
 }
-
 int GameManager::getGem(){
-    return UD->getIntegerForKey(KEY_GEM_COUNT, 0);
+    int gem = UD->getIntegerForKey(KEY_GEM_COUNT, 0);
+    if(lastGem < gem && gem > 100000){
+//        BSM->banMe();
+    }
+    return gem;
 }
 void GameManager::addTree(int howMuch){
     int tree = getTree();
     tree += howMuch;
     UDSetInt(KEY_TREE_COUNT, tree);
+    BSM->shouldSaveLumber = true;
 }
 void GameManager::setTree(int howMuch){
     UDSetInt(KEY_TREE_COUNT, howMuch);
 }
-
 int GameManager::getTree(){
     return UDGetInt(KEY_TREE_COUNT, 0);
 }
@@ -1048,9 +1049,9 @@ void GameManager::makeLabelEllipsis(Label* lbl, float width){
         lbl->setString(originalStr.substr(0, index) + "...");
     }
 }
-Point GameManager::getGemCountPosition(){
-    Size size = Director::getInstance()->getWinSize();
-    return Point(size.width/2 + 190, size.height - 30);
+Vec2 GameManager::getGemCountPosition(){
+    cocos2d::Size size = Director::getInstance()->getWinSize();
+    return Vec2(size.width/2 + 190, size.height - 30);
 }
 
 
@@ -1270,7 +1271,7 @@ void GameManager::showSpriteExplosion(Node* parent, const char* sptName, Vec2 po
         spt->runAction(Sequence::create(DelayTime::create(dur*2/3), FadeOut::create(dur/3), SPT_REMOVE_FUNC, NULL));
     }
 }
-void GameManager::showParticleExplosion(Node* prt, const char* sptName, Point pos, float scale){
+void GameManager::showParticleExplosion(Node* prt, const char* sptName, Vec2 pos, float scale){
     ParticleExplosion* particle = ParticleExplosion::create();
     particle->setPosition(pos);        // 위치
     particle->setLife(0.4*scale);                          // 지속시간
@@ -1322,7 +1323,7 @@ void GameManager::animateFadeIn(Node* layer, Node* parent){
     layer->setScale(0.1f);
     layer->runAction(Sequence::create(ScaleTo::create(0.2, 1.1), ScaleTo::create(0.05, 0.95),ScaleTo::create(0.05, 1), NULL));
     
-    Size size = Director::getInstance()->getWinSize();
+    
     Sprite* blackBack = Sprite::create("whiteRect.png");
     parent->addChild(blackBack, 999);
     blackBack->setOpacity(0.6f);
@@ -1330,7 +1331,7 @@ void GameManager::animateFadeIn(Node* layer, Node* parent){
     blackBack->setTag(7899);
     blackBack->setScaleX(size.width);
     blackBack->setScaleY(size.height);
-    blackBack->setPosition(Point(size.width/2, size.height/2));
+    blackBack->setPosition(Vec2(size.width/2, size.height/2));
 }
 void GameManager::animateFadeOut(Node* layer){
 //    layer->setScale(0.1f);
@@ -1592,6 +1593,9 @@ void GameManager::showVideo(int whichVideo){
     }else if(whichVideo == VIDEO_SHIELD){
 //        GameSharing::logFB("video shield");
         GameSharing::firebaseLog("video", "shield", "");
+    }else if(whichVideo == VIDEO_PVP6_TICKET || whichVideo == VIDEO_PVP12_TICKET){
+        //        GameSharing::logFB("video shield");
+        GameSharing::firebaseLog("video", "pvp", "");
     }
 //    NativeInterface::NativeInterface::showUnityAdsVideo();
     GameSharing::showRewardedVideoAds(); // test
@@ -1621,6 +1625,10 @@ void GameManager::showVideoDone(){
              videoIndex == VIDEO_SUPPORT_1 ||
              videoIndex == VIDEO_SUPPORT_2){
         getHudLayer()->videoDone();
+    }else if(videoIndex == VIDEO_PVP6_TICKET || videoIndex == VIDEO_PVP12_TICKET){
+        if(heroPage){
+            HEROPAGE->onPvpTicketVideoDone();
+        }
     }
     
 //    ((TitleLayer*)titleLayer)->showVideoDone();
@@ -1711,7 +1719,7 @@ RenderTexture* GameManager::createAdditiveBorder( Sprite* label, int size, Color
                                                   label->getTexture()->getContentSize().height+size * 2
                                                   );
     
-    Point originalPos = label->getPosition();
+    Vec2 originalPos = label->getPosition();
     
     Color3B originalColor = label->getColor();
     
@@ -1730,23 +1738,23 @@ RenderTexture* GameManager::createAdditiveBorder( Sprite* label, int size, Color
     ccBlendFunc bf = {GL_SRC_ALPHA, GL_ONE}; // GL_SRC_ALPHA for glow effect
     label->setBlendFunc(bf);
     
-    Point bottomLeft = Point(
+    Vec2 bottomLeft = Vec2(
                              label->getTexture()->getContentSize().width * label->getAnchorPoint().x + size,
                              label->getTexture()->getContentSize().height * label->getAnchorPoint().y + size);
     
-    Point positionOffset= Point(
+    Vec2 positionOffset= Vec2(
                                 label->getTexture()->getContentSize().width  * label->getAnchorPoint().x - label->getTexture()->getContentSize().width / 2,
                                 label->getTexture()->getContentSize().height * label->getAnchorPoint().y - label->getTexture()->getContentSize().height / 2);
     
     
-    Point position = ccpSub(originalPos, positionOffset);
+    Vec2 position = ccpSub(originalPos, positionOffset);
     
     //rt->getSprite()->getTexture()->setAntiAliasTexParameters();
     rt->begin();
     
     for (int i=0; i<360; i+= 15) // you should optimize that for your needs
     {
-        label->setPosition(Point(bottomLeft.x + sin(CC_DEGREES_TO_RADIANS(i))*size, bottomLeft.y + cos(CC_DEGREES_TO_RADIANS(i))*size)
+        label->setPosition(Vec2(bottomLeft.x + sin(CC_DEGREES_TO_RADIANS(i))*size, bottomLeft.y + cos(CC_DEGREES_TO_RADIANS(i))*size)
                            );
         label->visit();
     }
@@ -1769,7 +1777,7 @@ RenderTexture* GameManager::createAdditive( Sprite* label, Color3B color, GLubyt
     RenderTexture* rt = RenderTexture::create(label->getTexture()->getContentSize().width ,
                                                   label->getTexture()->getContentSize().height);
     
-    Point originalPos = label->getPosition();
+    Vec2 originalPos = label->getPosition();
     
     Color3B originalColor = label->getColor();
     
@@ -1788,21 +1796,21 @@ RenderTexture* GameManager::createAdditive( Sprite* label, Color3B color, GLubyt
     ccBlendFunc bf = {GL_SRC_ALPHA, GL_ONE}; // GL_SRC_ALPHA for glow effect
     label->setBlendFunc(bf);
     
-    Point bottomLeft = Point(
+    Vec2 bottomLeft = Vec2(
                              label->getTexture()->getContentSize().width * label->getAnchorPoint().x,
                              label->getTexture()->getContentSize().height * label->getAnchorPoint().y);
     
-    Point positionOffset= Point(
+    Vec2 positionOffset= Vec2(
                                 label->getTexture()->getContentSize().width  * label->getAnchorPoint().x - label->getTexture()->getContentSize().width / 2,
                                 label->getTexture()->getContentSize().height * label->getAnchorPoint().y - label->getTexture()->getContentSize().height / 2);
     
     
-    Point position = originalPos - positionOffset;
+    Vec2 position = originalPos - positionOffset;
     
     //rt->getSprite()->getTexture()->setAntiAliasTexParameters();
     rt->begin();
     
-    label->setPosition(Point(bottomLeft.x, bottomLeft.y));
+    label->setPosition(Vec2(bottomLeft.x, bottomLeft.y));
     for(int i = 0;i < additiveCount;i++){
         label->visit();
     }
@@ -2254,13 +2262,13 @@ void GameManager::showDisposableMessage(std::string msg, Node* parent){
     
     disposableLabel->setString(msg);
     float labelWidth = disposableLabel->getBoundingBox().size.width;
-    Size size = Director::getInstance()->getWinSize();
+    cocos2d::Size size = Director::getInstance()->getWinSize();
     if (labelWidth > size.width) {
         disposableLabel->setWidth(size.width/disposableLabel->getScale());
     }
     float dur = 3;
     disposableLabel->setPosition(size.width/2 - parent->getPositionX(), size.height/4);
-    disposableLabel->runAction(Sequence::create(MoveBy::create(0.5, Point(0, 10)), DelayTime::create(dur), FadeOut::create(1), CallFuncN::create(CC_CALLBACK_0(Node::removeFromParent, disposableLabel)), NULL));
+    disposableLabel->runAction(Sequence::create(MoveBy::create(0.5, Vec2(0, 10)), DelayTime::create(dur), FadeOut::create(1), CallFuncN::create(CC_CALLBACK_0(Node::removeFromParent, disposableLabel)), NULL));
     lastDisposableLabel = disposableLabel;
     
 //    Sprite* sptDisposableBack = Sprite::create("whiteBigCircle.png");
@@ -2271,7 +2279,7 @@ void GameManager::showDisposableMessage(std::string msg, Node* parent){
 //    sptDisposableBack->setScale(0.8, 0.2);
 //    sptDisposableBack->stopAllActions();
 //    sptDisposableBack->setPosition(disposableLabel->getPosition());
-//    sptDisposableBack->runAction(Sequence::create(MoveBy::create(0.5, Point(0, 10)), DelayTime::create(dur), FadeOut::create(0.3), NULL));
+//    sptDisposableBack->runAction(Sequence::create(MoveBy::create(0.5, Vec2(0, 10)), DelayTime::create(dur), FadeOut::create(0.3), NULL));
 //    lastDisposableLabelBack = sptDisposableBack;
 }
 bool GameManager::isCharacterPurchased(int character){
@@ -2432,7 +2440,7 @@ const char* GameManager::getFoodSpriteName(int food){
 }
 
 void GameManager::scrollTheLayer(ui::ScrollView* scrollLayer, bool isLeft, bool isHorizontal, int howMuch){
-    Point pos;
+    Vec2 pos;
     if(isHorizontal){
         float x = scrollLayer->getInnerContainer()->getPosition().x + scrollLayer->getContentSize().width*(isLeft?1:-1)*howMuch;
         if(x > 0){
@@ -2440,7 +2448,7 @@ void GameManager::scrollTheLayer(ui::ScrollView* scrollLayer, bool isLeft, bool 
         }else if(x < -(scrollLayer->getInnerContainerSize().width - scrollLayer->getContentSize().width)){
             x = -(scrollLayer->getInnerContainerSize().width - scrollLayer->getContentSize().width);
         }
-        scrollLayer->getInnerContainer()->runAction(MoveTo::create(0.3, Point(x, scrollLayer->getInnerContainer()->getPosition().y)));
+        scrollLayer->getInnerContainer()->runAction(MoveTo::create(0.3, Vec2(x, scrollLayer->getInnerContainer()->getPosition().y)));
     }else{
         
     }
@@ -2479,27 +2487,27 @@ void GameManager::setFontSize(Label* lbl, float size){
     lbl->setTTFConfig(config);
 }
 
-void GameManager::showWaiting(Node* parent, Size size){
+void GameManager::showWaiting(Node* parent, cocos2d::Size size){
     Layout* intersectionLayer = Layout::create();
     intersectionLayer->setTouchEnabled(true);
     intersectionLayer->setContentSize(size);
     Button* background = Button::create("1506_logoBackground.png");
-    background->setPosition(Point(size.width/2, size.height/2));
+    background->setPosition(Vec2(size.width/2, size.height/2));
     background->setScaleX(size.width/background->getContentSize().width);
     background->setScaleY(size.height/background->getContentSize().height);
     intersectionLayer->addChild(background);
     background->setOpacity(180);
     
     Sprite* spt = Sprite::create("flyingDary.png");
-    Point sptPos = Point(size.width/2, size.height/2 + 100);
+    Vec2 sptPos = Vec2(size.width/2, size.height/2 + 100);
     spt->setPosition(sptPos);
     intersectionLayer->addChild(spt);
     float dur = 0.3f;
-    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(dur, Point(0, 10)), MoveBy::create(dur, Point(0, -10)), NULL)));
+    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(dur, Vec2(0, 10)), MoveBy::create(dur, Vec2(0, -10)), NULL)));
     
     Label* lblTip = Label::createWithTTF("Please, wait...", GameManager::getInstance()->getFont(FONT_DEFAULT), 25);
     intersectionLayer->addChild(lblTip);
-    Point lblPos = Point(size.width/2, size.height/2 - 60);
+    Vec2 lblPos = Vec2(size.width/2, size.height/2 - 60);
     lblTip->setPosition(lblPos);
     lblTip->setAlignment(TextHAlignment::CENTER, TextVAlignment::TOP);
     
@@ -2518,7 +2526,7 @@ void GameManager::setWeaponCollected(int index){
 }
 
 Node* GameManager::findUp(Node* currentNode){
-    Point pos = currentNode->getPosition();
+    Vec2 pos = currentNode->getPosition();
     int unit = 10;
     Node* nodeFound = findWithDirect(pos, DIRECTION_UP, currentNode);
     if(nodeFound != nullptr) return nodeFound;
@@ -2536,7 +2544,7 @@ Node* GameManager::findUp(Node* currentNode){
     return nodeFound;
 }
 Node* GameManager::findDown(Node* currentNode){
-    Point pos = currentNode->getPosition();
+    Vec2 pos = currentNode->getPosition();
     int unit = 10;
     Node* nodeFound = findWithDirect(pos, DIRECTION_DOWN, currentNode);
     if(nodeFound != nullptr) return nodeFound;
@@ -2554,7 +2562,7 @@ Node* GameManager::findDown(Node* currentNode){
     return nodeFound;
 }
 Node* GameManager::findLeft(Node* currentNode){
-    Point pos = currentNode->getPosition();
+    Vec2 pos = currentNode->getPosition();
     int unit = 10;
     Node* nodeFound = findWithDirect(pos, DIRECTION_LEFT, currentNode);
     if(nodeFound != nullptr) return nodeFound;
@@ -2572,7 +2580,7 @@ Node* GameManager::findLeft(Node* currentNode){
     return nodeFound;
 }
 Node* GameManager::findRight(Node* currentNode){
-    Point pos = currentNode->getPosition();
+    Vec2 pos = currentNode->getPosition();
     int unit = 10;
     Node* nodeFound = findWithDirect(pos, DIRECTION_RIGHT, currentNode);
     if(nodeFound != nullptr) return nodeFound;
@@ -2590,9 +2598,9 @@ Node* GameManager::findRight(Node* currentNode){
     return nodeFound;
 }
 
-Node* GameManager::findWithDirect(Point pos, int direction, Node* currentNode){
+Node* GameManager::findWithDirect(Vec2 pos, int direction, Node* currentNode){
     Node* currentPanel = currentNode->getParent();
-    Point findingPos = Point(pos.x, pos.y);
+    Vec2 findingPos = Vec2(pos.x, pos.y);
     int unit = 10;
     Node* nodeFound = nullptr;
     while(true){
@@ -2612,7 +2620,7 @@ Node* GameManager::findWithDirect(Point pos, int direction, Node* currentNode){
     }
     return nodeFound;
 }
-Node* GameManager::getNodeAtThisPoint(Point pos, Node* currentNode){
+Node* GameManager::getNodeAtThisPoint(Vec2 pos, Node* currentNode){
     Node* currentPanel = currentNode->getParent();
     int unitTagLimit = 101;
     for (auto child: currentPanel->getChildren()){
@@ -2657,8 +2665,15 @@ bool GameManager::isAdsUser(){
 //    return true; // test
 }
     
-PointArray* GameManager::getPath(cocos2d::Point start, cocos2d::Point end){
+PointArray* GameManager::getPath(cocos2d::Vec2 start, cocos2d::Vec2 end){
 //    log("start get path");
+//    return PointArray::create(100); // test
+//    PointArray* ar = PointArray::create(2);
+//    ar->addControlPoint(start);
+//    ar->addControlPoint(end);
+//    return  ar;
+    // stage 4.tmx test
+    getPathCall++;
     deque<Cell*> _result = astar->getPath(start.x, start.y, end.x, end.y);
     PointArray* pointArray = PointArray::create(_result.size());
     if(_result.size() == 1){
@@ -2740,7 +2755,7 @@ void GameManager::setPathState(int x, int y, int state){
 //    }
 //    log("x: %d, y: %d, index: %d, state: %d", x, y, x + y*(int)mapSize.width, state);
 }
-PointArray* GameManager::getPathOld(cocos2d::Point start, cocos2d::Point end){
+PointArray* GameManager::getPathOld(cocos2d::Vec2 start, cocos2d::Vec2 end){
 //    testStartPos = start; // test
 //    testEndPos = end;
     
@@ -2832,7 +2847,7 @@ PointArray* GameManager::getPathOld(cocos2d::Point start, cocos2d::Point end){
                 while(true){
 //                    if(x == pathEnd.x && y == pathEnd.y){
 //                        isPathFound = true;
-//                        finalEnd = Point(x, y);
+//                        finalEnd = Vec2(x, y);
 //                        log("path found!");
 //                        break;
 //                    }
@@ -2896,7 +2911,7 @@ PointArray* GameManager::getPathOld(cocos2d::Point start, cocos2d::Point end){
     PointArray* array = PointArray::create(xList.size());
     
     for (int i = 0; i < xList.size(); i++) {
-        array->addControlPoint(Point(xList.at(i), yList.at(i)));
+        array->addControlPoint(Vec2(xList.at(i), yList.at(i)));
     }
     
     xList.clear();
@@ -2938,7 +2953,7 @@ void GameManager::inspectSurroundedStack(){
     //    int blockIndex =x + y*mapSize.width;
     if(x == pathEnd.x && y == pathEnd.y){
         isPathFound = true;
-        finalEnd = Point(x, y);
+        finalEnd = Vec2(x, y);
 //        log("path found!");
         return;
     }
@@ -3042,7 +3057,7 @@ void GameManager::inspectSurroundedNew(int x, int y, int distanceFromStart){
     //    int blockIndex =x + y*mapSize.width;
     if(x == pathEnd.x && y == pathEnd.y){
         isPathFound = true;
-        finalEnd = Point(x, y);
+        finalEnd = Vec2(x, y);
         log("path found!");
         return;
     }
@@ -3305,18 +3320,18 @@ void GameManager::inspectSurrounded(int x, int y, int distanceFromStart){
                     blockStateFromStart[inspectingX][inspectingY] = distanceFromStart + distanceFromLast;
                     blockStateLastPosition[inspectingX][inspectingY] = direction;
                     
-//                    WORLD->draw->drawLine(Point(i*TILE_SIZE, j*TILE_SIZE), Point(i*TILE_SIZE, j*TILE_SIZE) + directionPos, Color4F::RED);
+//                    WORLD->draw->drawLine(Vec2(i*TILE_SIZE, j*TILE_SIZE), Vec2(i*TILE_SIZE, j*TILE_SIZE) + directionPos, Color4F::RED);
                 }
             }else if (inspectedBlockState == ASTAR_STATE_INIT) {
                 blockState[inspectingX][inspectingY] = ASTAR_STATE_OPEN;
                 blockStateFromStart[inspectingX][inspectingY] = distanceFromStart + distanceFromLast;
                 blockStateLastPosition[inspectingX][inspectingY] = direction;
                 
-//                WORLD->draw->drawLine(getTilePosition(x+i, y+j) + Point(0, 5), getTilePosition(x+i, y+j) + Point(0, 5) + directionPos, Color4F::BLUE);
+//                WORLD->draw->drawLine(getTilePosition(x+i, y+j) + Vec2(0, 5), getTilePosition(x+i, y+j) + Vec2(0, 5) + directionPos, Color4F::BLUE);
             }
             
             if(tempX + tempY < 2){
-                finalEnd = Point(x + i, y + j);
+                finalEnd = Vec2(x + i, y + j);
                 isPathFound = true;
                 concluded = true;
                 break;
@@ -3366,39 +3381,39 @@ void GameManager::drawPath(){
     for (int i = 0; i < mapSize.width; i++) {
         for (int j = 0; j < mapSize.height; j++) {
             int direction = blockStateLastPosition[i][j];
-            Point directionPos;
+            Vec2 directionPos;
             if (direction == 0) {
-                directionPos = Point(0, 1);
+                directionPos = Vec2(0, 1);
             }
             if (direction == 1) {
-                directionPos = Point(0, -3);
+                directionPos = Vec2(0, -3);
             }
             if (direction == 2) {
-                directionPos = Point(-3, -3);
+                directionPos = Vec2(-3, -3);
             }
             if (direction == 3) {
-                directionPos = Point(-3, 0);
+                directionPos = Vec2(-3, 0);
             }
             if (direction == 4) {
-                directionPos = Point(-3, 3);
+                directionPos = Vec2(-3, 3);
             }
             if (direction == 5) {
-                directionPos = Point(0, 3);
+                directionPos = Vec2(0, 3);
             }
             if (direction == 6) {
-                directionPos = Point(3, 3);
+                directionPos = Vec2(3, 3);
             }
             if (direction == 7) {
-                directionPos = Point(3, 0);
+                directionPos = Vec2(3, 0);
             }
             if (direction == 8) {
-                directionPos = Point(3, -3);
+                directionPos = Vec2(3, -3);
             }
             
-            Point center = Point(i*TILE_SIZE + TILE_SIZE/2, (mapSize.width-j-1)*TILE_SIZE) + Point(0, TILE_SIZE/2);
+            Vec2 center = Vec2(i*TILE_SIZE + TILE_SIZE/2, (mapSize.width-j-1)*TILE_SIZE) + Vec2(0, TILE_SIZE/2);
             int state = blockState[i][j];
             if (state == ASTAR_STATE_OPEN || state == ASTAR_STATE_CLOSE) {
-//                Point center = WORLD->getTilePosition(Point(i, j));
+//                Vec2 center = WORLD->getTilePosition(Vec2(i, j));
                 WORLD->draw->drawLine(center, center + directionPos*15, Color4F::WHITE);
                 WORLD->draw->drawCircle(center, 25, 360, 20, false, 1, 1, Color4F::BLUE);
             }else if(state == ASTAR_STATE_DEAD_END){
@@ -3413,18 +3428,27 @@ void GameManager::alignToCenter(Node* node0, Node* node1, float gap, float cente
     node0->setPositionX(centerX - totalWidth/2 + node0->getContentSize().width*node0->getScaleX()/2 + offsetX);
     node1->setPositionX(centerX - totalWidth/2 + node0->getContentSize().width*node0->getScaleX() + gap + node1->getContentSize().width*node1->getScaleX()/2 + offsetX);
 }
+void GameManager::shakeIt(Node* node){
+    //node->stopAllActionsByTag(ACTION_TAG_ANIMATION);
+    //node->setPosition(Vec2::ZERO);
+    float shakeWidth = node->getContentSize().width*0.05f;
+    Sequence* seq = Sequence::create(MoveBy::create(0.05, Vec2(shakeWidth, shakeWidth)), MoveBy::create(0.05, Vec2(-shakeWidth*2, -shakeWidth)), MoveBy::create(0.03, Vec2(shakeWidth*1.5f, 0)), MoveBy::create(0.05, Vec2(-shakeWidth, shakeWidth)), MoveBy::create(0.05, Vec2(shakeWidth*1.5f, -shakeWidth)), MoveBy::create(0.03, Vec2(shakeWidth*-0.5f, 0)), NULL);
+    
+    seq->setTag(ACTION_TAG_ANIMATION);
+    node->runAction(seq);
+}
 void GameManager::shakeIt(Node* node, float shakeWidth, int shakeCount, float shakeTime){
     Vector<FiniteTimeAction*> array;
-    array.pushBack(MoveBy::create(shakeTime, Point(-shakeWidth/2, 0)));
+    array.pushBack(MoveBy::create(shakeTime, Vec2(-shakeWidth/2, 0)));
     for (int i = 0; i < shakeCount; i++) {
-        array.pushBack(MoveBy::create(shakeTime, Point(shakeWidth, 0)));
-        array.pushBack(MoveBy::create(shakeTime, Point(-shakeWidth, 0)));
+        array.pushBack(MoveBy::create(shakeTime, Vec2(shakeWidth, 0)));
+        array.pushBack(MoveBy::create(shakeTime, Vec2(-shakeWidth, 0)));
     }
-    array.pushBack(MoveBy::create(shakeTime, Point(shakeWidth/2, 0)));
+    array.pushBack(MoveBy::create(shakeTime, Vec2(shakeWidth/2, 0)));
     node->runAction(Sequence::create(array));
 }
-cocos2d::Point GameManager::getRandomPosInCicle(cocos2d::Point center, float radius){
-    return center + Point(cos((rand()%360)*3.14f/180)*radius, sin((rand()%360)*3.14f/180)*radius);
+cocos2d::Vec2 GameManager::getRandomPosInCicle(cocos2d::Vec2 center, float radius){
+    return center + Vec2(cos((rand()%360)*3.14f/180)*radius, sin((rand()%360)*3.14f/180)*radius);
 }
 
 void GameManager::setTimeLeft(Label* lbl, int time){
@@ -3891,6 +3915,36 @@ std::string GameManager::getSpineFileName(int unitType){
         return "salamander";
     }else if(unitType == UNIT_HERO_UNDINE){
         return "undine";
+    }else if(unitType == UNIT_HERO_SANTA){
+        return "santa";
+    }else if(unitType == UNIT_HERO_RUDOLPH){
+        return "rudolph";
+    }else if(unitType == UNIT_HERO_SANTADOG){
+        return "santadog";
+    }else if(unitType == UNIT_HERO_PENGUIN){
+        return "penguin";
+    }else if(unitType == UNIT_HERO_LADY_WEREWOLF){
+        return "werewolfFemale";
+    }else if(unitType == UNIT_HERO_CATINBOOTS){
+        return "catinboots";
+    }else if(unitType == UNIT_HERO_LADY_BEAR){
+        return "ladybear";
+    }else if(unitType == UNIT_HERO_MOLE){
+        return "mole";
+    }else if(unitType == UNIT_HERO_LADY_LION){
+        return "femaleLion";
+    }else if(unitType == UNIT_HERO_TOYMOUSE){
+        return "robotMouse";
+    }else if(unitType == UNIT_HERO_SAVAGEARCHER){
+        return "savageArcher";
+    }else if(unitType == UNIT_HERO_BATMONSTER){
+        return "batmonster";
+    }else if(unitType == UNIT_HERO_MEMEAT){
+        return "green_meat";
+    }else if(unitType == UNIT_HERO_PARASITE){
+        return "parasite";
+    }else if(unitType == UNIT_HERO_WATERMELON){
+        return "watermelon";
     }
     
     return "";
@@ -4008,10 +4062,34 @@ std::string GameManager::getUnitName(int index){
         return "hero reaper";
     }else if(index == UNIT_HERO_ENT){
         return "hero ent";
+    }else if(index == UNIT_HERO_SANTA){
+        return "hero santa";
     }else if(index == UNIT_HERO_SALAMANDER){
         return "hero salamander";
     }else if(index == UNIT_HERO_UNDINE){
         return "hero undine";
+    }else if(index == UNIT_HERO_RUDOLPH){
+        return "hero rudolph";
+    }else if(index == UNIT_HERO_SANTADOG){
+        return "hero santadog";
+    }else if(index == UNIT_HERO_PENGUIN){
+        return "hero penguin";
+    }else if(index == UNIT_HERO_CATINBOOTS){
+        return "hero catinboots";
+    }else if(index == UNIT_HERO_MOLE){
+        return "hero mole";
+    }else if(index == UNIT_HERO_TOYMOUSE){
+        return "hero toymouse";
+    }else if(index == UNIT_HERO_SAVAGEARCHER){
+        return "hero savagearcher";
+    }else if(index == UNIT_HERO_BATMONSTER){
+        return "hero batmonster";
+    }else if(index == UNIT_HERO_MEMEAT){
+        return "hero memeat";
+    }else if(index == UNIT_HERO_PARASITE){
+        return "hero parasite";
+    }else if(index == UNIT_HERO_WATERMELON){
+        return "hero watermelon";
     }
     return "worker";
 }
@@ -4111,8 +4189,8 @@ void GameManager::onRestored(std::string strSkuID){
     
 void GameManager::rollOpenScroll(ImageView* imgBack){
     float originalWidth = imgBack->getContentSize().width;
-    imgBack->setContentSize(Size(308, imgBack->getContentSize().height));
-    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, Size(originalWidth, imgBack->getContentSize().height)), 2));
+    imgBack->setContentSize(cocos2d::Size(308, imgBack->getContentSize().height));
+    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, cocos2d::Size(originalWidth, imgBack->getContentSize().height)), 2));
     
     for(auto child : imgBack->getParent()->getChildren()){
         if(child == imgBack || child->getName().compare("btnBlock") == 0) continue;
@@ -4221,26 +4299,38 @@ int GameManager::getElement(int unit){
        unit == UNIT_HERO_CRAZY_WEREWOLF ||
        unit == UNIT_HERO_LADY_WEREWOLF ||
        unit == UNIT_HERO_TANKER ||
+       unit == UNIT_HERO_MOLE ||
        unit == UNIT_HERO_ENT){
         return ELEMENT_GROUND;
     }else if(unit == UNIT_HERO_LIZARDMAN ||
              unit == UNIT_HERO_SPEARMAN ||
              unit == UNIT_HERO_ASSASSIN ||
-             unit == UNIT_HERO_UNDINE){
+             unit == UNIT_HERO_LADY_BEAR ||
+             unit == UNIT_HERO_LADY_LION ||
+             unit == UNIT_HERO_SANTA ||
+             unit == UNIT_HERO_UNDINE||
+             unit == UNIT_HERO_PENGUIN ||
+             unit == UNIT_HERO_SAVAGEARCHER){
         return ELEMENT_WATER;
     }else if(unit == UNIT_HERO_GOBLIN ||
              unit == UNIT_HERO_BEAR ||
              unit == UNIT_HERO_LION ||
-             unit == UNIT_HERO_CRAZY_BEAR ||
-             unit == UNIT_HERO_CRAZY_LION ||
-             unit == UNIT_HERO_LADY_BEAR ||
-             unit == UNIT_HERO_LADY_LION ||
              unit == UNIT_HERO_WIZARD ||
-             unit == UNIT_HERO_SALAMANDER){
+             unit == UNIT_HERO_SANTADOG ||
+             unit == UNIT_HERO_CATINBOOTS ||
+             unit == UNIT_HERO_SALAMANDER ||
+             unit == UNIT_HERO_TOYMOUSE ||
+             unit == UNIT_HERO_BATMONSTER){
         return ELEMENT_FIRE;
     }else if(unit == UNIT_HERO_ORC ||
              unit == UNIT_HERO_FIGHTER ||
-             unit == UNIT_HERO_KNIGHT){
+             unit == UNIT_HERO_CRAZY_BEAR ||
+             unit == UNIT_HERO_CRAZY_LION ||
+             unit == UNIT_HERO_RUDOLPH ||
+             unit == UNIT_HERO_MEMEAT ||
+             unit == UNIT_HERO_KNIGHT ||
+             unit == UNIT_HERO_PARASITE ||
+             unit == UNIT_HERO_WATERMELON){
         return ELEMENT_LIGHTNING;
     }else if(unit == UNIT_HERO_SKELETON ||
              unit == UNIT_HERO_REAPER){
@@ -4274,4 +4364,523 @@ void GameManager::addYellowRisingBallEffect(Node* parent){
         spt->setColor(Color3B(255, 251, 141));
         spt->setBlendFunc(BlendFunc::ADDITIVE);
     }
+}
+Color3B GameManager::getRankColor(int rank){
+    if (rank == 0) {
+        return Color3B(255, 255, 255);
+    }else if (rank == 1) {
+        return Color3B(57, 211, 205);
+    }else if (rank == 2) {
+        return Color3B(0, 180, 241);
+    }else if (rank == 3) {
+        return Color3B(255, 148, 183);
+    }else if (rank == 4) {
+        return Color3B(179, 22, 135);
+    }
+    return Color3B::WHITE;
+}
+void GameManager::setTextToNumberByTag(Ref* ref){
+    Text* lbl = (Text*)ref;
+    int originalNumber = Value(lbl->getString()).asInt();
+    int targetNumber = lbl->getTag();
+    int diff = 0;
+    if (targetNumber - originalNumber > 100) {
+        diff = 100;
+    }else if (targetNumber - originalNumber > 10) {
+        diff = 10;
+    }else if (targetNumber - originalNumber > 0) {
+        diff = 1;
+    }else if (targetNumber - originalNumber < -100) {
+        diff = -100;
+    }else if (targetNumber - originalNumber < -10) {
+        diff = -10;
+    }else if (targetNumber - originalNumber < 0) {
+        diff = -1;
+    }
+    originalNumber += diff;
+    lbl->setString(Value(originalNumber).asString());
+    if (originalNumber != targetNumber) {
+        lbl->runAction(CallFuncN::create(CC_CALLBACK_1(GameManager::setTextToNumberByTag, GM)));
+    }
+}
+void GameManager::addGlowBack(Node* node){
+    int glowCount = 5;
+    float width = node->getContentSize().width;
+    for (int i = 0; i < glowCount; i++) {
+        Sprite* spt = Sprite::create("whiteBigCircle.png");
+        spt->setScale(width*1.7f/spt->getContentSize().width, width*0.45f/spt->getContentSize().width);
+        node->addChild(spt, -1);
+        spt->setColor(Color3B::YELLOW);
+        spt->setBlendFunc(BlendFunc::ADDITIVE);
+        spt->setRotation(i*360/glowCount);
+        spt->runAction(RepeatForever::create(RotateBy::create(1, 40)));
+        spt->setOpacity(210);
+        spt->setPosition(node->getContentSize()/2);
+    }
+    
+    for (int i = 0; i < glowCount; i++) {
+        Sprite* spt = Sprite::create("whiteBigCircle.png");
+        spt->setScale(width*2.8f/spt->getContentSize().width, width*0.8f/spt->getContentSize().width);
+        node->addChild(spt, -1);
+        spt->setColor(Color3B::YELLOW);
+        spt->setBlendFunc(BlendFunc::ADDITIVE);
+        spt->setRotation(i*360/glowCount);
+        spt->setOpacity(120);
+        spt->runAction(RepeatForever::create(RotateBy::create(1, -20)));
+        spt->setPosition(node->getContentSize()/2);
+    }
+}
+int GameManager::getHeroSkillRate(int unitType, int rank){
+    if (unitType == UNIT_HERO_HEALER) {
+        return 35 + 3*rank;
+    }else if (unitType == UNIT_HERO_UNDINE) {
+        return 25 + 3*rank;
+    }else if (unitType == UNIT_HERO_PENGUIN ||
+              unitType == UNIT_HERO_CATINBOOTS ||
+              unitType == UNIT_HERO_MOLE) {
+        return 20 + 3*rank;
+    }else{
+        return 10 + 3*rank;
+    }
+}
+//std::string GameManager::getMonthlyEventInfoString(){
+    // first item is [month/receive count]
+    // -1 is received reward
+//    return UDGetStr(KEY_MONTHLY_EVENT_INFO, "-1/0_0_0_0_0_0_0_0_0_0_0_0");
+//}
+void GameManager::addMonthlyEventProgress(int index, int count){
+    int current = UDGetInt(strmake(KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT, index).c_str(), 0);
+    if(current < 0){
+        return;
+    }
+    current += count;
+    UDSetInt(strmake(KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT, index).c_str(), current);
+//    std::string strData = getMonthlyEventInfoString();
+//    checkIsNewMonthlyEvent();
+//    ValueVector list = GM->split(strData, "_");
+//    int missionCount = 12;
+//    int values[missionCount];
+//    for (int i = 0; i < missionCount; i++) {
+//        values[i] = 0;
+//    }
+//    bool isSomthingAdded = false;
+//    for (int i = 0; i < missionCount; i++) {
+//        values[i] = list.at(i + 1).asInt();
+//        if (index == i && getMonthlyEventProgressMax(index) > values[i] && values[i] >= 0) {
+//            values[i] += count;
+//            BSM->isThereSomethingToSaveForMonthlyEventProgress = true;
+//            isSomthingAdded = true;
+//            break;
+//        }
+//    }
+//    if (isSomthingAdded) {
+//        strData = list.at(0).asString();
+//        for (int i = 0; i < 12; i++) {
+//            strData += "_" + Value(values[i]).asString();
+//        }
+//        UDSetStr(KEY_MONTHLY_EVENT_INFO, strData);
+//    }
+//
+//    return values[index];
+}
+void GameManager::resetMonthlyEventProgress(int receivedCount){
+//    UDSetStr(KEY_MONTHLY_EVENT_INFO, strmake("%d/%d_0_0_0_0_0_0_0_0_0_0_0", BSM->getMonth(), receivedCount));
+//    BSM->isThereSomethingToSaveForMonthlyEventProgress = true;
+    UDSetInt(KEY_MONTHLY_EVENT_INFO_MONTH, BSM->getMonth());
+    UDSetInt(KEY_MONTHLY_EVENT_INFO_RECEIVE_COUNT, receivedCount);
+    for (int i = 0; i < EVENT_MISSION_TOTAL_COUNT; i++) {
+        UDSetInt(strmake(KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT, i).c_str(), 0);
+    }
+}
+int GameManager::getMonthlyEventProgressMax(int index){
+    if (index == EVENT_MISSION_ATTEND) {
+        return 12;
+    }else if (index == EVENT_MISSION_KILL_SWORDSMAN) {
+        return 80;
+    }else if (index == EVENT_MISSION_KILL_GOBLIN) {
+        return 200;
+    }else if (index == EVENT_MISSION_KILL_ORC_AXE) {
+        return 150;
+    }else if (index == EVENT_MISSION_KILL_ORC_SPEAR) {
+        return 150;
+    }else if (index == EVENT_MISSION_KILL_TROLL) {
+        return 50;
+    }else if (index == EVENT_MISSION_KILL_ZOMBIE) {
+        return 400;
+    }else if (index == EVENT_MISSION_ARENA_CLEAR) {
+        return 14;
+    }else if (index == EVENT_MISSION_PVP_6_WIN) {
+        return 40;
+    }else if (index == EVENT_MISSION_PVP_12_WIN) {
+        return 40;
+    }else if (index == EVENT_MISSION_BATTLE_NETWORK_WIN) {
+        return 50;
+    }else if (index == EVENT_MISSION_COLLECT_EVENT_HERO_PART) {
+        return 30;
+    }
+    return 100;
+}
+void GameManager::checkIsNewMonthlyEvent(){
+    if (!BSM->timeEstablished) {
+        return;
+    }
+//    std::string strData = getMonthlyEventInfoString();
+//    ValueVector list = GM->split(strData, "_");
+    int month = UDGetInt(KEY_MONTHLY_EVENT_INFO_MONTH, -1);
+//    if (list.at(0).asInt() != BSM->getMonth()) {
+    if(month != BSM->getMonth()){
+        resetMonthlyEventProgress(0);
+    }
+}
+int GameManager::getTimeLeftForCampaignChest(int index){
+//    std::string strCampaignChestGetTime = UDGetStr(strmake(KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT, index).c_str(), "2019-10-30T15:46:00.933Z");
+//    time_t getTime = BSM->getTimeTFromStr(strCampaignChestGetTime);
+    time_t getTime = getSavedTime(strmake(KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT, index).c_str());
+    time_t now = BSM->getCurrentTimeT();
+    if (now < 0) {
+        BSM->getHttpTime();
+        return 60*60*3;
+    }
+    int timeLeft = (int)difftime(getTime + 60*60*3, now);
+    if(timeLeft > 60*60*4){
+        GM->saveTime(strmake(KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT, index).c_str(), now + 60*60*3);
+        getTime = getSavedTime(strmake(KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT, index).c_str());
+        timeLeft = (int)difftime(getTime + 60*60*3, now);
+    }
+    return timeLeft;
+}
+
+void GameManager::saveTime(const char* key, time_t time){
+    std::string strTime = BSM->getStrFromTime(time);
+    std::string keyYear = strmake("%s_year", key);
+    std::string keyMonth = strmake("%s_month", key);
+    std::string keyDay = strmake("%s_day", key);
+    std::string keyHour = strmake("%s_hour", key);
+    std::string keyMin = strmake("%s_min", key);
+    std::string keySec = strmake("%s_sec", key);
+    if(strTime.size() < 19){
+        UDSetInt(keyYear.c_str(), 0);
+        UDSetInt(keyMonth.c_str(), 0);
+        UDSetInt(keyDay.c_str(), 0);
+        UDSetInt(keyHour.c_str(), 0);
+        UDSetInt(keyMin.c_str(), 0);
+        UDSetInt(keySec.c_str(), 0);
+        return;
+    }
+    std::string year = Value(strTime.substr(0, 4)).asString();
+    std::string month = Value(strTime.substr(5, 2)).asString();
+    std::string day = Value(strTime.substr(8, 2)).asString();
+    
+    std::string hour = Value(strTime.substr(11, 2)).asString();
+    std::string min = Value(strTime.substr(14, 2)).asString();
+    std::string sec = Value(strTime.substr(17, 2)).asString();
+    
+    UDSetInt(keyYear.c_str(), Value(year).asInt()-1900);
+    UDSetInt(keyMonth.c_str(), Value(month).asInt()-1);
+    UDSetInt(keyDay.c_str(), Value(day).asInt());
+    UDSetInt(keyHour.c_str(), Value(hour).asInt());
+    UDSetInt(keyMin.c_str(), Value(min).asInt());
+    UDSetInt(keySec.c_str(), Value(sec).asInt());
+    
+}
+    
+time_t GameManager::getSavedTime(const char* key){
+    
+    std::string keyYear = strmake("%s_year", key);
+    std::string keyMonth = strmake("%s_month", key);
+    std::string keyDay = strmake("%s_day", key);
+    std::string keyHour = strmake("%s_hour", key);
+    std::string keyMin = strmake("%s_min", key);
+    std::string keySec = strmake("%s_sec", key);
+    
+//    std::string year = Value(strTime.substr(0, 4)).asString();
+//    std::string month = Value(strTime.substr(5, 2)).asString();
+//    std::string date = Value(strTime.substr(8, 2)).asString();
+//
+//    std::string hour = Value(strTime.substr(11, 2)).asString();
+//    std::string min = Value(strTime.substr(14, 2)).asString();
+//    std::string sec = Value(strTime.substr(17, 2)).asString();
+    
+    struct tm theTime;
+    theTime.tm_year = UDGetInt(keyYear.c_str(), 0);
+    theTime.tm_mon = UDGetInt(keyMonth.c_str(), 0);
+    theTime.tm_mday = UDGetInt(keyDay.c_str(), 0);
+    theTime.tm_hour = UDGetInt(keyHour.c_str(), 0);
+    theTime.tm_min = UDGetInt(keyMin.c_str(), 0);
+    theTime.tm_sec = UDGetInt(keySec.c_str(), 0);
+    theTime.tm_isdst = 0;
+    
+    time_t what = timegm(&theTime); // UTC time - 1 hour can diff for summertime
+    return what;
+}
+void GameManager::saveUnitInfo(const char* key, UnitInfo* info){
+    if(info->rank > 4){
+        info->rank = 4;
+    }
+    UDSetInt(strmake("%s_unitType", key).c_str(), info->unitType);
+    UDSetInt(strmake("%s_levelAndRank", key).c_str(), info->level + info->rank*100);
+    UDSetInt(strmake("%s_x", key).c_str(), info->x);
+    UDSetInt(strmake("%s_y", key).c_str(), info->y);
+}
+UnitInfo* GameManager::getSavedUnitInfo(const char* key){
+    UnitInfo* info = new UnitInfo();
+    info->unitType = UDGetInt(strmake("%s_unitType", key).c_str());
+    int value = UDGetInt(strmake("%s_levelAndRank", key).c_str());
+    info->level = value%100;
+    info->rank = value/100;
+    info->x = UDGetInt(strmake("%s_x", key).c_str());
+    info->y = UDGetInt(strmake("%s_y", key).c_str());
+    return info;
+}
+std::vector<UnitInfo*> GameManager::getHeroInventory(){
+    int count = UDGetInt(KEY_UNITS_HERO_INVENTORY_COUNT, 0);
+    std::vector<UnitInfo*> list;
+    for(int i = 0; i < count; i++){
+        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_HERO_INVENTORY_FORMAT, i).c_str()));
+    }
+    return list;
+}
+void GameManager::saveHeroInventory(std::vector<UnitInfo*> list){
+    int count = (int)list.size();
+    UDSetInt(KEY_UNITS_HERO_INVENTORY_COUNT, count);
+    for(int i = 0; i < count; i++){
+        UnitInfo* info = list.at(i);
+        saveUnitInfo(strmake(KEY_UNITS_HERO_INVENTORY_FORMAT, i).c_str(), info);
+    }
+    UD->flush();
+    list.clear();
+}
+std::vector<UnitInfo*> GameManager::getHeroDeck(){
+    int count = UDGetInt(KEY_UNITS_HERO_DECK_COUNT, 0);
+    std::vector<UnitInfo*> list;
+    for(int i = 0; i < count; i++){
+        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_HERO_DECK_FORMAT, i).c_str()));
+    }
+    return list;
+}
+void GameManager::saveHeroDeck(std::vector<UnitInfo*> list){
+    int count = (int)list.size();
+    UDSetInt(KEY_UNITS_HERO_DECK_COUNT, count);
+    for(int i = 0; i < count; i++){
+        UnitInfo* info = list.at(i);
+        saveUnitInfo(strmake(KEY_UNITS_HERO_DECK_FORMAT, i).c_str(), info);
+    }
+    UD->flush();
+}
+
+std::vector<UnitInfo*> GameManager::getBattleUnitInventory(){
+    int count = UDGetInt(KEY_UNITS_INVENTORY_COUNT, 0);
+    std::vector<UnitInfo*> list;
+    for(int i = 0; i < count; i++){
+        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_INVENTORY_FORMAT, i).c_str()));
+    }
+    return list;
+}
+void GameManager::saveBattleUnitInventory(std::vector<UnitInfo*> list){
+    
+    int count = (int)list.size();
+    UDSetInt(KEY_UNITS_INVENTORY_COUNT, count);
+    for(int i = 0; i < count; i++){
+        UnitInfo* info = list.at(i);
+        saveUnitInfo(strmake(KEY_UNITS_INVENTORY_FORMAT, i).c_str(), info);
+    }
+    UD->flush();
+}
+std::vector<UnitInfo*> GameManager::getBattleUnitDeck(){
+    int count = UDGetInt(KEY_UNITS_DECK_COUNT, 0);
+    std::vector<UnitInfo*> list;
+    for(int i = 0; i < count; i++){
+        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_DECK_FORMAT, i).c_str()));
+    }
+    return list;
+}
+void GameManager::saveBattleUnitDeck(std::vector<UnitInfo*> list){
+    int count = (int)list.size();
+    UDSetInt(KEY_UNITS_DECK_COUNT, count);
+    if(count == 0){
+        log("save deck count 0");
+    }
+    for(int i = 0; i < count; i++){
+        UnitInfo* info = list.at(i);
+        saveUnitInfo(strmake(KEY_UNITS_DECK_FORMAT, i).c_str(), info);
+    }
+//    UD->flush();
+}
+int GameManager::getDailyMissionCampaignStageIndex(){
+    int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+    int stage = 1;
+    int dayCount = UDGetInt(KEY_DAY_COUNT, 0);
+    if (lastClearStage >= 35) { // if all clear and 35 pixed.
+        stage = dayCount%36;
+    }else{
+        stage = lastClearStage + 1;
+    }
+    
+    return stage;
+}
+int GameManager::getMonthlyHeroType(){
+    if (BSM->month == 11) {
+        return UNIT_HERO_ENT;
+    }else if (BSM->month == 12) {
+        return UNIT_HERO_SANTA;
+    }else if (BSM->month == 1) {
+        return UNIT_HERO_SALAMANDER;
+    }else if (BSM->month == 2) {
+        return UNIT_HERO_UNDINE;
+    }else if(BSM->month == 3){
+        return UNIT_HERO_LADY_WEREWOLF;
+    }else if(BSM->month == 4){
+        return UNIT_HERO_LADY_BEAR;
+    }else if(BSM->month == 5){
+        return UNIT_HERO_LADY_LION;
+    }else if(BSM->month == 6){
+        return UNIT_HERO_SAVAGEARCHER;
+    }else if(BSM->month == 7){
+        return UNIT_HERO_MEMEAT;
+    }else if(BSM->month == 8){
+        return UNIT_HERO_WATERMELON;
+    }
+    return -1;
+}
+int GameManager::getMidMonthHeroType(){
+    int month = BSM->month;
+    int day = BSM->day;
+    if ((month == 12 && day > 15) || (month == 1 && day <= 15)) {
+        return UNIT_HERO_RUDOLPH;
+    }else if ((month == 1 && day > 15) || (month == 2 && day <= 15)) {
+        return UNIT_HERO_SANTADOG;
+    }else if ((month == 2 && day > 15) || (month == 3 && day <= 15)) {
+        return UNIT_HERO_PENGUIN;
+    }else if ((month == 3 && day > 15) || (month == 4 && day <= 15)) {
+        return UNIT_HERO_CATINBOOTS;
+    }else if ((month == 4 && day > 15) || (month == 5 && day <= 15)) {
+        return UNIT_HERO_MOLE;
+    }else if ((month == 5 && day > 15) || (month == 6 && day <= 15)) {
+        return UNIT_HERO_TOYMOUSE;
+    }else if ((month == 6 && day > 15) || (month == 7 && day <= 15)) {
+        return UNIT_HERO_BATMONSTER;
+    }else if ((month == 7 && day > 15) || (month == 8 && day <= 15)) {
+        return UNIT_HERO_PARASITE;
+    }
+    return -1;
+}
+int GameManager::getMidMonthHeroTimeLeft(){
+    time_t now = BSM->getCurrentTimeT();
+    int month = BSM->getMonth();
+    int day = BSM->getDay();
+    int lastDay = BSM->getLastDayOfMonth(month);
+    int timeLeft = 86400 - (long)now%86400;
+    if (day > 15) {
+        timeLeft += (lastDay - day + 14)*(60*60*24);
+    }else{
+        timeLeft += (15 - day)*(60*60*24);
+    }
+    return timeLeft;
+}
+void GameManager::resetAsset(){
+    
+//    Director::getInstance()->purgeCachedData();
+//    SpriteFrameCache* cache = SpriteFrameCache::getInstance();
+//        cache->addSpriteFramesWithFile("CartoonCraftNV.plist");
+//        cache->addSpriteFramesWithFile("effect.plist");
+//    //    cache->addSpriteFramesWithFile("cartoonCraft.plist");
+//    //    cache->addSpriteFramesWithFile("cartoonCraftBuilding.plist");
+//    //    cache->addSpriteFramesWithFile("cartoonCraftEffect.plist");
+//        cache->addSpriteFramesWithFile("CartoonCraftNumber.plist");
+}
+int GameManager::getUnitAP(int unit){
+ if(unit == UNIT_WORKER){
+        return 3;
+    }else if(unit == UNIT_GOBLIN_WORKER){
+        return 3;
+    }else if(unit == UNIT_ARCHER){
+        return 13;
+    }else if(unit == UNIT_HELICOPTER){
+        return 10;
+    }else if(unit == UNIT_SWORDMAN){
+        return 10;
+    }else if(unit == UNIT_WATCHERTOWER){
+        return 15;
+    }else if(unit == UNIT_CATAPULT){
+        return 40;
+    }else if(unit == UNIT_GOBLIN){
+        return 8;
+    }else if(unit == UNIT_GOBLIN_BOMB){
+        return 500;
+    }else if(unit == UNIT_TROLL){
+        return 25;
+    }else if(unit == UNIT_ORC_AXE){
+        return 13;
+    }else if(unit == UNIT_ORC_SPEAR){
+        return 18;
+    }else if(unit == UNIT_ORC_BUNKER){
+        return 18;
+    }else if(unit == UNIT_ORC_HQ){
+        return 18;
+    }else if(unit == UNIT_ZOMBIE_SWORDSMAN){
+        return 10;
+    }else if(unit == UNIT_ZOMBIE_ORC_AXE){
+        return 12;
+    }else if(unit == UNIT_WIZARD){
+        return 40;
+    }else if(unit == UNIT_HERO_ORC){
+        return 25;
+    }
+    return 5;
+}
+
+int GameManager::getUnitMaxHP(int unit){
+    if(unit == UNIT_WORKER || unit == UNIT_GOBLIN_WORKER){
+            return 60;
+        }else if(unit == UNIT_ARCHER){
+            return 90;
+        }else if(unit == UNIT_SWORDMAN){
+            return 150;
+        }else if(unit == UNIT_CATAPULT){
+            return 400;
+        }else if(unit == UNIT_HELICOPTER){
+            return 70;
+        }else if(unit == UNIT_CASTLE || unit == UNIT_ZOMBIE_CASTLE){
+            return 4000;
+        }else if(unit == UNIT_FARM){
+            return 700;
+        }else if(unit == UNIT_BARRACKS){
+            return 1400;
+        }else if(unit == UNIT_LUMBERMILL){
+            return 1000;
+        }else if(unit == UNIT_FACTORY){
+            return 1500;
+        }else if(unit == UNIT_AIRPORT){
+            return 2000;
+        }else if(unit == UNIT_WATCHERTOWER){
+            return 500;
+        }else if(unit == UNIT_BARBECUE){
+            return 400;
+        }else if(unit == UNIT_ORC_BUNKER){
+            return 800;
+        }else if(unit == UNIT_ORC_HQ || unit == UNIT_ZOMBIE_HQ){
+            return 2000;
+        }else if(unit == UNIT_TREE){
+            return 20; // test
+        }else if(unit == UNIT_MINE){
+            return 50000; // test
+    //        return 50; // test
+        }else if(unit == UNIT_TROLL){
+            return 580;
+        }else if(unit == UNIT_GOBLIN || unit == UNIT_GOBLIN_BOMB){
+            return 80;
+        }else if(unit == UNIT_ORC_AXE){
+            return 180;
+        }else if(unit == UNIT_ORC_SPEAR){
+            return 120;
+        }else if(unit == UNIT_ZOMBIE_ORC_AXE){
+            return 260;
+        }else if(unit == UNIT_ZOMBIE_SWORDSMAN){
+            return 220;
+        }else if(unit == UNIT_WIZARD){
+            return 40;
+        }else if(unit == UNIT_HERO_ORC){
+            return 550;
+        }
+        return 60;
 }

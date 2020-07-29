@@ -29,7 +29,7 @@ using namespace cocos2d::ui;
 class ShopLayer : public PageBase
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     virtual bool init();
     CREATE_FUNC(ShopLayer);
@@ -47,15 +47,20 @@ public:
     void onBuyClassicWarPackage();
     void onBuyCrewManagerPackage();
     void onBuyMasterCrewPackage();
+    void onBuyEventHeroPackage();
+    void onBuyMidMonthEventHeroSet();
     void onBuyTree(Ref* ref);
     void onBuyGold(Ref* ref);
     void onBuyGem(Ref* ref);
+    int getEventHeroBoughtCount();
+    int getEventHeroSetBoughtCount();
     int getMineGoldPerHour(int level);
     void onBuyBuilding(Ref* ref);
     int currentTab = 0;
     void hideTab(int tab);
     bool heroesAreChanged = false;
     void closeShop();
+    int midMonthHeroType = 0;
 };
 
 #endif /* ShopLayer_hpp */

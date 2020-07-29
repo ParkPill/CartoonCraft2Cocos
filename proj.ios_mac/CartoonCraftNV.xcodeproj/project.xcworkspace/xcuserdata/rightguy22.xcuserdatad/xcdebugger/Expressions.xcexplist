@@ -6,13 +6,13 @@
          contextName = "Movable::move(float):Movable.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "isVisible">
+               value = "isCarryingTree">
             </PersistentString>
             <PersistentString
                value = "getName()">
             </PersistentString>
             <PersistentString
-               value = "isCarryingTree">
+               value = "isVisible">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -55,29 +55,21 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "GameManager::addMonthlyEventProgress(int, int):GameManager.cpp">
+      </ContextState>
+      <ContextState
          contextName = "BattleHud::loadData():BattleHud.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "unit-&gt;buildingCompleteTimeLeft">
+               value = "unit-&gt;unitState">
             </PersistentString>
             <PersistentString
                value = "unit-&gt;isUpgrading">
             </PersistentString>
             <PersistentString
-               value = "unit-&gt;unitState">
+               value = "unit-&gt;buildingCompleteTimeLeft">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "BattleHud::onCompleteClick():BattleHud.cpp">
-         <PersistentStrings>
-            <PersistentString
-               value = "selectedUnit">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "HelloWorld::onSelectForcesInScreen():HelloWorldScene.cpp">
       </ContextState>
       <ContextState
          contextName = "HelloWorld::checkClearGame():HelloWorldScene.cpp">
@@ -87,6 +79,17 @@
             </PersistentString>
             <PersistentString
                value = "enemyArray.at(0)-&gt;isVisible()">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HelloWorld::onSelectForcesInScreen():HelloWorldScene.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "BattleHud::update(float):BattleHud.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "unit-&gt;buildingCompleteTimeLeft">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -122,10 +125,10 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "BattleHud::update(float):BattleHud.cpp">
+         contextName = "BattleHud::onCompleteClick():BattleHud.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "unit-&gt;buildingCompleteTimeLeft">
+               value = "selectedUnit">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -159,6 +162,17 @@
          <PersistentStrings>
             <PersistentString
                value = "maxEnergy">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "HudLayer::showWinPopup(bool):HudLayer.cpp">
+      </ContextState>
+      <ContextState
+         contextName = "Movable::updateSkillAura(float):Movable.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "GameManager::getInstance()-&gt;getWorld()-&gt;isGameEnded">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -207,7 +221,7 @@
          contextName = "AStar::startPathFinding(bool (*)(Cell*, Cell*), int, int, int, int):AStar.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "goalX">
+               value = "startY">
             </PersistentString>
             <PersistentString
                value = "startX">
@@ -216,7 +230,7 @@
                value = "goalY">
             </PersistentString>
             <PersistentString
-               value = "startY">
+               value = "goalX">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -256,6 +270,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "BattleHud::updateUI(float):BattleHud.cpp">
+         <PersistentStrings>
+            <PersistentString
+               value = "building-&gt;buildingCompleteTimeLeft">
+            </PersistentString>
+            <PersistentString
+               value = "(timePassed)/360">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "cocos2d::ui::Widget::clone():UIWidget.cpp">
          <PersistentStrings>
             <PersistentString
@@ -265,6 +290,9 @@
                value = "getName()">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Astar::aStar(PathNode, PathNode):Astar.cpp">
       </ContextState>
       <ContextState
          contextName = "AStar::menuPathFinding(PathFindingType):AStar.cpp">
@@ -280,20 +308,6 @@
             </PersistentString>
             <PersistentString
                value = "_startY">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "Astar::aStar(PathNode, PathNode):Astar.cpp">
-      </ContextState>
-      <ContextState
-         contextName = "BattleHud::updateUI(float):BattleHud.cpp">
-         <PersistentStrings>
-            <PersistentString
-               value = "(timePassed)/360">
-            </PersistentString>
-            <PersistentString
-               value = "building-&gt;buildingCompleteTimeLeft">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -385,13 +399,13 @@
          contextName = "Movable::moveToTarget(cocos2d::Vec2):Movable.cpp">
          <PersistentStrings>
             <PersistentString
-               value = "failedFindPathStart">
+               value = "failedFindPathEnd">
             </PersistentString>
             <PersistentString
                value = "targetMoveTilePos">
             </PersistentString>
             <PersistentString
-               value = "failedFindPathEnd">
+               value = "failedFindPathStart">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

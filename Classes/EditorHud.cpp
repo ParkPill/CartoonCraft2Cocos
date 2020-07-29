@@ -36,13 +36,13 @@ bool EditorHud::init()
     
     
     //    ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
-    //    sptRect->setPosition(Point(size.width/2, size.height - 714));
-    //    sptRect->setContentSize(Size(750, 750));
-    //    sptRect->setAnchorPoint(Point(0.5, 0));
-    //    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
+    //    sptRect->setPosition(Vec2(size.width/2, size.height - 714));
+    //    sptRect->setContentSize(cocos2d::Size(750, 750));
+    //    sptRect->setAnchorPoint(Vec2(0.5, 0));
+    //    sptRect->setCapInsets(cocos2d::Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
     //    sptRect->setScale9Enabled(true);
     //    this->addChild(sptRect, 9);
-    //    sptRect->runAction(Sequence::create(DelayTime::create(0.5f), EaseIn::create(MoveBy::create(0.5f, Point(0, -750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), NULL));
+    //    sptRect->runAction(Sequence::create(DelayTime::create(0.5f), EaseIn::create(MoveBy::create(0.5f, Vec2(0, -750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), NULL));
     //
     
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
@@ -84,10 +84,10 @@ bool EditorHud::init()
     lblInfo = LM->getLocalizedLabel("", Color4B::BLACK);
     lblInfo->setScale(0.4);
     lblInfo->enableOutline(Color4B::WHITE, 5);
-    lblInfo->setPosition(Point(size.width/2, size.height - 714 + 150));
+    lblInfo->setPosition(Vec2(size.width/2, size.height - 714 + 150));
     lblInfo->setWidth(size.width);
     lblInfo->setHorizontalAlignment(TextHAlignment::CENTER);
-    lblInfo->setAnchorPoint(Point(0.5, 0.5));
+    lblInfo->setAnchorPoint(Vec2(0.5, 0.5));
     this->addChild(lblInfo);
     //
     //    inventory = new Inventory();
@@ -105,7 +105,7 @@ bool EditorHud::init()
     
     //    lblCommand = Label::createWithSystemFont("COMMAND: ", "Thonburi", 100);
     //    this->addChild(lblCommand);
-    //    lblCommand->setPosition(Point(size.width/2, lblCommand->getBoundingBox().size.height/2 + 50));
+    //    lblCommand->setPosition(Vec2(size.width/2, lblCommand->getBoundingBox().size.height/2 + 50));
     
     Button* btn;
     
@@ -121,20 +121,20 @@ bool EditorHud::init()
         //        btn->setTitleFontName(LM->getLocalizedFont());
         //        btn->setTitleFontSize(50);
         //        btn->setTitleColor(Color3B::BLACK);
-        btn->setContentSize(Size(220, 100));
+        btn->setContentSize(cocos2d::Size(220, 100));
         btn->setScale9Enabled(true);
         btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onMenuClick, this));
-        btn->setPosition(Point(offsetX + 327, 480));
+        btn->setPosition(Vec2(offsetX + 327, 480));
         addLabelToButton("menu", btn, false, DARK_GRAY_3B);
         
         ImageView* img = ImageView::create("uiBoxSmallBlue.png");
         this->addChild(img, 99);
-        img->setContentSize(Size(250, 100));
+        img->setContentSize(cocos2d::Size(250, 100));
         img->setScale9Enabled(true);
-        img->setPosition(Point(offsetX + 125, 480));
+        img->setPosition(Vec2(offsetX + 125, 480));
         
         lblTimer = PPLabel::create("00:00:00", 50, DARK_GRAY_3B, false, false, TextHAlignment::CENTER, false);//LM->getLocalizedLabel();
-        lblTimer->setPosition(Point(offsetX + 125, 480));
+        lblTimer->setPosition(Vec2(offsetX + 125, 480));
         lblTimer->setScaleX(0.8f);
         this->addChild(lblTimer, 99);
     }
@@ -144,15 +144,15 @@ bool EditorHud::init()
     this->addChild(svBrushes);
     svBrushes->setColor(Color3B::RED);
     
-    svBrushes->setContentSize(Size(menuWidth, size.height));
-    svBrushes->setPosition(Point(size.width - menuWidth, 0));
+    svBrushes->setContentSize(cocos2d::Size(menuWidth, size.height));
+    svBrushes->setPosition(Vec2(size.width - menuWidth, 0));
     
     int menuGap = 5;
-    svBrushes->setInnerContainerSize(Size(menuWidth, (menuWidth+menuGap)*brushCount));
+    svBrushes->setInnerContainerSize(cocos2d::Size(menuWidth, (menuWidth+menuGap)*brushCount));
     for(int i = BRUSH_TREE; i < brushCount + BRUSH_TREE; i++){
         btn = Button::create("uiBox.png", "uiBox.png");
-        btn->setPosition(Point(0, (menuWidth + menuGap)*(brushCount - i)));
-        btn->setAnchorPoint(Point(0, 0));
+        btn->setPosition(Vec2(0, (menuWidth + menuGap)*(brushCount - i)));
+        btn->setAnchorPoint(Vec2(0, 0));
         btn->setScale(menuWidth/btn->getContentSize().width);
         Sprite* spt;
         if(i ==  BRUSH_TREE ){
@@ -219,8 +219,8 @@ bool EditorHud::init()
     
     for(int i = 0; i < 3; i++){
         btn = Button::create("uiBox.png", "uiBox.png");
-        btn->setPosition(Point(menuGap, size.height - (menuWidth + menuGap)*i - menuGap));
-        btn->setAnchorPoint(Point(0, 1));
+        btn->setPosition(Vec2(menuGap, size.height - (menuWidth + menuGap)*i - menuGap));
+        btn->setAnchorPoint(Vec2(0, 1));
         btn->setScale(menuWidth/btn->getContentSize().width);
         if(i == 0){
             addSpriteToButton("pencil.png", btn, Button::TextureResType::LOCAL);
@@ -254,10 +254,10 @@ void EditorHud::onLeftMenuClick(Ref* ref){
     }
     svBrushes->stopAllActions();
     if(btn->getTag() == 0){
-        svBrushes->runAction(EaseInOut::create(MoveTo::create(0.3f, Point(size.width - menuWidth, 0)), 2));
+        svBrushes->runAction(EaseInOut::create(MoveTo::create(0.3f, Vec2(size.width - menuWidth, 0)), 2));
         selectedMode = MODE_PENCIL;
     }else{
-        svBrushes->runAction(EaseInOut::create(MoveTo::create(0.3f, Point(size.width, 0)), 2));
+        svBrushes->runAction(EaseInOut::create(MoveTo::create(0.3f, Vec2(size.width, 0)), 2));
         if(btn->getTag() == 1){
             selectedMode = MODE_ERASER;
             
@@ -289,7 +289,7 @@ void EditorHud::onMenuClick(){
     this->addChild(layer, 200);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2 + 100));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2 + 100));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -299,37 +299,37 @@ void EditorHud::onMenuClick(){
     
     ImageView* img = ImageView::create("uiBox.png");
     layer->addChild(img, 99);
-    img->setContentSize(Size(700, 500));
+    img->setContentSize(cocos2d::Size(700, 500));
     img->setScale9Enabled(true);
     img->setPosition(size/2);
     
     Button* btn = Button::create("uiBoxSmall.png");
     layer->addChild(btn, 99);
-    btn->setContentSize(Size(520, 150));
+    btn->setContentSize(cocos2d::Size(520, 150));
     btn->setScale9Enabled(true);
     btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onSaveClick, this));
-    btn->setPosition(Point(size.width/2, size.height/2 + 240));
+    btn->setPosition(Vec2(size.width/2, size.height/2 + 240));
     addLabelToButton("RESUME", btn, false, DARK_GRAY_3B);
     
     tfMapName = TextField::create("Enter Map Name Here", "Arial", 44);
     layer->addChild(tfMapName);
-    tfMapName->setPosition(Point(size.width/2 - 500, size.height/2 + 240));
+    tfMapName->setPosition(Vec2(size.width/2 - 500, size.height/2 + 240));
     
     btn = Button::create("uiBoxSmall.png");
     layer->addChild(btn, 99);
-    btn->setContentSize(Size(520, 150));
+    btn->setContentSize(cocos2d::Size(520, 150));
     btn->setScale9Enabled(true);
     btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onResumeClick, this));
-    btn->setPosition(Point(size.width/2, size.height/2 + 80));
+    btn->setPosition(Vec2(size.width/2, size.height/2 + 80));
     addLabelToButton("RESUME", btn, false, DARK_GRAY_3B);
     
     btn = Button::create("uiBoxSmall.png");
     layer->addChild(btn, 99);
     btn->setTitleColor(Color3B::BLACK);
-    btn->setContentSize(Size(520, 150));
+    btn->setContentSize(cocos2d::Size(520, 150));
     btn->setScale9Enabled(true);
     btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onExitClick, this));
-    btn->setPosition(Point(size.width/2, size.height/2 - 80));
+    btn->setPosition(Vec2(size.width/2, size.height/2 - 80));
     addLabelToButton("EXIT", btn, false, DARK_GRAY_3B);
     
 }
@@ -769,12 +769,12 @@ void EditorHud::showQuest(){
 //    ropeAround(imgBack);
 //    
 //    ImageView* imgTitle = (ImageView*)layer->getChildByName("imgTitle");
-//    imgTitle->runAction(EaseOut::create(ResizeTo::create(0.3f, Size(92, 21)), 2));
+//    imgTitle->runAction(EaseOut::create(ResizeTo::create(0.3f, cocos2d::Size(92, 21)), 2));
 //    
 //    Label* lblTitle = LM->getLocalizedLabel(LM->getText("quest").c_str(), Color4B(78, 78, 78, 255));
 //    lblTitle->setOpacity(0);
 //    imgTitle->addChild(lblTitle);
-//    lblTitle->setPosition(Point(46, 10));
+//    lblTitle->setPosition(Vec2(46, 10));
 //    lblTitle->setScale(0.12f);
 //    lblTitle->runAction(Sequence::create(DelayTime::create(0.3f), FadeIn::create(0.08f), NULL));
 //    
@@ -836,7 +836,7 @@ void EditorHud::showQuest(){
 }
 void EditorHud::addLabelToButton(std::string text, Button* btn, bool bordered, Color3B color){
     Node* lbl = PPLabel::create(text, btn->getContentSize().height*2/6, color, false, bordered, TextHAlignment::CENTER, false);
-    lbl->setPosition(Point(btn->getContentSize().width/2, btn->getContentSize().height/2));
+    lbl->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
     btn->addChild(lbl);
 }
 Sprite* EditorHud::addSpriteToButton(std::string imgFileName, Button* btn, Button::TextureResType type){
@@ -862,7 +862,7 @@ Sprite* EditorHud::getIconSprite(std::string itemName){
     int itemType = world->getItemType(itemName);
     Sprite* spt = Sprite::createWithSpriteFrameName(world->getItemStat(itemName, "sprite"));
     spt->setName("sprite");
-    Rect textureRect = spt->getTextureRect();
+    cocos2d::Rect textureRect = spt->getTextureRect();
     if(textureRect.size.width > TILE_SIZE || textureRect.size.height > TILE_SIZE){
         float textureWidth = textureRect.size.width;
         if(textureWidth > TILE_SIZE){
@@ -872,7 +872,7 @@ Sprite* EditorHud::getIconSprite(std::string itemName){
         if(textureHeight > TILE_SIZE){
             textureHeight = TILE_SIZE;
         }
-        spt->setTextureRect(Rect(textureRect.origin.x + spt->getContentSize().width/2 - textureWidth/2, textureRect.getMaxY() - textureHeight, textureWidth, textureHeight));
+        spt->setTextureRect(cocos2d::Rect(textureRect.origin.x + spt->getContentSize().width/2 - textureWidth/2, textureRect.getMaxY() - textureHeight, textureWidth, textureHeight));
     }
     
     Sprite* frameBack = Sprite::createWithSpriteFrameName("icon_frame.png");
@@ -909,14 +909,14 @@ void EditorHud::onStartClick(){
 
 void EditorHud::showBtns(){
     for (auto btn: menus){
-        btn->runAction(MoveBy::create(0.1f, Point(0, 1300)));
+        btn->runAction(MoveBy::create(0.1f, Vec2(0, 1300)));
     }
 }
 void EditorHud::hideBtns(){
     for (auto btn: menus){
-        btn->runAction(MoveBy::create(0.1f, Point(0, -1300)));
+        btn->runAction(MoveBy::create(0.1f, Vec2(0, -1300)));
     }
-    //    joystickLR->runAction(MoveBy::create(0.1f, Point(0, -300)));
+    //    joystickLR->runAction(MoveBy::create(0.1f, Vec2(0, -300)));
 }
 void EditorHud::toggleAuto(bool showMsg){
     bool isAuto = !world->isAutoTargetingOn;
@@ -1000,12 +1000,12 @@ void EditorHud::onDisconnectedController(Controller* controller, Event* event)
 {
     CCLOG("Game controller disconnected");
 }
-void EditorHud::addHeartAnimated(Point pos){
+void EditorHud::addHeartAnimated(Vec2 pos){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
     Sprite* spt = Sprite::create("heart.png");
     spt->setPosition(pos);
     this->addChild(spt);
-    spt->runAction(Sequence::create(EaseIn::create(MoveTo::create(1, heart->getPosition() + Point(50, 0)), 3), CallFuncN::create(CC_CALLBACK_1(EditorHud::addHeartDone, this)), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
+    spt->runAction(Sequence::create(EaseIn::create(MoveTo::create(1, heart->getPosition() + Vec2(50, 0)), 3), CallFuncN::create(CC_CALLBACK_1(EditorHud::addHeartDone, this)), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
 }
 void EditorHud::addHeartDone(Ref* obj){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
@@ -1015,7 +1015,7 @@ void EditorHud::addHeartDone(Ref* obj){
     spt->runAction(Sequence::create(RotateBy::create(1, 300), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
     
     heart->addChild(spt);
-    spt->setPosition(Point(heart->getContentSize().width/2, heart->getContentSize().height/2));
+    spt->setPosition(Vec2(heart->getContentSize().width/2, heart->getContentSize().height/2));
     
     
 }
@@ -1085,7 +1085,7 @@ void EditorHud::tryResultOK()
 void EditorHud::showTyping(){
     lblTyping = Label::createWithSystemFont("", GameManager::getInstance()->getFont(FONT_VISITOR), 30);
     this->addChild(lblTyping, 1);
-    lblTyping->setPosition(Point(size.width/2, size.height/4));
+    lblTyping->setPosition(Vec2(size.width/2, size.height/4));
     
     Sprite* sptBack = Sprite::create("whiteBigCircle.png");
     this->addChild(sptBack, 0);
@@ -1163,15 +1163,15 @@ void EditorHud::showStageTitle(){
     }
     float y = size.height*3/4 + 20;
     Label* lblTitle = LanguageManager::getInstance()->getLocalizedLabel(bufTitle, Color4B(235, 235, 235, 255));
-    lblTitle->setAnchorPoint(Point(0.5, 0.5));
-    lblTitle->setPosition(Point(size.width/2, y));
+    lblTitle->setAnchorPoint(Vec2(0.5, 0.5));
+    lblTitle->setPosition(Vec2(size.width/2, y));
     this->addChild(lblTitle, 10000);
     lblTitle->setOpacity(0);
     
     
     Label* lblStage = LanguageManager::getInstance()->getLocalizedLabel(bufStage, Color4B(235, 235, 235, 255));
-    lblStage->setAnchorPoint(Point(0.5, 0.5));
-    lblStage->setPosition(Point(size.width/2, y - lblTitle->getBoundingBox().size.height - 2));
+    lblStage->setAnchorPoint(Vec2(0.5, 0.5));
+    lblStage->setPosition(Vec2(size.width/2, y - lblTitle->getBoundingBox().size.height - 2));
     this->addChild(lblStage, 10000);
     lblStage->setOpacity(0);
     
@@ -1180,22 +1180,22 @@ void EditorHud::showStageTitle(){
     
     dnTitleLine = DrawNode::create();
     this->addChild(dnTitleLine, 10000);
-    dnTitleLine->setPosition(lblTitle->getBoundingBox().origin + Point(0, -4));
+    dnTitleLine->setPosition(lblTitle->getBoundingBox().origin + Vec2(0, -4));
     
     
     float dur = 0.5f;
     sptWhiteGun = Sprite::create("whiteGun.png");
-    sptWhiteGun->setAnchorPoint(Point(0.2, 0.3));
+    sptWhiteGun->setAnchorPoint(Vec2(0.2, 0.3));
     sptWhiteGun->setScale(3);
-    sptWhiteGun->setPosition(Point(dnTitleLine->getPosition() + Point(-60, -13)));
+    sptWhiteGun->setPosition(Vec2(dnTitleLine->getPosition() + Vec2(-60, -13)));
     this->addChild(sptWhiteGun, 10000);
     sptWhiteGun->runAction(Sequence::create(RotateBy::create(dur, 360), CallFunc::create(CC_CALLBACK_0(EditorHud::whiteGunFired, this)), EaseOut::create(RotateBy::create(0.1, -30), 2), RotateBy::create(0.4, 30), DelayTime::create(2.0f), FadeOut::create(1.0f), NULL));
     
     Sprite* sptGunEffect = Sprite::create("whiteGunFireEffect.png");
-    sptGunEffect->setAnchorPoint(Point(0, 0.5));
+    sptGunEffect->setAnchorPoint(Vec2(0, 0.5));
     sptGunEffect->setScale(3);
     sptGunEffect->setOpacity(0);
-    sptGunEffect->setPosition(sptWhiteGun->getPosition() + Point(50, 15));
+    sptGunEffect->setPosition(sptWhiteGun->getPosition() + Vec2(50, 15));
     sptGunEffect->runAction(Sequence::create(DelayTime::create(dur), FadeIn::create(0.05f), DelayTime::create(0.1f), FadeOut::create(0.05f), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptGunEffect)), NULL));
     this->addChild(sptGunEffect, 10000);
     
@@ -1208,7 +1208,7 @@ void EditorHud::stageTitleLineUpdate(float dt){
     float bulletWidth = 10;
     float gap = 4;
     if (currentLineLength > 10) {
-        dnTitleLine->drawSolidRect(Point::ZERO, Point(currentLineLength, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
+        dnTitleLine->drawSolidRect(Vec2::ZERO, Vec2(currentLineLength, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
     }
     if (currentLineLength < lineLength) {
         currentLineLength += lineLength*dt/0.5f;
@@ -1216,7 +1216,7 @@ void EditorHud::stageTitleLineUpdate(float dt){
     if (currentLineLength > lineLength) {
         currentLineLength = lineLength;
     }
-    dnTitleLine->drawSolidRect(Point(currentLineLength + gap, 0), Point(currentLineLength + bulletWidth + gap, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
+    dnTitleLine->drawSolidRect(Vec2(currentLineLength + gap, 0), Vec2(currentLineLength + bulletWidth + gap, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
     
     if (sptWhiteGun->getOpacity() == 0) {
         sptWhiteGun->removeFromParentAndCleanup(true);
@@ -1413,16 +1413,16 @@ void EditorHud::showTalk(const char* talk){
     //    CCLOG("showTalk: %s", talk);
     talkLabel->stopAllActions();
     talkLabel->setString(talk);
-    talkLabel->setPosition(Point(size.width/2, size.height/2 + 75));
+    talkLabel->setPosition(Vec2(size.width/2, size.height/2 + 75));
     talkLabel->setScale(0.1);
     //    talkLabel->runAction(Sequence::create(CCFadeIn::create(0.4), DelayTime::create(2), CCFadeOut::create(0.4), NULL));
     talkLabel->runAction(Sequence::create(EaseOut::create(ScaleTo::create(0.4, 1), 8), DelayTime::create(2), EaseIn::create(ScaleTo::create(0.4, 0.1), 8), NULL));
-    talkLabel->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.4, Point(0, 50)), 8), DelayTime::create(2), EaseIn::create(MoveBy::create(0.4, Point(0, -50)), 8), MoveBy::create(0.01, Point(0, 1000)),NULL));
-    //    talkLabel->runAction(Sequence::create(MoveBy::create(0.4, Point(0, 50)), DelayTime::create(2), MoveBy::create(0.4, Point(0, 50)),MoveBy::create(0.01, Point(0, 500)), NULL));
+    talkLabel->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.4, Vec2(0, 50)), 8), DelayTime::create(2), EaseIn::create(MoveBy::create(0.4, Vec2(0, -50)), 8), MoveBy::create(0.01, Vec2(0, 1000)),NULL));
+    //    talkLabel->runAction(Sequence::create(MoveBy::create(0.4, Vec2(0, 50)), DelayTime::create(2), MoveBy::create(0.4, Vec2(0, 50)),MoveBy::create(0.01, Vec2(0, 500)), NULL));
 }
 void EditorHud::hideTalk(){
     talkLabel->runAction(FadeOut::create(0.5));
-    talkLabel->runAction(MoveBy::create(0.5, Point(0, 40)));
+    talkLabel->runAction(MoveBy::create(0.5, Vec2(0, 40)));
 }
 void EditorHud::showCoinShopLayer(){
     
@@ -1434,25 +1434,25 @@ void EditorHud::showAchievementComplete(const char* text){
     Sprite* achieveNode = Sprite::create("achievementBar.png");
     Sprite* spt = Sprite::create("achievementIconEnabled.png");
     achieveNode->addChild(spt);
-    spt->setPosition(Point(80, achieveNode->getContentSize().height/2));
+    spt->setPosition(Vec2(80, achieveNode->getContentSize().height/2));
     this->addChild(achieveNode, 10000);
     
     Label* lblText = Label::createWithSystemFont(text, "Arial", 30);
-    lblText->setAnchorPoint(Point(0, 0.5));
-    lblText->setPosition(Point(spt->getPosition().x + 80, achieveNode->getContentSize().height/2));
+    lblText->setAnchorPoint(Vec2(0, 0.5));
+    lblText->setPosition(Vec2(spt->getPosition().x + 80, achieveNode->getContentSize().height/2));
     lblText->setTag(722);
     achieveNode->addChild(lblText);
     
     ((Label*)achieveNode->getChildByTag(722))->setString(text);
-    achieveNode->setPosition(Point(size.width/2 + 15, size.height + (achieveNode->getContentSize().height/2)));
+    achieveNode->setPosition(Vec2(size.width/2 + 15, size.height + (achieveNode->getContentSize().height/2)));
     
-    achieveNode->runAction(Sequence::create(EaseIn::create(MoveBy::create(0.5f, Point(0, -achieveNode->getContentSize().height)),0.2f), CallFuncN::create(CC_CALLBACK_1(EditorHud::achievementEffect, this)), DelayTime::create(1), EaseIn::create(MoveBy::create(0.5f, Point(0, achieveNode->getContentSize().height)),4), CallFuncN::create(CC_CALLBACK_1(EditorHud::nodeMoveDone, this)), NULL));
+    achieveNode->runAction(Sequence::create(EaseIn::create(MoveBy::create(0.5f, Vec2(0, -achieveNode->getContentSize().height)),0.2f), CallFuncN::create(CC_CALLBACK_1(EditorHud::achievementEffect, this)), DelayTime::create(1), EaseIn::create(MoveBy::create(0.5f, Vec2(0, achieveNode->getContentSize().height)),4), CallFuncN::create(CC_CALLBACK_1(EditorHud::nodeMoveDone, this)), NULL));
 }
 
 void EditorHud::achievementEffect(Node* node){
     Sprite* achieveNode = (Sprite*)node;
     Sprite* checkSprite = Sprite::create("checkImage.png");
-    checkSprite->setPosition(Point(achieveNode->getContentSize().width - 80, achieveNode->getContentSize().height/2));
+    checkSprite->setPosition(Vec2(achieveNode->getContentSize().width - 80, achieveNode->getContentSize().height/2));
     
     
     
@@ -1479,7 +1479,6 @@ void EditorHud::nodeMoveDone(Ref* obj)
     node->stopAllActions();
     node->removeFromParentAndCleanup(true);
 }
-
 void EditorHud::setButtonSize(float siz) // 0 ~ 1
 {
 }
@@ -1505,13 +1504,13 @@ void EditorHud::addEnergyEffect(){
     int spread = 80;
     for (int i = 0; i < effectCount; i++) {
         spt = Sprite::createWithSpriteFrameName("particle.png");
-        spt->setPosition(Point(size.width/2, size.height/2) + Point(rand()%spread - spread/2, rand()%spread - spread/2));
-        Point pos = spt->getPosition();
+        spt->setPosition(Vec2(size.width/2, size.height/2) + Vec2(rand()%spread - spread/2, rand()%spread - spread/2));
+        Vec2 pos = spt->getPosition();
         spt->setScale(3 + (rand()%10)*0.4);
         this->addChild(spt, 100);
         spt->runAction(FadeOut::create(0));
         spt->runAction(Sequence::create(DelayTime::create(i*interval), FadeIn::create(interval), NULL));
-        spt->runAction(Sequence::create(DelayTime::create(i*interval), EaseIn::create(MoveTo::create(dur, Point(x, y)), 3), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
+        spt->runAction(Sequence::create(DelayTime::create(i*interval), EaseIn::create(MoveTo::create(dur, Vec2(x, y)), 3), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
     }
     this->scheduleOnce(schedule_selector(EditorHud::addEnergyDone), dur + interval*effectCount);
 }
@@ -1521,7 +1520,7 @@ void EditorHud::addEnergyDone(float dt){
     float y = size.height - 28;
     Sprite* spt = Sprite::create("hudHeart.png");
     this->addChild(spt);
-    spt->setPosition(Point(x, y));
+    spt->setPosition(Vec2(x, y));
     float dur =0.5;
     spt->runAction(ScaleTo::create(dur, 3));
     spt->runAction(Sequence::create(FadeOut::create(dur), CallFuncN::create(CC_CALLBACK_1(EditorHud::spriteMoveDone, this)), NULL));
@@ -1537,7 +1536,7 @@ void EditorHud::initializeSreen(int lifeCount)
     //    recordItem->setVisible(true);w
 #endif
     
-    //    recordItem->setPosition(pauseItem->getPosition() + Point(-pauseItem->getContentSize().width - 15, 0));
+    //    recordItem->setPosition(pauseItem->getPosition() + Vec2(-pauseItem->getContentSize().width - 15, 0));
 }
 
 void EditorHud::reduceLife()
@@ -1585,7 +1584,7 @@ void EditorHud::setBulletCount(int count, int maxCount){
     //    float y = checkBoard->getPosition().y + checkBoard->getContentSize().height*checkBoard->getScale()/2;
     //    while(countLeft > 0){
     //        Sprite* sptBullet = Sprite::createWithSpriteFrameName("bulletPi.png");
-    //        sptBullet->setAnchorPoint(Point(0, 1));
+    //        sptBullet->setAnchorPoint(Vec2(0, 1));
     //        sptBullet->setPosition(x, y);
     //        sptBullet->setScale((checkBoard->getContentSize().height*checkBoard->getScale() - 1*bulletCountInColumn)/(sptBullet->getContentSize().height*bulletCountInColumn));
     //        this->addChild(sptBullet);
@@ -1608,7 +1607,7 @@ void EditorHud::keyCollected(int count)
 }
 void EditorHud::starCollected(int count)
 {
-    Point pos;
+    Vec2 pos;
     
     
     GameManager::getInstance()->showParticleExplosion(this, "goldStar.png", pos, 2);
@@ -1617,7 +1616,7 @@ void EditorHud::starCollected(int count)
 }
 
 
-void EditorHud::starCollectedFancy(int count, Point collectedPos)
+void EditorHud::starCollectedFancy(int count, Vec2 collectedPos)
 {
     
 }
@@ -1669,7 +1668,7 @@ void EditorHud::showPauseLayer()
     //    blackScreen->setVisible(true);
     
     pauseLayer = dynamic_cast<Layout*>(GUIReader::getInstance()->widgetFromJsonFile("LegendDary_UI_Pause.json"));
-    pauseLayer->setPosition(Point(size.width/2 - pauseLayer->getContentSize().width/2, 0));
+    pauseLayer->setPosition(Vec2(size.width/2 - pauseLayer->getContentSize().width/2, 0));
     this->addChild(pauseLayer);
     
     Button* btnResume = dynamic_cast<Button*>(Helper::seekWidgetByName(pauseLayer, "Button_14"));
@@ -1747,10 +1746,10 @@ void EditorHud::showShopLayer(std::string shopName)
         lbl->setTextColor(Color4B::BLACK);
         lbl->setName("lblCount");
         btn->addChild(lbl, 1);
-        lbl->setAnchorPoint(Point(1, 0));
+        lbl->setAnchorPoint(Vec2(1, 0));
         lbl->enableOutline(Color4B::WHITE, 8);
         lbl->setScale(0.08);
-        lbl->setPosition(Point(btn->getContentSize().width - 2, 1));
+        lbl->setPosition(Vec2(btn->getContentSize().width - 2, 1));
         lbl->setVisible(false);
         btn->addClickEventListener(CC_CALLBACK_1(EditorHud::selectInventorySlot, this));
         btn->setPressedActionEnabled(true);
@@ -1967,16 +1966,16 @@ void EditorHud::closeVideoDone(float dt){
     }
     Sprite* sptCoin = Sprite::create("coin.png");
     btnFreeCoin->getParent()->addChild(sptCoin);
-    sptCoin->setPosition(btnFreeCoin->getPosition() + Point(-40, 0));
+    sptCoin->setPosition(btnFreeCoin->getPosition() + Vec2(-40, 0));
     
     Label* lbl = Label::createWithSystemFont(__String::createWithFormat("+%d", coinCount)->getCString(), GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     sptCoin->addChild(lbl);
-    lbl->setPosition(Point(45, 19));
-    lbl->setAnchorPoint(Point(0, 0.5));
+    lbl->setPosition(Vec2(45, 19));
+    lbl->setAnchorPoint(Vec2(0, 0.5));
     
     lbl = Label::createWithSystemFont(__String::createWithFormat("EXP %d", expCount)->getCString(), GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     sptCoin->addChild(lbl);
-    lbl->setPosition(Point(55, -10));
+    lbl->setPosition(Vec2(55, -10));
     
     btnFreeCoin->removeFromParent();
     btnFreeCoin = NULL;
@@ -1991,12 +1990,12 @@ void EditorHud::closeVideoFailed(float dt){
     }
     //    Sprite* sptCoin = Sprite::create("coin.png");
     //    btnFreeCoin->getParent()->addChild(sptCoin);
-    //    sptCoin->setPosition(btnFreeCoin->getPosition() + Point(-40, 0));
+    //    sptCoin->setPosition(btnFreeCoin->getPosition() + Vec2(-40, 0));
     
     Label* lbl = Label::createWithSystemFont("ADS FAILED", GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     btnFreeCoin->getParent()->addChild(lbl);
     //    sptCoin->addChild(lbl);
-    //    lbl->setPosition(Point(80, 19));
+    //    lbl->setPosition(Vec2(80, 19));
     lbl->setPosition(btnFreeCoin->getPosition());
     
     btnFreeCoin->removeFromParent();
@@ -2006,22 +2005,12 @@ void EditorHud::closeVideoFailed(float dt){
     
     /*Label* lbl = Label::createWithSystemFont(LanguageManager::getInstance()->getText(STR_VIDEO_FAILED), GameManager::getInstance()->getFont(FONT_DEFAULT), 24);
      sptBackLight2->getParent()->addChild(lbl);
-     lbl->setPosition(sptBackLight2->getPosition() + Point(80, 115));
+     lbl->setPosition(sptBackLight2->getPosition() + Vec2(80, 115));
      
      btnFreeCoin->removeFromParent();
      btnFreeCoin = NULL;*/
 }
 
-void EditorHud::shareFacebook(){
-    this->scheduleOnce(schedule_selector(EditorHud::facebookSafe), 0.1);
-}
-
-void EditorHud::facebookSafe(float dt){
-    const char* link = "http://www.facebook.com/FifteenSixKorea";
-    if (GameManager::getInstance()->market == MARKET_PLAYSTORE_PAID) {
-        link = "https://play.google.com/store/apps/details?id=com.magmon.LegendDaryTwo";
-    }
-}
 void EditorHud::playCoinSoundLater(){
     
 }
@@ -2089,7 +2078,7 @@ void EditorHud::expLabelScheduler(float dt){
         this->unschedule(schedule_selector(EditorHud::expLabelScheduler));
         
         if (expCount >= maxExpCount) {
-            sptMaxTalkBalloon->setPosition(sptMaxTalkBalloon->getPosition() + Point(0, 1000));
+            sptMaxTalkBalloon->setPosition(sptMaxTalkBalloon->getPosition() + Vec2(0, 1000));
             sptMaxTalkBalloon->runAction(Sequence::create(ScaleTo::create(0.001, 0.5), ScaleTo::create(0.1, 1.1), ScaleTo::create(0.05, 1.0f), NULL));
         }
         
@@ -2120,7 +2109,7 @@ void EditorHud::tryGameContinue(Ref* pSender, ui::Widget::TouchEventType eEventT
         
         float duration = 3;
         ImageView* darySleep = dynamic_cast<ImageView*>(Helper::seekWidgetByName(reviveLayer, "sptDary"));
-        darySleep->runAction(EaseOut::create(MoveBy::create(duration, Point(0, 50)), 3));
+        darySleep->runAction(EaseOut::create(MoveBy::create(duration, Vec2(0, 50)), 3));
         darySleep->loadTexture("backLight.png");
         darySleep->runAction(RepeatForever::create(RotateBy::create(duration, 360)));
         
@@ -2129,7 +2118,7 @@ void EditorHud::tryGameContinue(Ref* pSender, ui::Widget::TouchEventType eEventT
         dary->setScale(4);
         dary->getTexture()->setAliasTexParameters();
         dary->setPosition(darySleep->getPosition());
-        dary->runAction(EaseOut::create(MoveBy::create(duration, Point(0, 50)), 3));
+        dary->runAction(EaseOut::create(MoveBy::create(duration, Vec2(0, 50)), 3));
         
         this->scheduleOnce(schedule_selector(EditorHud::reviveLater), duration*2/3);
         
@@ -2256,13 +2245,6 @@ void EditorHud::closeSchedule(float dt){
             //            ((TitleLayer*)GameManager::getInstance()->titleLayer)->setStageSelect();
             return;
         }
-        if (!UserDefault::getInstance()->getBoolForKey(KEY_AD_NOT_TODAY, false) &&
-            GameManager::getInstance()->market == MARKET_PLAYSTORE_FREE) {
-            GameManager::getInstance()->page = PAGE_STAGE_SELECT;
-            
-            //            ((TitleLayer*)GameManager::getInstance()->titleLayer)->setStageSelect();
-            return;
-        }
         if(GameManager::getInstance()->currentStageIndex == 23 ){
             GameManager::getInstance()->page = PAGE_STAGE_SELECT;
             
@@ -2280,17 +2262,6 @@ void EditorHud::closeSchedule(float dt){
         Director::getInstance()->popScene();
         //        int stage = GameManager::getInstance()->currentStageIndex;
         //        ((TitleLayer*)GameManager::getInstance()->titleLayer)->stageTouched();
-        
-    }else if(toWhat == CLOSE_TO_STAGES){
-        if (GameManager::getInstance()->market == MARKET_PLAYSTORE_FREE ||
-            GameManager::getInstance()->market == MARKET_APPSTORE_FREE) {
-            GameManager::getInstance()->showInterstitialAds();
-        }
-        
-        GameManager::getInstance()->page = PAGE_STAGE_SELECT;
-        
-        //        ((TitleLayer*)GameManager::getInstance()->titleLayer)->topBar->updateLabels();
-        //        ((TitleLayer*)GameManager::getInstance()->titleLayer)->setStageSelect();
         
     }else if(toWhat == CLOSE_TO_MAIN){
         GameManager::getInstance()->page = PAGE_TITLE;
@@ -2343,7 +2314,7 @@ void EditorHud::displayBossEnergy(const char* name)
 {
     //    bossEnergyBackground = Sprite::create("dialogBox.png");
     //    this->addChild(bossEnergyBackground);
-    //    bossEnergyBackground->setPosition(Point(size.width/2, size.height/2 - 60));
+    //    bossEnergyBackground->setPosition(Vec2(size.width/2, size.height/2 - 60));
     //    bossEnergyBackground->setScaleY(0.5);
     bossEnergyBarWidth = 600;
     
@@ -2352,22 +2323,22 @@ void EditorHud::displayBossEnergy(const char* name)
     bossName->enableShadow();
     //    bossName->getTexture()->setAliasTexParameters();
     this->addChild(bossName);
-    bossName->setAnchorPoint(Point(0,0));
-    bossName->setPosition(Point(size.width/6, size.height*2/3));
+    bossName->setAnchorPoint(Vec2(0,0));
+    bossName->setPosition(Vec2(size.width/6, size.height*2/3));
     
     
     
     bossEnergyBarBack = DrawNode::create();
     this->addChild(bossEnergyBarBack);
     
-    //bossEnergyBarRed->setAnchorPoint(Point(0, 0.5f));
+    //bossEnergyBarRed->setAnchorPoint(Vec2(0, 0.5f));
     //bossEnergyBarRed->setScaleX(bossEnergyBarWidth);
     //bossEnergyBarRed->setScaleY(2);
     
     bossEnergyBar = DrawNode::create();
     this->addChild(bossEnergyBar);
-    //bossEnergyBarYellow->setPosition(Point(size.width/2 - bossEnergyBarWidth/2, size.height/2 + 180));
-    //bossEnergyBarYellow->setAnchorPoint(Point(0, 0.5f));
+    //bossEnergyBarYellow->setPosition(Vec2(size.width/2 - bossEnergyBarWidth/2, size.height/2 + 180));
+    //bossEnergyBarYellow->setAnchorPoint(Vec2(0, 0.5f));
     //bossEnergyBarYellow->setScaleX(bossEnergyBarWidth);
     //bossEnergyBarYellow->setScaleY(2);
 }
@@ -2378,14 +2349,14 @@ void EditorHud::setBossEnergy(int percent)
     bossEnergyBar->clear();
     float width = size.width*4/6;
     float energyLeft = width*percent/100.0f;
-    bossEnergyBarBack->drawSolidRect(Point(size.width/6 - 1, size.height*2/3 - 3), Point(size.width/6 + width + 1, size.height*2/3 + 3), Color4F(235.0f/255, 235.0f/255, 235.0f/255, 100/255.0f));
+    bossEnergyBarBack->drawSolidRect(Vec2(size.width/6 - 1, size.height*2/3 - 3), Vec2(size.width/6 + width + 1, size.height*2/3 + 3), Color4F(235.0f/255, 235.0f/255, 235.0f/255, 100/255.0f));
     Color4F color;
     if (percent < 20) {
         color = Color4F(235.0f/255, 50.0f/255, 50.0f/255, 255/255.0f);
     }else{
         color = Color4F(255.0f/255, 208.0f/255, 59.0f/255, 255/255.0f);
     }
-    bossEnergyBar->drawSolidRect(Point(size.width/6, size.height*2/3 - 2), Point(size.width/6 + energyLeft, size.height*2/3 + 2), color);
+    bossEnergyBar->drawSolidRect(Vec2(size.width/6, size.height*2/3 - 2), Vec2(size.width/6 + energyLeft, size.height*2/3 + 2), color);
     if (percent <= 0) {
         bossEnergyBar->setVisible(false);
         bossEnergyBarBack->setVisible(false);
@@ -2408,9 +2379,9 @@ void EditorHud::onTutorialBoxClick(){
             tutorialHowTo = Node::create();
             this->addChild(tutorialHowTo);
             ImageView* img = ImageView::create("uiBox.png");
-            img->setContentSize(Size(690, 290));
+            img->setContentSize(cocos2d::Size(690, 290));
             img->setScale9Enabled(true);
-            img->setPosition(Point(size.width/2, size.height - 150));
+            img->setPosition(Vec2(size.width/2, size.height - 150));
             tutorialHowTo->addChild(img);
             ImageView* imgContent = ImageView::create();
             imgContent->setPosition(img->getPosition());
@@ -2635,30 +2606,30 @@ void EditorHud::showBlackTopAndBottom(){
     int barHeight = 200;
     blackTop = Sprite::create("whiteRect.png");
     this->addChild(blackTop, 5);
-    blackTop->setContentSize(Size(frameWidth, barHeight));
-    blackTop->setPosition(Point(size.width/2, size.height + barHeight));
-    blackTop->setAnchorPoint(Point(0.5, 1));
-    blackTop->runAction(MoveBy::create(0.6f, Point(0, -barHeight)));
+    blackTop->setContentSize(cocos2d::Size(frameWidth, barHeight));
+    blackTop->setPosition(Vec2(size.width/2, size.height + barHeight));
+    blackTop->setAnchorPoint(Vec2(0.5, 1));
+    blackTop->runAction(MoveBy::create(0.6f, Vec2(0, -barHeight)));
     blackTop->setColor(Color3B::BLACK);
     
     blackBottom = Sprite::create("whiteRect.png");
     this->addChild(blackBottom , 5);
-    blackBottom->setContentSize(Size(frameWidth, barHeight));
-    blackBottom->setPosition(Point(size.width/2, -barHeight));
-    blackBottom->setAnchorPoint(Point(0.5, 0));
-    blackBottom->runAction(Sequence::create(MoveBy::create(0.6f, Point(0, barHeight)), nullptr));
+    blackBottom->setContentSize(cocos2d::Size(frameWidth, barHeight));
+    blackBottom->setPosition(Vec2(size.width/2, -barHeight));
+    blackBottom->setAnchorPoint(Vec2(0.5, 0));
+    blackBottom->runAction(Sequence::create(MoveBy::create(0.6f, Vec2(0, barHeight)), nullptr));
     blackBottom->setColor(Color3B::BLACK);
     
     if(eventIndex != 100 || true){
         //        Sprite* sptBSkip = Sprite::createWithSpriteFrameName("bSkipPressed.png");
         //        blackBottom->addChild(sptBSkip);
         //        sptBSkip->setScale(4);
-        //        sptBSkip->setPosition(Point(blackBottom->getContentSize().width - sptBSkip->getContentSize().width*sptBSkip->getScale()/2 - 60, blackBottom->getContentSize().height/2 + sptBSkip->getContentSize().height*sptBSkip->getScale()/2 + 4));
+        //        sptBSkip->setPosition(Vec2(blackBottom->getContentSize().width - sptBSkip->getContentSize().width*sptBSkip->getScale()/2 - 60, blackBottom->getContentSize().height/2 + sptBSkip->getContentSize().height*sptBSkip->getScale()/2 + 4));
         //        GM->runAnimation(sptBSkip, "bSkip", true);
         Text* lblSkip = Text::create("SKIP", LM->getLocalizedFont(), 80);
         //        lblSkip->enableShadow();
         blackBottom->addChild(lblSkip);
-        lblSkip->setPosition(Point(blackBottom->getContentSize().width - lblSkip->getContentSize().width*lblSkip->getScale()/2 - 60,blackBottom->getContentSize().height/2 + lblSkip->getContentSize().height*lblSkip->getScale()/2 - 50));
+        lblSkip->setPosition(Vec2(blackBottom->getContentSize().width - lblSkip->getContentSize().width*lblSkip->getScale()/2 - 60,blackBottom->getContentSize().height/2 + lblSkip->getContentSize().height*lblSkip->getScale()/2 - 50));
         lblSkip->addClickEventListener(CC_CALLBACK_0(EditorHud::onSkipClick, this));
         lblSkip->setTouchEnabled(true);
         lblSkip->setOpacity(0);
@@ -2686,8 +2657,8 @@ void EditorHud::onSkipClick(){
 }
 void EditorHud::hideBlackTopAndBottom(){
     if(blackTop == nullptr) return;
-    blackTop->runAction(Sequence::create(MoveBy::create(1, Point(0, 80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackTop)), nullptr));
-    blackBottom->runAction(Sequence::create(MoveBy::create(1, Point(0, -80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackBottom)), nullptr));
+    blackTop->runAction(Sequence::create(MoveBy::create(1, Vec2(0, 80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackTop)), nullptr));
+    blackBottom->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackBottom)), nullptr));
     showBtns();
 }
 void EditorHud::updateTalkBoxRope(float dt){
@@ -2704,8 +2675,8 @@ void EditorHud::updateTalkBoxRope(float dt){
         bool topExist = false;
         bool bottomExist = false;
         x = i;
-        Point topPos = Point(x, sptTalkBox->getContentSize().height);
-        Point bottomPos = Point(x, 0);
+        Vec2 topPos = Vec2(x, sptTalkBox->getContentSize().height);
+        Vec2 bottomPos = Vec2(x, 0);
         for (auto rope : sptTalkBox->getChildren()) {
             if(rope->getTag() != 7){
                 continue;
@@ -2736,8 +2707,8 @@ void EditorHud::updateTalkBoxRope(float dt){
     //        bool leftExist = false;
     //        bool rightExist = false;
     //        y = i;
-    //        Point leftPos = Point(0, y);
-    //        Point rightPos = Point(sptTalkBox->getContentSize().width, y);
+    //        Vec2 leftPos = Vec2(0, y);
+    //        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
     //        for (auto rope : sptTalkBox->getChildren()) {
     //            if(rope->getBoundingBox().containsPoint(leftPos)){
     //                leftExist = true;
@@ -2769,8 +2740,8 @@ void EditorHud::onTalkBoxResizeDone(){
     //    // vertical
     //    for(int i = 0; i < sptTalkBox->getContentSize().height;i+=ropeheight){
     //        int y = i;
-    //        Point leftPos = Point(0, y);
-    //        Point rightPos = Point(sptTalkBox->getContentSize().width, y);
+    //        Vec2 leftPos = Vec2(0, y);
+    //        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
     //        Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
     //        sptTalkBox->addChild(sptRope);
     //        sptRope->setPosition(rightPos);
@@ -2892,7 +2863,7 @@ void EditorHud::selectABCOption(Node* node){
     int index = node->getTag();
     if(selectedAbcOption != node && node != nullptr){
         selectedAbcOption = node;
-        sptCursor->setPosition(node->getBoundingBox().origin + Point(-sptCursor->getContentSize().width/2 - 10, node->getBoundingBox().size.height/2));
+        sptCursor->setPosition(node->getBoundingBox().origin + Vec2(-sptCursor->getContentSize().width/2 - 10, node->getBoundingBox().size.height/2));
     }else if(samShopLayer != nullptr){
         int actionType = ACTION_TYPE_CANCEL;
         if(index == 1){
@@ -3303,10 +3274,10 @@ void EditorHud::onBClick(){
 void EditorHud::showOptions(std::string option0, std::string option1){
     sptTalkBox = Sprite::createWithSpriteFrameName("whiteRect.png");
     this->addChild(sptTalkBox, 6);
-    sptTalkBox->setPosition(Point(size.width/2, size.height/2 + 100));
+    sptTalkBox->setPosition(Vec2(size.width/2, size.height/2 + 100));
     //    sptTalkBox->setScale(1);
-    //    sptTalkBox->setContentSize(Size(640, 257));
-    sptTalkBox->setContentSize(Size(10, 10));
+    //    sptTalkBox->setContentSize(cocos2d::Size(640, 257));
+    sptTalkBox->setContentSize(cocos2d::Size(10, 10));
     int ropeWidth = 5*4;
     int ropeheight = 4*4;
     int x = 0;
@@ -3316,7 +3287,7 @@ void EditorHud::showOptions(std::string option0, std::string option1){
     float scale = 0.3f;
     Label* lblOption0 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("A. %s", option0.c_str()).c_str(), Color4B(78, 78, 78, 255));
     sptTalkBox->addChild(lblOption0);
-    lblOption0->setPosition(Point(320, height*4/5));
+    lblOption0->setPosition(Vec2(320, height*4/5));
     lblOption0->setScale(scale);
     lblOption0->setTag(0);
     lblOption0->setVisible(false);
@@ -3324,13 +3295,13 @@ void EditorHud::showOptions(std::string option0, std::string option1){
     
     Label* lblOption1 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("B. %s", option1.c_str()).c_str(), Color4B(78, 78, 78, 255));
     sptTalkBox->addChild(lblOption1);
-    lblOption1->setPosition(Point(320, height*2/5));
+    lblOption1->setPosition(Vec2(320, height*2/5));
     lblOption1->setVisible(false);
     lblOption1->setTag(1);
     lblOption1->setScale(scale);
     lblOption1->setWidth(600/scale);
     
-    sptTalkBox->runAction(Sequence::create(ResizeTo::create(0.2f, Size(8, 257)), ResizeTo::create(0.5f, Size(640, height)), CallFunc::create(CC_CALLBACK_0(EditorHud::onTalkBoxResizeDone, this)), nullptr));
+    sptTalkBox->runAction(Sequence::create(ResizeTo::create(0.2f, cocos2d::Size(8, 257)), ResizeTo::create(0.5f, cocos2d::Size(640, height)), CallFunc::create(CC_CALLBACK_0(EditorHud::onTalkBoxResizeDone, this)), nullptr));
     inputShouldWait = true;
     //    sptTalkBox->runAction(Sequence::create(ScaleTo::create(0.2f, 0.1f, 1),ScaleTo::create(0.5f, 1), CallFunc::create(CC_CALLBACK_0(EditorHud::onTalkBoxResizeDone, this)), nullptr));
     
@@ -3346,10 +3317,10 @@ void EditorHud::showEnding(int index){
     }
     ImageView* sptBack = ImageView::create("whiteRect.png");
     sptBack->setColor(Color3B::BLACK);
-    sptBack->setCapInsets(Rect(3, 3, sptBack->getContentSize().width - 6, sptBack->getContentSize().height - 6));
+    sptBack->setCapInsets(cocos2d::Rect(3, 3, sptBack->getContentSize().width - 6, sptBack->getContentSize().height - 6));
     sptBack->setScale9Enabled(true);
-    sptBack->setContentSize(Size(750, 750));
-    sptBack->setPosition(Point(size.width/2, size.height - 750/2));
+    sptBack->setContentSize(cocos2d::Size(750, 750));
+    sptBack->setPosition(Vec2(size.width/2, size.height - 750/2));
     this->addChild(sptBack,-1);
     sptBack->setName("EndingFrame");
     endingIndex = index;
@@ -3382,11 +3353,11 @@ void EditorHud::updateEnding(float dt){
     }else{
         if(text.size() > 0){
             Sprite* notice = Sprite::create("whiteRect.png");
-            notice->setContentSize(Size(800, 40));
-            notice->setPosition(Point(size.width/2, lastEndingTalkY));
+            notice->setContentSize(cocos2d::Size(800, 40));
+            notice->setPosition(Vec2(size.width/2, lastEndingTalkY));
             endingTalkArray.pushBack(notice);
             notice->setColor(Color3B(78, 78, 78));
-            notice->setAnchorPoint(Point(0.5, 1));
+            notice->setAnchorPoint(Vec2(0.5, 1));
             this->addChild(notice,-1);
             
             Label* lbl = LM->getLocalizedLabel();
@@ -3406,29 +3377,29 @@ void EditorHud::updateEnding(float dt){
     
     
     Sprite* profilePic = Sprite::createWithSpriteFrameName(profile);
-    profilePic->setPosition(Point(isLeft?80:670, lastEndingTalkY - padding));
-    profilePic->setAnchorPoint(Point(0.5, 1));
+    profilePic->setPosition(Vec2(isLeft?80:670, lastEndingTalkY - padding));
+    profilePic->setAnchorPoint(Vec2(0.5, 1));
     profilePic->setScale(4);
     this->addChild(profilePic, -1);
     endingTalkArray.pushBack(profilePic);
     log("box width before: %f", utils::getCascadeBoundingBox(profilePic).size.width);
     Label* lbl = LM->getLocalizedLabel(name.c_str(), Color4B::WHITE);
-    lbl->setAnchorPoint(Point(isLeft?0:1, 1));
-    lbl->setPosition(Point(isLeft?profilePic->getContentSize().width + padding:-padding, profilePic->getContentSize().height));
+    lbl->setAnchorPoint(Vec2(isLeft?0:1, 1));
+    lbl->setPosition(Vec2(isLeft?profilePic->getContentSize().width + padding:-padding, profilePic->getContentSize().height));
     profilePic->addChild(lbl);
     lbl->setScale(lbl->getScale());
     
     if (text.find("shyface") !=  std::string::npos) {
         Sprite* sptFace = Sprite::createWithSpriteFrameName("emoticonShyFace.png");
         profilePic->addChild(sptFace);
-        sptFace->setAnchorPoint(Point(0.5, 1));
+        sptFace->setAnchorPoint(Vec2(0.5, 1));
         sptFace->runAction(Sequence::create(DelayTime::create(0.3f), FlipX::create(true) , DelayTime::create(0.3f), FlipX::create(false) ,DelayTime::create(0.3f), FlipX::create(true), NULL));
-        sptFace->setPosition(Point(lbl->getPositionX() + sptFace->getContentSize().width/2*(isLeft?1:-1), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY() - padding));
+        sptFace->setPosition(Vec2(lbl->getPositionX() + sptFace->getContentSize().width/2*(isLeft?1:-1), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY() - padding));
     }else{
         ImageView* imgTalkBox = ImageView::create("talkBoxFrame.png");
-        imgTalkBox->setAnchorPoint(Point(isLeft?0:1, 1));
-        imgTalkBox->setPosition(Point(lbl->getPositionX(), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY()));
-        imgTalkBox->setCapInsets(Rect(3, 3, imgTalkBox->getContentSize().width - 6, imgTalkBox->getContentSize().height - 6));
+        imgTalkBox->setAnchorPoint(Vec2(isLeft?0:1, 1));
+        imgTalkBox->setPosition(Vec2(lbl->getPositionX(), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY()));
+        imgTalkBox->setCapInsets(cocos2d::Rect(3, 3, imgTalkBox->getContentSize().width - 6, imgTalkBox->getContentSize().height - 6));
         imgTalkBox->setScale9Enabled(true);
         profilePic->addChild(imgTalkBox);
         
@@ -3440,7 +3411,7 @@ void EditorHud::updateEnding(float dt){
         lblTalkShadow->setTextColor(Color4B(78, 78, 78, 255));
         // resize talkbox
         lblTalkShadow->setString(text);
-        Size talkSize = Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
+        cocos2d::Size talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
         float width = 66;
         if(talkSize.width > width){
             lblTalkShadow->setWidth(width/lblTalkShadow->getScale());
@@ -3448,13 +3419,13 @@ void EditorHud::updateEnding(float dt){
             lblTalkShadow->setWidth(talkSize.width/lblTalkShadow->getScale());
         }
         
-        talkSize = Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
+        talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
         float padding = 10;
-        imgTalkBox->setContentSize(Size(talkSize.width + padding, talkSize.height + padding));
-        lblTalkShadow->setPosition(imgTalkBox->getPosition() + Point((isLeft?1:-1)*imgTalkBox->getContentSize().width/2, - padding/2 - talkSize.height/2));
+        imgTalkBox->setContentSize(cocos2d::Size(talkSize.width + padding, talkSize.height + padding));
+        lblTalkShadow->setPosition(imgTalkBox->getPosition() + Vec2((isLeft?1:-1)*imgTalkBox->getContentSize().width/2, - padding/2 - talkSize.height/2));
         // resize talkbox end
         
-        sptPointer->setPosition(imgTalkBox->getPosition() + Point((isLeft?-1:1)*sptPointer->getContentSize().height/2 + (isLeft?3:-3), -5));
+        sptPointer->setPosition(imgTalkBox->getPosition() + Vec2((isLeft?-1:1)*sptPointer->getContentSize().height/2 + (isLeft?3:-3), -5));
         sptPointer->setRotation(isLeft?90:-90);
     }
     log("box width after: %f", utils::getCascadeBoundingBox(profilePic).size.width);
@@ -3478,10 +3449,10 @@ PPLabel* EditorHud::showInstanceMessage(std::string msg){
     PPLabel* lbl = PPLabel::create(msg, 60, Color3B::WHITE, false, false, TextHAlignment::CENTER, true);
     this->addChild(lbl, 200);
     lbl->setTag(77);
-    lbl->setPosition(Point(size.width/2, -TILE_SIZE/2));
+    lbl->setPosition(Vec2(size.width/2, -TILE_SIZE/2));
     float dur = 0.3f;
     float distanceToMove = 360;
-    lbl->runAction(Sequence::create(MoveBy::create(dur, Point(0, distanceToMove)), DelayTime::create(2), MoveBy::create(dur, Point(0, -distanceToMove)), CallFunc::create(CC_CALLBACK_0(PPLabel::removeFromParent, lbl)), nullptr));
+    lbl->runAction(Sequence::create(MoveBy::create(dur, Vec2(0, distanceToMove)), DelayTime::create(2), MoveBy::create(dur, Vec2(0, -distanceToMove)), CallFunc::create(CC_CALLBACK_0(PPLabel::removeFromParent, lbl)), nullptr));
     return lbl;
 }
 //bool EditorHud::addItemToInventory(std::string name){
@@ -3669,8 +3640,8 @@ Sprite* EditorHud::addBToCloseToLayer(Node* layer){
     Sprite* sptBToClose = Sprite::createWithSpriteFrameName("bToCloseReleased.png");
     layer->addChild(sptBToClose);
     GameManager::getInstance()->runAnimation(sptBToClose, "bToCloseAni", true);
-    sptBToClose->setAnchorPoint(Point(1, 0));
-    sptBToClose->setPosition(Point(196, 660));
+    sptBToClose->setAnchorPoint(Vec2(1, 0));
+    sptBToClose->setPosition(Vec2(196, 660));
     sptBToClose->setScale(4.5f);
     return sptBToClose;
 }
@@ -3834,7 +3805,7 @@ void EditorHud::showABCDialog(std::string msg, std::string option0, std::string 
     ropeAround(imgBack);
     
     sptCursor = (Sprite*)layer->getChildByName("sptCursor");
-    sptCursor->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Point(-5, 0)), MoveBy::create(0.2f, Point(5, 0)), NULL)));
+    sptCursor->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Vec2(-5, 0)), MoveBy::create(0.2f, Vec2(5, 0)), NULL)));
     
     Text* lbl = (Text*)layer->getChildByName("lblTitle");
     lbl->setString(msg);
@@ -3843,16 +3814,16 @@ void EditorHud::showABCDialog(std::string msg, std::string option0, std::string 
     lbl = (Text*)layer->getChildByName("lblOption0");
     lbl->setString(strmake("%s", option0.c_str()));
     changeTextWithLabel(lbl);
-    lbl->setTextAreaSize(Size(462, 68));
+    lbl->setTextAreaSize(cocos2d::Size(462, 68));
     selectABCOption(layer->getChildByName("btn0"));
     lbl = (Text*)layer->getChildByName("lblOption1");
     lbl->setString(strmake("%s", option1.c_str()));
     changeTextWithLabel(lbl);
-    lbl->setTextAreaSize(Size(462, 68));
+    lbl->setTextAreaSize(cocos2d::Size(462, 68));
     lbl = (Text*)layer->getChildByName("lblOption2");
     lbl->setString(strmake("%s", option2.c_str()));
     changeTextWithLabel(lbl);
-    lbl->setTextAreaSize(Size(462, 68));
+    lbl->setTextAreaSize(cocos2d::Size(462, 68));
     if(option2.size() == 0){
         layer->removeChildByName("lblOption2");
     }
@@ -3918,8 +3889,8 @@ void EditorHud::ropeAround(Node* node){
     // horizontal
     for(int i = 0; i < node->getContentSize().width + ropeWidth;i+=ropeWidth){
         x = i;
-        Point topPos = Point(x, node->getContentSize().height);
-        Point bottomPos = Point(x, 0);
+        Vec2 topPos = Vec2(x, node->getContentSize().height);
+        Vec2 bottomPos = Vec2(x, 0);
         
         Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
         node->addChild(sptRope);
@@ -3937,8 +3908,8 @@ void EditorHud::ropeAround(Node* node){
     // vertical
     for(int i = 0; i < node->getContentSize().height;i+=ropeheight){
         y = i;
-        Point leftPos = Point(0, y);
-        Point rightPos = Point(node->getContentSize().width, y);
+        Vec2 leftPos = Vec2(0, y);
+        Vec2 rightPos = Vec2(node->getContentSize().width, y);
         
         Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
         node->addChild(sptRope);
@@ -3954,14 +3925,14 @@ void EditorHud::ropeAround(Node* node){
 }
 void EditorHud::showBIAndReplaceScene(){
     ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
-    sptRect->setPosition(Point(size.width/2, size.height - 714));
-    sptRect->setContentSize(Size(750, 750));
-    sptRect->setAnchorPoint(Point(0.5, 0));
-    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
+    sptRect->setPosition(Vec2(size.width/2, size.height - 714));
+    sptRect->setContentSize(cocos2d::Size(750, 750));
+    sptRect->setAnchorPoint(Vec2(0.5, 0));
+    sptRect->setCapInsets(cocos2d::Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
     sptRect->setScale9Enabled(true);
     this->addChild(sptRect, 9);
-    sptRect->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.5f, Point(0, 750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), CallFunc::create(CC_CALLBACK_0(EditorHud::letsReplaceScene, this)), NULL));
-    sptRect->setPosition(sptRect->getPosition() - Point(0, 750));
+    sptRect->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.5f, Vec2(0, 750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), CallFunc::create(CC_CALLBACK_0(EditorHud::letsReplaceScene, this)), NULL));
+    sptRect->setPosition(sptRect->getPosition() - Vec2(0, 750));
     
     Sprite* sptBI = Sprite::create("title_bi.png");
     sptBI->setPosition(sptRect->getContentSize()/2);
@@ -4013,7 +3984,7 @@ void EditorHud::showIntro(){
     sptFrame->setScale(50);
     sptFrame->setOpacity(0);
     sptFrame->runAction(Sequence::create(DelayTime::create(1), FadeTo::create(2, 150), NULL));
-    sptFrame->setPosition(Point(size.width/2, size.height - size.width/2));
+    sptFrame->setPosition(Vec2(size.width/2, size.height - size.width/2));
     
     float dur = 50;
     Label* lbl = Label::createWithSystemFont("text", LM->getLocalizedFont(), 30);
@@ -4023,9 +3994,9 @@ void EditorHud::showIntro(){
     this->addChild(lbl, 1);
     lbl->setScale(1);
     
-    lbl->setAnchorPoint(Point(0.5, 1));
-    lbl->setPosition(Point(size.width/2, size.height - size.width));
-    lbl->runAction(MoveBy::create(dur, Point(0, lbl->getBoundingBox().size.height + size.width)));
+    lbl->setAnchorPoint(Vec2(0.5, 1));
+    lbl->setPosition(Vec2(size.width/2, size.height - size.width));
+    lbl->runAction(MoveBy::create(dur, Vec2(0, lbl->getBoundingBox().size.height + size.width)));
     
     GM->nextScene = STAGE_TITLE;
     this->runAction(Sequence::create(DelayTime::create(dur - 2), CallFunc::create(CC_CALLBACK_0(EditorHud::showBIAndReplaceScene, this)), NULL));
@@ -4498,7 +4469,7 @@ void EditorHud::showDoctorShop(){
     lbl = (Text*)layer->getChildByName("lblTip");
     lbl->setTextVerticalAlignment(TextVAlignment::BOTTOM);
     lbl->ignoreContentAdaptWithSize(false);
-    lbl->setContentSize(Size(635, 46));
+    lbl->setContentSize(cocos2d::Size(635, 46));
     lbl->setString(strmake("A.%s   B.%s", LM->getText("evolution").c_str(), LM->getText("cancel").c_str()));
     lbl->runAction(RepeatForever::create(Blink::create(1, 2)));
     //    changeTextWithLabel(lbl, 285.24f);
@@ -4543,10 +4514,10 @@ void EditorHud::updateDoctorShop(){
         lbl->setTextColor(Color4B::BLACK);
         lbl->setName("lblCount");
         btn->addChild(lbl, 1);
-        lbl->setAnchorPoint(Point(1, 0));
+        lbl->setAnchorPoint(Vec2(1, 0));
         lbl->enableOutline(Color4B::WHITE, 8);
         lbl->setScale(0.08);
-        lbl->setPosition(Point(btn->getContentSize().width - 2, 1));
+        lbl->setPosition(Vec2(btn->getContentSize().width - 2, 1));
     }
     bool feeEnough = GM->getCoin() >= Value(fee).asInt();
     bool ingredient0Enough = inventory->getTotalItemCount(ingredient0) >= Value(ingredient0Count).asInt();
@@ -4558,7 +4529,7 @@ void EditorHud::updateDoctorShop(){
     Text* lbl = (Text*)firstPopup->getChildByName("lblDescription");
     lbl->setTextVerticalAlignment(TextVAlignment::CENTER);
     lbl->ignoreContentAdaptWithSize(false);
-    lbl->setContentSize(Size(635, 68));
+    lbl->setContentSize(cocos2d::Size(635, 68));
     if(!feeEnough){
         lbl->setString(LM->getText("not enough money"));
     }else if(!isMaxLevel){
@@ -4620,10 +4591,10 @@ void EditorHud::showCredit(){
     isInScene = true;
     //    ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
     //    sptRect->setColor(Color3B::BLACK);
-    //    sptRect->setPosition(Point(size.width/2, size.height - 714));
-    //    sptRect->setContentSize(Size(750, 750));
-    //    sptRect->setAnchorPoint(Point(0.5, 0));
-    //    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
+    //    sptRect->setPosition(Vec2(size.width/2, size.height - 714));
+    //    sptRect->setContentSize(cocos2d::Size(750, 750));
+    //    sptRect->setAnchorPoint(Vec2(0.5, 0));
+    //    sptRect->setCapInsets(cocos2d::Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
     //    sptRect->setScale9Enabled(true);
     //    this->addChild(sptRect, 8);
     
@@ -4643,7 +4614,7 @@ void EditorHud::showCredit(){
         lbl->setOpacity(0);
         lbl->runAction(Sequence::create(DelayTime::create(1), DelayTime::create(i*3), FadeIn::create(1), DelayTime::create(1), FadeOut::create(1), NULL));
         this->addChild(lbl, 9);
-        lbl->setPosition(Point(size.width/2, size.height - 714/2 - 100));
+        lbl->setPosition(Vec2(size.width/2, size.height - 714/2 - 100));
     }
     GM->nextScene = STAGE_FIELD;
     this->runAction(Sequence::create(DelayTime::create(3*6 + 1), CallFunc::create(CC_CALLBACK_0(EditorHud::showBIAndReplaceScene, this)), NULL));
@@ -4697,7 +4668,7 @@ void EditorHud::showPeterInsuranceShop(){
     
     Node* cursor = peterShopLayer->getChildByName("sptCursor");
     cursor->setPositionX(peterShopLayer->getChildByName("lblOption0")->getPositionX() - 50);
-    cursor->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Point(-5, 0)), MoveBy::create(0.2f, Point(5, 0)), NULL)));
+    cursor->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Vec2(-5, 0)), MoveBy::create(0.2f, Vec2(5, 0)), NULL)));
     
     lbl = (Text*)layer->getChildByName("lblTip");
     LM->setLocalizedString(lbl, "a to select b to cancel");
@@ -4806,9 +4777,9 @@ void EditorHud::showWinPopup(bool win){
     imgBack->setTouchEnabled(true);
     
     ImageView* img = ImageView::create("uiBox.png");
-    img->setContentSize(Size(1300, 850));
+    img->setContentSize(cocos2d::Size(1300, 850));
     img->setScale9Enabled(true);
-    img->setPosition(Point(size.width/2, size.height/2 + 100));
+    img->setPosition(Vec2(size.width/2, size.height/2 + 100));
     popup->addChild(img);
     
     std::string strResult = "MISSION CLEAR";
@@ -4817,7 +4788,7 @@ void EditorHud::showWinPopup(bool win){
     }
     //    Label* lbl = LM->getLocalizedLabel(strResult.c_str(), Color4B::BLACK, 70);
     Node* title = PPLabel::create(strResult, 70, DARK_GRAY_3B, false, false, TextHAlignment::CENTER, false);
-    title->setPosition(Point(size.width/2, size.height/2 + 400));
+    title->setPosition(Vec2(size.width/2, size.height/2 + 400));
     popup->addChild(title);
     
     int leftX = size.width/2 - 350;
@@ -4866,9 +4837,9 @@ void EditorHud::showWinPopup(bool win){
             //            lbl->setName("lblKillTitle");
         }
         customLabel->setVisible(false);
-        customLabel->setPosition(Point(leftX, startY - gapY*i));
+        customLabel->setPosition(Vec2(leftX, startY - gapY*i));
         popup->addChild(customLabel);
-        spt->setPosition(Point(iconX, customLabel->getPositionY()));
+        spt->setPosition(Vec2(iconX, customLabel->getPositionY()));
         popup->addChild(spt);
         spt->setVisible(false);
         
@@ -4898,8 +4869,8 @@ void EditorHud::showWinPopup(bool win){
             //            lbl = LM->getLocalizedLabel("0", Color4B::BLACK, fontSize);
             //            lbl->setName("lblKill");
         }
-        customLabel->setPosition(Point(rightX, startY - gapY*i));
-        //        lbl->setAnchorPoint(Point(1, 0.5));
+        customLabel->setPosition(Vec2(rightX, startY - gapY*i));
+        //        lbl->setAnchorPoint(Vec2(1, 0.5));
         customLabel->setVisible(false);
         popup->addChild(customLabel);
     }
@@ -4912,16 +4883,16 @@ void EditorHud::showWinPopup(bool win){
     //    btn->setTitleText("OK");
     //    btn->setTitleFontName(LM->getLocalizedFont());
     //    btn->setTitleFontSize(50);
-    btn->setContentSize(Size(300, 200));
+    btn->setContentSize(cocos2d::Size(300, 200));
     btn->setScale9Enabled(true);
     btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onOkFromWinPopup, this));
-    btn->setPosition(Point(size.width/2 + 500, size.height/2 - 450));
+    btn->setPosition(Vec2(size.width/2 + 500, size.height/2 - 450));
     //    btn->setColor(Color3B(244, 236, 5));
     addLabelToButton("OK", btn, false, DARK_GRAY_3B);
     
     spt = Sprite::create("redFlag.png");
-    spt->setPosition(Point(size.width/2, size.height/2 + 850/2 + 110 - spt->getContentSize().height/2));
-    spt->setAnchorPoint(Point(0.18, 0.1));
+    spt->setPosition(Vec2(size.width/2, size.height/2 + 850/2 + 110 - spt->getContentSize().height/2));
+    spt->setAnchorPoint(Vec2(0.18, 0.1));
     popup->addChild(spt);
     
     if(!win){
@@ -5067,26 +5038,26 @@ void EditorHud::onOkFromWinPopup(Ref* ref){
     this->removeListener();
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
-void EditorHud::arrangeMenu(cocos2d::Point pos){
+void EditorHud::arrangeMenu(cocos2d::Vec2 pos){
     for (int i = 0; i < 6; i++) {
         Button* btn = (Button*)world->getChildByName(strmake("btnMenu%d", i));
         int radius = 270;
-        btn->setPosition(pos + Point(120, -100));
+        btn->setPosition(pos + Vec2(120, -100));
         btn->stopAllActions();
         btn->setOpacity(0);
         btn->runAction(FadeIn::create(0.16f));
         float angle = i*60 - 120;
-        btn->runAction(EaseOut::create(MoveBy::create(0.16f, Point(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2));
+        btn->runAction(EaseOut::create(MoveBy::create(0.16f, Vec2(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2));
     }
     
 }
-void EditorHud::showDetailPopup(cocos2d::Point pos){
-    Point coordinate = world->getCoordinateFromPosition(pos);
-    Rect rect;
+void EditorHud::showDetailPopup(cocos2d::Vec2 pos){
+    Vec2 coordinate = world->getCoordinateFromPosition(pos);
+    cocos2d::Rect rect;
     for(auto spt: world->spriteBatch->getChildren()){
         rect = spt->getBoundingBox();
         if(rect.containsPoint(pos)){
-            coordinate = Point(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
+            coordinate = Vec2(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
         }
     }
     
@@ -5111,29 +5082,29 @@ void EditorHud::showDetailPopup(cocos2d::Point pos){
         ImageView* imgBack = ImageView::create("horizontalScrollBackground.png");
         layer->addChild(imgBack);
         imgBack->setScale9Enabled(true);
-        imgBack->setContentSize(Size(308, 1170));
-        imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, Size(1598, 1170)), 2));
-        imgBack->setAnchorPoint(Point(0.5, 0.5));
-        imgBack->setPosition(Point(size.width/2, size.height/2));
+        imgBack->setContentSize(cocos2d::Size(308, 1170));
+        imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, cocos2d::Size(1598, 1170)), 2));
+        imgBack->setAnchorPoint(Vec2(0.5, 0.5));
+        imgBack->setPosition(Vec2(size.width/2, size.height/2));
         
         PPLabel* lbl = PPLabel::create("This is", 30, DARK_GRAY_3B, false, false, TextHAlignment::LEFT, false);
         layer->addChild(lbl);
-        lbl->setPosition(Point(size.width/2 - 628, size.height/2 + 350));
+        lbl->setPosition(Vec2(size.width/2 - 628, size.height/2 + 350));
         
         Button* btn = Button::create("btnBox.png");
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 - 328, size.height/2 + 350));
+        btn->setPosition(Vec2(size.width/2 - 328, size.height/2 + 350));
         btn->setScale9Enabled(true);
-        btn->setContentSize(Size(308, 120));
+        btn->setContentSize(cocos2d::Size(308, 120));
         btn->setName("btnPia");
         btn->setTag(PIA_HEROES);
         addLabelToButton(getPIAName(btn->getTag()), btn, false, DARK_GRAY_3B);
         btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onChangePiaClick, this));
         
         ScrollView* sv = ScrollView::create();
-        sv->setContentSize(Size(1300, 650));
+        sv->setContentSize(cocos2d::Size(1300, 650));
         layer->addChild(sv);
-        sv->setPosition(Point(size.width/2 - sv->getContentSize().width/2, size.height/2 - 400));
+        sv->setPosition(Vec2(size.width/2 - sv->getContentSize().width/2, size.height/2 - 400));
         
         float itemHeight = 120;
         float gapY = 10;
@@ -5144,20 +5115,20 @@ void EditorHud::showDetailPopup(cocos2d::Point pos){
         selectedUnit->eventInfoList.push_back(new EventInfo(SUBJECT_TIME, ACTION_AFTER, OBJECT_AMOUNT, SUBJECT_BUILDING, ACTION_PRODUCE, OBJECT_UNIT));
         selectedUnit->eventInfoList.push_back(new EventInfo(SUBJECT_TIME, ACTION_AFTER, OBJECT_AMOUNT, SUBJECT_BUILDING, ACTION_PRODUCE, OBJECT_UNIT));
         int itemCount = selectedUnit->eventInfoList.size();
-        sv->setInnerContainerSize(Size(1300, itemHeight*itemCount));
+        sv->setInnerContainerSize(cocos2d::Size(1300, itemHeight*itemCount));
         for (int i = 0; i < itemCount; i++) {
             Node* row = Node::create();
             
             btn = Button::create("btnBox.png");
             sv->addChild(btn);
             if(itemCount > 5){
-                btn->setPosition(Point(228, itemHeight*(itemCount - i)));
+                btn->setPosition(Vec2(228, itemHeight*(itemCount - i)));
             }else{
-                btn->setPosition(Point(228, sv->getInnerContainerSize().height - itemHeight*(i) - gapY));
+                btn->setPosition(Vec2(228, sv->getInnerContainerSize().height - itemHeight*(i) - gapY));
             }
             btn->setScale9Enabled(true);
-            btn->setAnchorPoint(Point(0, 1));
-            btn->setContentSize(Size(308, 120));
+            btn->setAnchorPoint(Vec2(0, 1));
+            btn->setContentSize(cocos2d::Size(308, 120));
             btn->setName("ifSubject");
             addLabelToButton("subject", btn, false, DARK_GRAY_3B);
             btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onIfSubjectClick, this));
@@ -5165,27 +5136,27 @@ void EditorHud::showDetailPopup(cocos2d::Point pos){
         
         btn = Button::create("btnBox.png");
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 + 450, size.height/2 + 350));
+        btn->setPosition(Vec2(size.width/2 + 450, size.height/2 + 350));
         btn->setScale9Enabled(true);
-        btn->setContentSize(Size(338, 120));
+        btn->setContentSize(cocos2d::Size(338, 120));
         btn->setName("btnAddEvent");
         addLabelToButton("Add Event", btn, false, DARK_GRAY_3B);
         btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onAddEventClick, this));
         
         btn = Button::create("btnBox.png");
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 + 230, size.height/2 - 500));
+        btn->setPosition(Vec2(size.width/2 + 230, size.height/2 - 500));
         btn->setScale9Enabled(true);
-        btn->setContentSize(Size(308, 120));
+        btn->setContentSize(cocos2d::Size(308, 120));
         btn->setName("btnAddEvent");
         addLabelToButton("OK", btn, false, DARK_GRAY_3B);
         btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onOkOnDetailPopup, this));
         
         btn = Button::create("btnBox.png");
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 + 530, size.height/2 - 500));
+        btn->setPosition(Vec2(size.width/2 + 530, size.height/2 - 500));
         btn->setScale9Enabled(true);
-        btn->setContentSize(Size(308, 120));
+        btn->setContentSize(cocos2d::Size(308, 120));
         btn->setName("btnAddEvent");
         addLabelToButton("Cancel", btn, false, DARK_GRAY_3B);
         btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
@@ -5234,21 +5205,21 @@ std::string EditorHud::getPIAName(int pia){
         return "Enemy Side";
     }
 }
-void EditorHud::doBrush(cocos2d::Point pos){
-    Point coordinate = world->getCoordinateFromPosition(pos);
+void EditorHud::doBrush(cocos2d::Vec2 pos){
+    Vec2 coordinate = world->getCoordinateFromPosition(pos);
     if(selectedMode == MODE_PENCIL){
         int unitType = world->getPlacedUnit(coordinate);
         if(unitType != selectedBrush){
             world->brushTile(selectedBrush, coordinate);
         }
     }else if(selectedMode == MODE_ERASER){
-        Rect rect;
+        cocos2d::Rect rect;
         bool somethingClicked = false;
         for(auto spt: world->spriteBatch->getChildren()){
             rect = spt->getBoundingBox();
             if(rect.containsPoint(pos)){
                 somethingClicked = true;
-                coordinate = Point(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
+                coordinate = Vec2(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
                 world->eraseTile(coordinate);
             }
         }
@@ -5273,7 +5244,7 @@ void EditorHud::doBrush(cocos2d::Point pos){
  -(action) on (condition)
  
 
- Start Point Menu
+ Start Vec2 Menu
  -clear condition
     -gold over (amount)
     -lumber over (amount)
@@ -5287,10 +5258,10 @@ void EditorHud::doBrush(cocos2d::Point pos){
     -none
  -init gold and lumber -> action to add gold on time 0 min
  
- Event Point
+ Event Vec2
  -if (who) arrived then (system event) hanppens.
  
- Start Point
+ Start Vec2
  -on (condition) then (system event) happens
  
  Condition

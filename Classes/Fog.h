@@ -12,7 +12,7 @@
 #define FOG_SEEN_NOT_NOW 1
 #define FOG_SEEN_LITTLE 2
 #define FOG_SEEN_NOW 3
-#define FOG_SIZE 200
+#define FOG_SIZE 100
 
 
 #include "cocos2d.h"
@@ -26,7 +26,7 @@ public:
     Vector<Fog*> adjacentFogs;
     Vector<Fog*> farFogs;
     static Fog* create();
-    cocos2d::Point coordinate;
+    cocos2d::Vec2 coordinate;
     int newState = FOG_SEEN_NOT;
     int appliedState = FOG_SEEN_NOT;
 };

@@ -33,12 +33,12 @@ public:
     Vector<EnemyBase*> enemyArray;
     float maxLength;
     EnemyBase* hitEnemy=nullptr;
-    cocos2d::Point endPos;
+    cocos2d::Vec2 endPos;
     bool isGatheringOn=false;
     bool isHitOn=false;
     static Laser* create(std::string laserName, std::string gatheringName, std::string hitAniName);
     void changeLook(std::string laserName, std::string gatheringAniName, std::string hitAniName);
-    void setLaser(cocos2d::Point startPos, float angle);
+    void setLaser(cocos2d::Vec2 startPos, float angle);
     void setLaserOn(bool isOn);
     void updateLaser(float dt);
 };
@@ -49,7 +49,7 @@ private:
     
 public:
     LightningLine(){};
-    static void createLine(std::string line, std::string tip, cocos2d::Point startPos, cocos2d::Point endPos, Node* parent);
+    static void createLine(std::string line, std::string tip, cocos2d::Vec2 startPos, cocos2d::Vec2 endPos, Node* parent);
 };
 
 class Lightning : public Sprite
@@ -63,8 +63,8 @@ public:
     Lightning(){};
     Vector<EnemyBase*> hitEnemyArray;
     float maxLength=200;
-    cocos2d::Point endPos;
-    static Lightning* create(std::string line, std::string tip, cocos2d::Point startPos, float angle, Vector<EnemyBase*> enemyArray, std::vector<cocos2d::Rect> rectArray);
+    cocos2d::Vec2 endPos;
+    static Lightning* create(std::string line, std::string tip, cocos2d::Vec2 startPos, float angle, Vector<EnemyBase*> enemyArray, std::vector<cocos2d::Rect> rectArray);
 };
 
 

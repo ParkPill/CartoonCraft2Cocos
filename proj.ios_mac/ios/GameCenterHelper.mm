@@ -60,6 +60,12 @@ void GameSharing::buyItemIOS(std::string item){
 //    [Ios_BillingManager sharedManager].purchaseCallback = callback;
     [[Ios_BillingManager sharedManager] purchase:item.c_str() code:0];
 }
+void GameSharing::restoreIOS(){
+    //    NSString* strItem = [NSString stringWithUTF8String:skuID];
+    
+    //    [Ios_BillingManager sharedManager].purchaseCallback = callback;
+    [[Ios_BillingManager sharedManager] restorePurchases];
+}
 void GameSharing::initForIOS(){
     [[Ios_BillingManager sharedManager] initialize];
     [[Ios_BillingManager sharedManager] requestProductData];
@@ -69,7 +75,13 @@ void GameSharing::initForIOS(){
 std::string GameSharing::getPriceLocaleIOS(std::string str){
     NSString* nsstr = [NSString stringWithUTF8String:str.c_str()];
     nsstr = [[Ios_BillingManager sharedManager] getPriceLocale:nsstr];
-    std::string returnedStr = std::string([nsstr UTF8String]);
+    std::string returnedStr;
+    if ([nsstr length] != 0){
+        returnedStr = std::string([nsstr UTF8String]);
+    }else{
+        returnedStr = "BUY";
+    }
+    
     return returnedStr;
 }
 std::string GameSharing::getPriceAmountIOS(std::string str){

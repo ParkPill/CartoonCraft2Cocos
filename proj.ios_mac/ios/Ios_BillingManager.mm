@@ -174,7 +174,7 @@ static Ios_BillingManager* mSelf = nil;
     //[self recordTransaction: transaction];
     //[self provideContent: transaction.originalTransaction.payment.productIdentifier];
     [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
-    GameSharing::onIAPSuccess();
+//    GameSharing::onIAPSuccess();
 //    if(self.purchaseCallback){
 //        (*self.purchaseCallback)(NativeInterface::PURCHASE_SUCCESS);
 //    }

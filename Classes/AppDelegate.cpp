@@ -1,7 +1,7 @@
 #include "cocos2d.h"
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
-
+#include "HeroPage.h"
 //#include "HelloWorldAstar.h"
 //#include "BattleLobby.h" // test
 //#ifdef SDKBOX_ENABLED
@@ -94,7 +94,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //#ifdef SDKBOX_ENABLED
 ////    sdkbox::PluginFacebook::init();
 //#endif
-    
+
 #endif
     // initialize director
     auto director = Director::getInstance();
@@ -102,11 +102,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1334, 750));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0, 0, 1334, 750));
         float rate = 0.8f;
-        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1500*rate, 750*rate));
-//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1500*rate, 750*rate));
-//        glview = GLViewImpl::createWithRect("Cartoon Craft", Rect(0, 0, 1024, 768));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0, 0, 1500*rate, 750*rate));
+        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0, 0, 1024*rate, 768*rate));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0, 0, 1500*rate, 750*rate));
+//        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0, 0, 1024, 768));
 //        glview = GLViewImpl::createWithFullScreen("Cartoon Craft");
 //        glview = GLViewImpl::create("Cartoon Craft");
 #else
@@ -131,10 +132,11 @@ bool AppDelegate::applicationDidFinishLaunching() {
     FileUtils::getInstance()->addSearchPath("tilemap");
     
     SpriteFrameCache* cache = SpriteFrameCache::getInstance();
+    cache->addSpriteFramesWithFile("CartoonCraftNV.plist");
     cache->addSpriteFramesWithFile("effect.plist");
-    cache->addSpriteFramesWithFile("cartoonCraft.plist");
-    cache->addSpriteFramesWithFile("cartoonCraftBuilding.plist");
-    cache->addSpriteFramesWithFile("cartoonCraftEffect.plist");
+//    cache->addSpriteFramesWithFile("cartoonCraft.plist");
+//    cache->addSpriteFramesWithFile("cartoonCraftBuilding.plist");
+//    cache->addSpriteFramesWithFile("cartoonCraftEffect.plist");
     cache->addSpriteFramesWithFile("CartoonCraftNumber.plist");
     
     AnimationCache::getInstance()->addAnimationsWithFile("animations.plist");
@@ -145,20 +147,20 @@ bool AppDelegate::applicationDidFinishLaunching() {
      log("time request ");*/
     
     // turn on display FPS
-    director->setDisplayStats(false);
+    director->setDisplayStats(false); // test
     
     // set FPS. the default value is 1.0/60 if you don't call this
-    director->setAnimationInterval(1.0 / 50);
+    director->setAnimationInterval(1.0 / 60);
     
     // Set the design resolution
     glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::SHOW_ALL);
-    Size frameSize = glview->getFrameSize();
+    cocos2d::Size frameSize = glview->getFrameSize();
     if (frameSize.height/frameSize.width > designResolutionSize.height/designResolutionSize.width){
         glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
     }else{
         glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_HEIGHT);
     }
-    /*Size frameSize = glview->getFrameSize();
+    /*cocos2d::Size frameSize = glview->getFrameSize();
      // if the frame's height is larger than the height of medium size.
      if (frameSize.height > mediumResolutionSize.height)
      {
@@ -178,7 +180,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
     
     GameManager::getInstance()->originalSize = director->getWinSize();
-    GameManager::getInstance()->market = MARKET_PLAYSTORE_PAID;
     GameManager::getInstance()->showVPad = false;
     GameManager::getInstance()->totalThemeCount = 4;
     GameManager::getInstance()->totalStage = 24*4;
@@ -205,7 +206,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
     
     srand((uint)time(NULL));
     
-    BSM->getHttpTime();
+//    BSM->getHttpTime();
+    
+//    BSM->getAllUserData();
     GM->loadBattleData();
     GameSharing::init(); // for ios
     
@@ -216,7 +219,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    GM->nextScene = STAGE_FIELD;
 //    GM->isPremiumRetry = true; // test
 //    GM->isColosseum = true; // test
-//    auto scene = HelloWorld::scene(4, false); // test
+    
 //    WORLD->addGold(15000);WORLD->addLumber(10000); // test
     
 //    GM->nextScene = STAGE_INTRO;
@@ -233,88 +236,65 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    scene->addChild(Title::create());
     // title end
     
-    int startX = 0;
-    int max=0;
-    int x=startX;
-    int y=max;
-    int direction = -1;//0:E 1:S 2:W 3:N
-    bool changeDirection = false;
-    for(int i = 0; i < 100; i++){
-        log("%d, %d", x, y);
-        
-        if (direction < 0 || (x == 0 && y == max)) {
-            y++;
-            x++;
-            max++;
-            if(direction < 0){
-                direction = 0;
-            }
-        }else if(direction == 0){
-            x++;
-            if(x > max){
-                changeDirection = true;
-            }
-        }else if(direction == 1){
-            y--;
-            if(y < -max){
-                changeDirection = true;
-            }
-        }else if(direction == 2){
-            x--;
-            if(x < -max){
-                changeDirection = true;
-            }
-        }else if(direction == 3){
-            y++;
-            if(y > max){
-                changeDirection = true;
-            }
-        }
-        if(changeDirection){
-            changeDirection = false;
-            if(direction == 0){
-                x--;
-                y--;
-            }else if(direction == 1){
-                x--;
-                y++;
-            }else if(direction == 2){
-                x++;
-                y++;
-            }else if(direction == 3){
-                x++;
-                y--;
-            }
-            direction++;
-            if(direction>3){
-                direction = 0;
-            }
-        }
-    }
     
-    GM->nextScene = STAGE_FIELD; // test
-    auto scene = HelloWorld::scene(1, GAME_MODE_PVP6); // test now
-    BSM->pvpTargetData = "_60/401/8/9_61/401/9/9_62/401/10/9_63/401/11/9_52/100/12/9_53/100/13/9_57/100/14/9_57/100/15/9_55/100/15/6_50/0/17/9_64/401/18/9_54/200/19/9_";
-    WORLD->setPvpMode(6);
+//    GM->nextScene = STAGE_FIELD; // test
+//    auto scene = HelloWorld::scene(36, GAME_MODE_NORMAL); // test 
+//    BSM->pvpTargetData = "_60/401/8/9_61/401/9/9_62/401/10/9_63/401/11/9_52/100/12/9_53/100/13/9_57/100/14/9_57/100/15/9_55/100/15/6_50/0/17/9_64/401/18/9_54/200/19/9_";
+//    BSM->pvpTargetName ="박성필 테스트";
+//    WORLD->setPvpMode(12);
 //    GM->nextScene = STAGE_LOBBY; // test
-//    auto scene = HelloWorld::scene(GM->nextScene, false); // test
+
+//    auto scene = HelloWorld::scene(36, false); // test
 //    GM->nextScene = STAGE_SINGLEPLAY; // test
 //    GM->singlePlayStageIndex = 0;
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
-    GM->version = "2.82";
-    GM->versionCode = 167;
-//    auto scene = Scene::create();
-//    Intro* intro = Intro::create();
-//    scene->addChild(intro);
+    GM->market = MARKET_PAID;
+    GM->version = "3.64";
+    GM->versionCode = 250;
+//    auto scene = HelloWorld::scene(36, false); // test
+    auto scene = Scene::create();
+    Intro* intro = Intro::create();
+    scene->addChild(intro);
     // intro end
+    
+    if (GM->market == MARKET_SMARTPASS) {
+        UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::JAPANESE);
+    }
 
+    std::string strName = "";
+    for (int i = 0; i < 15; i++) {
+        strName += (char)(rand()%10 + (int)'0');
+    }
+    log("strName: %s", strName.c_str());
+    log("strName: %s", strName.c_str());
 //    scene->addChild(FifteenSixLogo::create());
 //    scene->addChild(WorldMap::create());
 //    scene->addChild(PanZoomLayer::create());
 //    scene->addChild(Title::create());
 //    Scene* sceneTitle = Scene::create();
 //    sceneTitle->addChild(HelloWorld::scene(STAGE_LOBBY, false));
+    
+//    std::string savedRID = "5c9dae8b385e48337a34dc5b";
+//    std::string data = "score="+Value(1100).asString() + "&name=tester1";
+//    std::string arenaRID = "";
+//    if(arenaRID.length() > 0){
+//        data += "&arenarid=" + arenaRID;
+//    }
+//    BSM->sendPost("arnsv", "_id=" + savedRID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+//    
+//    savedRID = "5db588363a61a02621ef2602";
+//    data = "score="+Value(1200).asString() + "&name=tester2";
+//    arenaRID = "5db588413a61a02621ef2603";
+//    if(arenaRID.length() > 0){
+//        data += "&arenarid=" + arenaRID;
+//    }
+//    BSM->sendPost("arnsv", "_id=" + savedRID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+//    
+//    savedRID = "5c9dae4e385e48337a34dc5a";
+//    data = "score="+Value(1300).asString() + "&name=tester3";
+//    BSM->sendPost("arnsv", "_id=" + savedRID + "&" + data, httpresponse_selector(BuggyServerManager::onSaveUserData));
+    
     
     log("time: %s", BSM->getStrFromTime(-12342352).c_str());
     
@@ -340,13 +320,17 @@ void AppDelegate::applicationDidEnterBackground() {
 //        scene->addChild(intro);
 //        
 //        Director::getInstance()->replaceScene(scene);
-        BHUD->checkUnsaved();
+//        BHUD->checkUnsaved();
     }
     if (TITLE == nullptr && WORLD && GM->nextScene == STAGE_FIELD) {
         HUD->onMenuClick();
     }
     if (GM->titleLayer && GM->titleLayer != nullptr) {
         TITLE->onEnterBackground();
+    }
+    
+    if (HEROPAGE) {
+        HEROPAGE->checkChangesForHeroes();
     }
     
     // if you use SimpleAudioEngine, it must be pause
@@ -359,7 +343,8 @@ void AppDelegate::applicationWillEnterForeground() {
 //    sdkbox::sessionStart();
 //#endif
     Director::getInstance()->startAnimation();
-    BSM->getHttpTime();
+//    BSM->getHttpTime();
+//    BSM->checkServer();
 //    if(BHUD){
 //        BHUD->getLastAccessTime();
 //    }

@@ -19,9 +19,10 @@ bool FindMatch::init()
     {
         return false;
     }
-    
+    size = Director::getInstance()->getWinSize();
     Node* layer = CSLoader::createNode("FindMatch.csb");
     this->addChild(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     Button* btn = (Button*)layer->getChildByName("btnCancel");
     btn->addClickEventListener(CC_CALLBACK_0(FindMatch::onCancelClick, this));
     Text* lbl = (Text*)btn->getChildByName("lbl");

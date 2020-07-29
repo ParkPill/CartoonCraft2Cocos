@@ -74,7 +74,7 @@
           <AbstractNodeData Name="btnKorean" ActionTag="-1899439878" IconVisible="False" LeftMargin="719.9420" RightMargin="1221.4980" TopMargin="323.7255" BottomMargin="860.6345" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="391522382" Tag="302" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3024" BottomMargin="50.5307" IsCustomSize="True" FontSize="30" LabelText="KOREAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="391522382" Tag="302" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3025" BottomMargin="50.5306" IsCustomSize="True" FontSize="30" LabelText="KOREAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="65.8069" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3037" Y="83.4341" />
@@ -101,7 +101,7 @@
           <AbstractNodeData Name="btnEnglish" ActionTag="643476629" Tag="1" IconVisible="False" LeftMargin="1207.7488" RightMargin="733.6912" TopMargin="323.7261" BottomMargin="860.6339" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="888707188" Tag="307" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="33.3005" BottomMargin="50.5326" IsCustomSize="True" FontSize="30" LabelText="ENGLISH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="888707188" Tag="307" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="33.3006" BottomMargin="50.5325" IsCustomSize="True" FontSize="30" LabelText="ENGLISH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="65.8069" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3013" Y="83.4360" />
@@ -128,7 +128,7 @@
           <AbstractNodeData Name="btnRussian" ActionTag="910373470" Tag="2" IconVisible="False" LeftMargin="719.9420" RightMargin="1221.4980" TopMargin="495.6422" BottomMargin="688.7178" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="1006223914" Tag="310" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3023" BottomMargin="50.5308" IsCustomSize="True" FontSize="30" LabelText="RUSSIAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="1006223914" Tag="310" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3024" BottomMargin="50.5307" IsCustomSize="True" FontSize="30" LabelText="RUSSIAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="65.8069" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3037" Y="83.4342" />
@@ -155,7 +155,7 @@
           <AbstractNodeData Name="btnFrench" ActionTag="1162292220" Tag="3" IconVisible="False" LeftMargin="1207.7488" RightMargin="733.6912" TopMargin="495.3468" BottomMargin="689.0132" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="1301065347" Tag="3" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="31.0700" BottomMargin="48.2983" IsCustomSize="True" FontSize="30" LabelText="FRENCH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="1301065347" Tag="3" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="31.0701" BottomMargin="48.2982" IsCustomSize="True" FontSize="30" LabelText="FRENCH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="70.2717" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3013" Y="83.4341" />
@@ -209,7 +209,7 @@
           <AbstractNodeData Name="btnGerman" ActionTag="-584916579" Tag="5" IconVisible="False" LeftMargin="1207.7488" RightMargin="733.6913" TopMargin="666.9682" BottomMargin="517.3918" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="1751693408" Tag="443" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="31.0686" BottomMargin="48.2997" IsCustomSize="True" FontSize="30" LabelText="GERMAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="1751693408" Tag="443" IconVisible="False" LeftMargin="65.3013" RightMargin="179.7746" TopMargin="31.0686" BottomMargin="48.2998" IsCustomSize="True" FontSize="30" LabelText="GERMAN" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="70.2717" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3013" Y="83.4356" />
@@ -236,7 +236,7 @@
           <AbstractNodeData Name="btnTurkish" ActionTag="-179520459" Tag="6" IconVisible="False" LeftMargin="719.9420" RightMargin="1221.4980" TopMargin="839.4759" BottomMargin="344.8841" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="426.5600" Y="149.6400" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="-477275395" Tag="446" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3010" BottomMargin="50.5321" IsCustomSize="True" FontSize="30" LabelText="TURKISH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lbl" ActionTag="-477275395" Tag="446" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3009" BottomMargin="50.5322" IsCustomSize="True" FontSize="30" LabelText="TURKISH" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="181.4841" Y="65.8069" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="65.3037" Y="83.4356" />
@@ -253,6 +253,33 @@
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="255" G="255" B="255" />
             <PrePosition X="0.4842" Y="0.3707" />
+            <PreSize X="0.1801" Y="0.1122" />
+            <TextColor A="255" R="65" G="65" B="70" />
+            <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <NormalFileData Type="Normal" Path="btnBox.png" Plist="" />
+            <OutlineColor A="255" R="255" G="0" B="0" />
+            <ShadowColor A="255" R="110" G="110" B="110" />
+          </AbstractNodeData>
+          <AbstractNodeData Name="btnJapanese" ActionTag="-2046340972" Tag="7" IconVisible="False" LeftMargin="1207.7488" RightMargin="733.6913" TopMargin="839.4759" BottomMargin="344.8841" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+            <Size X="426.5600" Y="149.6400" />
+            <Children>
+              <AbstractNodeData Name="lbl" ActionTag="2095489844" Tag="4126" IconVisible="False" LeftMargin="65.3037" RightMargin="179.7722" TopMargin="33.3009" BottomMargin="50.5322" IsCustomSize="True" FontSize="30" LabelText="JAPANESE" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="181.4841" Y="65.8069" />
+                <AnchorPoint ScaleY="0.5000" />
+                <Position X="65.3037" Y="83.4356" />
+                <Scale ScaleX="1.5000" ScaleY="1.5000" />
+                <CColor A="255" R="14" G="14" B="14" />
+                <PrePosition X="0.1531" Y="0.5576" />
+                <PreSize X="0.4255" Y="0.4398" />
+                <OutlineColor A="255" R="255" G="0" B="0" />
+                <ShadowColor A="255" R="110" G="110" B="110" />
+              </AbstractNodeData>
+            </Children>
+            <AnchorPoint ScaleX="1.0000" ScaleY="1.0000" />
+            <Position X="1634.3087" Y="494.5241" />
+            <Scale ScaleX="1.0000" ScaleY="1.0000" />
+            <CColor A="255" R="255" G="255" B="255" />
+            <PrePosition X="0.6902" Y="0.3707" />
             <PreSize X="0.1801" Y="0.1122" />
             <TextColor A="255" R="65" G="65" B="70" />
             <PressedFileData Type="Normal" Path="btnBox.png" Plist="" />

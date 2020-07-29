@@ -12,9 +12,10 @@
 #include "EditorHud.h"
 #include "HelloWorldScene.h"
 #include "BattleHud.h"
+//#include "LoadBalancing-cpp/inc/Client.h"
 
 
-#include "SimpleAudioEngine.h"
+//#include "SimpleAudioEngine.h"
 
 #include "../cocos2d/cocos/ui/UILayout.h"
 #include "../cocos2d/cocos/ui/UIButton.h"
@@ -97,6 +98,8 @@ using namespace cocos2d::ui;
 #define IAP_DETAIL_CLASSIC_WAR_PACKAGE "cc_classic_war_package"
 #define IAP_DETAIL_CREW_MANAGER_PACKAGE "cc_crew_manager_package"
 #define IAP_DETAIL_MASTER_CREW_PACKAGE "cc_master_crew_package"
+#define IAP_DETAIL_EVENT_HERO_PACKAGE "cc_monthly_event_package"
+#define IAP_DETAIL_MID_MONTH_PACKAGE "cc_mid_month_event_package"
 
 #define FEELING_TALK 0
 #define FEELING_EXCLAIM 1
@@ -222,6 +225,25 @@ using namespace cocos2d::ui;
 #define POPUP_ZORDER 200
 #define KEY_HERO_LEVEL_FORMAT "KEY_HERO_LEVEL_%d"
 #define KEY_HERO_EXP_FORMAT "KEY_HERO_EXP_%d"
+#define KEY_HERO_POS_X_FORMAT "KEY_HERO_POS_X_FORMAT_%d"
+#define KEY_HERO_POS_Y_FORMAT "KEY_HERO_POS_Y_FORMAT_%d"
+#define KEY_HERO_INVENTORY_UNIT_TYPE_FORMAT "KEY_HERO_INVENTORY_UNIT_TYPE_FORMAT_%d"
+#define KEY_HERO_INVENTORY_RANK_LEVEL_FORMAT "KEY_HERO_INVENTORY_RANK_LEVEL_FORMAT_%d"
+#define KEY_HERO_INVENTORY_INT_SAVED "KEY_HERO_INVENTORY_INT_SAVED"
+#define KEY_HERO_DECK_UNIT_TYPE_FORMAT "KEY_HERO_DECK_UNIT_TYPE_FORMAT_%d"
+#define KEY_HERO_DECK_RANK_LEVEL_FORMAT "KEY_HERO_DECK_RANK_LEVEL_FORMAT_%d"
+#define KEY_HERO_DECK_X_FORMAT "KEY_HERO_DECK_X_FORMAT_%d"
+#define KEY_HERO_DECK_Y_FORMAT "KEY_HERO_DECK_Y_FORMAT_%d"
+#define KEY_HERO_DECK_INT_SAVED "KEY_HERO_DECK_INT_SAVED"
+
+#define KEY_BATTLE_UNIT_INVENTORY_UNIT_TYPE_FORMAT "KEY_BATTLE_UNIT_INVENTORY_UNIT_TYPE_FORMAT_%d"
+#define KEY_BATTLE_UNIT_INVENTORY_RANK_LEVEL_FORMAT "KEY_BATTLE_UNIT_INVENTORY_RANK_LEVEL_FORMAT_%d"
+#define KEY_BATTLE_UNIT_INVENTORY_INT_SAVED "KEY_BATTLE_UNIT_INVENTORY_INT_SAVED"
+#define KEY_BATTLE_UNIT_DECK_UNIT_TYPE_FORMAT "KEY_BATTLE_UNIT_DECK_UNIT_TYPE_FORMAT_%d"
+#define KEY_BATTLE_UNIT_DECK_RANK_LEVEL_FORMAT "KEY_BATTLE_UNIT_DECK_RANK_LEVEL_FORMAT_%d"
+#define KEY_BATTLE_UNIT_DECK_X_FORMAT "KEY_BATTLE_UNIT_DECK_X_FORMAT_%d"
+#define KEY_BATTLE_UNIT_DECK_Y_FORMAT "KEY_BATTLE_UNIT_DECK_Y_FORMAT_%d"
+#define KEY_BATTLE_UNIT_DECK_INT_SAVED "KEY_BATTLE_UNIT_DECK_INT_SAVED"
 
 #define KEY_HERO_WEAPON_FORMAT "KEY_HERO_WEAPON_%d"
 #define KEY_HERO_SHIELD_FORMAT "KEY_HERO_SHIELD_%d"
@@ -232,7 +254,7 @@ using namespace cocos2d::ui;
 #define KEY_INVENTORY_ITEM_COUNT_FORMAT "KEY_INVENTORY_ITEM_COUNT_FORMAT_%d"
 #define KEY_LAST_HIRE_REFRESH_DAY "KEY_LAST_HIRE_REFRESH_DAY"
 #define KEY_LAST_SAVE_POINT "KEY_LAST_SAVE_POINT"
-#define KEY_HARD_MODE_CLEAR_FORMAT "KEY_HARD_MODE_CLEAR_FORMAT_%d"
+#define KEY_HARD_MODE_CLEAR_STAGE "KEY_HARD_MODE_CLEAR_STAGE"
 #define KEY_LAST_CHECK_POINT "KEY_LAST_CHECK_POINT"
 #define KEY_LAST_SAVE_HEALTH "KEY_LAST_SAVE_HEALTH"
 #define KEY_NEXT_SPAWN_DIRECTION "KEY_NEXT_SPAWN_DIRECTION"
@@ -251,8 +273,8 @@ using namespace cocos2d::ui;
 #define KEY_HERO_PAGE_TUTORIAL_DONE "KEY_HERO_PAGE_TUTORIAL_DONE"
 #define KEY_DEFENCE_RECORD_TUTORIAL_DONE "KEY_DEFENCE_RECORD_TUTORIAL_DONE"
 #define KEY_HERO_ARRANGE_TYPE "KEY_HERO_ARRANGE_TYPE"
-#define KEY_TODAY_STRING "KEY_TODAY_STRING"
-#define KEY_DAILY_REWARD_RECEIVED_DAY "KEY_DAILY_REWARD_RECEIVED_DAY"
+#define KEY_TODAY_INT "KEY_TODAY_INT"
+#define KEY_DAILY_REWARD_RECEIVED_DAY_INT "KEY_DAILY_REWARD_RECEIVED_DAY_INT"
 #define KEY_ID_EXIST_CHECK_DONE "KEY_ID_EXIST_CHECK_DONE"
 #define KEY_VIDEO_STORE_RANDOM_INDEX "KEY_VIDEO_STORE_RANDOM_INDEX"
 #define KEY_VIDEO_STORE_UNIT_INDEX "KEY_VIDEO_STORE_UNIT_INDEX"
@@ -276,12 +298,22 @@ using namespace cocos2d::ui;
 #define KEY_SINGLEPLAY_DATA_FORMAT "KEY_SINGLEPLAY_DATA_%d"
 #define KEY_BUILDINGS "KEY_BUILDINGS"
 #define KEY_UNITS_INVENTORY "KEY_UNITS_INVENTORY"
+#define KEY_UNITS_INVENTORY_COUNT "KEY_UNITS_INVENTORY_COUNT"
+#define KEY_UNITS_INVENTORY_FORMAT "KEY_UNITS_INVENTORY_%d"
 #define KEY_UNITS_DECK "KEY_UNITS_DECK"
+#define KEY_UNITS_DECK_COUNT "KEY_UNITS_DECK_COUNT"
+#define KEY_UNITS_DECK_FORMAT "KEY_UNITS_DECK_%d"
 #define KEY_UNITS_HERO_INVENTORY "KEY_UNITS_HERO_INVENTORY"
+#define KEY_UNITS_HERO_INVENTORY_COUNT "KEY_UNITS_HERO_INVENTORY_COUNT"
+#define KEY_UNITS_HERO_INVENTORY_FORMAT "KEY_UNITS_HERO_INVENTORY_FORMAT_%d"
 #define KEY_UNITS_HERO_DECK "KEY_UNITS_HERO_DECK"
+#define KEY_UNITS_HERO_DECK_COUNT "KEY_UNITS_HERO_DECK_COUNT"
+#define KEY_UNITS_HERO_DECK_FORMAT "KEY_UNITS_HERO_DECK_FORMAT_%d"
 #define KEY_DEFENCE_RECORD "KEY_DEFENCE_RECORD"
 #define KEY_COLLECTION_UNLOCKED_FORMAT "KEY_COLLECTION_UNLOCKED_FORMAT%d"
 #define KEY_SAVED_ID "KEY_SAVED_ID"
+#define KEY_HERO_INVALIDATE "KEY_HERO_INVALIDATE"
+#define KEY_BATTLE_DATA_INVALIDATE "KEY_BATTLE_DATA_INVALIDATE"
 #define KEY_MESSAGE_BOX "KEY_MESSAGE_BOX"
 #define KEY_GOLDEN_TICKET "KEY_GOLDEN_TICKET"
 #define KEY_GOLDEN_TICKET_FREE "KEY_GOLDEN_TICKET_FREE"
@@ -426,6 +458,7 @@ using namespace cocos2d::ui;
 #define EFFECT_HEAL 26
 #define EFFECT_HIT_WITH_CIRCLE_ON_GROUND 27
 #define EFFECT_PURPLE_SLASH 28
+#define EFFECT_WATER_SPLASH 29
 
 #define VEHICLE_NONE 0
 #define VEHICLE_GOLIATH 1
@@ -446,10 +479,9 @@ using namespace cocos2d::ui;
 #define BOSS_GIANT 2
 #define BOSS_GIANT_HOOD 3
 
-#define MARKET_APPSTORE_PAID 0
-#define MARKET_PLAYSTORE_PAID 1
-#define MARKET_APPSTORE_FREE 2
-#define MARKET_PLAYSTORE_FREE 3
+#define MARKET_PAID 1
+#define MARKET_FREE 2
+#define MARKET_SMARTPASS 3
 #define MARKET_ONESTORE_PAID 4
 #define MARKET_ONESTORE_FREE 5
 #define MARKET_SAMSUNG_APPS 6
@@ -585,12 +617,27 @@ using namespace cocos2d::ui;
 #define KEY_UPDATE_REWARD_PROVIDED "UpdateIssue"
 #define KEY_SELECTED_LANGUAGE "SelectedLanguage"
 #define KEY_NAME "KEY_Name"
+#define KEY_SEASON_KEY "KEY_SEASON_KEY"
+#define KEY_INVENTORY_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM "KEY_INVENTORY_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM"
+#define KEY_DECK_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM "KEY_DECK_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM"
+#define KEY_EVENT_ITEM_BOUGHT_COUNT "KEY_EVENT_ITEM_BOUGHT_COUNT"
+#define KEY_MID_MONTH_ITEM_BOUGHT_COUNT "eventSetItemBuyCount"
+#define KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT "KEY_CAMPAIGN_CHEST_GET_TIME_%d"
+#define KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT "KEY_CAMPAIGN_CHEST_STAGE_INDEX_%d"
+#define KEY_MONTHLY_EVENT_INFO "KEY_MONTHLY_EVENT_INFO"
+#define KEY_MONTHLY_EVENT_INFO_INVALIDATE "KEY_MONTHLY_EVENT_INFO_INVALIDATE"
+#define KEY_MONTHLY_EVENT_ATTEND_DAY "KEY_MONTHLY_EVENT_ATTEND_DAY"
+#define KEY_MONTHLY_EVENT_INFO_MONTH "KEY_MONTHLY_EVENT_INFO_MONTH"
+#define KEY_MONTHLY_EVENT_INFO_RECEIVE_COUNT "KEY_MONTHLY_EVENT_INFO_RECEIVE_COUNT"
+#define KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT "KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT_%d"
 #define KEY_ARENA_RID "KEY_ARENA_RID"
 #define KEY_RID "KEY_RID"
-#define KEY_PVP6RID "KEY_PVP6RID"
-#define KEY_PVP12RID "KEY_PVP12RID"
+#define KEY_ROULETTE_VIDEO_BUTTON_ENABLED "KEY_ROULETTE_VIDEO_BUTTON_ENABLED"
+#define KEY_MID_MONTH_ROULETTE_ROLL_DAY "KEY_MID_MONTH_ROULETTE_ROLL_DAY"
 #define KEY_PVP6_TROPHY "KEY_PVP6_TROPHY"
 #define KEY_PVP12_TROPHY "KEY_PVP12_TROPHY"
+#define KEY_PVP6_LAST_TIME_LEFT "KEY_PVP6_LAST_TIME_LEFT"
+#define KEY_PVP12_LAST_TIME_LEFT "KEY_PVP12_LAST_TIME_LEFT"
 #define KEY_TROPHY "KEY_TROPHY"
 #define KEY_IAP_TOTAL "KEY_IAP_TOTAL"
 #define KEY_IAP_LIST "KEY_IAP_LIST"
@@ -605,6 +652,9 @@ using namespace cocos2d::ui;
 #define KEY_DAY_COUNT "DayCount"
 #define KEY_TODAYS_SCORE "TodaysScore"
 #define KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME "KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME_STR"
+#define KEY_LAST_VIDEO_FOR_PVP6_TICKET_WATCHED_TIME "KEY_LAST_VIDEO_FOR_PVP6_TICKET_WATCHED_TIME"
+#define KEY_LAST_VIDEO_FOR_PVP12_TICKET_WATCHED_TIME "KEY_LAST_VIDEO_FOR_PVP12_TICKET_WATCHED_TIME"
+#define KEY_MID_MONTH_ROULETTE_VIDEO_WATCHED_TIME "KEY_MID_MONTH_ROULETTE_VIDEO_WATCHED_TIME"
 
 #define ACHIEVEMENT_COMPLETE_TUTORIAL 0
 #define ACHIEVEMENT_BEAT_BOSS 1
@@ -650,6 +700,24 @@ using namespace cocos2d::ui;
 #define VIDEO_STORE_UNIT 10
 #define VIDEO_STORE_GEM 11
 #define VIDEO_GACHA 12
+#define VIDEO_PVP6_TICKET 13
+#define VIDEO_PVP12_TICKET 14
+#define VIDEO_MIDMONTH_ROULETTE 15
+
+#define EVENT_MISSION_ATTEND 0
+#define EVENT_MISSION_COLLECT_EVENT_HERO_PART 1
+#define EVENT_MISSION_KILL_GOBLIN 2
+#define EVENT_MISSION_KILL_SWORDSMAN 3
+#define EVENT_MISSION_KILL_TROLL 4
+#define EVENT_MISSION_KILL_ORC_SPEAR 5
+#define EVENT_MISSION_KILL_ORC_AXE 6
+#define EVENT_MISSION_KILL_ZOMBIE 7
+#define EVENT_MISSION_ARENA_CLEAR 8
+#define EVENT_MISSION_PVP_6_WIN 9
+#define EVENT_MISSION_PVP_12_WIN 10
+#define EVENT_MISSION_BATTLE_NETWORK_WIN 11
+#define EVENT_MISSION_TOTAL_COUNT 12
+
 //static const Color3B greenColor = {5,126,45};
 //static const Color3B yesColor = {241,74,1};
 //static const Color3B noColor = {46,124,179};
@@ -742,7 +810,7 @@ public:
     void saveGameData();
     void setLoadedData(const char* key, const char* value);
     
-    cocos2d::Point getGemCountPosition();
+    cocos2d::Vec2 getGemCountPosition();
     bool isPaidGame;
     bool isInMiddleOfGame;
     bool isLoadingGame = false;
@@ -750,11 +818,17 @@ public:
     bool firstPlayed;
     const char* version;
     int versionCode = 0;
+    int receivedVersionCode = 0;
+    int serverMaintenance = 0;
+    int rewardCode = 0;
+    int rewardedCode = 0;
+    int rewardGemCount = 0;
+    std::string rewardMsg = "";
     cocos2d::Size originalSize;
     cocos2d::Size size;
     bool isStageSetOnce;
     int currentStageIndex = -1;
-    
+    Color3B getRankColor(int rank);
     bool leftPressed;
     bool rightPressed;
     bool downPressed;
@@ -842,10 +916,11 @@ public:
     float getSoundVolumn();
     float getButtonSize();
     bool getNotificationOn();
-    double getAngle(cocos2d::Point pos1, cocos2d::Point pos2);
+    double getAngle(cocos2d::Vec2 pos1, cocos2d::Vec2 pos2);
     void SendAchievement(const char* text, int count, int goal);
     const char* getWeaponImageFileName(int weapon);
     void makeItSiluk(Node* node);
+    void makeItSiluk(Node* node, float delay, float dur);
     void makeItScaleUpAndDown(Node* node);
     void addMastery(int stageIndex);
     int getMastery(int stageIndex);
@@ -906,15 +981,15 @@ public:
 //    void disableLayer(Layer* layer);
 //    void enableLayer(Layer* layer);
     
-    void showParticleExplosion(Node* prt, const char* sptName, cocos2d::Point pos, float scale);
+    void showParticleExplosion(Node* prt, const char* sptName, cocos2d::Vec2 pos, float scale);
     void showSpriteExplosion(Node* parent, const char* sptName, Vec2 pos, int sptCount, float radius, float dur);
     void scheduleLocalNotification(const char* title, const char* msg, int time);
     void scheduleLocalNotification();
     void unscheduleAllNotifications();
     long strToLong(const char* str);
     Sprite* getGrayScaleImage(std::string src);
-    RenderTexture* createAdditiveBorder( Sprite* label, int size, Color3B color, GLubyte opacity );
-    RenderTexture* createAdditive( Sprite* label, Color3B color, GLubyte opacity, int additiveCount);
+//    RenderTexture* createAdditiveBorder( Sprite* label, int size, Color3B color, GLubyte opacity );
+//    RenderTexture* createAdditive( Sprite* label, Color3B color, GLubyte opacity, int additiveCount);
     Sprite* getSpriteShapeSolidColorSprite(const char* src, Color3B color);
     bool isBoss(int theme, int stage);
     
@@ -962,8 +1037,8 @@ public:
     Node* findDown(Node* currentNode);
     Node* findLeft(Node* currentNode);
     Node* findRight(Node* currentNode);
-    Node* findWithDirect(cocos2d::Point pos, int direction, Node* currentPanel);
-    Node* getNodeAtThisPoint(cocos2d::Point pos, Node* currentNode);
+    Node* findWithDirect(cocos2d::Vec2 pos, int direction, Node* currentPanel);
+    Node* getNodeAtThisPoint(cocos2d::Vec2 pos, Node* currentNode);
     
     bool isOnlineEnabled = true;
     
@@ -989,14 +1064,14 @@ public:
     int nextScene = 0;
     void setPathState(int x, int y, int state);
     cocos2d::Size mapSize;
-    PointArray* getPath(cocos2d::Point start, cocos2d::Point end);
-    PointArray* getPathOld(cocos2d::Point start, cocos2d::Point end);
+    PointArray* getPath(cocos2d::Vec2 start, cocos2d::Vec2 end);
+    PointArray* getPathOld(cocos2d::Vec2 start, cocos2d::Vec2 end);
     void getNextAvailableWayAlongWall(int &firstX, int &firstY, int &secondX, int &secondY, int direction, int x, int y, int &firstDirection, int &secondDirection);
     bool getNextAvailableWay(int &firstX, int &firstY, int direction, int x, int y, int &firstDirection);
     void getNextXYForDirection(int direction, int centerX, int centerY, int &x, int &y, int &newDirection);
     int testStepLimit = 1;
-    cocos2d::Point testStartPos;
-    cocos2d::Point testEndPos;
+    cocos2d::Vec2 testStartPos;
+    cocos2d::Vec2 testEndPos;
     void inspectSurrounded(int x, int y, int distanceFromStart);
     void inspectSurroundedNew(int x, int y, int distanceFromStart);
     int inspectPathStackCount = 0;
@@ -1017,14 +1092,14 @@ public:
     char blockStateToEnd[100][100];
     bool isPathFound = false;
     int foundPathDistance = 9999999;
-    cocos2d::Point pathStart;
-    cocos2d::Point pathEnd;
-    cocos2d::Point finalEnd;
+    cocos2d::Vec2 pathStart;
+    cocos2d::Vec2 pathEnd;
+    cocos2d::Vec2 finalEnd;
     void alignToCenter(Node* node0, Node* node1, float gap, float centerX, float offsetX);
     void drawPath();
     int pathFindingCounter = 0;
     void shakeIt(Node* node, float shakeWidth, int shakeCount, float shakeTime = 0.07f);
-    cocos2d::Point getRandomPosInCicle(cocos2d::Point center, float radius);
+    cocos2d::Vec2 getRandomPosInCicle(cocos2d::Vec2 center, float radius);
     
     std::string uuid;
     void setTimeLeft(Label* lbl, int time);
@@ -1072,6 +1147,7 @@ public:
     int getGemForTimeLeft(int timeLeft);
     int singlePlayStageIndex = 0;
     std::string raidEnemyID = "enemyID";
+    std::string raidEnemyRID = "";
     std::string raidEnemyName = "enemyName";
     int raidEnemyTrophy = 0;
     int raidEnemyGold = 0;
@@ -1079,6 +1155,7 @@ public:
     std::string raidEnemyBuildings = "enemyBuildings";
     std::string raidEnemyDeck = "enemyDeck";
     std::string raidEnemyHeroDeck = "enemyDeck";
+    std::string raidEnemyHeroPos = "";
     int raidMatchState = 0;
     UnitInfo* getUnitInfoFromString(std::string str);
     void loadBattleData();
@@ -1135,7 +1212,7 @@ public:
     
     spine::SkeletonAnimation* getHeroSpine(int unitType);
     
-    bool isHeroLoaded = false;
+//    bool isHeroLoaded = false;
     
     int getMaxGold(int level);
     int getMaxGold();
@@ -1147,8 +1224,51 @@ public:
     int playedStageIndexForTitle = -1;
     
     void addYellowRisingBallEffect(Node* parent);
+    void addGlowBack(Node* node);
     bool isBattleDataLoadComplete = false;
     int matchFindCount = 0;
+    
+    void setTextToNumberByTag(Ref* ref);
+    int getHeroSkillRate(int unitType, int rank);
+    
+    void addMonthlyEventProgress(int index, int count);
+    void resetMonthlyEventProgress(int receivedCount);
+    void checkIsNewMonthlyEvent();
+    int getMonthlyEventProgressMax(int index);
+//    std::string getMonthlyEventInfoString();
+    
+    int getTimeLeftForCampaignChest(int index);
+    std::string strSmartPassError = "";
+    
+    void saveTime(const char* key, time_t time);
+    time_t getSavedTime(const char* key);
+    
+    void saveUnitInfo(const char* key, UnitInfo* info);
+    UnitInfo* getSavedUnitInfo(const char* key);
+    std::vector<UnitInfo*> getHeroInventory();
+    void saveHeroInventory(std::vector<UnitInfo*> list);
+    std::vector<UnitInfo*> getHeroDeck();
+    void saveHeroDeck(std::vector<UnitInfo*> list);
+    std::vector<UnitInfo*> getBattleUnitDeck();
+    void saveBattleUnitDeck(std::vector<UnitInfo*> list);
+    std::vector<UnitInfo*> getBattleUnitInventory();
+    void saveBattleUnitInventory(std::vector<UnitInfo*> list);
+    int getDailyMissionCampaignStageIndex();
+    int lastGem = -1;
+    int isThisCampaignFromDailyMission = false;
+    
+    int getPathCall = 0;
+    int getMidMonthHeroType();
+    int getMidMonthHeroTimeLeft();
+    int getMonthlyHeroType();
+    
+    void resetAsset();
+    
+    bool isPvpFromBHUD = false;
+    int pvpOpenDate = 0;
+    
+    int getUnitAP(int unit);
+    int getUnitMaxHP(int unit);
 };
 
 #endif

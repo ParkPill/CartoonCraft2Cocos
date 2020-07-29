@@ -6,7 +6,7 @@
       <ObjectData Name="Scene" Tag="155" ctype="GameNodeObjectData">
         <Size X="2368.0000" Y="1334.0000" />
         <Children>
-          <AbstractNodeData Name="btnBlock" ActionTag="1035062124" Alpha="179" Tag="156" IconVisible="False" LeftMargin="-746.6198" RightMargin="-878.1333" TopMargin="-551.4945" BottomMargin="-511.1642" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnBlock" ActionTag="1035062124" Alpha="179" Tag="156" IconVisible="False" LeftMargin="-746.6198" RightMargin="-878.1333" TopMargin="-551.4946" BottomMargin="-511.1641" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="3992.7529" Y="2396.6587" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="1249.7567" Y="687.1652" />
@@ -590,8 +590,8 @@
             <Children>
               <AbstractNodeData Name="lblPopulation" ActionTag="332779099" Tag="1017" IconVisible="False" LeftMargin="1338.6465" RightMargin="-1397.6465" TopMargin="-481.7402" BottomMargin="409.7402" FontSize="50" LabelText="19" OutlineSize="5" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="59.0000" Y="72.0000" />
-                <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="1368.1465" Y="445.7402" />
+                <AnchorPoint ScaleY="0.5000" />
+                <Position X="1338.6465" Y="445.7402" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
                 <PrePosition />

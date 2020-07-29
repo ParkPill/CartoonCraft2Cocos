@@ -531,10 +531,10 @@
                 <OutlineColor A="255" R="255" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lblHireDescription" ActionTag="-692057945" Tag="688" IconVisible="False" LeftMargin="77.1405" RightMargin="-987.0188" TopMargin="-75.1104" BottomMargin="-11.4680" IsCustomSize="True" FontSize="33" LabelText="NEW SOLDIERS (00:23:35)" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="3" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lblHireDescription" ActionTag="-692057945" Tag="688" IconVisible="False" LeftMargin="77.1405" RightMargin="-987.0188" TopMargin="-78.5628" BottomMargin="-8.0156" IsCustomSize="True" FontSize="30" LabelText="NEW SOLDIERS (00:23:35)" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="3" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="909.8783" Y="86.5784" />
-                <AnchorPoint ScaleY="1.0000" />
-                <Position X="77.1405" Y="75.1104" />
+                <AnchorPoint />
+                <Position X="77.1405" Y="-8.0156" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
                 <CColor A="255" R="255" G="255" B="255" />
                 <PrePosition />
@@ -1319,12 +1319,12 @@
                 <OutlineColor A="255" R="255" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lblWizardDescription" ActionTag="775960304" Tag="1619" IconVisible="False" LeftMargin="791.6531" RightMargin="-1555.6531" TopMargin="-340.4629" BottomMargin="283.4629" FontSize="40" LabelText="WIZARD CAN BURN TREES IN BATTLE" OutlineSize="4" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-                <Size X="764.0000" Y="57.0000" />
+              <AbstractNodeData Name="lblWizardDescription" ActionTag="775960304" Tag="1619" IconVisible="False" LeftMargin="793.6531" RightMargin="-1553.6531" TopMargin="-326.5910" BottomMargin="277.5910" FontSize="40" LabelText="WIZARD CAN BURN TREES IN BATTLE" OutlineSize="4" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="760.0000" Y="49.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                <Position X="1173.6531" Y="311.9629" />
+                <Position X="1173.6531" Y="302.0910" />
                 <Scale ScaleX="1.0000" ScaleY="1.0000" />
-                <CColor A="255" R="255" G="255" B="255" />
+                <CColor A="255" R="0" G="0" B="0" />
                 <PrePosition />
                 <PreSize X="0.0000" Y="0.0000" />
                 <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />

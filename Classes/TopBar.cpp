@@ -56,14 +56,23 @@ Node* TopBar::getShopLayer(){
     return shopLayer;
 }
 void TopBar::onGoldClick(){
+    if (GM->market == MARKET_SMARTPASS) {
+        return;
+    }
     ShopLayer* shopLayer = (ShopLayer*)getShopLayer();
     shopLayer->onGoldClickFromTopBar();
 }
 void TopBar::onTreeClick(){
+    if (GM->market == MARKET_SMARTPASS) {
+        return;
+    }
     ShopLayer* shopLayer = (ShopLayer*)getShopLayer();
     shopLayer->onTreeClickFromTopBar();
 }
 void TopBar::onGemClick(){
+    if (GM->market == MARKET_SMARTPASS) {
+        return;
+    }
     ShopLayer* shopLayer = (ShopLayer*)getShopLayer();
     shopLayer->onGemClickFromTopBar();
 }
@@ -80,7 +89,7 @@ void TopBar::update(float dt){
         if(rate > 1){
             rate = 1;
         }
-        ndTopBar->getChildByName("imgGoldGuage")->setContentSize(Size(443.56f*rate, 128.90f));
+        ndTopBar->getChildByName("imgGoldGuage")->setContentSize(cocos2d::Size(443.56f*rate, 128.90f));
     }
     if(lblTreeInHud && GM->getTree() != lastTreeUpdated){
         lastTreeUpdated = GM->makeNumberCloseTo(lastTreeUpdated, GM->getTree());
@@ -89,6 +98,18 @@ void TopBar::update(float dt){
         if(rate > 1){
             rate = 1;
         }
-        ndTopBar->getChildByName("imgTreeGuage")->setContentSize(Size(443.56f*rate, 128.90f));
+        ndTopBar->getChildByName("imgTreeGuage")->setContentSize(cocos2d::Size(443.56f*rate, 128.90f));
     }
+}
+void TopBar::addGem(Ref* ref){
+    Node* holder = (Node*)ref;
+    GM->addGem(holder->getTag());
+}
+void TopBar::addGold(Ref* ref){
+    Node* holder = (Node*)ref;
+    GM->addCoin(holder->getTag());
+}
+void TopBar::addLumber(Ref* ref){
+    Node* holder = (Node*)ref;
+    GM->addTree(holder->getTag());
 }

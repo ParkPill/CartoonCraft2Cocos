@@ -35,13 +35,13 @@ bool HudLayer::init()
     
     
 //    ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
-//    sptRect->setPosition(Point(size.width/2, size.height - 714));
-//    sptRect->setContentSize(Size(750, 750));
-//    sptRect->setAnchorPoint(Point(0.5, 0));
-//    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
+//    sptRect->setPosition(Vec2(size.width/2, size.height - 714));
+//    sptRect->setContentSize(cocos2d::Size(750, 750));
+//    sptRect->setAnchorPoint(Vec2(0.5, 0));
+//    sptRect->setCapInsets(cocos2d::Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
 //    sptRect->setScale9Enabled(true);
 //    this->addChild(sptRect, 9);
-//    sptRect->runAction(Sequence::create(DelayTime::create(0.5f), EaseIn::create(MoveBy::create(0.5f, Point(0, -750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), NULL));
+//    sptRect->runAction(Sequence::create(DelayTime::create(0.5f), EaseIn::create(MoveBy::create(0.5f, Vec2(0, -750)), 2), CallFunc::create(CC_CALLBACK_0(ImageView::removeFromParent, sptRect)), NULL));
 //
     
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
@@ -83,10 +83,10 @@ bool HudLayer::init()
     lblInfo = LM->getLocalizedLabel("", Color4B::BLACK);
     lblInfo->setScale(0.4);
     lblInfo->enableOutline(Color4B::WHITE, 5);
-    lblInfo->setPosition(Point(size.width/2, size.height - 714 + 150));
+    lblInfo->setPosition(Vec2(size.width/2, size.height - 714 + 150));
     lblInfo->setWidth(size.width);
     lblInfo->setHorizontalAlignment(TextHAlignment::CENTER);
-    lblInfo->setAnchorPoint(Point(0.5, 0.5));
+    lblInfo->setAnchorPoint(Vec2(0.5, 0.5));
     this->addChild(lblInfo);
 //
 //    inventory = new Inventory();
@@ -104,85 +104,93 @@ bool HudLayer::init()
     
 //    lblCommand = Label::createWithSystemFont("COMMAND: ", "Thonburi", 100);
 //    this->addChild(lblCommand);
-//    lblCommand->setPosition(Point(size.width/2, lblCommand->getBoundingBox().size.height/2 + 50));
+//    lblCommand->setPosition(Vec2(size.width/2, lblCommand->getBoundingBox().size.height/2 + 50));
     
     Button* btn;
     for (int i = 0; i < 6; i++) {
-//        Point pos = Point(size.width - 600 + (i%3)*200, 400 - 200*(i/3)); // two rows
-//        Point pos = Point(size.width - 10 - 200*(5-i), 10); // reverse
-        Point pos = Point(size.width - 10 - 200*(5 - i), 10);
-        if (i == 0) {
-            btn = Button::create("btnMove.png");
-        }else if (i == 1) {
-            btn = Button::create("btnStop.png");
-        }else if (i == 2) {
-            btn = Button::create("btnAttack.png");
-        }else if (i == 3) {
-            btn = Button::create("btnGather.png");
-        }else if (i == 4) {
-            btn = Button::create("btnBuild.png");
-        }else if (i == 5) {
-            btn = Button::create("btnBuildBetter.png");
-        }else if (i == 6) {
-            btn = Button::create("whiteCircle.png");
-            pos = Point(1200, 600);
-        }else if (i == 7) {
-            btn = Button::create("whiteCircle.png");
-            pos = Point(1300, 600);
-        }
-        btn->setTag(i);
-        btn->setName(strmake("btnMenu%d", i));
+//        Vec2 pos = Vec2(size.width - 600 + (i%3)*200, 400 - 200*(i/3)); // two rows
+//        Vec2 pos = Vec2(size.width - 10 - 200*(5-i), 10); // reverse
+        Vec2 pos = Vec2(size.width - 10 - 200*(5 - i), 10);
+//        if (i == 0) {
+//            btn = Button::create("btnMove.png");
+//        }else if (i == 1) {
+//            btn = Button::create("btnStop.png");
+//        }else if (i == 2) {
+//            btn = Button::create("btnAttack.png");
+//        }else if (i == 3) {
+//            btn = Button::create("btnGather.png");
+//        }else if (i == 4) {
+//            btn = Button::create("btnBuild.png");
+//        }else if (i == 5) {
+//            btn = Button::create("btnBuildBetter.png");
+//        }else if (i == 6) {
+//            btn = Button::create("whiteCircle.png");
+//            pos = Vec2(1200, 600);
+//        }else if (i == 7) {
+//            btn = Button::create("whiteCircle.png");
+//            pos = Vec2(1300, 600);
+//        }
+        Node* btnMenu = (Widget*)CSLoader::createNode("MenuButton.csb");
+        btnMenu->setTag(i);
+        btnMenu->setName(strmake("btnMenu%d", i));
+        btn = (Button*)btnMenu->getChildByName("btn");
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onCommandClick, this));
-        btn->setAnchorPoint(Point(1, 0));
-        btn->setPosition(pos);
-        WORLD->addChild(btn, 1000);
-        PPLabel* lbl = PPLabel::create("", 30, Color3B::WHITE, true, true, TextHAlignment::CENTER, true);
-        btn->addChild(lbl, 10);
-        lbl->setPosition(Point(btn->getContentSize().width/2, 50));
-        lbl->setName("lbl");
-        if(LM->getLanguageType() == LanguageType::ENGLISH){
-            lbl->setWidth(btn->getContentSize().width);
-        }else{
-            log("menu set korean");
-            lbl->lblNormal->setWidth(btn->getContentSize().width);
-            lbl->lblNormal->setAlignment(TextHAlignment::CENTER);
-            lbl->lblNormal->enableOutline(Color4B(DARK_GRAY_3B, 255));
-        }
+        btnMenu->setAnchorPoint(Vec2(1, 0));
+        btnMenu->setPosition(pos);
+        
+        WORLD->addChild(btnMenu, 10000);
+        
+//        PPLabel* lbl = PPLabel::create("", 30, Color3B::WHITE, true, true, TextHAlignment::CENTER, true);
+//        btn->addChild(lbl, 10);
+//        lbl->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height*5/6));
+//        lbl->setName("lbl");
+//        if(LM->getLanguageType() == LanguageType::ENGLISH){
+//            lbl->setWidth(btn->getContentSize().width);
+//        }else{
+//            log("menu set korean");
+//            lbl->lblNormal->setWidth(btn->getContentSize().width);
+//            lbl->lblNormal->setAlignment(TextHAlignment::CENTER);
+//            lbl->lblNormal->enableOutline(Color4B(DARK_GRAY_3B, 255));
+//        }
     }
     
     isRaid = GM->nextScene == STAGE_SINGLEPLAY || GM->nextScene == STAGE_RAID;
     ImageView* img;Sprite* spt;
     img = ImageView::create("uiBoxSmall.png");
+    img->setName("imgResourceBack");
     this->addChild(img);
     img->setScale9Enabled(true);
     img->setTouchEnabled(true);
-    img->setContentSize(Size(950, 105));
-    img->setAnchorPoint(Point(1, 1));
+    img->setContentSize(cocos2d::Size(950, 105));
+    img->setAnchorPoint(Vec2(1, 1));
     img->setOpacity(150);
-    img->setPosition(Point(size.width, size.height));
+    img->setPosition(Vec2(size.width, size.height));
     
     lblGold = PPLabel::create("0", 40, Color3B::WHITE, false, false, TextHAlignment::LEFT, true);
     this->addChild(lblGold);
-    lblGold->setPosition(Point(size.width - 800, size.height - 50));
+    lblGold->setPosition(Vec2(size.width - 800, size.height - 50));
     Sprite* sptGold = Sprite::create("goldIcon.png");
     this->addChild(sptGold);
-    sptGold->setPosition(lblGold->getPosition() + Point(-60, 0));
+    sptGold->setName("iconGold");
+    sptGold->setPosition(lblGold->getPosition() + Vec2(-60, 0));
     
     lblLumber = PPLabel::create("0", 40, Color3B::WHITE, false, false, TextHAlignment::LEFT, true);
     this->addChild(lblLumber);
-    lblLumber->setPosition(Point(size.width - 500, size.height - 50));
-    lblLumber->setAnchorPoint(Point(0, 0.5));
+    lblLumber->setPosition(Vec2(size.width - 500, size.height - 50));
+    lblLumber->setAnchorPoint(Vec2(0, 0.5));
     Sprite* sptTree = Sprite::create("lumberIcon.png");
     this->addChild(sptTree);
-    sptTree->setPosition(lblLumber->getPosition() + Point(-50, 0));
+    sptTree->setName("iconLumber");
+    sptTree->setPosition(lblLumber->getPosition() + Vec2(-50, 0));
     
     lblFood = PPLabel::create("0", 40, Color3B::WHITE, false, false, TextHAlignment::LEFT, true);
     this->addChild(lblFood);
-    lblFood->setPosition(Point(size.width - 200, size.height - 50));
-    lblFood->setAnchorPoint(Point(0, 0.5));
+    lblFood->setPosition(Vec2(size.width - 200, size.height - 50));
+    lblFood->setAnchorPoint(Vec2(0, 0.5));
     Sprite* sptMan = Sprite::create("manIcon.png");
     this->addChild(sptMan);
-    sptMan->setPosition(lblFood->getPosition() + Point(-50, 0));
+    sptMan->setName("iconFood");
+    sptMan->setPosition(lblFood->getPosition() + Vec2(-50, 0));
     if(isRaid){
         img->setVisible(false);
         lblGold->setVisible(false);
@@ -197,50 +205,47 @@ bool HudLayer::init()
     float y = 0;
     priceInfo = Node::create();
     this->addChild(priceInfo);
-    priceInfo->setPosition(Point(size.width/2, 130));
+    priceInfo->setPosition(Vec2(size.width/2, 130));
     PPLabel* lbl = PPLabel::create("0", 40, Color3B::WHITE, false, true, TextHAlignment::LEFT, false);//LM->getLocalizedLabel("0", Color4B::WHITE);
     priceInfo->addChild(lbl);
     lbl->setName("lblGold");
-    lbl->setPosition(Point(0 - 300, y));
-    lbl->setAnchorPoint(Point(0, 0.5));
+    lbl->setPosition(Vec2(0 - 300, y));
+    lbl->setAnchorPoint(Vec2(0, 0.5));
     spt = Sprite::create("goldIcon.png");
     spt->setName("sptGold");
     priceInfo->addChild(spt);
-    spt->setPosition(lbl->getPosition() + Point(-50, 0));
+    spt->setPosition(lbl->getPosition() + Vec2(-50, 0));
     
     lbl = PPLabel::create("0", 40, Color3B::WHITE, false, true, TextHAlignment::LEFT, false);
     priceInfo->addChild(lbl);
     lbl->setName("lblLumber");
-    lbl->setPosition(Point(0 - 0, y));
-    lbl->setAnchorPoint(Point(0, 0.5));
+    lbl->setPosition(Vec2(0 - 0, y));
+    lbl->setAnchorPoint(Vec2(0, 0.5));
     spt = Sprite::create("lumberIcon.png");
     spt->setName("sptLumber");
     priceInfo->addChild(spt);
-    spt->setPosition(lbl->getPosition() + Point(-50, 0));
+    spt->setPosition(lbl->getPosition() + Vec2(-50, 0));
     
     lbl = PPLabel::create("0", 40, Color3B::WHITE, false, true, TextHAlignment::LEFT, false);
     priceInfo->addChild(lbl);
     lbl->setName("lblFood");
-    lbl->setPosition(Point(0 + 300, y));
-    lbl->setAnchorPoint(Point(0, 0.5));
+    lbl->setPosition(Vec2(0 + 300, y));
+    lbl->setAnchorPoint(Vec2(0, 0.5));
     spt = Sprite::create("manIcon.png");
     spt->setName("sptFood");
     priceInfo->addChild(spt);
-    spt->setPosition(lbl->getPosition() + Point(-50, 0));
+    spt->setPosition(lbl->getPosition() + Vec2(-50, 0));
     
     lbl = PPLabel::create("not enough food", 50, Color3B::WHITE, true, true, TextHAlignment::CENTER, false);
     priceInfo->addChild(lbl);
     lbl->setName("lblDescription");
-    lbl->setPosition(Point(0, y + 100));
+    lbl->setPosition(Vec2(0, y + 100));
     
     priceInfo->setVisible(false);
     
     if(isRaid){
         Node* ndBottom = CSLoader::createNode("BottomUnitBar.csb");
         this->addChild(ndBottom, 5);
-        if(GM->isVisiting){
-            ndBottom->setVisible(false);
-        }
         ndBottom->setPositionX(size.width/2);
         bottomUnitBar = ndBottom;
         Text* lblSelectGround = (Text*)ndBottom->getChildByName("lbl");
@@ -266,6 +271,7 @@ bool HudLayer::init()
             btn->setPosition(Vec2(137.05f + counter*267.3f, 122.38f));
             Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(info->unitType));
             btn->addChild(spt);
+            spt->setScale(2);
             spt->setPosition(btn->getContentSize()/2);
             counter++;
         }
@@ -291,35 +297,38 @@ bool HudLayer::init()
             counter++;
         }
         btnTemp->removeFromParent();
-        sv->setInnerContainerSize(Size(counter*267.3f, sv->getContentSize().height));
+        sv->setInnerContainerSize(cocos2d::Size(counter*267.3f, sv->getContentSize().height));
     }
     if(GM->nextScene == STAGE_FIELD || isRaid){
-        int offsetX = 0;
+        int offsetX = 120;
+        
         if(size.height/size.width < 700.0f/1334.0f){
 //            offsetX = 100;
         }
         if(GM->nextScene == STAGE_FIELD){
             btn = Button::create("uiBoxSmallBlue.png");
             this->addChild(btn, 99);
-            btn->setContentSize(Size(220, 100));
+            btn->setContentSize(cocos2d::Size(220, 100));
+            btn->setName("btnMenu");
             btn->setScale9Enabled(true);
             btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onMenuClick, this));
-            btn->setPosition(Point(offsetX + 327, 480));
+            btn->setPosition(Vec2(offsetX + 327, 480));
             addLabelToButton("menu", btn, false, DARK_GRAY_3B);
         }
         
         ImageView* img = ImageView::create("uiBoxSmallBlue.png");
         this->addChild(img, 99);
-        img->setContentSize(Size(250, 100));
+        img->setName("imgTimeBack");
+        img->setContentSize(cocos2d::Size(250, 100));
         img->setScale9Enabled(true);
-        img->setPosition(Point(offsetX + 125, 480));
+        img->setPosition(Vec2(offsetX + 125, 480));
         
         lblTimer = PPLabel::create("00:00:00", 50, DARK_GRAY_3B, false, false, TextHAlignment::CENTER, false);//LM->getLocalizedLabel();
-        lblTimer->setPosition(Point(offsetX + 125, 480));
+        lblTimer->setPosition(Vec2(offsetX + 125, 480));
         lblTimer->setScaleX(0.8f);
         this->addChild(lblTimer, 99);
         if(isRaid){
-            img->setContentSize(Size(440, 100));
+            img->setContentSize(cocos2d::Size(440, 100));
             img->setPositionX(offsetX + 220);
             lblTimer->setPositionX(img->getPositionX());
         }
@@ -331,7 +340,8 @@ bool HudLayer::init()
         Node* ndPanel = CSLoader::createNode("RightBottomPanelForCampaign.csb");
         rightBottomPanelForCampaign = ndPanel;
         this->addChild(ndPanel, 99);
-        ndPanel->setPosition(Vec2(size.width, 0));
+        offsetRight = 100;
+        ndPanel->setPosition(Vec2(size.width - offsetRight, 0));
         
         btn = (Button*)ndPanel->getChildByName("btnSelectAll");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
@@ -391,6 +401,7 @@ bool HudLayer::init()
         }
         btn = (Button*)rightBottomPanel->getChildByName("btnSurrender");
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onSurrenderClick, this));
+        btn->setPositionY(560); // test
         lblTitle = (Text*)btn->getChildByName("lbl");
         LM->setLocalizedString(lblTitle, "surrender");
         Node* ndInfo = rightBottomPanelForCampaign->getChildByName("ndInfo");
@@ -435,20 +446,20 @@ bool HudLayer::init()
         img->setScale(100, 100);
         img->setColor(Color3B::BLACK);
         img->setOpacity(50);
-        img->setPosition(Point(size.width/2, size.height/2));
+        img->setPosition(Vec2(size.width/2, size.height/2));
         img->addClickEventListener(CC_CALLBACK_0(HudLayer::onTutorialBoxClick, this));
         
         img = ImageView::create("uiBox.png");
         tutorialNode->addChild(img);
         img->setScale9Enabled(true);
         img->setTouchEnabled(true);
-        img->setContentSize(Size(2000, 500));
-        img->setPosition(Point(size.width/2, 330));
+        img->setContentSize(cocos2d::Size(2000, 500));
+        img->setPosition(Vec2(size.width/2, 330));
         img->addClickEventListener(CC_CALLBACK_0(HudLayer::onTutorialBoxClick, this));
         
         Label* lbl = LM->getLocalizedLabel("", Color4B::BLACK, 60);
         tutorialNode->addChild(lbl);
-        lbl->setPosition(img->getPosition() + Point(200, 0));
+        lbl->setPosition(img->getPosition() + Vec2(200, 0));
         lbl->setDimensions(1500, 450);
         lbl->setName("lbl");
         lbl->setVerticalAlignment(TextVAlignment::CENTER);
@@ -456,8 +467,9 @@ bool HudLayer::init()
         Sprite* sptIcon = Sprite::createWithSpriteFrameName("workerAxeStand0.png");
         tutorialNode->addChild(sptIcon);
         GM->runAnimation(sptIcon, "workerStand", true);
-        sptIcon->setPosition(Point(size.width/2 - 750, 330));
+        sptIcon->setPosition(Vec2(size.width/2 - 750, 330));
         sptIcon->setName("sptIcon");
+        sptIcon->setScale(1/WORLD->imageScale);
         
         talkIndex = 0;
         talkText = LM->getText(strmake("tutorial %d", 0).c_str());
@@ -498,9 +510,9 @@ void HudLayer::onShowMoreMenuClick(Ref* ref){
     btn->setTag(shouldShow?1:0);
     btn->getParent()->stopAllActions();
     if (shouldShow) {
-        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width, 567.30f)), 2));
+        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width - offsetRight, 567.30f)), 2));
     }else{
-        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width, 0)), 2));
+        btn->getParent()->runAction(EaseOut::create(MoveTo::create(0.3f, Vec2(size.width - offsetRight, 0)), 2));
     }
     btn->getChildByName("img")->runAction(RotateTo::create(0.3f, shouldShow?0:180));
 }
@@ -541,7 +553,8 @@ void HudLayer::setRaid(){
     std::string strEquipped = GM->raidEnemyBuildings;//UDGetStr(KEY_BUILDINGS, "");
     log("strEquipped: %s", strEquipped.c_str());
     
-    Node* layer = CSLoader::createNode("BattleEnemyInfo.csb");
+    Node* layer = CSLoader::createNodeWithVisibleSize("BattleEnemyInfo.csb");
+    
     this->addChild(layer, 5);
     Text* lbl = (Text*)layer->getChildByName("lblName");
     lbl->setString(GM->raidEnemyName);
@@ -560,25 +573,25 @@ void HudLayer::setRaid(){
             int unitType = Value(datas.at(0)).asInt();
             
             UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
-            Size occupySize = WORLD->getBuildingOccupySize(unitType);
+            cocos2d::Size occupySize = WORLD->getBuildingOccupySize(unitType);
             float x = Value(datas.at(2)).asInt();
             float y = Value(datas.at(3)).asInt();
             Vec2 sptPos = Vec2(x, y);
             if(x > 100 || y > 100){
-                sptPos = Vec2(x, y);
+                sptPos = Vec2(x/2, y/2);
             }else{
                 float extraX = 0;
-                if ((int)WORLD->getBuildingOccupySize(unitType).width%2 == 1) {
-                    extraX = 50;
-                }
+//                if ((int)WORLD->getBuildingOccupySize(unitType).width%2 == 1) {
+//                    extraX = 50;
+//                }
                 float extraY = 0;
-                if ((int)WORLD->getBuildingOccupySize(unitType).height%2 == 1) {
-                    extraY = 50;
-                }
-                sptPos = Vec2(x*100 + extraX, y*100 + extraY);
+//                if ((int)WORLD->getBuildingOccupySize(unitType).height%2 == 1) {
+//                    extraY = 50;
+//                }
+                sptPos = Vec2(x*TILE_SIZE + extraX, y*TILE_SIZE + extraY);
             }
             Vec2 pos = sptPos - Vec2(occupySize.width*TILE_SIZE/2, occupySize.height*TILE_SIZE/2);
-            Vec2 occupyPos = pos + Vec2(0, TILE_SIZE*occupySize.height);
+            Vec2 occupyPos = pos + Vec2(TILE_SIZE*(((int)occupySize.width)%2), TILE_SIZE*occupySize.height);
             EnemyBase* unit = WORLD->createUnit(unitType, info->unitType == UNIT_TREE_FOR_BATTLE?WHICH_SIDE_MUTUAL:WHICH_SIDE_ENEMY, ITS_BUILDING, sptPos, "name", 1, WORLD->getSpriteNameForUnit(unitType));
             if(info->unitType != UNIT_TREE_FOR_BATTLE){
                 unit->energy = GM->getUnitHP(info->unitType, info->level);
@@ -591,6 +604,7 @@ void HudLayer::setRaid(){
                 castlePos = unit->getPosition();
             }
             if (unit->isBuilding) {
+                unit->setPosition(unit->getPosition() + Vec2(TILE_SIZE*0.5f*(((int)occupySize.width)%2), TILE_SIZE*0.5f*(((int)occupySize.height)%2)));
 //                setupBuilding(unit);
                 unit->level = info->level;
                 WORLD->setOccupy(occupyPos, occupySize.width, occupySize.height, true, unit);
@@ -605,7 +619,7 @@ void HudLayer::setRaid(){
                     Text* lblTimeLeft = Text::create("Upgrade...", "BMDOHYEON.ttf", 20);
                     lblTimeLeft->enableOutline(Color4B::BLACK, 2);
                     WORLD->addChild(lblTimeLeft, unit->getParent()->getLocalZOrder()+1);
-                    lblTimeLeft->setPosition(unit->getPosition() + Point(0, 60));
+                    lblTimeLeft->setPosition(unit->getPosition() + Vec2(0, 60));
                     //                    timeLeftLabels.pushBack(lblTimeLeft);
                     unit->lblTimeLeft = lblTimeLeft;
                     if(unit->unitState == UNIT_STATE_UPGRADE){
@@ -624,6 +638,7 @@ void HudLayer::setRaid(){
                         unit->buildingCompleteTime = 60;
                     }
                 }
+                unit->setLocalZOrder(-unit->getPositionY());
             }else{
 //                setupNonBuilding(unit);
             }
@@ -647,12 +662,26 @@ void HudLayer::setRaid(){
             
             WORLD->addUnit(unit, false);
 //            unitsDeck.pushBack(unit);
-            
+            Vec2 pos;
             if(info->x > 100 || info->y > 100){
-                unit->setPosition(Vec2(info->x, info->y));
+                pos = Vec2(info->x/2, info->y/2);
             }else{
-                unit->setPosition(Vec2(info->x*100, info->y*100));
+//                pos = Vec2(info->x*TILE_SIZE, info->y*TILE_SIZE);
+                pos = WORLD->getPositionFromTileCoordinate(info->x, info->y);
             }
+            if(pos.x > 30*TILE_SIZE){
+                pos = Vec2(28*TILE_SIZE, pos.y);
+            }else if(pos.x < 0){
+                pos = Vec2(2*TILE_SIZE, pos.y);
+            }
+            if(pos.y > 30*TILE_SIZE){
+                pos = Vec2(pos.x, 28*TILE_SIZE);
+            }else if(pos.y < 0){
+                pos = Vec2(pos.x, 2*TILE_SIZE);
+            }
+            unit->setPosition(pos);
+            unit->stop();
+            unit->setLocalZOrder(-unit->getBoundingBox().getMinY());
 //            info->belongTo = BELONG_TO_DECK;
 //            info->index = i;
 //            unitInfoListDeck.push_back(info);
@@ -661,25 +690,65 @@ void HudLayer::setRaid(){
     
     strEquipped = GM->raidEnemyHeroDeck;
     units = GameManager::getInstance()->split(strEquipped, "_");
+    
+    std::string str = GM->raidEnemyHeroPos;
+    std::vector<int> raidHeroPosXList;
+    std::vector<int> raidHeroPosYList;
+    if(str.length() > 0){
+        std::string value = "";
+        ValueVector posList = GameManager::getInstance()->split(str, "_");
+        for (int i = 0; i < posList.size(); i++) {
+            ValueVector xAndY = GameManager::getInstance()->split(posList.at(i).asString(), "/");
+            if(xAndY.size() > 1){
+                int x = xAndY.at(0).asInt();
+                int y = xAndY.at(1).asInt();
+                raidHeroPosXList.push_back(x);
+                raidHeroPosYList.push_back(y);
+            }
+        }
+    }
+    int index = 0;
     for(int i = 0; i < units.size(); i++){
         if(units.at(i).asString().length() > 0){
             UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+            if(info == nullptr){
+                continue;
+            }
             Movable* unit = GM->getUnitFromData(info);
             WORLD->addUnit(unit, false);
             WORLD->setHeroLevelInfo((EnemyBase*)unit, info->level%100);
+            Vec2 pos;
             if (unit->getPositionX() < 0 || unit->getPositionY() < 0) {
                 unit->setPosition(castlePos - Vec2(200, 200) + Vec2(i*100, 0));
                 if (unit->getPositionX() < 0 || unit->getPositionY() < 0) {
-                    unit->setPosition(Vec2(50, 50));
+                    unit->setPosition(Vec2(TILE_SIZE*2, TILE_SIZE*2));
                 }
                 WORLD->moveTo((EnemyBase*)unit, unit->getPosition());
             }else{
                 if(info->x > 100 || info->y > 100){
-                    unit->setPosition(Vec2(info->x, info->y));
+                    pos = Vec2(info->x/2, info->y/2);
                 }else{
-                    unit->setPosition(Vec2(info->x*100, info->y*100));
+//                    pos = Vec2(info->x*TILE_SIZE, info->y*TILE_SIZE);
+                    pos = WORLD->getPositionFromTileCoordinate(info->x, info->y);
                 }
             }
+            if(pos.x > 30*TILE_SIZE){
+                pos = Vec2(28*TILE_SIZE, pos.y);
+            }else if(pos.x < 0){
+                pos = Vec2(2*TILE_SIZE, pos.y);
+            }
+            if(pos.y > 30*TILE_SIZE){
+                pos = Vec2(pos.x, 28*TILE_SIZE);
+            }else if(pos.y < 0){
+                pos = Vec2(pos.x, 2*TILE_SIZE);
+            }
+            if (raidHeroPosXList.size() > index && raidHeroPosYList.size() > index) {
+                pos = WORLD->getPositionFromTileCoordinate(raidHeroPosXList.at(index), raidHeroPosYList.at(index));
+            }
+            unit->setPosition(pos);
+            unit->setLocalZOrder(-unit->getBoundingBox().getMinY());
+            unit->spine->setLocalZOrder(unit->getLocalZOrder());
+            index++;
         }
     }
 //    updateUnitInfoInList();
@@ -738,6 +807,7 @@ void HudLayer::showRaidResult(bool saveRecord){
             if (trophy > 0) {
                 trophy *= -1;
             }
+            GM->addMonthlyEventProgress(EVENT_MISSION_BATTLE_NETWORK_WIN, 1);
         }else{
             if(GM->raidEnemyTrophy > myTrophy){
                 trophy = 10;
@@ -751,6 +821,14 @@ void HudLayer::showRaidResult(bool saveRecord){
             if (trophy < 0) {
                 trophy *= -1;
             }
+//            if (!isWin) {
+//                trophy = 0; // no bonus trophy for opponent when player lose
+//            }
+        }
+        if(trophy < -100){
+            trophy = -100;
+        }else if(trophy > 100){
+            trophy = 100;
         }
         
         int trophyGet = -trophy;
@@ -770,32 +848,39 @@ void HudLayer::showRaidResult(bool saveRecord){
             gold *= -1;
             tree *= -1;
         }
-        BSM->sendPost("adddefencerecord", "id=" + GM->raidEnemyID + "&enemyid=" + UDGetStr(KEY_SAVED_ID, "-1") + "&name=" + UDGetStr(KEY_NAME, "noname") + "&trophy=" + Value(trophy).asString() + "&gold="+Value(gold).asString()+"&tree="+Value(tree).asString() + "&star=" + Value(WORLD->starCountForRaid).asString(), httpresponse_selector(BuggyServerManager::onActionNotNeededComplete));
+        if(GM->raidEnemyRID.length() > 2){
+            
+        }else{
+            
+        }
+        BSM->sendPost("adddefencerecord", "id=" + GM->raidEnemyID + "&enemyid=" + UDGetStr(KEY_SAVED_ID, "-1") + "&name=" + UDGetStr(KEY_NAME, "noname") + "&trophy=" + Value(isWin?-1:0).asString() + "&gold="+Value(gold).asString()+"&tree="+Value(tree).asString() + "&star=" + Value(WORLD->starCountForRaid).asString(), httpresponse_selector(BuggyServerManager::onActionNotNeededComplete));
         
         GM->raidRewardGold = -gold;
         GM->raidRewardTree = -tree;
         GM->raidRewardTrophy = trophyGet;
     }else if(GM->currentStageIndex == STAGE_SINGLEPLAY){
-        bool isRewardGiven = UDGetBool(strmake(KEY_SINGLE_PLAY_CLEAR_FORMAT, GM->singlePlayStageIndex).c_str(), false);
-        trophy = 0;
-        if (!isRewardGiven) {
-            gold = -100*GM->singlePlayStageIndex;
-            tree = -40*GM->singlePlayStageIndex;
-            
-            GM->addCoin(-gold);
-            GM->addTree(-tree);
-            BSM->saveUserData("gold=" + Value(GM->getCoin()).asString() + "&tree=" + Value(GM->getTree()).asString());
-        }
         if (isWin) {
+            bool isRewardGiven = UDGetBool(strmake(KEY_SINGLE_PLAY_CLEAR_FORMAT, GM->singlePlayStageIndex).c_str(), false);
+            trophy = 0;
+            if (!isRewardGiven) {
+                gold = -100*GM->singlePlayStageIndex;
+                tree = -40*GM->singlePlayStageIndex;
+                
+                GM->addCoin(-gold);
+                GM->addTree(-tree);
+                BSM->saveUserData("gold=" + Value(GM->getCoin()).asString() + "&tree=" + Value(GM->getTree()).asString());
+            }
+            
             UDSetBool(strmake(KEY_SINGLE_PLAY_CLEAR_FORMAT, GM->singlePlayStageIndex).c_str(), true);
             UDSetInt(strmake(KEY_SINGLE_PLAY_STAR_FORMAT, GM->singlePlayStageIndex).c_str(), WORLD->starCountForRaid);
         }
     }
     Node* layer = CSLoader::createNode("WinPopup.csb");
     setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     GM->animateFadeIn(layer, this);
     Button* btn = (Button*)layer->getChildByName("btnOk");
-    btn->addClickEventListener(CC_CALLBACK_0(HudLayer::goToBattleScene, this));
+    btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onOkFromRaidWinPopup, this));
     Node* imgTitle = layer->getChildByName("imgTitle");
     ImageView* img;
     float delayTime = 0.5f;
@@ -904,7 +989,7 @@ void HudLayer::showSupportOffer(){
     this->addChild(layer, 200);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2 + 100));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2 + 100));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -914,20 +999,20 @@ void HudLayer::showSupportOffer(){
     
     Button* btn = Button::create("horizontalScrollBackground.png");
     btn->setScale9Enabled(true);
-    btn->setContentSize(Size(308, 1270));
+    btn->setContentSize(cocos2d::Size(308, 1270));
     
-//    imgBack->setAnchorPoint(Point(0.5, 0.5));
-    btn->setPosition(Point(size.width/2, size.height/2));
+//    imgBack->setAnchorPoint(Vec2(0.5, 0.5));
+    btn->setPosition(Vec2(size.width/2, size.height/2));
     
     layer->addChild(btn);
-//    btn->setContentSize(Size(1800, 1000));
+//    btn->setContentSize(cocos2d::Size(1800, 1000));
     btn->setScale9Enabled(true);
     btn->setPosition(size/2);
     btn->setZoomScale(0);
-    btn->runAction(EaseInOut::create(ResizeTo::create(0.3, Size(2098, 1270)), 2));
+    btn->runAction(EaseInOut::create(ResizeTo::create(0.3, cocos2d::Size(2098, 1270)), 2));
     
     PPLabel* lbl = PPLabel::create(LM->getText("choose support"), 60, Color3B(45, 45, 45), LM->getLanguageType() != LanguageType::ENGLISH, false, TextHAlignment::CENTER, false);
-    lbl->setPosition(Point(size.width/2, size.height/2 + 400));
+    lbl->setPosition(Vec2(size.width/2, size.height/2 + 400));
     layer->addChild(lbl);
     
     float y = size.height/2 + 320;
@@ -936,9 +1021,9 @@ void HudLayer::showSupportOffer(){
         btn = Button::create("uiBoxSmall.png");
         layer->addChild(btn, 99);
         btn->setTitleColor(Color3B::BLACK);
-        btn->setContentSize(Size(520, 520));
+        btn->setContentSize(cocos2d::Size(520, 520));
         btn->setScale9Enabled(true);
-        btn->setPosition(Point(size.width/2 + (i-1)*560, size.height/2 + 60));
+        btn->setPosition(Vec2(size.width/2 + (i-1)*560, size.height/2 + 60));
         
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onSupportSelected, this));
         
@@ -950,9 +1035,9 @@ void HudLayer::showSupportOffer(){
                 unitType = UNIT_GOBLIN_WORKER;
             }
             for(int j = 0; j < 4; j++){
-                Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
+                Sprite* spt = WORLD->getSpriteForUnit(unitType);
                 btn->addChild(spt);
-                spt->setPosition(Point(btn->getContentSize().width/2 - (unitGap*3/2) + unitGap*j, btn->getContentSize().height/2));
+                spt->setPosition(Vec2(btn->getContentSize().width/2 - (unitGap*3/2) + unitGap*j, btn->getContentSize().height/2));
             }
         }else if(i == 1){
             float unitGap = 80;
@@ -961,52 +1046,52 @@ void HudLayer::showSupportOffer(){
                 unitType = UNIT_GOBLIN;
             }
             for(int j = 0; j < 3; j++){
-                Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
+                Sprite* spt = WORLD->getSpriteForUnit(unitType);
                 btn->addChild(spt);
-                spt->setPosition(Point(btn->getContentSize().width/2 - (unitGap) + unitGap*j, btn->getContentSize().height/2 + 70));
+                spt->setPosition(Vec2(btn->getContentSize().width/2 - (unitGap) + unitGap*j, btn->getContentSize().height/2 + 70));
             }
             unitType = UNIT_ARCHER;
             if(GM->currentStageIndex >= 12 && GM->currentStageIndex <= 24){
                 unitType = UNIT_GOBLIN_BOMB;
             }
             for(int j = 0; j < 3; j++){
-                Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
+                Sprite* spt = WORLD->getSpriteForUnit(unitType);
                 btn->addChild(spt);
-                spt->setPosition(Point(btn->getContentSize().width/2 - (unitGap) + unitGap*j, btn->getContentSize().height/2 - 70));
+                spt->setPosition(Vec2(btn->getContentSize().width/2 - (unitGap) + unitGap*j, btn->getContentSize().height/2 - 70));
             }
         }else if(i == 2){
             int unitType = UNIT_HELICOPTER;
             if(GM->currentStageIndex >= 12 && GM->currentStageIndex <= 24){
                 unitType = UNIT_TROLL;
             }
-            Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
+            Sprite* spt = WORLD->getSpriteForUnit(unitType);
             btn->addChild(spt);
-            spt->setPosition(Point(150, 350));
+            spt->setPosition(Vec2(150, 350));
             unitType = UNIT_CATAPULT;
             if(GM->currentStageIndex >= 12 && GM->currentStageIndex <= 24){
                 unitType = UNIT_WIZARD;
             }
-            spt = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unitType));
+            spt = WORLD->getSpriteForUnit(unitType);
             btn->addChild(spt);
-            spt->setPosition(Point(300, 200));
+            spt->setPosition(Vec2(300, 200));
         }
         
         if(GM->isColosseum){
             lbl = PPLabel::create(LM->getText("select support"), btn->getContentSize().height*2/6, DARK_GRAY_3B, LM->getLanguageType() != LanguageType::ENGLISH, false, TextHAlignment::CENTER, false);
-            lbl->setPosition(Point(size.width/2 + (i-1)*560 - 520/2, size.height/2 - 320));
+            lbl->setPosition(Vec2(size.width/2 + (i-1)*560 - 520/2, size.height/2 - 320));
             layer->addChild(lbl);
-            lbl->setAnchorPoint(Point(0, 0.5));
+            lbl->setAnchorPoint(Vec2(0, 0.5));
             lbl->setTextHAlignment(TextHAlignment::LEFT);
             lbl->setScale(0.4f);
             
             int xOffset = -140;
-            Size btnSize = Size(160, 110);
+            cocos2d::Size btnSize = cocos2d::Size(160, 110);
             float sptScale = 0.8f;
             Button* btnVideo = Button::create("uiBoxSmall.png");
             layer->addChild(btnVideo);
             btnVideo->setContentSize(btnSize);
             btnVideo->setScale9Enabled(true);
-            btnVideo->setPosition(Point(size.width/2 + (i-1)*560 + 150 + xOffset, size.height/2 - 320));
+            btnVideo->setPosition(Vec2(size.width/2 + (i-1)*560 + 150 + xOffset, size.height/2 - 320));
             btnVideo->addClickEventListener(CC_CALLBACK_1(HudLayer::onSupportSelected, this));
             btnVideo->setTag(i);
             
@@ -1019,7 +1104,7 @@ void HudLayer::showSupportOffer(){
             layer->addChild(btnTicket);
             btnTicket->setContentSize(btnSize);
             btnTicket->setScale9Enabled(true);
-            btnTicket->setPosition(Point(size.width/2 + (i-1)*560 + 320 + xOffset, size.height/2 - 320));
+            btnTicket->setPosition(Vec2(size.width/2 + (i-1)*560 + 320 + xOffset, size.height/2 - 320));
             btnTicket->addClickEventListener(CC_CALLBACK_1(HudLayer::onSupportSelectedByTicket, this));
             btnTicket->setTag(i);
             
@@ -1036,32 +1121,32 @@ void HudLayer::showSupportOffer(){
             
             int ticketCount = UDGetInt(KEY_GOLDEN_TICKET, 1);
             lbl = PPLabel::create(Value(ticketCount).asString(), 50, Color3B::WHITE, false, true, TextHAlignment::RIGHT, false);
-            lbl->setPosition(Point(size.width/2 + 860, size.height/2 + 550));
+            lbl->setPosition(Vec2(size.width/2 + 860, size.height/2 + 550));
             layer->addChild(lbl);
-            lbl->setAnchorPoint(Point(1, 0.5));
+            lbl->setAnchorPoint(Vec2(1, 0.5));
             lbl->setTextHAlignment(TextHAlignment::RIGHT);
 //            lbl->setScale(0.4f);
             
             spt = Sprite::create("goldenTicket.png");
             layer->addChild(spt);
-            spt->setPosition(lbl->getPosition() + Point(-lbl->totalWidth/2 - spt->getContentSize().width/2 - 50, 0));
+            spt->setPosition(lbl->getPosition() + Vec2(-lbl->totalWidth/2 - spt->getContentSize().width/2 - 50, 0));
         }else{
             
             btn = Button::create("uiBoxSmall.png");
             layer->addChild(btn);
-            btn->setContentSize(Size(520, 150));
+            btn->setContentSize(cocos2d::Size(520, 150));
             btn->setScale9Enabled(true);
-            btn->setPosition(Point(size.width/2 + (i-1)*560, size.height/2 - 320));
+            btn->setPosition(Vec2(size.width/2 + (i-1)*560, size.height/2 - 320));
             btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onSupportSelected, this));
             btn->setTag(i);
             
             lbl = PPLabel::create(LM->getText("select support"), btn->getContentSize().height*2/6, DARK_GRAY_3B, LM->getLanguageType() != LanguageType::ENGLISH, false, TextHAlignment::CENTER, false);
-            lbl->setPosition(Point(btn->getContentSize().width/2 + 70, btn->getContentSize().height/2));
+            lbl->setPosition(Vec2(btn->getContentSize().width/2 + 70, btn->getContentSize().height/2));
             btn->addChild(lbl);
             
             Sprite* spt = Sprite::create("videoIcon.png");
             btn->addChild(spt);
-            spt->setPosition(Point(150, 75));
+            spt->setPosition(Vec2(150, 75));
             
             if(LM->getLanguageType() == LanguageType::SPANISH){
                 spt->setPositionX(spt->getPositionX() - 40);
@@ -1070,7 +1155,7 @@ void HudLayer::showSupportOffer(){
         btn = Button::create("btnStop.png");
         layer->addChild(btn);
         btn->setScale(0.45);
-        btn->setPosition(Point(size.width/2 + 800, size.height/2 + 400));
+        btn->setPosition(Vec2(size.width/2 + 800, size.height/2 + 400));
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onResumeClick, this));
         
     }
@@ -1090,10 +1175,18 @@ void HudLayer::onSupportSelectedByTicket(Ref* ref){
 void HudLayer::onSupportSelected(Ref* ref){
     log("on vido click");
     BTN_FROM_REF_AND_DISABLE
-    if(GameSharing::isVideoAvailable()){
-        GM->showVideo(VIDEO_SUPPORT_0 + btn->getTag());
+    bool isVideoPass = false;
+    if (GM->market == MARKET_SMARTPASS) {
+        isVideoPass = true;
+    }
+    if (isVideoPass) {
+        videoDone();
     }else{
-        showInstanceMessage(LM->getText("video not available"));
+        if(GameSharing::isVideoAvailable()){
+            GM->showVideo(VIDEO_SUPPORT_0 + btn->getTag());
+        }else{
+            showInstanceMessage(LM->getText("video not available"));
+        }
     }
 //    GM->showVideo(VIDEO_SUPPORT_0 + btn->getTag()); // test
 //    GM->showVideoDone(); // test
@@ -1107,6 +1200,7 @@ void HudLayer::onMenuClick(){
     GM->playSoundEffect(SOUND_WOOD_HIT);
     WORLD->pauseLayer();
     
+//    showWinPopup(true); // test
     Node* layer = CSLoader::createNode("Menu.csb");
     this->addChild(layer, 5);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
@@ -1138,13 +1232,17 @@ void HudLayer::onMenuClick(){
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onResumeClick, this));
     LM->setLocalizedString((Text*)btn->getChildByName("lbl"), "resume");
     
+    if(GM->isColosseum){
+        layer->getChildByName("btnSave")->setVisible(false);
+        layer->getChildByName("btnLoad")->setVisible(false);
+    }
 //
 //    Layer* layer = Layer::create();
 //    setAsPopup(layer);
 //    this->addChild(layer, 200);
 //
 //    Button* btnBlock = Button::create("uiBox.png");
-//    btnBlock->setPosition(Point(size.width/2, size.height/2 + 100));
+//    btnBlock->setPosition(Vec2(size.width/2, size.height/2 + 100));
 //    layer->addChild(btnBlock);
 //    btnBlock->setScale(20);
 //    btnBlock->setOpacity(100);
@@ -1154,7 +1252,7 @@ void HudLayer::onMenuClick(){
 //
 //    ImageView* img = ImageView::create("uiBox.png");
 //    layer->addChild(img, 99);
-//    img->setContentSize(Size(700, 1000));
+//    img->setContentSize(cocos2d::Size(700, 1000));
 //    img->setScale9Enabled(true);
 //    img->setPosition(size/2);
 //
@@ -1162,14 +1260,14 @@ void HudLayer::onMenuClick(){
 //    Button* btn = Button::create("uiBoxSmall.png");
 //    layer->addChild(btn, 99);
 //    btn->setTitleColor(Color3B::BLACK);
-//    btn->setContentSize(Size(520, 150));
+//    btn->setContentSize(cocos2d::Size(520, 150));
 //    btn->setScale9Enabled(true);
 //    if (GM->isColosseum){
 //        btn->setColor(Color3B::GRAY);
 //    }else{
 //        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSaveClick, this));
 //    }
-//    btn->setPosition(Point(size.width/2, y));
+//    btn->setPosition(Vec2(size.width/2, y));
 //    addLabelToButton("save", btn, false, DARK_GRAY_3B);
 //
 //    y -= 160;
@@ -1177,43 +1275,43 @@ void HudLayer::onMenuClick(){
 //    btn = Button::create("uiBoxSmall.png");
 //    layer->addChild(btn, 99);
 //    btn->setTitleColor(Color3B::BLACK);
-//    btn->setContentSize(Size(520, 150));
+//    btn->setContentSize(cocos2d::Size(520, 150));
 //    btn->setScale9Enabled(true);
 //    if (GM->isColosseum){
 //        btn->setColor(Color3B::GRAY);
 //    }else{
 //        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onLoadClick, this));
 //    }
-//    btn->setPosition(Point(size.width/2, y));
+//    btn->setPosition(Vec2(size.width/2, y));
 //    addLabelToButton("load", btn, false, DARK_GRAY_3B);
 //    y -= 160;
 //
 //    btn = Button::create("uiBoxSmall.png");
 //    layer->addChild(btn, 99);
 //    btn->setTitleColor(Color3B::BLACK);
-//    btn->setContentSize(Size(520, 150));
+//    btn->setContentSize(cocos2d::Size(520, 150));
 //    btn->setScale9Enabled(true);
 //    btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onOptionClick, this));
-//    btn->setPosition(Point(size.width/2, y));
+//    btn->setPosition(Vec2(size.width/2, y));
 //    addLabelToButton("option", btn, false, DARK_GRAY_3B);
 //    y -= 160;
 //
 //    btn = Button::create("uiBoxSmall.png");
 //    layer->addChild(btn, 99);
-//    btn->setContentSize(Size(520, 150));
+//    btn->setContentSize(cocos2d::Size(520, 150));
 //    btn->setScale9Enabled(true);
 //    btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onResumeClick, this));
-//    btn->setPosition(Point(size.width/2, y));
+//    btn->setPosition(Vec2(size.width/2, y));
 //    addLabelToButton("resume", btn, false, DARK_GRAY_3B);
 //    y -= 180;
 //
 //    btn = Button::create("uiBoxSmall.png");
 //    layer->addChild(btn, 99);
 //    btn->setTitleColor(Color3B::BLACK);
-//    btn->setContentSize(Size(520, 150));
+//    btn->setContentSize(cocos2d::Size(520, 150));
 //    btn->setScale9Enabled(true);
 //    btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onExitClick, this));
-//    btn->setPosition(Point(size.width/2, y));
+//    btn->setPosition(Vec2(size.width/2, y));
 //    addLabelToButton("exit", btn, false, DARK_GRAY_3B);
 }
 void HudLayer::onOptionClick(){
@@ -1223,7 +1321,7 @@ void HudLayer::onOptionClick(){
     setAsPopup(layer);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -1238,13 +1336,13 @@ void HudLayer::onOptionClick(){
     
     PPLabel* lbl = PPLabel::create(LM->getText("option"), 100, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
     layer->addChild(lbl);
-    lbl->setPosition(Point(size.width/2, size.height/2 + 300));
+    lbl->setPosition(Vec2(size.width/2, size.height/2 + 300));
     
     Button* btn = Button::create("uiBoxSmall.png");
     btn->setScale9Enabled(true);
     layer->addChild(btn);
-    btn->setPosition(Point(size.width/2 - 300, size.height/2 - 100));
-    btn->setContentSize(Size(500, 200));
+    btn->setPosition(Vec2(size.width/2 - 300, size.height/2 - 100));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onEffectClick, this));
     
     lbl = PPLabel::create(LM->getText(GM->getSoundVolumn()==0?"effect off":"effect on"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1255,8 +1353,8 @@ void HudLayer::onOptionClick(){
     btn = Button::create("uiBoxSmall.png");
     btn->setScale9Enabled(true);
     layer->addChild(btn);
-    btn->setPosition(Point(size.width/2 + 300, size.height/2 - 100));
-    btn->setContentSize(Size(500, 200));
+    btn->setPosition(Vec2(size.width/2 + 300, size.height/2 - 100));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onMusicClick, this));
     
     lbl = PPLabel::create(LM->getText(GM->getMusicVolumn()==0?"music off":"music on"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1272,7 +1370,7 @@ void HudLayer::onSaveClick(){
     setAsPopup(layer);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -1292,12 +1390,12 @@ void HudLayer::onSaveClick(){
     float gapY = 260;
     PPLabel* lblSave = PPLabel::create(LM->getText("save"), 100, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
     layer->addChild(lblSave);
-    lblSave->setPosition(Point(size.width/2, size.height/2 + 360));
+    lblSave->setPosition(Vec2(size.width/2, size.height/2 + 360));
     for (int i = 0; i < 4; i++) {
         btn = Button::create("uiBoxSmall.png");
         btn->setScale9Enabled(true);
         layer->addChild(btn);
-        btn->setContentSize(Size(500, 200));
+        btn->setContentSize(cocos2d::Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onSaveSlotClick, this));
         btn->setTag(i);
         std::string data = UDGetStr(strmake("savedData%d", btn->getTag()).c_str());
@@ -1332,16 +1430,16 @@ void HudLayer::onSaveClick(){
         lblTime = PPLabel::create(GM->getTimeLeftInString(savedTime), 40, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
         layer->addChild(lblTime);
         if(i == 0){
-            btn->setPosition(Point(size.width/2 - 300, firstLineY));
+            btn->setPosition(Vec2(size.width/2 - 300, firstLineY));
         }else if(i == 1){
-            btn->setPosition(Point(size.width/2 + 300, firstLineY));
+            btn->setPosition(Vec2(size.width/2 + 300, firstLineY));
         }else if(i == 2){
-            btn->setPosition(Point(size.width/2 - 300, firstLineY - gapY));
+            btn->setPosition(Vec2(size.width/2 - 300, firstLineY - gapY));
         }else if(i == 3){
-            btn->setPosition(Point(size.width/2 + 300, firstLineY - gapY));
+            btn->setPosition(Vec2(size.width/2 + 300, firstLineY - gapY));
         }
-        lblTitle->setPosition(btn->getPosition() + Point(0, 35));
-        lblTime->setPosition(btn->getPosition() + Point(0, -35));
+        lblTitle->setPosition(btn->getPosition() + Vec2(0, 35));
+        lblTime->setPosition(btn->getPosition() + Vec2(0, -35));
         if(savedTime == 0){
             lblTime->setVisible(false);
         }
@@ -1380,7 +1478,7 @@ void HudLayer::onSaveSlotClick(Ref* ref){
         setAsPopup(layer);
         
         Button* btnBlock = Button::create("uiBox.png");
-        btnBlock->setPosition(Point(size.width/2, size.height/2));
+        btnBlock->setPosition(Vec2(size.width/2, size.height/2));
         layer->addChild(btnBlock);
         btnBlock->setScale(20);
         btnBlock->setOpacity(100);
@@ -1395,14 +1493,14 @@ void HudLayer::onSaveSlotClick(Ref* ref){
         
         PPLabel* lbl = PPLabel::create(LM->getText("overwrite save data"), 50, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
         layer->addChild(lbl);
-        lbl->setPosition(Point(size.width/2, size.height/2 + 300));
+        lbl->setPosition(Vec2(size.width/2, size.height/2 + 300));
         lbl->setWidth(1000);
         
         Button* btn = Button::create("uiBoxSmall.png");
         btn->setScale9Enabled(true);
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 - 300, size.height/2 - 200));
-        btn->setContentSize(Size(500, 200));
+        btn->setPosition(Vec2(size.width/2 - 300, size.height/2 - 200));
+        btn->setContentSize(cocos2d::Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onOkFromSaveOverwrite, this));
         
         lbl = PPLabel::create(LM->getText("ok"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1412,8 +1510,8 @@ void HudLayer::onSaveSlotClick(Ref* ref){
         btn = Button::create("uiBoxSmall.png");
         btn->setScale9Enabled(true);
         layer->addChild(btn);
-        btn->setPosition(Point(size.width/2 + 300, size.height/2 - 200));
-        btn->setContentSize(Size(500, 200));
+        btn->setPosition(Vec2(size.width/2 + 300, size.height/2 - 200));
+        btn->setContentSize(cocos2d::Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::closePopup, this));
         
         lbl = PPLabel::create(LM->getText("cancel"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1599,6 +1697,7 @@ void HudLayer::goToLoadedStage(){
     if(datas.size() > 0){
         isHardMode = Value(datas.at(0)).asInt();
     }
+    GM->isThisCampaignFromDailyMission = false;
     auto scene = HelloWorld::scene(savedStage, isHardMode);
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
@@ -1613,7 +1712,7 @@ void HudLayer::onLoadClick(){
     setAsPopup(layer);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -1633,12 +1732,12 @@ void HudLayer::onLoadClick(){
     float gapY = 260;
     PPLabel* lblLoad = PPLabel::create(LM->getText("load"), 100, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
     layer->addChild(lblLoad);
-    lblLoad->setPosition(Point(size.width/2, size.height/2 + 360));
+    lblLoad->setPosition(Vec2(size.width/2, size.height/2 + 360));
     for (int i = 0; i < 4; i++) {
         btn = Button::create("uiBoxSmall.png");
         btn->setScale9Enabled(true);
         layer->addChild(btn);
-        btn->setContentSize(Size(500, 200));
+        btn->setContentSize(cocos2d::Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onLoadSlotClick, this));
         btn->setTag(i);
 
@@ -1676,16 +1775,16 @@ void HudLayer::onLoadClick(){
         lblTime = PPLabel::create(GM->getTimeLeftInString(savedTime), 40, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
         layer->addChild(lblTime);
         if(i == 0){
-            btn->setPosition(Point(size.width/2 - 300, firstLineY));
+            btn->setPosition(Vec2(size.width/2 - 300, firstLineY));
         }else if(i == 1){
-            btn->setPosition(Point(size.width/2 + 300, firstLineY));
+            btn->setPosition(Vec2(size.width/2 + 300, firstLineY));
         }else if(i == 2){
-            btn->setPosition(Point(size.width/2 - 300, firstLineY - gapY));
+            btn->setPosition(Vec2(size.width/2 - 300, firstLineY - gapY));
         }else if(i == 3){
-            btn->setPosition(Point(size.width/2 + 300, firstLineY - gapY));
+            btn->setPosition(Vec2(size.width/2 + 300, firstLineY - gapY));
         }
-        lblTitle->setPosition(btn->getPosition() + Point(0, 35));
-        lblTime->setPosition(btn->getPosition() + Point(0, -35));
+        lblTitle->setPosition(btn->getPosition() + Vec2(0, 35));
+        lblTime->setPosition(btn->getPosition() + Vec2(0, -35));
         if(savedTime == 0){
             lblTime->setVisible(false);
         }
@@ -1708,7 +1807,7 @@ void HudLayer::onLoadSlotClick(Ref* ref){
     setAsPopup(layer);
     
     Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Point(size.width/2, size.height/2));
+    btnBlock->setPosition(Vec2(size.width/2, size.height/2));
     layer->addChild(btnBlock);
     btnBlock->setScale(20);
     btnBlock->setOpacity(100);
@@ -1723,14 +1822,14 @@ void HudLayer::onLoadSlotClick(Ref* ref){
     
     PPLabel* lbl = PPLabel::create(LM->getText("load data"), 50, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
     layer->addChild(lbl);
-    lbl->setPosition(Point(size.width/2, size.height/2 + 300));
+    lbl->setPosition(Vec2(size.width/2, size.height/2 + 300));
     lbl->setWidth(1000);
     
     btn = Button::create("uiBoxSmall.png");
     btn->setScale9Enabled(true);
     layer->addChild(btn);
-    btn->setPosition(Point(size.width/2 - 300, size.height/2 - 200));
-    btn->setContentSize(Size(500, 200));
+    btn->setPosition(Vec2(size.width/2 - 300, size.height/2 - 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onOkFromLoadData, this));
     
     lbl = PPLabel::create(LM->getText("ok"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1741,8 +1840,8 @@ void HudLayer::onLoadSlotClick(Ref* ref){
     btn = Button::create("uiBoxSmall.png");
     btn->setScale9Enabled(true);
     layer->addChild(btn);
-    btn->setPosition(Point(size.width/2 + 300, size.height/2 - 200));
-    btn->setContentSize(Size(500, 200));
+    btn->setPosition(Vec2(size.width/2 + 300, size.height/2 - 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::closePopup, this));
     
     lbl = PPLabel::create(LM->getText("cancel"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1786,7 +1885,12 @@ void HudLayer::goToTitleScene(){
     GM->setHudLayer(nullptr);
     auto scene = Scene::create();
     scene->addChild(Title::create());
+    GM->isThisCampaignFromDailyMission = false;
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
+}
+void HudLayer::onOkFromRaidWinPopup(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    goToBattleScene();
 }
 void HudLayer::goToBattleScene(){
     setGameSpeed(1);
@@ -1794,6 +1898,7 @@ void HudLayer::goToBattleScene(){
     if(GM->isAdsUser()){
         GameSharing::showInterstitial();
     }
+    GM->isThisCampaignFromDailyMission = false;
     GM->setHudLayer(nullptr);
     GM->nextScene = STAGE_LOBBY;
     auto scene = HelloWorld::scene(STAGE_LOBBY, false);
@@ -1815,6 +1920,8 @@ void HudLayer::talkBoxUpdate(float dt){
     }
     if (talkIndex == 0) {
         tutorialNode->setVisible(true);
+        Label* lbl = (Label*)tutorialNode->getChildByName("lbl");
+        lbl->setString("");
         if(tutorialHowTo != nullptr){
             tutorialHowTo->setVisible(false);
             this->unschedule(schedule_selector(HudLayer::updateTutorialHowTo));
@@ -1830,6 +1937,7 @@ void HudLayer::talkBoxUpdate(float dt){
     if(lbl->getBoundingBox().size.width == 0){
         lbl->setString(strPrevious);
     }
+    
     
 //    talkIndex++;
     talkIndex += 2;
@@ -1873,18 +1981,19 @@ Label* HudLayer::getLabel(std::string txt, int fontSize){
 }
 void HudLayer::setMenu(int index, int btnType){
     if(GM->currentStageIndex == STAGE_LOBBY) return;
-    Button* btn = (Button*)WORLD->getChildByName(strmake("btnMenu%d", index));
+    Node* btnMenu = WORLD->getChildByName(strmake("btnMenu%d", index));
+    Button* btn = (Button*)btnMenu->getChildByName("btn");
     btn->removeChildByName("sptSelected");
     btn->setTag(btnType);
-    btn->setVisible(btnType != BTN_TYPE_NONE);
+    btnMenu->setVisible(btnType != BTN_TYPE_NONE);
     btn->removeChildByName("icon");
     Sprite* sptBuilding = nullptr;
-//    btn->getChildByName("lblGold")->setVisible(btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL);
-//    btn->getChildByName("lblLumber")->setVisible(btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL);
+    btnMenu->getChildByName("lblGold")->setVisible(btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL);
+    btnMenu->getChildByName("lblLumber")->setVisible(btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL);
     int unitIndex = -1;
     btn->loadTextures("uiBox.png", "uiBox.png");
-    PPLabel* lbl = (PPLabel*)btn->getChildByName("lbl");
-    lbl->setString("");
+    Text* lbl = (Text*)btnMenu->getChildByName("lbl");
+    LM->setLocalizedStringNotKey(lbl, "");
     selectedMenuName = "-1";
     if(btnType ==  BTN_TYPE_MOVE ){
         btn->loadTextures("btnMove.png", "btnMove.png");
@@ -2000,11 +2109,31 @@ void HudLayer::setMenu(int index, int btnType){
         unitIndex = UNIT_WIZARD;
         lbl->setString(LM->getText("wizard"));
     }
-    lbl->setVisible(lbl->text.length() > 0);
-    if(btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL){
+    lbl->setVisible(lbl->getString().length() > 0);
+    float isToBuy = btnType >= BTN_TYPE_WORKER && btnType < BTN_TYPE_CANCEL;
+    btnMenu->getChildByName("lblGold")->setVisible(isToBuy);
+    btnMenu->getChildByName("lblLumber")->setVisible(isToBuy);
+    btnMenu->getChildByName("imgGold")->setVisible(isToBuy);
+    btnMenu->getChildByName("imgLumber")->setVisible(isToBuy);
+    btnMenu->getChildByName("imgResourceBack")->setVisible(isToBuy);
+    ImageView* imgTitleBack = (ImageView*)btnMenu->getChildByName("imgTitleBack");
+    imgTitleBack->setVisible(isToBuy);
+    lbl->ignoreContentAdaptWithSize(true);
+    
+    if (lbl->getBoundingBox().size.width > 238.28) {
+        log("size overflow %s", lbl->getString().c_str());
+        imgTitleBack->setContentSize(cocos2d::Size(238.28, 49.56*2));
+        lbl->setTextAreaSize(cocos2d::Size(322.82, 217.05));
+        lbl->ignoreContentAdaptWithSize(false);
+    }else{
+        imgTitleBack->setContentSize(cocos2d::Size(238.28, 49.56));
+    }
+    
+    if(isToBuy){
 //        LM->setLocalizedString((Label*)btn->getChildByName("lblName"), WORLD->getUnitName(unitIndex));
-//        ((Label*)btn->getChildByName("lblGold"))->setString(strmake("G:%s", Value(WORLD->getGoldPriceForUnit(unitIndex)).asString().c_str()));
-//        ((Label*)btn->getChildByName("lblLumber"))->setString(strmake("L:%s", Value(WORLD->getLumberPriceForUnit(unitIndex)).asString().c_str()));
+        ((Text*)btn->getParent()->getChildByName("lblGold"))->setString(Value(WORLD->getGoldPriceForUnit(unitIndex)).asString());
+        ((Text*)btn->getParent()->getChildByName("lblLumber"))->setString(Value(WORLD->getLumberPriceForUnit(unitIndex)).asString());
+        
         sptBuilding = WORLD->getSpriteForIcon(unitIndex);
     }
     if(sptBuilding != nullptr){
@@ -2019,28 +2148,28 @@ void HudLayer::onCommandClick(Ref* ref){
         WORLD->buildingTemplate = nullptr;
     }
     Button* btn = (Button*)ref;
-    std::string name = btn->getName();
+    std::string name = btn->getParent()->getName();
     int index = Value(name.substr(7)).asInt();
     index = btn->getTag();
     
     if(index != BTN_TYPE_BUILD && index != BTN_TYPE_BUILD_BETTER && index != BTN_TYPE_CANCEL){
-        if(selectedMenuName.compare(name) != 0){
-            if(selectedMenuName.compare("-1") != 0){
-                Button* btnPrevious = (Button*)WORLD->getChildByName(selectedMenuName);
-                btnPrevious->removeChildByName("sptSelected");
-            }
-            
-            Sprite* sptSelected = Sprite::create("uiBoxSelected.png");
-            sptSelected->setName("sptSelected");
-            btn->addChild(sptSelected);
-            sptSelected->setPosition(btn->getContentSize()/2);
-            selectedMenuName = name;
-            
-            rightBottomPanelForCampaign->getChildByName("ndMission")->setVisible(false);
-            rightBottomPanelForCampaign->getChildByName("ndInfo")->setVisible(true);
-            WORLD->setPriceInfo(index);
-            return;
-        }
+//        if(selectedMenuName.compare(name) != 0){
+//            if(selectedMenuName.compare("-1") != 0){
+//                Button* btnPrevious = (Button*)WORLD->getChildByName(selectedMenuName);
+//                btnPrevious->removeChildByName("sptSelected");
+//            }
+//
+//            Sprite* sptSelected = Sprite::create("uiBoxSelected.png");
+//            sptSelected->setName("sptSelected");
+//            btn->addChild(sptSelected);
+//            sptSelected->setPosition(btn->getContentSize()/2);
+//            selectedMenuName = name;
+//
+//            rightBottomPanelForCampaign->getChildByName("ndMission")->setVisible(false);
+//            rightBottomPanelForCampaign->getChildByName("ndInfo")->setVisible(true);
+//            WORLD->setPriceInfo(index);
+//            return;
+//        }
     }
     
     bool shouldHideMenu = false;
@@ -2065,6 +2194,7 @@ void HudLayer::onCommandClick(Ref* ref){
             Sprite* spt = (Sprite*)HUD->tutorialNode->getChildByName("sptIcon");
             spt->stopAllActions();
             spt->setSpriteFrame("farm.png");
+            spt->setScale(1/WORLD->imageScale);
             WORLD->addGold(400);
             WORLD->addLumber(200);
         }
@@ -2212,7 +2342,7 @@ void HudLayer::processReset(){
 
 void HudLayer::addLabelToButton(std::string text, Button* btn, bool bordered, Color3B color, bool isSystemLabel){
     PPLabel* lbl = PPLabel::create(LM->getText(text.c_str()), btn->getContentSize().height*2/6, color, isSystemLabel, bordered, TextHAlignment::CENTER, false);
-    lbl->setPosition(Point(btn->getContentSize().width/2, btn->getContentSize().height/2));
+    lbl->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
     btn->addChild(lbl);
 }
 Sprite* HudLayer::addSpriteToButton(std::string imgFileName, Button* btn, Button::TextureResType type){
@@ -2238,7 +2368,7 @@ Sprite* HudLayer::getIconSprite(std::string itemName){
     int itemType = WORLD->getItemType(itemName);
     Sprite* spt = Sprite::createWithSpriteFrameName(WORLD->getItemStat(itemName, "sprite"));
     spt->setName("sprite");
-    Rect textureRect = spt->getTextureRect();
+    cocos2d::Rect textureRect = spt->getTextureRect();
     if(textureRect.size.width > TILE_SIZE || textureRect.size.height > TILE_SIZE){
         float textureWidth = textureRect.size.width;
         if(textureWidth > TILE_SIZE){
@@ -2248,7 +2378,7 @@ Sprite* HudLayer::getIconSprite(std::string itemName){
         if(textureHeight > TILE_SIZE){
             textureHeight = TILE_SIZE;
         }
-        spt->setTextureRect(Rect(textureRect.origin.x + spt->getContentSize().width/2 - textureWidth/2, textureRect.getMaxY() - textureHeight, textureWidth, textureHeight));
+        spt->setTextureRect(cocos2d::Rect(textureRect.origin.x + spt->getContentSize().width/2 - textureWidth/2, textureRect.getMaxY() - textureHeight, textureWidth, textureHeight));
     }
     
     Sprite* frameBack = Sprite::createWithSpriteFrameName("icon_frame.png");
@@ -2266,14 +2396,14 @@ void HudLayer::onStartClick(){
 
 void HudLayer::showBtns(){
     for (auto btn: menus){
-        btn->runAction(MoveBy::create(0.1f, Point(0, 1300)));
+        btn->runAction(MoveBy::create(0.1f, Vec2(0, 1300)));
     }
 }
 void HudLayer::hideBtns(){
     for (auto btn: menus){
-        btn->runAction(MoveBy::create(0.1f, Point(0, -1300)));
+        btn->runAction(MoveBy::create(0.1f, Vec2(0, -1300)));
     }
-//    joystickLR->runAction(MoveBy::create(0.1f, Point(0, -300)));
+//    joystickLR->runAction(MoveBy::create(0.1f, Vec2(0, -300)));
 }
 void HudLayer::toggleAuto(bool showMsg){
     bool isAuto = !GameManager::getInstance()->getWorld()->isAutoTargetingOn;
@@ -2357,12 +2487,12 @@ void HudLayer::onDisconnectedController(Controller* controller, Event* event)
 {
     CCLOG("Game controller disconnected");
 }
-void HudLayer::addHeartAnimated(Point pos){
+void HudLayer::addHeartAnimated(Vec2 pos){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
     Sprite* spt = Sprite::create("heart.png");
     spt->setPosition(pos);
     this->addChild(spt);
-    spt->runAction(Sequence::create(EaseIn::create(MoveTo::create(1, heart->getPosition() + Point(50, 0)), 3), CallFuncN::create(CC_CALLBACK_1(HudLayer::addHeartDone, this)), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
+    spt->runAction(Sequence::create(EaseIn::create(MoveTo::create(1, heart->getPosition() + Vec2(50, 0)), 3), CallFuncN::create(CC_CALLBACK_1(HudLayer::addHeartDone, this)), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
 }
 void HudLayer::addHeartDone(Ref* obj){
     Sprite* heart = lifeArray.at(lifeArray.size() - 1);
@@ -2372,7 +2502,7 @@ void HudLayer::addHeartDone(Ref* obj){
     spt->runAction(Sequence::create(RotateBy::create(1, 300), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
     
     heart->addChild(spt);
-    spt->setPosition(Point(heart->getContentSize().width/2, heart->getContentSize().height/2));
+    spt->setPosition(Vec2(heart->getContentSize().width/2, heart->getContentSize().height/2));
     
     
 }
@@ -2396,7 +2526,7 @@ void HudLayer::tryResultOK()
 void HudLayer::showTyping(){
     lblTyping = Label::createWithSystemFont("", GameManager::getInstance()->getFont(FONT_VISITOR), 30);
     this->addChild(lblTyping, 1);
-    lblTyping->setPosition(Point(size.width/2, size.height/4));
+    lblTyping->setPosition(Vec2(size.width/2, size.height/4));
     
     Sprite* sptBack = Sprite::create("whiteBigCircle.png");
     this->addChild(sptBack, 0);
@@ -2474,15 +2604,15 @@ void HudLayer::showStageTitle(){
     }
     float y = size.height*3/4 + 20;
     Label* lblTitle = LanguageManager::getInstance()->getLocalizedLabel(bufTitle, Color4B(235, 235, 235, 255));
-    lblTitle->setAnchorPoint(Point(0.5, 0.5));
-    lblTitle->setPosition(Point(size.width/2, y));
+    lblTitle->setAnchorPoint(Vec2(0.5, 0.5));
+    lblTitle->setPosition(Vec2(size.width/2, y));
     this->addChild(lblTitle, 10000);
     lblTitle->setOpacity(0);
     
     
     Label* lblStage = LanguageManager::getInstance()->getLocalizedLabel(bufStage, Color4B(235, 235, 235, 255));
-    lblStage->setAnchorPoint(Point(0.5, 0.5));
-    lblStage->setPosition(Point(size.width/2, y - lblTitle->getBoundingBox().size.height - 2));
+    lblStage->setAnchorPoint(Vec2(0.5, 0.5));
+    lblStage->setPosition(Vec2(size.width/2, y - lblTitle->getBoundingBox().size.height - 2));
     this->addChild(lblStage, 10000);
     lblStage->setOpacity(0);
     
@@ -2491,22 +2621,22 @@ void HudLayer::showStageTitle(){
  
     dnTitleLine = DrawNode::create();
     this->addChild(dnTitleLine, 10000);
-    dnTitleLine->setPosition(lblTitle->getBoundingBox().origin + Point(0, -4));
+    dnTitleLine->setPosition(lblTitle->getBoundingBox().origin + Vec2(0, -4));
     
     
     float dur = 0.5f;
     sptWhiteGun = Sprite::create("whiteGun.png");
-    sptWhiteGun->setAnchorPoint(Point(0.2, 0.3));
+    sptWhiteGun->setAnchorPoint(Vec2(0.2, 0.3));
     sptWhiteGun->setScale(3);
-    sptWhiteGun->setPosition(Point(dnTitleLine->getPosition() + Point(-60, -13)));
+    sptWhiteGun->setPosition(Vec2(dnTitleLine->getPosition() + Vec2(-60, -13)));
     this->addChild(sptWhiteGun, 10000);
     sptWhiteGun->runAction(Sequence::create(RotateBy::create(dur, 360), CallFunc::create(CC_CALLBACK_0(HudLayer::whiteGunFired, this)), EaseOut::create(RotateBy::create(0.1, -30), 2), RotateBy::create(0.4, 30), DelayTime::create(2.0f), FadeOut::create(1.0f), NULL));
     
     Sprite* sptGunEffect = Sprite::create("whiteGunFireEffect.png");
-    sptGunEffect->setAnchorPoint(Point(0, 0.5));
+    sptGunEffect->setAnchorPoint(Vec2(0, 0.5));
     sptGunEffect->setScale(3);
     sptGunEffect->setOpacity(0);
-    sptGunEffect->setPosition(sptWhiteGun->getPosition() + Point(50, 15));
+    sptGunEffect->setPosition(sptWhiteGun->getPosition() + Vec2(50, 15));
     sptGunEffect->runAction(Sequence::create(DelayTime::create(dur), FadeIn::create(0.05f), DelayTime::create(0.1f), FadeOut::create(0.05f), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptGunEffect)), NULL));
     this->addChild(sptGunEffect, 10000);
     
@@ -2519,7 +2649,7 @@ void HudLayer::stageTitleLineUpdate(float dt){
     float bulletWidth = 10;
     float gap = 4;
     if (currentLineLength > 10) {
-        dnTitleLine->drawSolidRect(Point::ZERO, Point(currentLineLength, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
+        dnTitleLine->drawSolidRect(Vec2::ZERO, Vec2(currentLineLength, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
     }
     if (currentLineLength < lineLength) {
         currentLineLength += lineLength*dt/0.5f;
@@ -2527,7 +2657,7 @@ void HudLayer::stageTitleLineUpdate(float dt){
     if (currentLineLength > lineLength) {
         currentLineLength = lineLength;
     }
-    dnTitleLine->drawSolidRect(Point(currentLineLength + gap, 0), Point(currentLineLength + bulletWidth + gap, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
+    dnTitleLine->drawSolidRect(Vec2(currentLineLength + gap, 0), Vec2(currentLineLength + bulletWidth + gap, 4), Color4F(235.0f/255, 235.0f/255, 235.0f/255, sptWhiteGun->getOpacity()/255.0f));
     
     if (sptWhiteGun->getOpacity() == 0) {
         sptWhiteGun->removeFromParentAndCleanup(true);
@@ -2601,7 +2731,11 @@ void HudLayer::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
             if (isRaid) {
                 goToBattleScene();
             }else{
-                onMenuClick();
+                if (WORLD->gameMode == GAME_MODE_PVP6 || WORLD->gameMode == GAME_MODE_PVP12) {
+                    
+                }else{
+                    onMenuClick();
+                }
             }
         }else{
             closePopup();
@@ -2719,16 +2853,16 @@ void HudLayer::showTalk(const char* talk){
 //    CCLOG("showTalk: %s", talk);
     talkLabel->stopAllActions();
     talkLabel->setString(talk);
-    talkLabel->setPosition(Point(size.width/2, size.height/2 + 75));
+    talkLabel->setPosition(Vec2(size.width/2, size.height/2 + 75));
     talkLabel->setScale(0.1);
 //    talkLabel->runAction(Sequence::create(CCFadeIn::create(0.4), DelayTime::create(2), CCFadeOut::create(0.4), NULL));
     talkLabel->runAction(Sequence::create(EaseOut::create(ScaleTo::create(0.4, 1), 8), DelayTime::create(2), EaseIn::create(ScaleTo::create(0.4, 0.1), 8), NULL));
-    talkLabel->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.4, Point(0, 50)), 8), DelayTime::create(2), EaseIn::create(MoveBy::create(0.4, Point(0, -50)), 8), MoveBy::create(0.01, Point(0, 1000)),NULL));
-//    talkLabel->runAction(Sequence::create(MoveBy::create(0.4, Point(0, 50)), DelayTime::create(2), MoveBy::create(0.4, Point(0, 50)),MoveBy::create(0.01, Point(0, 500)), NULL));
+    talkLabel->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.4, Vec2(0, 50)), 8), DelayTime::create(2), EaseIn::create(MoveBy::create(0.4, Vec2(0, -50)), 8), MoveBy::create(0.01, Vec2(0, 1000)),NULL));
+//    talkLabel->runAction(Sequence::create(MoveBy::create(0.4, Vec2(0, 50)), DelayTime::create(2), MoveBy::create(0.4, Vec2(0, 50)),MoveBy::create(0.01, Vec2(0, 500)), NULL));
 }
 void HudLayer::hideTalk(){
     talkLabel->runAction(FadeOut::create(0.5));
-    talkLabel->runAction(MoveBy::create(0.5, Point(0, 40)));
+    talkLabel->runAction(MoveBy::create(0.5, Vec2(0, 40)));
 }
 void HudLayer::showCoinShopLayer(){
     
@@ -2740,25 +2874,25 @@ void HudLayer::showAchievementComplete(const char* text){
     Sprite* achieveNode = Sprite::create("achievementBar.png");
     Sprite* spt = Sprite::create("achievementIconEnabled.png");
     achieveNode->addChild(spt);
-    spt->setPosition(Point(80, achieveNode->getContentSize().height/2));
+    spt->setPosition(Vec2(80, achieveNode->getContentSize().height/2));
     this->addChild(achieveNode, 10000);
     
     Label* lblText = Label::createWithSystemFont(text, "Arial", 30);
-    lblText->setAnchorPoint(Point(0, 0.5));
-    lblText->setPosition(Point(spt->getPosition().x + 80, achieveNode->getContentSize().height/2));
+    lblText->setAnchorPoint(Vec2(0, 0.5));
+    lblText->setPosition(Vec2(spt->getPosition().x + 80, achieveNode->getContentSize().height/2));
     lblText->setTag(722);
     achieveNode->addChild(lblText);
     
     ((Label*)achieveNode->getChildByTag(722))->setString(text);
-    achieveNode->setPosition(Point(size.width/2 + 15, size.height + (achieveNode->getContentSize().height/2)));
+    achieveNode->setPosition(Vec2(size.width/2 + 15, size.height + (achieveNode->getContentSize().height/2)));
     
-    achieveNode->runAction(Sequence::create(EaseIn::create(MoveBy::create(0.5f, Point(0, -achieveNode->getContentSize().height)),0.2f), CallFuncN::create(CC_CALLBACK_1(HudLayer::achievementEffect, this)), DelayTime::create(1), EaseIn::create(MoveBy::create(0.5f, Point(0, achieveNode->getContentSize().height)),4), CallFuncN::create(CC_CALLBACK_1(HudLayer::nodeMoveDone, this)), NULL));
+    achieveNode->runAction(Sequence::create(EaseIn::create(MoveBy::create(0.5f, Vec2(0, -achieveNode->getContentSize().height)),0.2f), CallFuncN::create(CC_CALLBACK_1(HudLayer::achievementEffect, this)), DelayTime::create(1), EaseIn::create(MoveBy::create(0.5f, Vec2(0, achieveNode->getContentSize().height)),4), CallFuncN::create(CC_CALLBACK_1(HudLayer::nodeMoveDone, this)), NULL));
 }
 
 void HudLayer::achievementEffect(Node* node){
     Sprite* achieveNode = (Sprite*)node;
     Sprite* checkSprite = Sprite::create("checkImage.png");
-    checkSprite->setPosition(Point(achieveNode->getContentSize().width - 80, achieveNode->getContentSize().height/2));
+    checkSprite->setPosition(Vec2(achieveNode->getContentSize().width - 80, achieveNode->getContentSize().height/2));
     
     
     
@@ -2811,13 +2945,13 @@ void HudLayer::addEnergyEffect(){
     int spread = 80;
     for (int i = 0; i < effectCount; i++) {
         spt = Sprite::createWithSpriteFrameName("particle.png");
-        spt->setPosition(Point(size.width/2, size.height/2) + Point(rand()%spread - spread/2, rand()%spread - spread/2));
-        Point pos = spt->getPosition();
+        spt->setPosition(Vec2(size.width/2, size.height/2) + Vec2(rand()%spread - spread/2, rand()%spread - spread/2));
+        Vec2 pos = spt->getPosition();
         spt->setScale(3 + (rand()%10)*0.4);
         this->addChild(spt, 100);
         spt->runAction(FadeOut::create(0));
         spt->runAction(Sequence::create(DelayTime::create(i*interval), FadeIn::create(interval), NULL));
-        spt->runAction(Sequence::create(DelayTime::create(i*interval), EaseIn::create(MoveTo::create(dur, Point(x, y)), 3), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
+        spt->runAction(Sequence::create(DelayTime::create(i*interval), EaseIn::create(MoveTo::create(dur, Vec2(x, y)), 3), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
     }
     this->scheduleOnce(schedule_selector(HudLayer::addEnergyDone), dur + interval*effectCount);
 }
@@ -2827,7 +2961,7 @@ void HudLayer::addEnergyDone(float dt){
     float y = size.height - 28;
     Sprite* spt = Sprite::create("hudHeart.png");
     this->addChild(spt);
-    spt->setPosition(Point(x, y));
+    spt->setPosition(Vec2(x, y));
     float dur =0.5;
     spt->runAction(ScaleTo::create(dur, 3));
     spt->runAction(Sequence::create(FadeOut::create(dur), CallFuncN::create(CC_CALLBACK_1(HudLayer::spriteMoveDone, this)), NULL));
@@ -2843,7 +2977,7 @@ void HudLayer::initializeSreen(int lifeCount)
 //    recordItem->setVisible(true);w
 #endif
 
-//    recordItem->setPosition(pauseItem->getPosition() + Point(-pauseItem->getContentSize().width - 15, 0));
+//    recordItem->setPosition(pauseItem->getPosition() + Vec2(-pauseItem->getContentSize().width - 15, 0));
 }
 
 void HudLayer::reduceLife()
@@ -2891,7 +3025,7 @@ void HudLayer::setBulletCount(int count, int maxCount){
 //    float y = checkBoard->getPosition().y + checkBoard->getContentSize().height*checkBoard->getScale()/2;
 //    while(countLeft > 0){
 //        Sprite* sptBullet = Sprite::createWithSpriteFrameName("bulletPi.png");
-//        sptBullet->setAnchorPoint(Point(0, 1));
+//        sptBullet->setAnchorPoint(Vec2(0, 1));
 //        sptBullet->setPosition(x, y);
 //        sptBullet->setScale((checkBoard->getContentSize().height*checkBoard->getScale() - 1*bulletCountInColumn)/(sptBullet->getContentSize().height*bulletCountInColumn));
 //        hudLayer->addChild(sptBullet);
@@ -2914,7 +3048,7 @@ void HudLayer::keyCollected(int count)
 }
 void HudLayer::starCollected(int count)
 {
-    Point pos;
+    Vec2 pos;
     
     
     GameManager::getInstance()->showParticleExplosion(this, "goldStar.png", pos, 2);
@@ -2923,7 +3057,7 @@ void HudLayer::starCollected(int count)
 }
 
 
-void HudLayer::starCollectedFancy(int count, Point collectedPos)
+void HudLayer::starCollectedFancy(int count, Vec2 collectedPos)
 {
     
 }
@@ -2975,7 +3109,7 @@ void HudLayer::showPauseLayer()
 //    blackScreen->setVisible(true);
     
     pauseLayer = dynamic_cast<Layout*>(GUIReader::getInstance()->widgetFromJsonFile("LegendDary_UI_Pause.json"));
-    pauseLayer->setPosition(Point(size.width/2 - pauseLayer->getContentSize().width/2, 0));
+    pauseLayer->setPosition(Vec2(size.width/2 - pauseLayer->getContentSize().width/2, 0));
     this->addChild(pauseLayer);
     
     Button* btnResume = dynamic_cast<Button*>(Helper::seekWidgetByName(pauseLayer, "Button_14"));
@@ -3150,16 +3284,16 @@ void HudLayer::closeVideoDone(float dt){
     }
     Sprite* sptCoin = Sprite::create("coin.png");
     btnFreeCoin->getParent()->addChild(sptCoin);
-    sptCoin->setPosition(btnFreeCoin->getPosition() + Point(-40, 0));
+    sptCoin->setPosition(btnFreeCoin->getPosition() + Vec2(-40, 0));
     
     Label* lbl = Label::createWithSystemFont(__String::createWithFormat("+%d", coinCount)->getCString(), GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     sptCoin->addChild(lbl);
-    lbl->setPosition(Point(45, 19));
-    lbl->setAnchorPoint(Point(0, 0.5));
+    lbl->setPosition(Vec2(45, 19));
+    lbl->setAnchorPoint(Vec2(0, 0.5));
     
     lbl = Label::createWithSystemFont(__String::createWithFormat("EXP %d", expCount)->getCString(), GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     sptCoin->addChild(lbl);
-    lbl->setPosition(Point(55, -10));
+    lbl->setPosition(Vec2(55, -10));
     
     btnFreeCoin->removeFromParent();
     btnFreeCoin = NULL;
@@ -3174,12 +3308,12 @@ void HudLayer::closeVideoFailed(float dt){
     }
 //    Sprite* sptCoin = Sprite::create("coin.png");
 //    btnFreeCoin->getParent()->addChild(sptCoin);
-//    sptCoin->setPosition(btnFreeCoin->getPosition() + Point(-40, 0));
+//    sptCoin->setPosition(btnFreeCoin->getPosition() + Vec2(-40, 0));
     
     Label* lbl = Label::createWithSystemFont("ADS FAILED", GameManager::getInstance()->getFont(FONT_BITDUST_ONE), 30);
     btnFreeCoin->getParent()->addChild(lbl);
 //    sptCoin->addChild(lbl);
-//    lbl->setPosition(Point(80, 19));
+//    lbl->setPosition(Vec2(80, 19));
     lbl->setPosition(btnFreeCoin->getPosition());
     
     btnFreeCoin->removeFromParent();
@@ -3189,22 +3323,12 @@ void HudLayer::closeVideoFailed(float dt){
     
     /*Label* lbl = Label::createWithSystemFont(LanguageManager::getInstance()->getText(STR_VIDEO_FAILED), GameManager::getInstance()->getFont(FONT_DEFAULT), 24);
     sptBackLight2->getParent()->addChild(lbl);
-    lbl->setPosition(sptBackLight2->getPosition() + Point(80, 115));
+    lbl->setPosition(sptBackLight2->getPosition() + Vec2(80, 115));
     
     btnFreeCoin->removeFromParent();
     btnFreeCoin = NULL;*/
 }
 
-void HudLayer::shareFacebook(){
-    this->scheduleOnce(schedule_selector(HudLayer::facebookSafe), 0.1);
-}
-
-void HudLayer::facebookSafe(float dt){
-    const char* link = "http://www.facebook.com/FifteenSixKorea";
-    if (GameManager::getInstance()->market == MARKET_PLAYSTORE_PAID) {
-        link = "https://play.google.com/store/apps/details?id=com.magmon.LegendDaryTwo";
-    }
-}
 void HudLayer::playCoinSoundLater(){
     
 }
@@ -3272,7 +3396,7 @@ void HudLayer::expLabelScheduler(float dt){
         this->unschedule(schedule_selector(HudLayer::expLabelScheduler));
         
         if (expCount >= maxExpCount) {
-            sptMaxTalkBalloon->setPosition(sptMaxTalkBalloon->getPosition() + Point(0, 1000));
+            sptMaxTalkBalloon->setPosition(sptMaxTalkBalloon->getPosition() + Vec2(0, 1000));
             sptMaxTalkBalloon->runAction(Sequence::create(ScaleTo::create(0.001, 0.5), ScaleTo::create(0.1, 1.1), ScaleTo::create(0.05, 1.0f), NULL));
         }
         
@@ -3303,7 +3427,7 @@ void HudLayer::tryGameContinue(Ref* pSender, ui::Widget::TouchEventType eEventTy
         
         float duration = 3;
         ImageView* darySleep = dynamic_cast<ImageView*>(Helper::seekWidgetByName(reviveLayer, "sptDary"));
-        darySleep->runAction(EaseOut::create(MoveBy::create(duration, Point(0, 50)), 3));
+        darySleep->runAction(EaseOut::create(MoveBy::create(duration, Vec2(0, 50)), 3));
         darySleep->loadTexture("backLight.png");
         darySleep->runAction(RepeatForever::create(RotateBy::create(duration, 360)));
         
@@ -3312,7 +3436,7 @@ void HudLayer::tryGameContinue(Ref* pSender, ui::Widget::TouchEventType eEventTy
         dary->setScale(4);
         dary->getTexture()->setAliasTexParameters();
         dary->setPosition(darySleep->getPosition());
-        dary->runAction(EaseOut::create(MoveBy::create(duration, Point(0, 50)), 3));
+        dary->runAction(EaseOut::create(MoveBy::create(duration, Vec2(0, 50)), 3));
         
         this->scheduleOnce(schedule_selector(HudLayer::reviveLater), duration*2/3);
         
@@ -3389,7 +3513,7 @@ void HudLayer::buyGemClosed(Ref* obj){
     
 }
 void HudLayer::removeUsedAssets(){
-    GameManager::getInstance()->getWorld()->removeUsedAssets();
+    WORLD->removeUsedAssets();
     
     popupArray.clear();
     endingTalkArray.clear();
@@ -3397,9 +3521,9 @@ void HudLayer::removeUsedAssets(){
     lifeArray.clear();
     menus.clear();
     bulletArray.clear();
-    
-    _eventDispatcher->removeEventListener(touchListener);
-    _eventDispatcher->removeEventListener(listener);
+//    this->removeAllChildren();
+//    _eventDispatcher->removeEventListener(touchListener);
+//    _eventDispatcher->removeEventListener(listener);
     /*if (gameOverLayer) {
         gameOverLayer->removeFromParentAndCleanup(true);
     }
@@ -3447,7 +3571,7 @@ void HudLayer::closeSchedule(float dt){
             return;
         }
         if (!UserDefault::getInstance()->getBoolForKey(KEY_AD_NOT_TODAY, false) &&
-            GameManager::getInstance()->market == MARKET_PLAYSTORE_FREE) {
+            GameManager::getInstance()->market == MARKET_FREE) {
             GameManager::getInstance()->page = PAGE_STAGE_SELECT;
             
 //            ((TitleLayer*)GameManager::getInstance()->titleLayer)->setStageSelect();
@@ -3472,8 +3596,7 @@ void HudLayer::closeSchedule(float dt){
 //        ((TitleLayer*)GameManager::getInstance()->titleLayer)->stageTouched();
         
     }else if(toWhat == CLOSE_TO_STAGES){
-        if (GameManager::getInstance()->market == MARKET_PLAYSTORE_FREE ||
-            GameManager::getInstance()->market == MARKET_APPSTORE_FREE) {
+        if (GameManager::getInstance()->market == MARKET_FREE) {
             GameManager::getInstance()->showInterstitialAds();
         }
         
@@ -3533,7 +3656,7 @@ void HudLayer::displayBossEnergy(const char* name)
 {
 //    bossEnergyBackground = Sprite::create("dialogBox.png");
 //    this->addChild(bossEnergyBackground);
-//    bossEnergyBackground->setPosition(Point(size.width/2, size.height/2 - 60));
+//    bossEnergyBackground->setPosition(Vec2(size.width/2, size.height/2 - 60));
 //    bossEnergyBackground->setScaleY(0.5);
     bossEnergyBarWidth = 600;
     
@@ -3542,22 +3665,22 @@ void HudLayer::displayBossEnergy(const char* name)
     bossName->enableShadow();
 //    bossName->getTexture()->setAliasTexParameters();
     this->addChild(bossName);
-    bossName->setAnchorPoint(Point(0,0));
-    bossName->setPosition(Point(size.width/6, size.height*2/3));
+    bossName->setAnchorPoint(Vec2(0,0));
+    bossName->setPosition(Vec2(size.width/6, size.height*2/3));
     
     
     
     bossEnergyBarBack = DrawNode::create();
     this->addChild(bossEnergyBarBack);
     
-    //bossEnergyBarRed->setAnchorPoint(Point(0, 0.5f));
+    //bossEnergyBarRed->setAnchorPoint(Vec2(0, 0.5f));
     //bossEnergyBarRed->setScaleX(bossEnergyBarWidth);
     //bossEnergyBarRed->setScaleY(2);
     
     bossEnergyBar = DrawNode::create();
     this->addChild(bossEnergyBar);
-    //bossEnergyBarYellow->setPosition(Point(size.width/2 - bossEnergyBarWidth/2, size.height/2 + 180));
-    //bossEnergyBarYellow->setAnchorPoint(Point(0, 0.5f));
+    //bossEnergyBarYellow->setPosition(Vec2(size.width/2 - bossEnergyBarWidth/2, size.height/2 + 180));
+    //bossEnergyBarYellow->setAnchorPoint(Vec2(0, 0.5f));
     //bossEnergyBarYellow->setScaleX(bossEnergyBarWidth);
     //bossEnergyBarYellow->setScaleY(2);
 }
@@ -3568,25 +3691,27 @@ void HudLayer::setBossEnergy(int percent)
     bossEnergyBar->clear();
     float width = size.width*4/6;
     float energyLeft = width*percent/100.0f;
-    bossEnergyBarBack->drawSolidRect(Point(size.width/6 - 1, size.height*2/3 - 3), Point(size.width/6 + width + 1, size.height*2/3 + 3), Color4F(235.0f/255, 235.0f/255, 235.0f/255, 100/255.0f));
+    bossEnergyBarBack->drawSolidRect(Vec2(size.width/6 - 1, size.height*2/3 - 3), Vec2(size.width/6 + width + 1, size.height*2/3 + 3), Color4F(235.0f/255, 235.0f/255, 235.0f/255, 100/255.0f));
     Color4F color;
     if (percent < 20) {
         color = Color4F(235.0f/255, 50.0f/255, 50.0f/255, 255/255.0f);
     }else{
         color = Color4F(255.0f/255, 208.0f/255, 59.0f/255, 255/255.0f);
     }
-    bossEnergyBar->drawSolidRect(Point(size.width/6, size.height*2/3 - 2), Point(size.width/6 + energyLeft, size.height*2/3 + 2), color);
+    bossEnergyBar->drawSolidRect(Vec2(size.width/6, size.height*2/3 - 2), Vec2(size.width/6 + energyLeft, size.height*2/3 + 2), color);
     if (percent <= 0) {
         bossEnergyBar->setVisible(false);
         bossEnergyBarBack->setVisible(false);
     }
 }
 void HudLayer::removeListener(){
+    removeUsedAssets();
     cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(touchListener);
     cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(listener);
     cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(_listener);
+    this->unscheduleAllCallbacks();
     this->unschedule(schedule_selector(HudLayer::oneSecUpdate));
-    WORLD->removeUsedAssets();
+//    WORLD->removeUsedAssets();
 //    js2->removeListener();
 }
 void HudLayer::onTutorialBoxClick(){
@@ -3598,9 +3723,9 @@ void HudLayer::onTutorialBoxClick(){
             tutorialHowTo = Node::create();
             this->addChild(tutorialHowTo);
             ImageView* img = ImageView::create("uiBox.png");
-            img->setContentSize(Size(690, 290));
+            img->setContentSize(cocos2d::Size(690, 290));
             img->setScale9Enabled(true);
-            img->setPosition(Point(size.width/2, size.height - 150));
+            img->setPosition(Vec2(size.width/2, size.height - 150));
             tutorialHowTo->addChild(img);
             ImageView* imgContent = ImageView::create();
             imgContent->setPosition(img->getPosition());
@@ -3610,10 +3735,10 @@ void HudLayer::onTutorialBoxClick(){
             lbl->setName("lbl");
             lbl->setTextHAlignment(TextHAlignment::CENTER);
             tutorialHowTo->addChild(lbl);
-            lbl->setPosition(Point(size.width/2, size.height - 320));
+            lbl->setPosition(Vec2(size.width/2, size.height - 320));
             lbl->setShadowEnabled(true);
             if(lbl->lblNormal != nullptr){
-                lbl->lblNormal->enableShadow(Color4B(DARK_GRAY_3B, 255), Size(4, -4));
+                lbl->lblNormal->enableShadow(Color4B(DARK_GRAY_3B, 255), cocos2d::Size(4, -4));
             }
             lbl->setWidth(img->getContentSize().width);
         }
@@ -3808,30 +3933,30 @@ void HudLayer::showBlackTopAndBottom(){
     int barHeight = 200;
     blackTop = Sprite::create("whiteRect.png");
     this->addChild(blackTop, 5);
-    blackTop->setContentSize(Size(frameWidth, barHeight));
-    blackTop->setPosition(Point(size.width/2, size.height + barHeight));
-    blackTop->setAnchorPoint(Point(0.5, 1));
-    blackTop->runAction(MoveBy::create(0.6f, Point(0, -barHeight)));
+    blackTop->setContentSize(cocos2d::Size(frameWidth, barHeight));
+    blackTop->setPosition(Vec2(size.width/2, size.height + barHeight));
+    blackTop->setAnchorPoint(Vec2(0.5, 1));
+    blackTop->runAction(MoveBy::create(0.6f, Vec2(0, -barHeight)));
     blackTop->setColor(Color3B::BLACK);
     
     blackBottom = Sprite::create("whiteRect.png");
     this->addChild(blackBottom , 5);
-    blackBottom->setContentSize(Size(frameWidth, barHeight));
-    blackBottom->setPosition(Point(size.width/2, -barHeight));
-    blackBottom->setAnchorPoint(Point(0.5, 0));
-    blackBottom->runAction(Sequence::create(MoveBy::create(0.6f, Point(0, barHeight)), nullptr));
+    blackBottom->setContentSize(cocos2d::Size(frameWidth, barHeight));
+    blackBottom->setPosition(Vec2(size.width/2, -barHeight));
+    blackBottom->setAnchorPoint(Vec2(0.5, 0));
+    blackBottom->runAction(Sequence::create(MoveBy::create(0.6f, Vec2(0, barHeight)), nullptr));
     blackBottom->setColor(Color3B::BLACK);
     
     if(eventIndex != 100 || true){
 //        Sprite* sptBSkip = Sprite::createWithSpriteFrameName("bSkipPressed.png");
 //        blackBottom->addChild(sptBSkip);
 //        sptBSkip->setScale(4);
-//        sptBSkip->setPosition(Point(blackBottom->getContentSize().width - sptBSkip->getContentSize().width*sptBSkip->getScale()/2 - 60, blackBottom->getContentSize().height/2 + sptBSkip->getContentSize().height*sptBSkip->getScale()/2 + 4));
+//        sptBSkip->setPosition(Vec2(blackBottom->getContentSize().width - sptBSkip->getContentSize().width*sptBSkip->getScale()/2 - 60, blackBottom->getContentSize().height/2 + sptBSkip->getContentSize().height*sptBSkip->getScale()/2 + 4));
 //        GM->runAnimation(sptBSkip, "bSkip", true);
         Text* lblSkip = Text::create("SKIP", LM->getLocalizedFont(), 80);
 //        lblSkip->enableShadow();
         blackBottom->addChild(lblSkip);
-        lblSkip->setPosition(Point(blackBottom->getContentSize().width - lblSkip->getContentSize().width*lblSkip->getScale()/2 - 60,blackBottom->getContentSize().height/2 + lblSkip->getContentSize().height*lblSkip->getScale()/2 - 50));
+        lblSkip->setPosition(Vec2(blackBottom->getContentSize().width - lblSkip->getContentSize().width*lblSkip->getScale()/2 - 60,blackBottom->getContentSize().height/2 + lblSkip->getContentSize().height*lblSkip->getScale()/2 - 50));
         lblSkip->addClickEventListener(CC_CALLBACK_0(HudLayer::onSkipClick, this));
         lblSkip->setTouchEnabled(true);
         lblSkip->setOpacity(0);
@@ -3866,8 +3991,8 @@ void HudLayer::onSkipClick(){
 }
 void HudLayer::hideBlackTopAndBottom(){
     if(blackTop == nullptr) return;
-    blackTop->runAction(Sequence::create(MoveBy::create(1, Point(0, 80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackTop)), nullptr));
-    blackBottom->runAction(Sequence::create(MoveBy::create(1, Point(0, -80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackBottom)), nullptr));
+    blackTop->runAction(Sequence::create(MoveBy::create(1, Vec2(0, 80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackTop)), nullptr));
+    blackBottom->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackBottom)), nullptr));
     showBtns();
 }
 void HudLayer::updateTalkBoxRope(float dt){
@@ -3884,8 +4009,8 @@ void HudLayer::updateTalkBoxRope(float dt){
         bool topExist = false;
         bool bottomExist = false;
         x = i;
-        Point topPos = Point(x, sptTalkBox->getContentSize().height);
-        Point bottomPos = Point(x, 0);
+        Vec2 topPos = Vec2(x, sptTalkBox->getContentSize().height);
+        Vec2 bottomPos = Vec2(x, 0);
         for (auto rope : sptTalkBox->getChildren()) {
             if(rope->getTag() != 7){
                 continue;
@@ -3916,8 +4041,8 @@ void HudLayer::updateTalkBoxRope(float dt){
 //        bool leftExist = false;
 //        bool rightExist = false;
 //        y = i;
-//        Point leftPos = Point(0, y);
-//        Point rightPos = Point(sptTalkBox->getContentSize().width, y);
+//        Vec2 leftPos = Vec2(0, y);
+//        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
 //        for (auto rope : sptTalkBox->getChildren()) {
 //            if(rope->getBoundingBox().containsPoint(leftPos)){
 //                leftExist = true;
@@ -3949,8 +4074,8 @@ void HudLayer::onTalkBoxResizeDone(){
 //    // vertical
 //    for(int i = 0; i < sptTalkBox->getContentSize().height;i+=ropeheight){
 //        int y = i;
-//        Point leftPos = Point(0, y);
-//        Point rightPos = Point(sptTalkBox->getContentSize().width, y);
+//        Vec2 leftPos = Vec2(0, y);
+//        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
 //        Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
 //        sptTalkBox->addChild(sptRope);
 //        sptRope->setPosition(rightPos);
@@ -4086,7 +4211,7 @@ void HudLayer::selectABCOption(Node* node){
     int index = node->getTag();
     if(selectedAbcOption != node && node != nullptr){
         selectedAbcOption = node;
-        sptCursor->setPosition(node->getBoundingBox().origin + Point(-sptCursor->getContentSize().width/2 - 10, node->getBoundingBox().size.height/2));
+        sptCursor->setPosition(node->getBoundingBox().origin + Vec2(-sptCursor->getContentSize().width/2 - 10, node->getBoundingBox().size.height/2));
     }else if(samShopLayer != nullptr){
         int actionType = ACTION_TYPE_CANCEL;
         if(index == 1){
@@ -4260,10 +4385,10 @@ void HudLayer::endEvent(){
 void HudLayer::showOptions(std::string option0, std::string option1){
     sptTalkBox = Sprite::createWithSpriteFrameName("whiteRect.png");
     this->addChild(sptTalkBox, 6);
-    sptTalkBox->setPosition(Point(size.width/2, size.height/2 + 100));
+    sptTalkBox->setPosition(Vec2(size.width/2, size.height/2 + 100));
 //    sptTalkBox->setScale(1);
-//    sptTalkBox->setContentSize(Size(640, 257));
-    sptTalkBox->setContentSize(Size(10, 10));
+//    sptTalkBox->setContentSize(cocos2d::Size(640, 257));
+    sptTalkBox->setContentSize(cocos2d::Size(10, 10));
     int ropeWidth = 5*4;
     int ropeheight = 4*4;
     int x = 0;
@@ -4273,7 +4398,7 @@ void HudLayer::showOptions(std::string option0, std::string option1){
     float scale = 0.3f;
     Label* lblOption0 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("A. %s", option0.c_str()).c_str(), Color4B(78, 78, 78, 255));
     sptTalkBox->addChild(lblOption0);
-    lblOption0->setPosition(Point(320, height*4/5));
+    lblOption0->setPosition(Vec2(320, height*4/5));
     lblOption0->setScale(scale);
     lblOption0->setTag(0);
     lblOption0->setVisible(false);
@@ -4281,13 +4406,13 @@ void HudLayer::showOptions(std::string option0, std::string option1){
     
     Label* lblOption1 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("B. %s", option1.c_str()).c_str(), Color4B(78, 78, 78, 255));
     sptTalkBox->addChild(lblOption1);
-    lblOption1->setPosition(Point(320, height*2/5));
+    lblOption1->setPosition(Vec2(320, height*2/5));
     lblOption1->setVisible(false);
     lblOption1->setTag(1);
     lblOption1->setScale(scale);
     lblOption1->setWidth(600/scale);
     
-    sptTalkBox->runAction(Sequence::create(ResizeTo::create(0.2f, Size(8, 257)), ResizeTo::create(0.5f, Size(640, height)), CallFunc::create(CC_CALLBACK_0(HudLayer::onTalkBoxResizeDone, this)), nullptr));
+    sptTalkBox->runAction(Sequence::create(ResizeTo::create(0.2f, cocos2d::Size(8, 257)), ResizeTo::create(0.5f, cocos2d::Size(640, height)), CallFunc::create(CC_CALLBACK_0(HudLayer::onTalkBoxResizeDone, this)), nullptr));
     inputShouldWait = true;
 //    sptTalkBox->runAction(Sequence::create(ScaleTo::create(0.2f, 0.1f, 1),ScaleTo::create(0.5f, 1), CallFunc::create(CC_CALLBACK_0(HudLayer::onTalkBoxResizeDone, this)), nullptr));
     
@@ -4303,10 +4428,10 @@ void HudLayer::showEnding(int index){
     }
     ImageView* sptBack = ImageView::create("whiteRect.png");
     sptBack->setColor(Color3B::BLACK);
-    sptBack->setCapInsets(Rect(3, 3, sptBack->getContentSize().width - 6, sptBack->getContentSize().height - 6));
+    sptBack->setCapInsets(cocos2d::Rect(3, 3, sptBack->getContentSize().width - 6, sptBack->getContentSize().height - 6));
     sptBack->setScale9Enabled(true);
-    sptBack->setContentSize(Size(750, 750));
-    sptBack->setPosition(Point(size.width/2, size.height - 750/2));
+    sptBack->setContentSize(cocos2d::Size(750, 750));
+    sptBack->setPosition(Vec2(size.width/2, size.height - 750/2));
     this->addChild(sptBack,-1);
     sptBack->setName("EndingFrame");
     endingIndex = index;
@@ -4339,11 +4464,11 @@ void HudLayer::updateEnding(float dt){
     }else{
         if(text.size() > 0){
             Sprite* notice = Sprite::create("whiteRect.png");
-            notice->setContentSize(Size(800, 40));
-            notice->setPosition(Point(size.width/2, lastEndingTalkY));
+            notice->setContentSize(cocos2d::Size(800, 40));
+            notice->setPosition(Vec2(size.width/2, lastEndingTalkY));
             endingTalkArray.pushBack(notice);
             notice->setColor(Color3B(78, 78, 78));
-            notice->setAnchorPoint(Point(0.5, 1));
+            notice->setAnchorPoint(Vec2(0.5, 1));
             this->addChild(notice,-1);
             
             Label* lbl = LM->getLocalizedLabel();
@@ -4363,29 +4488,29 @@ void HudLayer::updateEnding(float dt){
     
     
     Sprite* profilePic = Sprite::createWithSpriteFrameName(profile);
-    profilePic->setPosition(Point(isLeft?80:670, lastEndingTalkY - padding));
-    profilePic->setAnchorPoint(Point(0.5, 1));
+    profilePic->setPosition(Vec2(isLeft?80:670, lastEndingTalkY - padding));
+    profilePic->setAnchorPoint(Vec2(0.5, 1));
     profilePic->setScale(4);
     this->addChild(profilePic, -1);
     endingTalkArray.pushBack(profilePic);
     log("box width before: %f", utils::getCascadeBoundingBox(profilePic).size.width);
     Label* lbl = LM->getLocalizedLabel(name.c_str(), Color4B::WHITE);
-    lbl->setAnchorPoint(Point(isLeft?0:1, 1));
-    lbl->setPosition(Point(isLeft?profilePic->getContentSize().width + padding:-padding, profilePic->getContentSize().height));
+    lbl->setAnchorPoint(Vec2(isLeft?0:1, 1));
+    lbl->setPosition(Vec2(isLeft?profilePic->getContentSize().width + padding:-padding, profilePic->getContentSize().height));
     profilePic->addChild(lbl);
     lbl->setScale(lbl->getScale());
     
     if (text.find("shyface") !=  std::string::npos) {
         Sprite* sptFace = Sprite::createWithSpriteFrameName("emoticonShyFace.png");
         profilePic->addChild(sptFace);
-        sptFace->setAnchorPoint(Point(0.5, 1));
+        sptFace->setAnchorPoint(Vec2(0.5, 1));
         sptFace->runAction(Sequence::create(DelayTime::create(0.3f), FlipX::create(true) , DelayTime::create(0.3f), FlipX::create(false) ,DelayTime::create(0.3f), FlipX::create(true), NULL));
-        sptFace->setPosition(Point(lbl->getPositionX() + sptFace->getContentSize().width/2*(isLeft?1:-1), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY() - padding));
+        sptFace->setPosition(Vec2(lbl->getPositionX() + sptFace->getContentSize().width/2*(isLeft?1:-1), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY() - padding));
     }else{
         ImageView* imgTalkBox = ImageView::create("talkBoxFrame.png");
-        imgTalkBox->setAnchorPoint(Point(isLeft?0:1, 1));
-        imgTalkBox->setPosition(Point(lbl->getPositionX(), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY()));
-        imgTalkBox->setCapInsets(Rect(3, 3, imgTalkBox->getContentSize().width - 6, imgTalkBox->getContentSize().height - 6));
+        imgTalkBox->setAnchorPoint(Vec2(isLeft?0:1, 1));
+        imgTalkBox->setPosition(Vec2(lbl->getPositionX(), lbl->getPositionY() - lbl->getContentSize().height*lbl->getScaleY()));
+        imgTalkBox->setCapInsets(cocos2d::Rect(3, 3, imgTalkBox->getContentSize().width - 6, imgTalkBox->getContentSize().height - 6));
         imgTalkBox->setScale9Enabled(true);
         profilePic->addChild(imgTalkBox);
         
@@ -4397,7 +4522,7 @@ void HudLayer::updateEnding(float dt){
         lblTalkShadow->setTextColor(Color4B(78, 78, 78, 255));
         // resize talkbox
         lblTalkShadow->setString(text);
-        Size talkSize = Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
+        cocos2d::Size talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
         float width = 66;
         if(talkSize.width > width){
             lblTalkShadow->setWidth(width/lblTalkShadow->getScale());
@@ -4405,13 +4530,13 @@ void HudLayer::updateEnding(float dt){
             lblTalkShadow->setWidth(talkSize.width/lblTalkShadow->getScale());
         }
         
-        talkSize = Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
+        talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalkShadow->getScale(), lblTalkShadow->getContentSize().height*lblTalkShadow->getScale());
         float padding = 10;
-        imgTalkBox->setContentSize(Size(talkSize.width + padding, talkSize.height + padding));
-        lblTalkShadow->setPosition(imgTalkBox->getPosition() + Point((isLeft?1:-1)*imgTalkBox->getContentSize().width/2, - padding/2 - talkSize.height/2));
+        imgTalkBox->setContentSize(cocos2d::Size(talkSize.width + padding, talkSize.height + padding));
+        lblTalkShadow->setPosition(imgTalkBox->getPosition() + Vec2((isLeft?1:-1)*imgTalkBox->getContentSize().width/2, - padding/2 - talkSize.height/2));
         // resize talkbox end
         
-        sptPointer->setPosition(imgTalkBox->getPosition() + Point((isLeft?-1:1)*sptPointer->getContentSize().height/2 + (isLeft?3:-3), -5));
+        sptPointer->setPosition(imgTalkBox->getPosition() + Vec2((isLeft?-1:1)*sptPointer->getContentSize().height/2 + (isLeft?3:-3), -5));
         sptPointer->setRotation(isLeft?90:-90);
     }
     log("box width after: %f", utils::getCascadeBoundingBox(profilePic).size.width);
@@ -4435,10 +4560,10 @@ PPLabel* HudLayer::showInstanceMessage(std::string msg){
     PPLabel* lbl = PPLabel::create(msg, 60, Color3B::WHITE, true, false, TextHAlignment::CENTER, true);
     this->addChild(lbl, 200);
     lbl->setTag(77);
-    lbl->setPosition(Point(size.width/2, -TILE_SIZE/2));
+    lbl->setPosition(Vec2(size.width/2, -TILE_SIZE/2));
     float dur = 0.3f;
     float distanceToMove = 360;
-    lbl->runAction(Sequence::create(MoveBy::create(dur, Point(0, distanceToMove)), DelayTime::create(2), MoveBy::create(dur, Point(0, -distanceToMove)), CallFunc::create(CC_CALLBACK_0(PPLabel::removeFromParent, lbl)), nullptr));
+    lbl->runAction(Sequence::create(MoveBy::create(dur, Vec2(0, distanceToMove)), DelayTime::create(2), MoveBy::create(dur, Vec2(0, -distanceToMove)), CallFunc::create(CC_CALLBACK_0(PPLabel::removeFromParent, lbl)), nullptr));
     return lbl;
 }
 //bool HudLayer::addItemToInventory(std::string name){
@@ -4626,8 +4751,8 @@ Sprite* HudLayer::addBToCloseToLayer(Node* layer){
     Sprite* sptBToClose = Sprite::createWithSpriteFrameName("bToCloseReleased.png");
     layer->addChild(sptBToClose);
     GameManager::getInstance()->runAnimation(sptBToClose, "bToCloseAni", true);
-    sptBToClose->setAnchorPoint(Point(1, 0));
-    sptBToClose->setPosition(Point(196, 660));
+    sptBToClose->setAnchorPoint(Vec2(1, 0));
+    sptBToClose->setPosition(Vec2(196, 660));
     sptBToClose->setScale(4.5f);
     return sptBToClose;
 }
@@ -4744,8 +4869,8 @@ void HudLayer::ropeAround(Node* node){
     // horizontal
     for(int i = 0; i < node->getContentSize().width + ropeWidth;i+=ropeWidth){
         x = i;
-        Point topPos = Point(x, node->getContentSize().height);
-        Point bottomPos = Point(x, 0);
+        Vec2 topPos = Vec2(x, node->getContentSize().height);
+        Vec2 bottomPos = Vec2(x, 0);
         
             Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
             node->addChild(sptRope);
@@ -4763,8 +4888,8 @@ void HudLayer::ropeAround(Node* node){
     // vertical
         for(int i = 0; i < node->getContentSize().height;i+=ropeheight){
             y = i;
-            Point leftPos = Point(0, y);
-            Point rightPos = Point(node->getContentSize().width, y);
+            Vec2 leftPos = Vec2(0, y);
+            Vec2 rightPos = Vec2(node->getContentSize().width, y);
             
                 Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
                 node->addChild(sptRope);
@@ -4819,7 +4944,7 @@ void HudLayer::showIntro(){
     sptFrame->setScale(50);
     sptFrame->setOpacity(0);
     sptFrame->runAction(Sequence::create(DelayTime::create(1), FadeTo::create(2, 150), NULL));
-    sptFrame->setPosition(Point(size.width/2, size.height - size.width/2));
+    sptFrame->setPosition(Vec2(size.width/2, size.height - size.width/2));
     
     float dur = 50;
     Label* lbl = Label::createWithSystemFont("text", LM->getLocalizedFont(), 30);
@@ -4829,9 +4954,9 @@ void HudLayer::showIntro(){
     this->addChild(lbl, 1);
     lbl->setScale(1);
     
-    lbl->setAnchorPoint(Point(0.5, 1));
-    lbl->setPosition(Point(size.width/2, size.height - size.width));
-    lbl->runAction(MoveBy::create(dur, Point(0, lbl->getBoundingBox().size.height + size.width)));
+    lbl->setAnchorPoint(Vec2(0.5, 1));
+    lbl->setPosition(Vec2(size.width/2, size.height - size.width));
+    lbl->runAction(MoveBy::create(dur, Vec2(0, lbl->getBoundingBox().size.height + size.width)));
     
     GM->nextScene = STAGE_TITLE;
 //    this->runAction(Sequence::create(DelayTime::create(dur - 2), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
@@ -5005,7 +5130,7 @@ void HudLayer::showDoctorShop(){
     lbl = (Text*)layer->getChildByName("lblTip");
     lbl->setTextVerticalAlignment(TextVAlignment::BOTTOM);
     lbl->ignoreContentAdaptWithSize(false);
-    lbl->setContentSize(Size(635, 46));
+    lbl->setContentSize(cocos2d::Size(635, 46));
     lbl->setString(strmake("A.%s   B.%s", LM->getText("evolution").c_str(), LM->getText("cancel").c_str()));
     lbl->runAction(RepeatForever::create(Blink::create(1, 2)));
 //    changeTextWithLabel(lbl, 285.24f);
@@ -5037,10 +5162,10 @@ void HudLayer::showCredit(){
     isInScene = true;
 //    ImageView* sptRect = ImageView::create("res/258_gray_rect.png");
 //    sptRect->setColor(Color3B::BLACK);
-//    sptRect->setPosition(Point(size.width/2, size.height - 714));
-//    sptRect->setContentSize(Size(750, 750));
-//    sptRect->setAnchorPoint(Point(0.5, 0));
-//    sptRect->setCapInsets(Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
+//    sptRect->setPosition(Vec2(size.width/2, size.height - 714));
+//    sptRect->setContentSize(cocos2d::Size(750, 750));
+//    sptRect->setAnchorPoint(Vec2(0.5, 0));
+//    sptRect->setCapInsets(cocos2d::Rect(3, 3, sptRect->getContentSize().width - 6, sptRect->getContentSize().height - 6));
 //    sptRect->setScale9Enabled(true);
 //    this->addChild(sptRect, 8);
     
@@ -5060,7 +5185,7 @@ void HudLayer::showCredit(){
         lbl->setOpacity(0);
         lbl->runAction(Sequence::create(DelayTime::create(1), DelayTime::create(i*3), FadeIn::create(1), DelayTime::create(1), FadeOut::create(1), NULL));
         this->addChild(lbl, 9);
-        lbl->setPosition(Point(size.width/2, size.height - 714/2 - 100));
+        lbl->setPosition(Vec2(size.width/2, size.height - 714/2 - 100));
     }
     GM->nextScene = STAGE_FIELD;
 //    this->runAction(Sequence::create(DelayTime::create(3*6 + 1), CallFunc::create(CC_CALLBACK_0(HudLayer::showBIAndReplaceScene, this)), NULL));
@@ -5103,20 +5228,21 @@ void HudLayer::showPVP(){
     
 }
 void HudLayer::oneSecUpdate(float dt){
-    
+//    log("getPath count: %d", GM->getPathCall);
+    GM->getPathCall = 0;
 }
-void HudLayer::showPotSoul(cocos2d::Point pos){
+void HudLayer::showPotSoul(cocos2d::Vec2 pos){
     Sprite* spt = Sprite::createWithSpriteFrameName("potSoul.png");
     this->addChild(spt, 100);
     spt->setScale(WORLD->getScale());
     spt->setPosition(pos);
     spt->setOpacity(0);
     spt->runAction(FadeIn::create(1));
-    Point targetPos = Point(603.17f, 1209.88f);
-    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(1, Point(0, 100)), 2), EaseInOut::create(MoveTo::create(0.7f, targetPos), 2), CallFunc::create(CC_CALLBACK_0(HudLayer::onPotSoulMoveDone, this)), SPT_REMOVE_FUNC,NULL));
+    Vec2 targetPos = Vec2(603.17f, 1209.88f);
+    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(1, Vec2(0, 100)), 2), EaseInOut::create(MoveTo::create(0.7f, targetPos), 2), CallFunc::create(CC_CALLBACK_0(HudLayer::onPotSoulMoveDone, this)), SPT_REMOVE_FUNC,NULL));
     Node* counter = hudLayer->getChildByName("potCounter");
-    counter->setPosition(Point(900, 1166));
-    counter->runAction(Sequence::create(DelayTime::create(1), MoveTo::create(0.4f, Point(710, 1166)), DelayTime::create(1), MoveTo::create(0.3f, Point(900, 1166)), NULL));
+    counter->setPosition(Vec2(900, 1166));
+    counter->runAction(Sequence::create(DelayTime::create(1), MoveTo::create(0.4f, Vec2(710, 1166)), DelayTime::create(1), MoveTo::create(0.3f, Vec2(900, 1166)), NULL));
     counter->runAction(Sequence::create(DelayTime::create(1), FadeIn::create(0.4f), DelayTime::create(1), FadeOut::create(0.3f), NULL));
     Text* lbl = (Text*)counter->getChildByName("lblCount");
     int potCount = UDGetInt(KEY_POT_SOUL_COUNT, 0);
@@ -5176,143 +5302,447 @@ void HudLayer::onReviveByDead(){
     UDSetStr(KEY_LAST_SAVE_POINT, checkPoint.c_str());
 }
 void HudLayer::showWinPopup(bool win){
-    GameSharing::logFB(strmake("STAGE %d %s", GM->currentStageIndex, win?"WIN":"LOSE").c_str());
-    Node* popup = Node::create();
-    popup->setName("winPopup");
-    popup->setTag(win?1:0);
-    this->addChild(popup, 200);
-    resultPopup = popup;
-    ImageView* imgBack = ImageView::create("uiBox.png");
-    popup->addChild(imgBack, -1);
-    imgBack->setColor(Color3B::BLACK);
-    imgBack->setOpacity(100);
-    imgBack->setScale(20);
-    imgBack->setTouchEnabled(true);
-    
-    ImageView* img = ImageView::create("uiBox.png");
-    img->setContentSize(Size(1300, 850));
-    img->setScale9Enabled(true);
-    img->setPosition(Point(size.width/2, size.height/2 + 100));
-    popup->addChild(img);
-    
-    std::string strResult = LM->getText("mission cleared");
-    if (!win) {
-        strResult = LM->getText("mission failed");
-    }
-//    Label* lbl = LM->getLocalizedLabel(strResult.c_str(), Color4B::BLACK, 70);
-    Node* title = PPLabel::create(strResult, 70, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-    title->setPosition(Point(size.width/2, size.height/2 + 400));
-    popup->addChild(title);
-    
-    int leftX = size.width/2 - 350;
-    int iconX = size.width/2 - 450;
-    int rightX = size.width/2 + 500;
-    int startY = size.height/2 + 250;
-    int gapY = 100;
-    int fontSize = 40;
-    Node* customLabel;
-    Sprite* spt;
-    for(int i = 0; i < 5; i++){
-        if (i == 0) {
-            customLabel = PPLabel::create(LM->getText("time"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
-            customLabel->setName("lblTimeTitle");
-            spt = Sprite::create("iconTime.png");
-            spt->setName("sptTime");
-//            lbl = LM->getLocalizedLabel("Time", Color4B::BLACK, fontSize);
-//            lbl->setName("lblTimeTitle");
-        }else if (i == 1) {
-            customLabel = PPLabel::create(strmake("%s (%s/%s)", LM->getText("gold text").c_str(), LM->getText("used").c_str(), LM->getText("earned").c_str()), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
-            customLabel->setName("lblGoldTitle");
-            spt = Sprite::create("iconGold.png");
-            spt->setName("sptGold");
-//            lbl = LM->getLocalizedLabel("Gold (Used/Earnd)", Color4B::BLACK, fontSize);
-//            lbl->setName("lblGoldTitle");
-        }else if (i == 2) {
-            customLabel = PPLabel::create(strmake("%s (%s/%s)", LM->getText("lumber text").c_str(), LM->getText("used").c_str(), LM->getText("earned").c_str()), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
-            customLabel->setName("lblLumberTitle");
-            spt = Sprite::create("iconLumber.png");
-            spt->setName("sptLumber");
-//            lbl = LM->getLocalizedLabel("Lumber (Used/Earnd)", Color4B::BLACK, fontSize);
-//            lbl->setName("lblLumberTitle");
-        }else if (i == 3) {
-            customLabel = PPLabel::create(LM->getText("produced unit"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
-            customLabel->setName("lblProduceTitle");
-            spt = Sprite::create("iconPopulation.png");
-            spt->setName("sptPopulation");
-//            lbl = LM->getLocalizedLabel("Produced Unit", Color4B::BLACK, fontSize);
-//            lbl->setName("lblProduceTitle");
-        }else if (i == 4) {
-            customLabel = PPLabel::create(LM->getText("killed unit"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
-            customLabel->setName("lblKillTitle");
-            spt = Sprite::create("iconKilled.png");
-            spt->setName("sptKilled");
-//            lbl = LM->getLocalizedLabel("Killed Unit", Color4B::BLACK, fontSize);
-//            lbl->setName("lblKillTitle");
+    isWon = win;
+    if (WORLD->gameMode == GAME_MODE_PVP6 || WORLD->gameMode == GAME_MODE_PVP12) {
+        Node* layer = this->getChildByName("pvpUI");
+        Node* ndResult = layer->getChildByName("imgResult");
+        ndResult->retain();
+        ndResult->removeFromParentAndCleanup(false);
+        GM->animateFadeIn(ndResult, layer);
+        ndResult->release();
+        ndResult->setVisible(true);
+        Text* lblLose = (Text*)ndResult->getChildByName("lblLose");
+        lblLose->setVisible(!win);
+        LM->setLocalizedString(lblLose, "lose");
+        Text* lblWin = (Text*)ndResult->getChildByName("lblWin");
+        lblWin->setVisible(win);
+        LM->setLocalizedString(lblWin, "win");
+        if(win){
+            GM->addGlowBack(lblWin);
         }
-        customLabel->setVisible(false);
-        customLabel->setPosition(Point(leftX, startY - gapY*i));
-        popup->addChild(customLabel);
-        spt->setPosition(Point(iconX, customLabel->getPositionY()));
-        popup->addChild(spt);
-        spt->setVisible(false);
+        Button* btn = (Button*)ndResult->getChildByName("btnOk");
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onPvpResultOk, this));
+        btn->setOpacity(0);
+        btn->setScale(0.1f);
+        btn->runAction(Sequence::create(DelayTime::create(1), EaseBackOut::create(ScaleTo::create(0.3f, 1)), nullptr));
+        btn->runAction(Sequence::create(DelayTime::create(1), FadeIn::create(0), nullptr));
+        ImageView* img; int rank;Text* lbl;
+        std::string strEquipped = UDGetStr(KEY_UNITS_HERO_DECK, "");
+        ValueVector units = GM->split(strEquipped, "_");
+        UnitInfo* info;
+        int index = 0;
+        lbl = (Text*)ndResult->getChildByName("lblPlayerName");
+        lbl->setString(UDGetStr(KEY_NAME, ""));
+        lbl = (Text*)ndResult->getChildByName("lblTrophyPlayer");
+        int playerTrophy = UDGetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_TROPHY:KEY_PVP12_TROPHY, 1000);
         
-        if (i == 0) {
-            customLabel = PPLabel::create("00:00:00", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
-            customLabel->setName("lblTime");
-//            lbl = LM->getLocalizedLabel("00:00:00", Color4B::BLACK, fontSize);
-//            lbl->setName("lblTime");
-        }else if (i == 1) {
-            customLabel = PPLabel::create("0/0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
-            customLabel->setName("lblGold");
-//            lbl = LM->getLocalizedLabel("0/0", Color4B::BLACK, fontSize);
-//            lbl->setName("lblGold");
-        }else if (i == 2) {
-            customLabel = PPLabel::create("0/0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
-            customLabel->setName("lblLumber");
-//            lbl = LM->getLocalizedLabel("0/0", Color4B::BLACK, fontSize);
-//            lbl->setName("lblLumber");
-        }else if (i == 3) {
-            customLabel = PPLabel::create("0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
-            customLabel->setName("lblProduce");
-//            lbl = LM->getLocalizedLabel("0", Color4B::BLACK, fontSize);
-//            lbl->setName("lblProduce");
-        }else if (i == 4) {
-            customLabel = PPLabel::create("0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
-            customLabel->setName("lblKill");
-//            lbl = LM->getLocalizedLabel("0", Color4B::BLACK, fontSize);
-//            lbl->setName("lblKill");
+        
+        int timeLeftToSeasonOff = BSM->getTimeLeftToSunday();
+        int lastTimeLeftToSeaonOff = UDGetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_LAST_TIME_LEFT:KEY_PVP12_LAST_TIME_LEFT, -1 );
+        if(lastTimeLeftToSeaonOff < 0){
+            UDSetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_LAST_TIME_LEFT:KEY_PVP12_LAST_TIME_LEFT, timeLeftToSeasonOff);
+        }else if(lastTimeLeftToSeaonOff < timeLeftToSeasonOff){ // season changed
+            playerTrophy = 1000;
+            UDSetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_TROPHY:KEY_PVP12_TROPHY, 1000);
+            UDSetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_LAST_TIME_LEFT:KEY_PVP12_LAST_TIME_LEFT, timeLeftToSeasonOff);
         }
-        customLabel->setPosition(Point(rightX, startY - gapY*i));
-//        lbl->setAnchorPoint(Point(1, 0.5));
-        customLabel->setVisible(false);
-        popup->addChild(customLabel);
+        
+        lbl->setString(Value(playerTrophy).asString());
+        for(int i = 0; i < units.size(); i++){
+            std::string str = units.at(i).asString();
+            if(str.length() <= 0){
+                continue;
+            }
+            
+            info = GM->getUnitInfoFromString(units.at(i).asString());
+            if(info != nullptr && info){
+                int unitType = info->unitType;
+                int unitLevel = info->level;
+                if(unitType >= 0){
+//                    EnemyBase* unit = EnemyBase::createEnemy(unitType, 1, 0, GM->getUnitName(unitType).c_str());
+                    Node* unit = GM->getHeroSpine(unitType);
+//                    playerHpMax += unit->maxEnergy;
+                    
+                    unit->setScale(-0.5f, 0.5f);
+                    img = (ImageView*)ndResult->getChildByName(strmake("img_%d", index));
+                    info = GM->getUnitInfoFromString(units.at(i).asString());
+                    rank = info->rank;
+                    img->setColor(GM->getRankColor(rank));
+                    ndResult->addChild(unit);
+                    unit->setPosition(img->getPosition() + Vec2(0, -img->getContentSize().height/4));
+                    lbl = (Text*)img->getChildByName("lblLevel_5");
+                    lbl->setString(strmake("Lv.%d", unitLevel + 1));
+                    
+                    bool isAlive = false;
+                    for (int j = 0; j < WORLD->heroArray.size(); j++) {
+                        EnemyBase* unitLeft = WORLD->heroArray.at(j);
+                        
+                        if (unitLeft->getTag() == index){
+                            isAlive = true;
+                            break;
+                        }
+                    }
+                    if (!isAlive) {
+                        unit->setOpacity(100);
+                        Sprite* spt = Sprite::createWithSpriteFrameName("cartoonyFastExplosion0.png");
+                        img->addChild(spt, 5);
+                        spt->setScale(0.7f);
+                        spt->setOpacity(0);
+                        spt->setPosition(img->getContentSize()/2);
+                        Animation* animation = AnimationCache::getInstance()->getAnimation("cartoonyExplosion");
+                        Animate* animate = Animate::create(animation);
+                        spt->runAction(Sequence::create(DelayTime::create(0.5f), FadeIn::create(0), animate, CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+                    }
+                }
+            }
+            index++;
+        }
+        
+        strEquipped = BSM->pvpTargetData;
+        units = GM->split(strEquipped, "_");
+        index = 0;
+        lbl = (Text*)ndResult->getChildByName("lblEnemyName");
+        lbl->setString(BSM->pvpTargetName);
+        lbl = (Text*)ndResult->getChildByName("lblTrophyEnemy");
+        lbl->setString(Value(BSM->pvpTargetTrophy).asString());
+        for(int i = 0; i < units.size(); i++){
+            std::string str = units.at(i).asString();
+            if(str.length() <= 0){
+                continue;
+            }
+            
+            info = GM->getUnitInfoFromString(units.at(i).asString());
+            if(info != nullptr && info){
+                int unitType = info->unitType;
+                int unitLevel = info->level;
+                if(unitType >= 0){
+//                    EnemyBase* unit = EnemyBase::createEnemy(unitType, 1, 0, GM->getUnitName(unitType).c_str());
+                    Node* unit = GM->getHeroSpine(unitType);
+                    unit->setScale(0.5f);
+                    img = (ImageView*)ndResult->getChildByName(strmake("imgEnemy_%d", index));
+                    info = GM->getUnitInfoFromString(units.at(i).asString());
+                    rank = info->rank;
+                    
+                    img->setColor(GM->getRankColor(rank));
+                    ndResult->addChild(unit);
+                    unit->setPosition(img->getPosition() + Vec2(0, -img->getContentSize().height/4));
+                    lbl = (Text*)img->getChildByName("lblLevel_5");
+                    lbl->setString(strmake("Lv.%d", unitLevel + 1));
+                    
+                    bool isAlive = false;
+                    for (int j = 0; j < WORLD->enemyArray.size(); j++) {
+                        EnemyBase* unitLeft = WORLD->enemyArray.at(j);
+                        if(unitLeft->getTag() == i){
+                            isAlive = true;
+                            break;
+                        }
+                    }
+                    if (!isAlive) {
+                        unit->setOpacity(100);
+                        Sprite* spt = Sprite::createWithSpriteFrameName("cartoonyFastExplosion0.png");
+                        img->addChild(spt, 5);
+                        spt->setScale(0.7f);
+                        spt->setOpacity(0);
+                        spt->setPosition(img->getContentSize()/2);
+                        Animation* animation = AnimationCache::getInstance()->getAnimation("cartoonyExplosion");
+                        Animate* animate = Animate::create(animation);
+                        spt->runAction(Sequence::create(DelayTime::create(0.5f), FadeIn::create(0), animate, CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
+                    }
+                }
+            }
+            index++;
+        }
+        
+        int upDown = 0;
+        if (win) {
+            if (playerTrophy < BSM->pvpTargetTrophy) {
+                upDown = 10;
+            }else{
+                upDown = 3;
+            }
+        }else{
+            if (playerTrophy > BSM->pvpTargetTrophy) {
+                upDown = -10;
+            }else{
+                upDown = -3;
+            }
+        }
+        playerTrophy += upDown;
+        lbl = (Text*)ndResult->getChildByName("lblTrophyUpDownPlayer");
+        lbl->setString((upDown>0?"+":"") + Value(upDown).asString());
+        lbl->setTextColor(upDown>0?Color4B::GREEN:Color4B::RED);
+        
+        UDSetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_TROPHY:KEY_PVP12_TROPHY, playerTrophy);
+        log("%d/%d", GM->pvpOpenDate , BSM->getDay());
+        if(WORLD->gameMode == GAME_MODE_PVP6){
+            if(GM->pvpOpenDate == BSM->getDay()){
+                BSM->sendPvp6Result(playerTrophy);
+            }
+            if(win){
+                GM->addMonthlyEventProgress(EVENT_MISSION_PVP_6_WIN, 1);
+            }
+        }else{
+            if(GM->pvpOpenDate == BSM->getDay()){
+                BSM->sendPvp12Result(playerTrophy);
+            }
+            if(win){
+                GM->addMonthlyEventProgress(EVENT_MISSION_PVP_12_WIN, 1);
+            }
+        }
+    }else{
+        GameSharing::logFB(strmake("STAGE %d %s", GM->currentStageIndex, win?"WIN":"LOSE").c_str());
+        Node* popup = Node::create();
+        popup->setName("winPopup");
+        popup->setTag(win?1:0);
+        this->addChild(popup, 200);
+        resultPopup = popup;
+        ImageView* imgBack = ImageView::create("uiBox.png");
+        popup->addChild(imgBack, -1);
+        imgBack->setColor(Color3B::BLACK);
+        imgBack->setOpacity(100);
+        imgBack->setScale(20);
+        imgBack->setTouchEnabled(true);
+        
+        ImageView* img = ImageView::create("uiBox.png");
+        img->setContentSize(cocos2d::Size(1300, 850));
+        img->setScale9Enabled(true);
+        img->setPosition(Vec2(size.width/2, size.height/2 + 100));
+        popup->addChild(img);
+        
+        std::string strResult = LM->getText("mission cleared");
+        if (!win) {
+            strResult = LM->getText("mission failed");
+        }
+        //    Label* lbl = LM->getLocalizedLabel(strResult.c_str(), Color4B::BLACK, 70);
+        Node* title = PPLabel::create(strResult, 70, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
+        title->setPosition(Vec2(size.width/2, size.height/2 + 400));
+        popup->addChild(title);
+        
+        int leftX = size.width/2 - 350;
+        int iconX = size.width/2 - 450;
+        int rightX = size.width/2 + 500;
+        int startY = size.height/2 + 250;
+        int gapY = 100;
+        int fontSize = 40;
+        Node* customLabel;
+        Sprite* spt;
+        for(int i = 0; i < 5; i++){
+            if (i == 0) {
+                customLabel = PPLabel::create(LM->getText("time"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
+                customLabel->setName("lblTimeTitle");
+                spt = Sprite::create("iconTime.png");
+                spt->setName("sptTime");
+                //            lbl = LM->getLocalizedLabel("Time", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblTimeTitle");
+            }else if (i == 1) {
+                customLabel = PPLabel::create(strmake("%s (%s/%s)", LM->getText("gold text").c_str(), LM->getText("used").c_str(), LM->getText("earned").c_str()), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
+                customLabel->setName("lblGoldTitle");
+                spt = Sprite::create("iconGold.png");
+                spt->setName("sptGold");
+                //            lbl = LM->getLocalizedLabel("Gold (Used/Earnd)", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblGoldTitle");
+            }else if (i == 2) {
+                customLabel = PPLabel::create(strmake("%s (%s/%s)", LM->getText("lumber text").c_str(), LM->getText("used").c_str(), LM->getText("earned").c_str()), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
+                customLabel->setName("lblLumberTitle");
+                spt = Sprite::create("iconLumber.png");
+                spt->setName("sptLumber");
+                //            lbl = LM->getLocalizedLabel("Lumber (Used/Earnd)", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblLumberTitle");
+            }else if (i == 3) {
+                customLabel = PPLabel::create(LM->getText("produced unit"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
+                customLabel->setName("lblProduceTitle");
+                spt = Sprite::create("iconPopulation.png");
+                spt->setName("sptPopulation");
+                //            lbl = LM->getLocalizedLabel("Produced Unit", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblProduceTitle");
+            }else if (i == 4) {
+                customLabel = PPLabel::create(LM->getText("killed unit"), fontSize, DARK_GRAY_3B, true, false, TextHAlignment::LEFT, false);
+                customLabel->setName("lblKillTitle");
+                spt = Sprite::create("iconKilled.png");
+                spt->setName("sptKilled");
+                //            lbl = LM->getLocalizedLabel("Killed Unit", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblKillTitle");
+            }
+            customLabel->setVisible(false);
+            customLabel->setPosition(Vec2(leftX, startY - gapY*i));
+            popup->addChild(customLabel);
+            spt->setPosition(Vec2(iconX, customLabel->getPositionY()));
+            popup->addChild(spt);
+            spt->setVisible(false);
+            
+            if (i == 0) {
+                customLabel = PPLabel::create("00:00:00", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
+                customLabel->setName("lblTime");
+                //            lbl = LM->getLocalizedLabel("00:00:00", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblTime");
+            }else if (i == 1) {
+                customLabel = PPLabel::create("0/0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
+                customLabel->setName("lblGold");
+                //            lbl = LM->getLocalizedLabel("0/0", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblGold");
+            }else if (i == 2) {
+                customLabel = PPLabel::create("0/0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
+                customLabel->setName("lblLumber");
+                //            lbl = LM->getLocalizedLabel("0/0", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblLumber");
+            }else if (i == 3) {
+                customLabel = PPLabel::create("0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
+                customLabel->setName("lblProduce");
+                //            lbl = LM->getLocalizedLabel("0", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblProduce");
+            }else if (i == 4) {
+                customLabel = PPLabel::create("0", fontSize, DARK_GRAY_3B, true, false, TextHAlignment::RIGHT, false);
+                customLabel->setName("lblKill");
+                //            lbl = LM->getLocalizedLabel("0", Color4B::BLACK, fontSize);
+                //            lbl->setName("lblKill");
+            }
+            customLabel->setPosition(Vec2(rightX, startY - gapY*i));
+            //        lbl->setAnchorPoint(Vec2(1, 0.5));
+            customLabel->setVisible(false);
+            popup->addChild(customLabel);
+        }
+        
+        Button* btn = Button::create("uiBoxSmall.png");
+        popup->addChild(btn);
+        //    btn->setColor(Color3B::GRAY);
+        btn->setName("btnOk");
+        btn->setVisible(false);
+        //    btn->setTitleText("OK");
+        //    btn->setTitleFontName(LM->getLocalizedFont());
+        //    btn->setTitleFontSize(50);
+        btn->setContentSize(cocos2d::Size(300, 200));
+        btn->setScale9Enabled(true);
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onOkFromWinPopup, this));
+        btn->setPosition(Vec2(size.width/2 + 500, size.height/2 - 450));
+        //    btn->setColor(Color3B(244, 236, 5));
+        addLabelToButton("ok", btn, false, DARK_GRAY_3B);
+        
+        spt = Sprite::create("redFlag.png");
+        spt->setPosition(Vec2(size.width/2, size.height/2 + 850/2 + 110 - spt->getContentSize().height/2));
+        spt->setAnchorPoint(Vec2(0.18, 0.1));
+        popup->addChild(spt);
+        
+        if(!win){
+            spt->runAction(Sequence::create(DelayTime::create(1.5f), EaseIn::create(RotateBy::create(0.5f, -90), 2), NULL));
+        }
+        
+        this->schedule(schedule_selector(HudLayer::updateResultPopup), 0.1f);
+        
+        int chapter = WORLD->stageIndex/12;
+//        UDSetInt(strmake(KEY_`_STAGE_INDEX_FORMAT, chapter).c_str(), 1); // test
+        int stageIndex = WORLD->stageIndex%12;
+        int chestIndex = UDGetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), 0);
+        int timeLeft = GM->getTimeLeftForCampaignChest(chapter);
+        bool isArena = GM->isColosseum;
+        if (win && timeLeft <= 0 && stageIndex == chestIndex && !isArena) {
+//        if (win && stageIndex == chestIndex) { // test
+            time_t now = BSM->getCurrentTimeT();
+//            const char* strNow = BSM->getStrFromTime(now).c_str();
+            std::string strTimeKey = strmake(KEY_CAMPAIGN_CHEST_GET_TIME_FORMAT, chapter).c_str();
+//            UDSetStr(strTimeKey.c_str(), strNow);
+            GM->saveTime(strTimeKey.c_str(), now);
+            
+            chestIndex++;
+            UDSetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), chestIndex);
+            
+            Node* layer = CSLoader::createNode("CampaignChest.csb");
+            this->addChild(layer, POPUP_ZORDER);
+            layer->setPosition(Vec2(size.width/2 - layer->getContentSize().width/2, size.height/2 - layer->getContentSize().height/2));
+            layer->setName("campaignChest");
+            Button* btn = (Button*)layer->getChildByName("btnOpen");
+            btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onOpenCampaignChestClick, this));
+            btn->setOpacity(0);
+            Node* imgChest = layer->getChildByName("imgChest");
+            GM->makeItScaleUpAndDown(imgChest);
+            GM->addGlowBack(imgChest);
+            GM->shakeIt(imgChest, 10, 5);
+            for (int i = 0; i < 3; i++) {
+                layer->getChildByName(strmake("imgPos%d", i))->setOpacity(0);
+            }
+            btn = (Button*)layer->getChildByName("btnOk");
+            btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onOkCampaignChestClick, this));
+        }
     }
-    
-    Button* btn = Button::create("uiBoxSmall.png");
-    popup->addChild(btn);
-//    btn->setColor(Color3B::GRAY);
-    btn->setName("btnOk");
-    btn->setVisible(false);
-//    btn->setTitleText("OK");
-//    btn->setTitleFontName(LM->getLocalizedFont());
-//    btn->setTitleFontSize(50);
-    btn->setContentSize(Size(300, 200));
-    btn->setScale9Enabled(true);
-    btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onOkFromWinPopup, this));
-    btn->setPosition(Point(size.width/2 + 500, size.height/2 - 450));
-//    btn->setColor(Color3B(244, 236, 5));
-    addLabelToButton("ok", btn, false, DARK_GRAY_3B);
-    
-    spt = Sprite::create("redFlag.png");
-    spt->setPosition(Point(size.width/2, size.height/2 + 850/2 + 110 - spt->getContentSize().height/2));
-    spt->setAnchorPoint(Point(0.18, 0.1));
-    popup->addChild(spt);
-    
-    if(!win){
-        spt->runAction(Sequence::create(DelayTime::create(1.5f), EaseIn::create(RotateBy::create(0.5f, -90), 2), NULL));
+}
+void HudLayer::onOpenCampaignChestClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    Node* layer = this->getChildByName("campaignChest");
+    Node* imgChest = layer->getChildByName("imgChest");
+    imgChest->stopAllActions();
+    imgChest->runAction(Sequence::create(EaseOut::create(MoveBy::create(1.0f, Vec2(0, 100)), 2), JumpBy::create(0.4f, Vec2(0, -100), 200, 1), CallFunc::create(CC_CALLBACK_0(HudLayer::onOpenCampaignChest, this)),NULL));
+}
+void HudLayer::onOpenCampaignChest(){
+    Node* layer = this->getChildByName("campaignChest");
+    ImageView* imgChest = (ImageView*)layer->getChildByName("imgChest");
+    imgChest->loadTexture("chestWoodOpen.png");
+    ImageView* img; ImageView* imgTemp;
+    bool saveGem = false;
+    for (int i = 0; i < 3; i++) {
+        int reward = rand()%100;
+        if (reward < 20) {
+            imgTemp = (ImageView*)layer->getChildByName("imgGold");
+            GM->addCoin(150);
+        }else if (reward < 50) {
+            imgTemp = (ImageView*)layer->getChildByName("imgLumber");
+            GM->addTree(100);
+        }else if (reward < 90) {
+            imgTemp = (ImageView*)layer->getChildByName("imgEventItem");
+            ImageView* imgIcon = (ImageView*)imgTemp->getChildByName("imgIcon");
+            int month = BSM->getMonth();
+            imgIcon->loadTexture(strmake("eventItem%d.png", month));
+            if(month == 12){
+                imgIcon->setContentSize(cocos2d::Size(73, 88));
+            }else if(month == 1){
+                imgIcon->setContentSize(cocos2d::Size(85, 60));
+            }else if(month == 2){
+                imgIcon->setContentSize(cocos2d::Size(88, 88));
+            }else if(month == 3){
+                imgIcon->setContentSize(cocos2d::Size(75, 76));
+            }
+            GM->addMonthlyEventProgress(EVENT_MISSION_COLLECT_EVENT_HERO_PART, 1);
+        }else{
+            imgTemp = (ImageView*)layer->getChildByName("imgGem");
+            GM->addGem(10);
+            saveGem = true;
+        }
+            
+        img = (ImageView*)imgTemp->clone();
+        layer->addChild(img);
+        img->setPosition(layer->getChildByName(strmake("imgPos%d", i))->getPosition());
+        img->setOpacity(0);
+        img->runAction(Sequence::create(DelayTime::create(0.5f*i), FadeIn::create(0), JumpBy::create(0.3f, Vec2(0, 0), 50, 1), NULL));
     }
-    
-    this->schedule(schedule_selector(HudLayer::updateResultPopup), 0.1f);
+    if(saveGem){
+        std::vector<int> datas;
+        datas.push_back(DATA_TYPE_GEM);
+        BSM->saveUserData(datas);
+    }
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    btn->runAction(Sequence::create(DelayTime::create(1.2f), JumpBy::create(0.5f, Vec2(0, 650), 200, 1), NULL));
+}
+void HudLayer::onOkCampaignChestClick(){
+    this->removeChildByName("campaignChest");
+}
+void HudLayer::onPvpResultOk(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    this->removeListener();
+    Scene* scene = Scene::create();
+    if(GM->isPvpFromBHUD){
+        GM->isPvpFromBHUD = false;
+        GM->titleLayer = nullptr;
+        GM->nextScene = STAGE_LOBBY;
+        GM->isColosseum = false;
+        auto scene = HelloWorld::scene(STAGE_LOBBY, false);
+        BHUD->onTrainClick();
+        BHUD->onHeroClick();
+        Director::getInstance()->replaceScene(TransitionFade::create(1, scene, Color3B::BLACK));
+    }else{
+        Title* title = Title::create();
+        scene->addChild(title);
+        Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
+        title->showChapterSelect();
+        title->onHeroClick();
+    }
 }
 void HudLayer::showPremiumRetry(){
     Node* layer = CSLoader::createNode("PremiumRetry.csb");
@@ -5321,8 +5751,8 @@ void HudLayer::showPremiumRetry(){
     setAsPopup(layer);
     
     ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
-    imgBack->setContentSize(Size(300, 1038));
-    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, Size(1334, 1038)), 2));
+    imgBack->setContentSize(cocos2d::Size(300, 1038));
+    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, cocos2d::Size(1334, 1038)), 2));
     
     ImageView* contentBox = (ImageView*)layer->getChildByName("contentBox");
     contentBox->runAction(Sequence::create(DelayTime::create(0.3), FadeIn::create(0.5f), NULL));
@@ -5468,7 +5898,7 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
     btn->setEnabled(false);
     
-    if(!UDGetBool(KEY_RATE_POPUP_NEVER_SHOW, false) && (GM->market == MARKET_PLAYSTORE_PAID || GM->market == MARKET_APPSTORE_PAID)){ // review test
+    if(!UDGetBool(KEY_RATE_POPUP_NEVER_SHOW, false) && (GM->market == MARKET_PAID || GM->market == MARKET_FREE)){ // review test
 //    if(true){ // test 
         Node* popup = Node::create();
         this->addChild(popup, 200);
@@ -5480,65 +5910,67 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
         imgBack->setTouchEnabled(true);
         
         ImageView* img = ImageView::create("uiBox.png");
-        img->setContentSize(Size(1300, 850));
+        img->setContentSize(cocos2d::Size(1300, 850));
         img->setScale9Enabled(true);
-        img->setPosition(Point(size.width/2, size.height/2 + 100));
+        img->setPosition(Vec2(size.width/2, size.height/2 + 100));
         popup->addChild(img);
         
         Node* title = PPLabel::create(LM->getText("enjoy game"), 70, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-        title->setPosition(Point(size.width/2, size.height/2));
+        title->setPosition(Vec2(size.width/2, size.height/2));
         popup->addChild(title);
         PPLabel* lbl = (PPLabel*)title;
         lbl->setWidth(1100);
         
         title = PPLabel::create(LM->getText("rate game"), 50, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
-        title->setPosition(Point(size.width/2, size.height/2 - 150));
+        title->setPosition(Vec2(size.width/2, size.height/2 - 150));
         popup->addChild(title);
         
         EnemyBase* unit = EnemyBase::createEnemy(UNIT_TROLL, 0, 0, "trollStand0.png");
         popup->addChild(unit);
-        unit->setPosition(Point(size.width/2, size.height/2 + 280));
+        unit->setPosition(Vec2(size.width/2, size.height/2 + 280));
         unit->runAnimation("trollStand", true);
         
         Button* btn = Button::create("uiBoxSmall.png");
         popup->addChild(btn);
-        btn->setContentSize(Size(300, 200));
+        btn->setContentSize(cocos2d::Size(300, 200));
         btn->setTag(0);
         btn->setScale9Enabled(true);
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onReivewPopupButtonClick, this));
-        btn->setPosition(Point(size.width/2 + 500, size.height/2 - 450));
+        btn->setPosition(Vec2(size.width/2 + 500, size.height/2 - 450));
         addLabelToButton("ok", btn, false, DARK_GRAY_3B);
         
         btn = Button::create("uiBoxSmall.png");
         popup->addChild(btn);
         btn->setTag(1);
-        btn->setContentSize(Size(300, 200));
+        btn->setContentSize(cocos2d::Size(300, 200));
         btn->setScale9Enabled(true);
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onReivewPopupButtonClick, this));
-        btn->setPosition(Point(size.width/2 + 200, size.height/2 - 450));
+        btn->setPosition(Vec2(size.width/2 + 200, size.height/2 - 450));
         addLabelToButton("later", btn, false, DARK_GRAY_3B);
         
         btn = Button::create("uiBoxSmall.png");
         popup->addChild(btn);
         btn->setTag(2);
-        btn->setContentSize(Size(640, 200));
+        btn->setContentSize(cocos2d::Size(640, 200));
         btn->setScale9Enabled(true);
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onReivewPopupButtonClick, this));
-        btn->setPosition(Point(size.width/2 - 320, size.height/2 - 450));
+        btn->setPosition(Vec2(size.width/2 - 320, size.height/2 - 450));
         addLabelToButton("never show", btn, false, DARK_GRAY_3B);
         return;
     }
     
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     GM->setHudLayer(nullptr);
-    Scene* scene;
     int stage = WORLD->stageIndex;
     
     Node* popup = this->getChildByName("winPopup");
     if(popup != nullptr && popup->getTag() == 1 && !WORLD->isGameOver){
         
         if (WORLD->isHardMode) {
-            UDSetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, stage).c_str(), true);
+            int clearStage = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, -1);
+            if(clearStage < stage){
+                UDSetInt(KEY_HARD_MODE_CLEAR_STAGE, stage);
+            }
         }else{
             int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
             if(clearStage < stage){
@@ -5550,16 +5982,17 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
         }
     }
     setGameSpeed(1);
-    if(GM->currentStageIndex == 11 && !WORLD->isGameOver){
-        this->removeListener();
+    bool isWin = !WORLD->isGameOver;
+    this->removeListener();
+    Scene* scene;
+    if(GM->currentStageIndex == 11 && isWin){
         GM->nextScene = STAGE_INTRO;
         scene = HelloWorld::scene(12, false);
     }else{
         scene = Scene::create();
         Title* title = Title::create();
         scene->addChild(title);
-        if (!WORLD->isGameOver) {
-            
+        if (isWin) {
             stage++;
             if (stage < 13) { // test  5 for google indie festival 13(12 + bonus) for launch
 //                Node* temp = Node::create();
@@ -5570,23 +6003,32 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
                 // show ending
             }
         }
-        this->removeListener();
     }
     
     if(GM->isAdsUser()){
         GameSharing::showInterstitial();
     }
+    GM->isThisCampaignFromDailyMission = false;
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
 
 void HudLayer::onReivewPopupButtonClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
     if(btn->getTag() == 0){
+        if (GM->market == MARKET_PAID) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-        Application::getInstance()->openURL("itms-apps://itunes.apple.com/app/id1389133177?action=write-review");
+            Application::getInstance()->openURL("itms-apps://itunes.apple.com/app/id1389133177?action=write-review");
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-        Application::getInstance()->openURL("https://play.google.com/store/apps/details?id=com.magmon.cartooncraft");
+            Application::getInstance()->openURL("https://play.google.com/store/apps/details?id=com.magmon.cartooncraft");
 #endif
+        }else if (GM->market == MARKET_FREE) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+            Application::getInstance()->openURL("itms-apps://itunes.apple.com/app/id1389133177?action=write-review");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+            Application::getInstance()->openURL("https://play.google.com/store/apps/details?id=com.magmon.cartooncraftf");
+#endif
+        }
+
     }else if(btn->getTag() == 1){
         
     }else if(btn->getTag() == 2){
@@ -5597,48 +6039,56 @@ void HudLayer::onReivewPopupButtonClick(Ref* ref){
     setGameSpeed(1);
     Scene* scene;
     if(GM->currentStageIndex == 11 && !WORLD->isGameOver){
-        this->removeListener();
         GM->nextScene = STAGE_INTRO;
         scene = HelloWorld::scene(12, false);
     }else{
         
+        int stage = WORLD->stageIndex;
+        if (!WORLD->isGameOver) {
+            if (WORLD->isHardMode) {
+                int clearStage = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, -1);
+                if(clearStage < stage){
+                    UDSetInt(KEY_HARD_MODE_CLEAR_STAGE, stage);
+                }
+            }else{
+                int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+                if(clearStage < stage){
+                    UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+                }
+            }
+            stage++;
+        }
         scene = Scene::create();
         Title* title = Title::create();
         scene->addChild(title);
-        if (!WORLD->isGameOver) {
-            int stage = WORLD->stageIndex;
-            UDSetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, stage).c_str(), true);
-            int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-            if(clearStage < stage){
-                UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
-            }
-            stage++;
-            if (stage < 13) { // test  5 for google indie festival 13(12 + bonus) for launch
-//                Node* temp = Node::create();
-//                temp->setTag(stage);
-//                title->onStageClick(temp);
-                title->stageRequested = stage;
-            }else{
-                // show ending
-            }
+        if (stage < 13) { // test  5 for google indie festival 13(12 + bonus) for launch
+            //                Node* temp = Node::create();
+            //                temp->setTag(stage);
+            //                title->onStageClick(temp);
+            title->stageRequested = stage;
+        }else{
+            // show ending
         }
-        this->removeListener();
     }
+    this->removeListener();
+    GM->isThisCampaignFromDailyMission = false;
     Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
 
-void HudLayer::arrangeMenu(cocos2d::Point pos){
+void HudLayer::arrangeMenu(cocos2d::Vec2 pos){
     if(GM->currentStageIndex == STAGE_LOBBY) return;
     for (int i = 0; i < 6; i++) {
         Button* btn = (Button*)WORLD->getChildByName(strmake("btnMenu%d", i));
-        int radius = 270;
-        btn->setPosition(pos + Point(120, -100));
+        int radius = 270/WORLD->layerScale;
+        btn->setPosition(pos + Vec2(0, 40));
         btn->stopAllActions();
         btn->setOpacity(0);
         btn->runAction(FadeIn::create(0.16f));
+        btn->setScale(1/WORLD->layerScale);
         float angle = i*60 - 120;
-        btn->setEnabled(false);
-        btn->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.16f, Point(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2), CallFuncN::create(CC_CALLBACK_1(GameManager::enableButton, GM)), nullptr));
+//        btn->setEnabled(false);
+        btn->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.16f, Vec2(cos(angle*3.14f/-180)*radius, sin(angle*3.14f/-180)*radius)), 2), nullptr));
+        btn->setLocalZOrder(1000);
     }
 }
 void HudLayer::showIndicator(){
@@ -5664,8 +6114,23 @@ void HudLayer::update(float dt){
     if(isVideoDone){
         isVideoDone = false;
         WORLD->getSupportFromVideo(GM->videoIndex);
+        closePopup();
         onResumeClick();
         onMenuClick();
+    }
+    if(hideIndicatorRequested){
+        hideIndicatorRequested = false;
+        hideIndicator();
+    }
+    
+    if(lblVs != nullptr){
+        int timeLeft = 60 - GM->getWorld()->gameTimer;
+        if(timeLeft < 0){
+            lblVs->setString("0");
+            GM->getWorld()->endGame(imgPvpPlayerEnergy->getContentSize().width >= imgPvpEnemyEnergy->getContentSize().width);
+        }else if(timeLeft < 60){
+            lblVs->setString(strmake("%d", timeLeft));
+        }
     }
     if(GM->iapFlag == IAP_FLAG_SUCCESS){
         GM->iapFlag = IAP_FLAG_INIT;
@@ -5675,7 +6140,7 @@ void HudLayer::update(float dt){
             showInstanceMessage(LM->getText("purchase success"));
             UDSetBool(KEY_PREMIUM_START, true);
             setGameSpeed(1);
-            removeUsedAssets();
+            removeListener();
             GM->nextScene = STAGE_FIELD;
             GM->isColosseum = false;
             GM->setHudLayer(nullptr);
@@ -5695,5 +6160,43 @@ void HudLayer::update(float dt){
         GM->nextScene = STAGE_RAID;
         auto scene = HelloWorld::scene(GM->nextScene, false);
         Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
+    }
+}
+
+void HudLayer::setPvpUI(int playerHPMax, int enemyHPMax){
+    Node* layer = CSLoader::createNodeWithVisibleSize("PvpUI.csb");
+    this->addChild(layer, 5);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setName("pvpUI");
+    Node* imgVSBack = layer->getChildByName("imgVSBack");
+    Text* lbl = (Text*)imgVSBack->getChildByName("lblPlayerName");
+    lbl->setString(UDGetStr(KEY_NAME, "ME"));
+    lbl = (Text*)imgVSBack->getChildByName("lblEnemyName");
+    lbl->setString(BSM->pvpTargetName);
+    imgPvpPlayerEnergy = (ImageView*)layer->getChildByName("imgPlayerEnergy");
+    imgPvpEnemyEnergy = (ImageView*)layer->getChildByName("imgEnemyEnergy");
+    lblPvpCount = (Text*)layer->getChildByName("lblCount");
+    lblVs = (Text*)layer->getChildByName("lblVs");
+    
+    playerHpMax = playerHPMax;
+    enemyHpMax = enemyHPMax;
+    
+    lbl = (Text*)imgVSBack->getChildByName("lblPlayerTrophy");
+    lbl->setString(Value(UDGetInt(WORLD->gameMode == GAME_MODE_PVP6?KEY_PVP6_TROPHY:KEY_PVP12_TROPHY, 1000)).asString());
+    lbl = (Text*)imgVSBack->getChildByName("lblEnemyTrophy");
+    lbl->setString(Value(BSM->pvpTargetTrophy).asString());
+    
+    Node* ndResult = layer->getChildByName("imgResult");
+    ndResult->setVisible(false); // test
+    
+}
+void HudLayer::updatePvpUI(int playerHP, int enemyHP){
+    imgPvpPlayerEnergy->setContentSize(cocos2d::Size(1000.0f*playerHP/playerHpMax,115.82f));
+    if(playerHP/playerHpMax < 0.3){
+        imgPvpPlayerEnergy->setColor(Color3B(248, 59, 7));
+    }
+    imgPvpEnemyEnergy->setContentSize(cocos2d::Size(1000.0f*enemyHP/enemyHpMax,115.82f));
+    if(enemyHP/enemyHpMax < 0.3){
+        imgPvpEnemyEnergy->setColor(Color3B(248, 59, 7));
     }
 }

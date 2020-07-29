@@ -58,7 +58,7 @@
                 <PreSize X="0.1710" Y="0.2822" />
                 <FileData Type="Normal" Path="tree1.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="lblDesc" ActionTag="180046707" Tag="515" IconVisible="False" LeftMargin="17.1806" RightMargin="22.2044" TopMargin="331.3375" BottomMargin="14.6464" IsCustomSize="True" FontSize="32" LabelText="Sword Man 3 + Archer 3 + Zombie human 1 + gem 60 asdf adfa d fa" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="8" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+              <AbstractNodeData Name="lblDesc" ActionTag="180046707" Tag="515" IconVisible="False" LeftMargin="17.1806" RightMargin="22.2044" TopMargin="331.3375" BottomMargin="14.6464" IsCustomSize="True" FontSize="32" LabelText="Épéiste 3 + Archer 3 + Zombie human 1 + gem 60 asdf adfa d fa" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" OutlineSize="8" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                 <Size X="498.5914" Y="121.7145" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                 <Position X="266.4763" Y="75.5036" />

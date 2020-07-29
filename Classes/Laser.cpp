@@ -24,8 +24,8 @@ Laser* Laser::create(std::string laserName, std::string gatheringName, std::stri
     }
     laser->addChild(laser->sptHit);
     
-    laser->setAnchorPoint(Point(0, 0.5));
-    laser->sptBeam->setAnchorPoint(Point(0, 0.5));
+    laser->setAnchorPoint(Vec2(0, 0.5));
+    laser->sptBeam->setAnchorPoint(Vec2(0, 0.5));
     laser->schedule(schedule_selector(Laser::updateLaser), 0.07f);
     laser->gatheringImageName = gatheringName;
     return laser;
@@ -41,7 +41,7 @@ Laser::Laser(){
     gatheringIntervalMax = 0.2;
     gatheringInterval = gatheringIntervalMax;
 }
-void Laser::setLaser(cocos2d::Point startPos, float angle){
+void Laser::setLaser(cocos2d::Vec2 startPos, float angle){
     this->setPosition(startPos);
     laserAngle = angle;
 }
@@ -52,7 +52,7 @@ void Laser::updateLaser(float dt){
     if (!isVisible()) {
         return;
     }
-    Point finalPos;
+    Vec2 finalPos;
     float length = 10;
     bool checked = false;
     while (true) {
@@ -60,13 +60,13 @@ void Laser::updateLaser(float dt){
         float y = sin(-laserAngle*3.14/180)*length;
         
         for (int i = 0; i < rectArray.size(); i++) {// tile
-            if (rectArray.at(i).containsPoint(getPosition() + Point(x, y))) {
+            if (rectArray.at(i).containsPoint(getPosition() + Vec2(x, y))) {
                 checked = true;
                 break;
             }
         }
         for (int i = 0; i < enemyArray.size(); i++) {// enemy
-            if (enemyArray.at(i)->getBoundingBox().containsPoint(getPosition() + Point(x, y))) {
+            if (enemyArray.at(i)->getBoundingBox().containsPoint(getPosition() + Vec2(x, y))) {
                 checked = true;
                 hitEnemy = enemyArray.at(i);
                 break;
@@ -102,17 +102,17 @@ void Laser::updateLaser(float dt){
     this->addChild(sptGathering);
     int gatheringRadius = 8;
     sptGathering->runAction(RotateBy::create(0.5, 180));
-    sptGathering->setPosition(Point(cos((rand()*90 - 90)*3.14/180)*gatheringRadius, -sin((rand()*90 - 90)*3.14/180)*gatheringRadius));
-    sptGathering->runAction(Sequence::create(EaseIn::create(MoveTo::create(0.3, Point(0, this->getContentSize().height/2)), 2), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptGathering)), NULL));
+    sptGathering->setPosition(Vec2(cos((rand()*90 - 90)*3.14/180)*gatheringRadius, -sin((rand()*90 - 90)*3.14/180)*gatheringRadius));
+    sptGathering->runAction(Sequence::create(EaseIn::create(MoveTo::create(0.3, Vec2(0, this->getContentSize().height/2)), 2), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptGathering)), NULL));
     sptBeam->setScale(length/sptBeam->getContentSize().width, scaleY);
-    sptHit->setPosition(Point(length, 0));
+    sptHit->setPosition(Vec2(length, 0));
 //    sptHit->setRotation(-laserAngle);
 }
-void LightningLine::createLine(std::string line, std::string tip, Point startPos, Point endPos, Node* parent){
+void LightningLine::createLine(std::string line, std::string tip, Vec2 startPos, Vec2 endPos, Node* parent){
     LightningLine* sptStartTip = new LightningLine();
     sptStartTip->initWithFile(tip);
     sptStartTip->getTexture()->setAntiAliasTexParameters();
-    sptStartTip->setAnchorPoint(Point(1, 0.5));
+    sptStartTip->setAnchorPoint(Vec2(1, 0.5));
     sptStartTip->setPosition(startPos);
     float angle = -atan2((endPos.y - startPos.y), (endPos.x - startPos.x))*180/3.14f;
     sptStartTip->setRotation(angle);
@@ -124,7 +124,7 @@ void LightningLine::createLine(std::string line, std::string tip, Point startPos
     float length = sqrtf((endPos.y - startPos.y)*(endPos.y - startPos.y) + (endPos.x - startPos.x)*(endPos.x - startPos.x));
     
     Sprite* sptLine = Sprite::create(line);
-    sptLine->setAnchorPoint(Point(0, 0.5));
+    sptLine->setAnchorPoint(Vec2(0, 0.5));
     sptLine->getTexture()->setAntiAliasTexParameters();
     sptLine->setPosition(startPos);
     sptLine->setRotation(angle);
@@ -135,19 +135,19 @@ void LightningLine::createLine(std::string line, std::string tip, Point startPos
     
     Sprite* sptEndTip = Sprite::create(tip);
     sptEndTip->getTexture()->setAntiAliasTexParameters();
-    sptEndTip->setAnchorPoint(Point(1, 0.5));
+    sptEndTip->setAnchorPoint(Vec2(1, 0.5));
     sptEndTip->setRotation(180 + angle);
     sptEndTip->setPosition(endPos);
     //sptEndTip->setBlendFunc({GL_SRC_ALPHA, GL_ONE});
     parent->addChild(sptEndTip);
     sptEndTip->runAction(Sequence::create(DelayTime::create(delay), EaseOut::create(FadeOut::create(fade), 2), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptStartTip)), NULL));
 }
-Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d::Point startPos, float angle, Vector<EnemyBase*> enemyArray, std::vector<cocos2d::Rect> rectArray){
+Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d::Vec2 startPos, float angle, Vector<EnemyBase*> enemyArray, std::vector<cocos2d::Rect> rectArray){
     Lightning* lightning = new Lightning();
     lightning->init();
 //    lightning->setSpriteFrame(lineName);
     
-    Point finalPos;
+    Vec2 finalPos;
     float length = 10;
     bool checked = false;
     while (true) {
@@ -155,7 +155,7 @@ Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d:
         float y = sin(-angle*3.14/180)*length;
         
         for (int i = 0; i < rectArray.size(); i++) {// tile
-            finalPos = startPos + Point(x, y);
+            finalPos = startPos + Vec2(x, y);
             if (rectArray.at(i).containsPoint(finalPos)) {
                 checked = true;
                 break;
@@ -175,8 +175,8 @@ Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d:
     float finalLength = length;
     int nextLength = 0;
     int lengthUnit;
-    Point nextPos;
-    Point previousPos = startPos;
+    Vec2 nextPos;
+    Vec2 previousPos = startPos;
     int extraLength = 5;
     int minLengthUnit = 5;
     int verticalGap = 5;
@@ -184,7 +184,7 @@ Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d:
     lightning->hitPointArray = PointArray::create(200);
     lightning->hitPointArray->addControlPoint(startPos);
     angle = -angle;
-    Point zagPos;
+    Vec2 zagPos;
     int counter = 0;
     Node* light;
     while(true){
@@ -193,12 +193,12 @@ Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d:
         verticalGapMade = rand()%(verticalGap*2) - verticalGap;
         if (finalLength < nextLength) {
             nextLength = finalLength;
-            zagPos = Point::ZERO;
+            zagPos = Vec2::ZERO;
         }else{
-            zagPos = Point(cos((angle+90)*3.14/180)*verticalGapMade, sin((angle+90)*3.14/180)*verticalGapMade);
+            zagPos = Vec2(cos((angle+90)*3.14/180)*verticalGapMade, sin((angle+90)*3.14/180)*verticalGapMade);
         }
         
-        nextPos = Point(cos(angle*3.14/180)*nextLength, sin(angle*3.14/180)*nextLength) + startPos + zagPos;
+        nextPos = Vec2(cos(angle*3.14/180)*nextLength, sin(angle*3.14/180)*nextLength) + startPos + zagPos;
         for (int i = 0; i < enemyArray.size(); i++) {// tile
              if (enemyArray.at(i)->getBoundingBox().containsPoint(nextPos)) {
                  if (!lightning->hitEnemyArray.contains(enemyArray.at(i))) {
@@ -228,7 +228,7 @@ Lightning* Lightning::create(std::string lineName, std::string tipName, cocos2d:
         sptSpark->setPosition(nextPos);
         sptSpark->setScale(2);
         sptSpark->runAction(FadeOut::create(dur));
-        sptSpark->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur, Point(rand()%30 - 15, rand()%10 - 5)), 3), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptSpark)), NULL));
+        sptSpark->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur, Vec2(rand()%30 - 15, rand()%10 - 5)), 3), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptSpark)), NULL));
     }
     light = GameManager::getInstance()->getWorld()->getLight();
     light->runAction(Sequence::create(DelayTime::create(0.05), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, light)), NULL));

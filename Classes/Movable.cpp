@@ -24,12 +24,12 @@ Movable::Movable()
 //    state = STATE_STANDING;
     xSpeed = 0;
     ySpeed = 0;
-    velocity = Point(0,-100);
+    velocity = Vec2(0,-100);
     jumped = false;
     blinkingTime = 0;
     freezed = false;
     immortal = false;
-    centerPosition = Point(0,0);
+    centerPosition = Vec2(0,0);
     
     untouchable = false;
     onGround = true;
@@ -45,19 +45,39 @@ Movable::Movable()
 }
 void Movable::init(int unit, int eng, float extraSpd, const char* sptName)
 {
-    if (unit >= UNIT_HERO_ORC && unit <= UNIT_HERO_REAPER) {
+    if(unit == UNIT_HERO_BATMONSTER){
+        energyBarY += 50;
+    }
+    std::string strSpineFileName = GM->getSpineFileName(unit);
+//    if (unit >= UNIT_HERO_ORC && unit <= UNIT_HERO_SANTADOG) {
+    if(strSpineFileName.length() > 0){
         spine = GM->getHeroSpine(unit);
     }else{
         this->Sprite::initWithSpriteFrameName(sptName);
     }
+    
     if (spine) {
-        this->addChild(spine, 1);
+//        if(WORLD){
+//            WORLD->addChild(spine, 1);
+//        }else{
+        if(WORLD){
+            WORLD->batch->addChild(spine, 1);
+        }
+//        WORLD->addChild(spine, WORLD->batch->getLocalZOrder()+1);
+//        }
+        
         spine->setAnimation(0, "idle", true);
-        spine->setPosition(Vec2(60, 15));
-        this->Sprite::initWithFile("shadow.png");
+        spine->setScale(0.5f);
+        
+        this->Sprite::initWithSpriteFrameName("shadow.png");
     }
-    setAnchorPoint(Vec2(0.5, 14/getBoundingBox().size.height));
-    this->getTexture()->setAliasTexParameters();
+    if(WORLD){
+        setAnchorPoint(Vec2(0.5, (14/getBoundingBox().size.height)*WORLD->imageScale));
+    }else{
+        setAnchorPoint(Vec2(0.5, (14/getBoundingBox().size.height)*0.5f));
+    }
+    
+//    this->getTexture()->setAliasTexParameters();
     
     this->sptName = sptName;
     this->energy = eng;
@@ -81,9 +101,9 @@ void Movable::showTalk(std::string text, float time, float y, float delay){
         imgTalkBalloon->removeFromParentAndCleanup(true);
     }
     imgTalkBalloon = ImageView::create("talkBalloonEmpty.png");
-    imgTalkBalloon->setAnchorPoint(Point(0.5, 0));
+    imgTalkBalloon->setAnchorPoint(Vec2(0.5, 0));
     imgTalkBalloon->setScale9Enabled(true);
-    imgTalkBalloon->setCapInsets(Rect(12, 4, 1, 4));
+    imgTalkBalloon->setCapInsets(cocos2d::Rect(12, 4, 1, 4));
     imgTalkBalloon->setOpacity(0);
     imgTalkBalloon->runAction(Sequence::create(DelayTime::create(delay), FadeIn::create(0), NULL));
     
@@ -94,12 +114,12 @@ void Movable::showTalk(std::string text, float time, float y, float delay){
     lblTalk->setOpacity(0);
     lblTalk->runAction(Sequence::create(DelayTime::create(delay), FadeIn::create(0), NULL));
     float gap = 3;
-    lblTalk->setPosition(Point(lblTalk->getBoundingBox().size.width/2 + gap, imgTalkBalloon->getBoundingBox().size.height/2 + 1.5));
+    lblTalk->setPosition(Vec2(lblTalk->getBoundingBox().size.width/2 + gap, imgTalkBalloon->getBoundingBox().size.height/2 + 1.5));
     float width = lblTalk->getBoundingBox().size.width + gap*2;
     if (width < imgTalkBalloon->getContentSize().width) {
         width = imgTalkBalloon->getContentSize().width;
     }
-    imgTalkBalloon->setContentSize(Size(width, imgTalkBalloon->getContentSize().height));
+    imgTalkBalloon->setContentSize(cocos2d::Size(width, imgTalkBalloon->getContentSize().height));
     
     GameManager::getInstance()->getWorld()->addChild(imgTalkBalloon, 10000);
     talkVisibleTime = time + delay;
@@ -120,7 +140,7 @@ void Movable::updateTalkBalloon(float dt){
             return;
         }
     }
-    imgTalkBalloon->setPosition(this->getPosition() + Point(0, talkBalloonY));
+    imgTalkBalloon->setPosition(this->getPosition() + Vec2(0, talkBalloonY));
 }
 void Movable::dontHurt(){
     isHurting = false;
@@ -152,7 +172,7 @@ void Movable::setFlippedX(bool flip){
     Sprite::setFlippedX(flip);
     isTowardLeft = !flip;
     if(spine){
-        spine->setScaleX(flip?-1:1);
+        spine->setScaleX(flip?-0.5:0.5);
     }
 }
 void Movable::encounteredCliff(int direction){}
@@ -191,14 +211,14 @@ void Movable::updatePosition(float dt)
         setFlippedX(true);
     }
     
-    Point vlct;
+    Vec2 vlct;
     
     if (this->freezed) {
-        vlct = Point(inWater?vlct.x*0.9:vlct.x * (freezed?0.95:0.30), vlct.y);
+        vlct = Vec2(inWater?vlct.x*0.9:vlct.x * (freezed?0.95:0.30), vlct.y);
     }else{
 //        if (wantsToJump){
 //            if(inWater || (!jumped && (onGround || jumpAllowed))) {
-//                Point jumpForce = Point(0.0, inWater?(onGround?waterAccelYP+10:waterAccelYP):1850.0);
+//                Vec2 jumpForce = Vec2(0.0, inWater?(onGround?waterAccelYP+10:waterAccelYP):1850.0);
 //                vlct = vlct + jumpForce;
 //                jumped = true;
 //                onGround = false;
@@ -206,8 +226,8 @@ void Movable::updatePosition(float dt)
 //                onJumped();
 //
 //            }else if (doubleJump && !tumbled && (jumped || !onGround) && !iWasInWater) {
-//                Point jumpForce = Point(0.0, inWater?(onGround?waterAccelYP+60:waterAccelYP):1850.0);
-//                vlct = Point(vlct.x, 230);
+//                Vec2 jumpForce = Vec2(0.0, inWater?(onGround?waterAccelYP+60:waterAccelYP):1850.0);
+//                vlct = Vec2(vlct.x, 230);
 //                tumbled = true;
 //                wantsToJump = false;
 //
@@ -234,17 +254,17 @@ void Movable::updatePosition(float dt)
             verticalMove = 0;
         }
         
-        vlct = vlct + Point(horizontalMove*dt, verticalMove*dt);
+        vlct = vlct + Vec2(horizontalMove*dt, verticalMove*dt);
     }
     
-//    Point minMovement = Point(inWater?-waterMaxX:-50.0-extraSpeed, inWater?-waterMinY:-280.0 - extraJump);
-//    Point maxMovement = Point(inWater?waterMaxX:50.0+extraSpeed, 280.0 + extraJump);
-    Point minMovement = Point(inWater?-waterMaxX:-280.0, inWater?-waterMinY:-280.0 - extraJump);
-    Point maxMovement = Point(inWater?waterMaxX:280.0, 280.0 + extraJump);
+//    Vec2 minMovement = Vec2(inWater?-waterMaxX:-50.0-extraSpeed, inWater?-waterMinY:-280.0 - extraJump);
+//    Vec2 maxMovement = Vec2(inWater?waterMaxX:50.0+extraSpeed, 280.0 + extraJump);
+    Vec2 minMovement = Vec2(inWater?-waterMaxX:-280.0, inWater?-waterMinY:-280.0 - extraJump);
+    Vec2 maxMovement = Vec2(inWater?waterMaxX:280.0, 280.0 + extraJump);
     
     // Clamp allows you limit a hero's speed while Moving
     vlct = vlct.getClampPoint(minMovement, maxMovement);
-    Point stepVelocity = vlct * dt;
+    Vec2 stepVelocity = vlct * dt;
     //this->setPosition(ccpAdd(getPosition(), stepVelocity));
     desiredPosition = getPosition() + stepVelocity;
     
@@ -257,7 +277,7 @@ void Movable::freezeForAWhile(float dur){
 void Movable::releaseFreezing(){
     freezed = false;
     if (fixAngleToTargetWhenReleaseFreezing) {
-        movingAngle = -(-GameManager::getInstance()->getAngle(this->getPosition(), this->target->getPosition() + Point(0, TILE_SIZE/2)) + 180);
+        movingAngle = -(-GameManager::getInstance()->getAngle(this->getPosition(), this->target->getPosition() + Vec2(0, TILE_SIZE/2)) + 180);
     }
 }
 void Movable::onDropping(){
@@ -288,22 +308,22 @@ void Movable::onJumped(){
 }
 void Movable::updatePositionForStraight(float dt)
 {
-    Point vlct;
+    Vec2 vlct;
     float baseSpeed = 50;
     
-    vlct = Point((baseSpeed+extraSpeed)*cos(movingAngle*3.14/180),
+    vlct = Vec2((baseSpeed+extraSpeed)*cos(movingAngle*3.14/180),
                  (baseSpeed+extraSpeed)*sin(movingAngle*3.14/180));
     
-    Point minMovement = Point(-baseSpeed-extraSpeed, -280.0);
-    Point maxMovement = Point(baseSpeed+extraSpeed, 280.0);
+    Vec2 minMovement = Vec2(-baseSpeed-extraSpeed, -280.0);
+    Vec2 maxMovement = Vec2(baseSpeed+extraSpeed, 280.0);
     
     // Clamp allows you limit a hero's speed while Moving
     vlct = vlct.getClampPoint(minMovement, maxMovement);
-    Point stepVelocity = vlct * dt;
+    Vec2 stepVelocity = vlct * dt;
 
     //this->setPosition(ccpAdd(getPosition(), stepVelocity));
     if (freezed) {
-        stepVelocity = Point::ZERO;
+        stepVelocity = Vec2::ZERO;
     }
     desiredPosition = getPosition() + stepVelocity;
     this->velocity = vlct;
@@ -312,48 +332,48 @@ void Movable::updatePositionForStraight(float dt)
 void Movable::updatePositionToFlyToFollowTarget(float dt)
 {
 //    baseSpeed+extraSpeed
-    Point tPos = target->getPosition();
-    Point pos = getPosition();
+    Vec2 tPos = target->getPosition();
+    Vec2 pos = getPosition();
     float diff = sqrtf((tPos.x - pos.x)*(tPos.x-pos.x)+(tPos.y - pos.y)*(tPos.y - pos.y));
     float toMove = dt*50 + dt*extraSpeed;
     
     float toX = (tPos.x - pos.x)*(toMove/diff);
     float toY = (tPos.y - pos.y)*(toMove/diff);
-    desiredPosition = Point(pos.x + toX, pos.y + toY);
-    velocity = Point(0, this->getPositionY() >= desiredPosition.y?-1:1);
+    desiredPosition = Vec2(pos.x + toX, pos.y + toY);
+    velocity = Vec2(0, this->getPositionY() >= desiredPosition.y?-1:1);
 }
 
 void Movable::updatePositionForBouncing(float dt)
 {
-    Point vlct;
+    Vec2 vlct;
     float baseSpeed = 50;
     
-    Point gravity = Point(0.0, -850.0);
+    Vec2 gravity = Vec2(0.0, -850.0);
     if (onGround) {
-        gravity = Point(0.0, 0);
+        gravity = Vec2(0.0, 0);
 //        if (state == STATE_JUMPING) {
 //            state = STATE_STANDING;
 //        }
     }
-    Point gravityStep = gravity * dt;
+    Vec2 gravityStep = gravity * dt;
     
     vlct = this->velocity + gravityStep;
     
-    Point minMovement = Point(-baseSpeed-extraSpeed, -280.0);
-    Point maxMovement = Point(baseSpeed+extraSpeed, 280.0);
+    Vec2 minMovement = Vec2(-baseSpeed-extraSpeed, -280.0);
+    Vec2 maxMovement = Vec2(baseSpeed+extraSpeed, 280.0);
     
     vlct = vlct.getClampPoint(minMovement, maxMovement);
-    Point stepVelocity = vlct * dt;
+    Vec2 stepVelocity = vlct * dt;
     
     desiredPosition = getPosition() + stepVelocity;
     this->velocity = vlct;
 }
 
-Rect Movable::collectBoundingBox()
+cocos2d::Rect Movable::collectBoundingBox()
 {
-    return Rect(desiredPosition.x - TILE_SIZE/2, desiredPosition.y - getContentSize().height/2, TILE_SIZE, TILE_SIZE*2);
+    return cocos2d::Rect(desiredPosition.x - TILE_SIZE/2, desiredPosition.y - getContentSize().height/2, TILE_SIZE, TILE_SIZE*2);
 }
-Rect Movable::collisionBoundingBox()
+cocos2d::Rect Movable::collisionBoundingBox()
 {
     float width = getContentSize().width/2;
     float height = getContentSize().height*getScaleY();
@@ -363,73 +383,73 @@ Rect Movable::collisionBoundingBox()
     if (height <= 0) {
         height = TILE_SIZE/2;
     }
-//    return Rect(desiredPosition.x - TILE_SIZE/2, desiredPosition.y - getContentSize().height/2, width, height);//TILE_SIZE, TILE_SIZE);
-    return Rect(desiredPosition.x - width/2, desiredPosition.y - height/2, width, TILE_SIZE/2);
-    Rect bounding = boundingBox();
+//    return cocos2d::Rect(desiredPosition.x - TILE_SIZE/2, desiredPosition.y - getContentSize().height/2, width, height);//TILE_SIZE, TILE_SIZE);
+    return cocos2d::Rect(desiredPosition.x - width/2, desiredPosition.y - height/2, width, TILE_SIZE/2);
+    cocos2d::Rect bounding = boundingBox();
    
     if (bounding.size.width < TILE_SIZE*2 && bounding.size.height < TILE_SIZE*2) {
-        Rect collisionBox = RectInset(bounding, 1, 0);
-        Point diff = desiredPosition - getPosition();
-        Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
+        cocos2d::Rect collisionBox = RectInset(bounding, 1, 0);
+        Vec2 diff = desiredPosition - getPosition();
+        cocos2d::Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
         return returnBoundingBox;
     }else{
-        Point pos = getPosition();
-        Rect rect = Rect(pos.x - TILE_SIZE/2, pos.y - getContentSize().height/2, TILE_SIZE, getContentSize().height);
-        Rect collisionBox = RectInset(rect, 0, 0);
-        Point diff = desiredPosition - getPosition();
-        Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
+        Vec2 pos = getPosition();
+        cocos2d::Rect rect = cocos2d::Rect(pos.x - TILE_SIZE/2, pos.y - getContentSize().height/2, TILE_SIZE, getContentSize().height);
+        cocos2d::Rect collisionBox = RectInset(rect, 0, 0);
+        Vec2 diff = desiredPosition - getPosition();
+        cocos2d::Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
         return returnBoundingBox;
     }
 }
-Rect Movable::damageBoundingBox()
+cocos2d::Rect Movable::damageBoundingBox()
 {
-    Rect bounding = getBoundingBox();
-    Rect collisionBox = RectInset(bounding, 3, 3);
-//    Point diff = 0;//desiredPosition - getPosition();
-//    Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
+    cocos2d::Rect bounding = getBoundingBox();
+    cocos2d::Rect collisionBox = RectInset(bounding, 3, 3);
+//    Vec2 diff = 0;//desiredPosition - getPosition();
+//    cocos2d::Rect returnBoundingBox = cocos2d::RectOffset(collisionBox, diff.x, diff.y);
 //    return returnBoundingBox;
     return collisionBox;
 }
 
-Point Movable::getGravityPosition()
+Vec2 Movable::getGravityPosition()
 {
-    return Point(getPosition().x, getPosition().y-getContentSize().height/2 + TILE_SIZE/2);
+    return Vec2(getPosition().x, getPosition().y-getContentSize().height/2 + TILE_SIZE/2);
 }
 
-/*Rect Movable::currentBoundingBox()
+/*cocos2d::Rect Movable::currentBoundingBox()
 {
-    Rect bounding = boundingBox();
+    cocos2d::Rect bounding = boundingBox();
     
     if (vehicleType == VEHICLE_GOLIATH) {
         
-        Point pos = getPosition();
-        Rect collisionBox = Rect(pos.x - TILE_SIZE, pos.y - 28, TILE_SIZE*2, TILE_SIZE*2);
+        Vec2 pos = getPosition();
+        cocos2d::Rect collisionBox = cocos2d::Rect(pos.x - TILE_SIZE, pos.y - 28, TILE_SIZE*2, TILE_SIZE*2);
         return collisionBox;
     }
     
     if (bounding.size.width < TILE_SIZE*2 && bounding.size.height < TILE_SIZE*2) {
-        Rect collisionBox = RectInset(bounding, 0, 0);
-//        Point diff = ccpSub(desiredPosition, getPosition());
-//        Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
+        cocos2d::Rect collisionBox = cocos2d::RectInset(bounding, 0, 0);
+//        Vec2 diff = ccpSub(desiredPosition, getPosition());
+//        cocos2d::Rect returnBoundingBox = cocos2d::RectOffset(collisionBox, diff.x, diff.y);
         return collisionBox;
     }else{
-        Point pos = getPosition();
-        Rect rect = Rect(pos.x - TILE_SIZE/2, pos.y - TILE_SIZE + 1, TILE_SIZE, TILE_SIZE*2 - 2);
-        Rect collisionBox = RectInset(rect, 0, 0);
-//        Point diff = ccpSub(desiredPosition, getPosition());
-//        Rect returnBoundingBox = RectOffset(collisionBox, diff.x, diff.y);
+        Vec2 pos = getPosition();
+        cocos2d::Rect rect = cocos2d::Rect(pos.x - TILE_SIZE/2, pos.y - TILE_SIZE + 1, TILE_SIZE, TILE_SIZE*2 - 2);
+        cocos2d::Rect collisionBox = cocos2d::RectInset(rect, 0, 0);
+//        Vec2 diff = ccpSub(desiredPosition, getPosition());
+//        cocos2d::Rect returnBoundingBox = cocos2d::RectOffset(collisionBox, diff.x, diff.y);
         return collisionBox;
     }
 }*/
 
-Rect Movable::RectOffset(Rect rect, float x, float y)
+cocos2d::Rect Movable::RectOffset(cocos2d::Rect rect, float x, float y)
 {
-    return Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width, rect.size.height);
+    return cocos2d::Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width, rect.size.height);
 }
 
-Rect Movable::RectInset(Rect rect, float x, float y)
+cocos2d::Rect Movable::RectInset(cocos2d::Rect rect, float x, float y)
 {
-    return Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width - x*2, rect.size.height - y*2);
+    return cocos2d::Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width - x*2, rect.size.height - y*2);
 }
 
 /*void Movable::setOrder(int order)
@@ -474,8 +494,8 @@ void Movable::setTarget(Movable* t)
 }
 float Movable::findTarget(Movable* tar, float dist)
 {
-    Point pos = this->getPosition();
-    Point tPos = tar->getPosition();
+    Vec2 pos = this->getPosition();
+    Vec2 tPos = tar->getPosition();
     float distance = sqrtf((pos.x - tPos.x)*(pos.x - tPos.x) + (pos.y - tPos.y)*(pos.y - tPos.y));
     
     if (distance < dist){
@@ -575,7 +595,7 @@ void Movable::stop(bool search){
     isTemporaryFlying = false;
     this->forceAttackTarget = false;
     resetRoute();
-    targetCoordinate = Point::ZERO;
+    targetCoordinate = Vec2::ZERO;
     isArrived = true;
     target = nullptr;
     canFindTarget = attackType != ATTACK_TYPE_NONE;
@@ -588,9 +608,9 @@ void Movable::stop(bool search){
         // progress
         
         Sprite* spt = Sprite::create("uiBox.png");
-        spt->setPosition(unit->getPosition() + Point(50, unit->getContentSize().height/2 + 10));
+        spt->setPosition(unit->getPosition() + Vec2(50, unit->getContentSize().height/2 + 10));
         WORLD->addChild(spt, 1000);
-        auto timer = ProgressTimer::create(Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unit->unitType)));
+        auto timer = ProgressTimer::create(WORLD->getSpriteForUnit(unit->unitType));
         processTimer = timer;
         timer->setType(ProgressTimer::Type::RADIAL);
         spt->addChild(timer);
@@ -629,9 +649,9 @@ void Movable::stop(bool search){
         this->attackType = ATTACK_TYPE_NONE;
         this->untouchable = true;
     }
-    if (attackFlagPos != Point::ZERO && target == nullptr && search) {
+    if (attackFlagPos != Vec2::ZERO && target == nullptr && search) {
         if(attackFlagPos == getPosition()){
-            attackFlagPos = Point::ZERO;
+            attackFlagPos = Vec2::ZERO;
         }else{
             moveToTarget(attackFlagPos);
             canFindTarget = true;
@@ -643,8 +663,8 @@ void Movable::stop(bool search){
         WORLD->attackNearHero((EnemyBase*)this);
     }else if (!isGatheringGold && !WORLD->isThisSpotAvailable(this) && canMove && !isFlying) {
         isTemporaryFlying = true;
-        Point coordinate = WORLD->getCoordinateFromPosition(getPosition());
-        coordinate = Point(coordinate.x + rand()%3 - 1, coordinate.y + rand()%3 - 1);
+        Vec2 coordinate = WORLD->getCoordinateFromPosition(getPosition());
+        coordinate = Vec2(coordinate.x + rand()%3 - 1, coordinate.y + rand()%3 - 1);
         if(coordinate.x + 1 >= WORLD->mapSize.width){
             coordinate.x = WORLD->mapSize.width - 1;
         }else if(coordinate.x < 0){
@@ -655,8 +675,8 @@ void Movable::stop(bool search){
         }else if(coordinate.y < 0){
             coordinate.y = 0;
         }
-        Point newPos = WORLD->getPositionFromTileCoordinate(coordinate.x, coordinate.y);
-//        Point nowPos = getPosition();
+        Vec2 newPos = WORLD->getPositionFromTileCoordinate(coordinate.x, coordinate.y);
+//        Vec2 nowPos = getPosition();
         WORLD->moveTo((EnemyBase*)this, newPos);
 //        runMoveAnimation(DIRECTION_E);
     }
@@ -704,6 +724,7 @@ void Movable::onBuildComplete(){//building(float dt){
         Sprite* spt = (Sprite*)HUD->tutorialNode->getChildByName("sptIcon");
         spt->stopAllActions();
         spt->setSpriteFrame("barracks.png");
+        spt->setScale(1/WORLD->imageScale);
         WORLD->addGold(800);
         WORLD->addLumber(400);
     }else if (WORLD->stageIndex == 0 && HUD->tutorialIndex == 7) {
@@ -713,6 +734,7 @@ void Movable::onBuildComplete(){//building(float dt){
         Sprite* spt = (Sprite*)HUD->tutorialNode->getChildByName("sptIcon");
         spt->stopAllActions();
         spt->setSpriteFrame("swordmanStand0.png");
+        spt->setScale(1/WORLD->imageScale);
         WORLD->addGold(300);
     }
     builderBuilding->stopAllActions();
@@ -736,7 +758,7 @@ void Movable::onBuildComplete(){//building(float dt){
     if(!this->isCarryingGold && !this->isCarryingTree){
         this->attackType = ATTACK_TYPE_NEAR;
     }
-    this->untouchable = false;
+    isBuildingABuilding = false;
     stopNew();
 //    }
 }
@@ -787,7 +809,7 @@ std::string Movable::getCharacterName(int unitType){
 }
 void Movable::attackUpdate(float dt){
 //    if(isBuilding) return; // test
-    if(!target || target->energy <= 0 || target->untouchable){
+    if(!target || target->energy <= 0 || target->untouchable || (target->alliSide == WHICH_SIDE_MUTUAL && unitType != UNIT_WIZARD)){
         stopNew();
         target = nullptr;
         return;
@@ -809,12 +831,11 @@ void Movable::attackUpdate(float dt){
         isSkillOn = true;
         if (unitType == UNIT_HERO_REAPER) {
             attackCoolTime += 23.0f/30;
+        }else if(unitType == UNIT_HERO_CATINBOOTS){
+            attackCoolTime = 65.0f/30;
         }
     }
-    
-    if(unitType == UNIT_HERO_SKELETON){
-        isSkillOn = true; // test
-    }
+//    isSkillOn = true;  // test 
     
     runAnimation(ANIMATION_TYPE_ATTACK);
     
@@ -904,6 +925,47 @@ void Movable::attackUpdate(float dt){
                                              DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
             seq->setTag(attackTag);
             this->runAction(seq);
+        }else if (unitType == UNIT_HERO_ENT){
+            happenTime = 31.0f/30;
+        }else if (unitType == UNIT_HERO_SANTA){
+            happenTime = 28.0f/30;
+        }else if (unitType == UNIT_HERO_RUDOLPH){
+            happenTime = 30.0f/30;
+        }else if (unitType == UNIT_HERO_SANTADOG){
+            happenTime = 28.0f/30;
+        }else if (unitType == UNIT_HERO_SALAMANDER){
+            happenTime = 34.0f/30;
+        }else if (unitType == UNIT_HERO_UNDINE){
+            happenTime = 24.0f/30;
+        }else if (unitType == UNIT_HERO_PENGUIN){
+            happenTime = 24.0f/30;
+        }else if (unitType == UNIT_HERO_LADY_WEREWOLF){
+            happenTime = 25.0f/30;
+        }else if (unitType == UNIT_HERO_CATINBOOTS){
+            happenTime = 44.0f/30;
+        }else if (unitType == UNIT_HERO_LADY_BEAR){
+            happenTime = 23.0f/30;
+        }else if (unitType == UNIT_HERO_MOLE){
+            happenTime = 29.0f/30;
+        }else if (unitType == UNIT_HERO_LADY_LION){
+            happenTime = 20.0f/30;
+        }else if (unitType == UNIT_HERO_TOYMOUSE){
+            happenTime = 57.0f/30;
+        }else if (unitType == UNIT_HERO_BATMONSTER){
+            happenTime = 45.0f/30;
+        }else if (unitType == UNIT_HERO_SAVAGEARCHER){
+            happenTime = 30.0f/30;
+            Sequence* seq = Sequence::create(DelayTime::create(34.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)),
+                                             DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
+            seq->setTag(attackTag);
+            this->runAction(seq);
+        }else if (unitType == UNIT_HERO_MEMEAT){
+            happenTime = 40.0f/30;
+        }else if (unitType == UNIT_HERO_PARASITE){
+            happenTime = 34.0f/30;
+        }else if (unitType == UNIT_HERO_WATERMELON){
+            happenTime = 32.0f/30;
         }
     }
     Sequence* seq = Sequence::create(DelayTime::create(happenTime), CallFunc::create(CC_CALLBACK_0(Movable::attack, this)), nullptr);
@@ -911,7 +973,7 @@ void Movable::attackUpdate(float dt){
     this->runAction(seq);
 }
 void Movable::healNearFriend(){
-    WORLD->healHeroNearPoint(getPosition(), 100);
+    WORLD->healHeroNearPoint(this, getPosition(), 100);
 }
 void Movable::startSkillAuraAndSkillEffect(int aura){
     selectedSkillAura = aura;
@@ -960,8 +1022,9 @@ void Movable::startSkillAuraAndSkillEffect(int aura){
     }else if (unitType == UNIT_HERO_MONK) {
         this->runAction(Sequence::create(DelayTime::create(27.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
         skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
-    }else if (unitType == UNIT_HERO_FIGHTER) {
-        this->runAction(Sequence::create(DelayTime::create(48.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+    }else if (unitType == UNIT_HERO_FIGHTER ||
+              unitType == UNIT_HERO_MOLE) {
+        this->runAction(Sequence::create(DelayTime::create(29.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
         skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
     }else if (unitType == UNIT_HERO_BEAR) {
         this->runAction(Sequence::create(DelayTime::create(32.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
@@ -981,50 +1044,96 @@ void Movable::startSkillAuraAndSkillEffect(int aura){
     }else if (unitType == UNIT_HERO_ASSASSIN) {
         this->runAction(Sequence::create(DelayTime::create(45.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
         skillEffectIndex = EFFECT_BLUE_SLASH;
+    }else if (unitType == UNIT_HERO_CATINBOOTS) {
+        this->runAction(Sequence::create(DelayTime::create(43.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_BLUE_SLASH;
     }else if (unitType == UNIT_HERO_LION) {
         this->runAction(Sequence::create(DelayTime::create(19.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
                                          DelayTime::create(11.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
                                          DelayTime::create(11.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),nullptr));
         skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
-    }else if (unitType == UNIT_HERO_TANKER) {
+    }else if (unitType == UNIT_HERO_TANKER ||
+              unitType == UNIT_HERO_SANTADOG ||
+              unitType == UNIT_HERO_PENGUIN) {
         this->runAction(Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
         skillEffectIndex = EFFECT_HIT_WITH_CIRCLE_ON_GROUND;
     }else if (unitType == UNIT_HERO_REAPER) {
         this->runAction(Sequence::create(DelayTime::create(25.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), DelayTime::create(5.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
         skillEffectIndex = EFFECT_PURPLE_SLASH;
+    }else if (unitType == UNIT_HERO_LADY_WEREWOLF) {
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE_ON_GROUND;
+    }else if (unitType == UNIT_HERO_UNDINE) {
+        skillEffectIndex = EFFECT_WATER_SPLASH;
+    }else if (unitType == UNIT_HERO_ENT) {
+        this->runAction(Sequence::create(DelayTime::create(31.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE_ON_GROUND;
+    }else if (unitType == UNIT_HERO_RUDOLPH) {
+        this->runAction(Sequence::create(DelayTime::create(27.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE;
+    }else if (unitType == UNIT_HERO_SALAMANDER) {
+        this->runAction(Sequence::create(DelayTime::create(34.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_FIREBOMB;
+    }else if (unitType == UNIT_HERO_LADY_LION) {
+        this->runAction(Sequence::create(DelayTime::create(20.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_FIREBALL_EXPLOSION;
+    }else if (unitType == UNIT_HERO_TOYMOUSE) {
+        this->runAction(Sequence::create(DelayTime::create(57.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_FIREBALL_EXPLOSION;
+    }else if (unitType == UNIT_HERO_BATMONSTER) {
+        this->runAction(Sequence::create(DelayTime::create(45.0f/30 - 0.1f), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_FIREBALL_EXPLOSION;
+    }else if (unitType == UNIT_HERO_SAVAGEARCHER) {
+        this->runAction(Sequence::create(DelayTime::create(30.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)),
+                                         DelayTime::create(4.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_BLUE_SLASH;
+    }else if (unitType == UNIT_HERO_MEMEAT) {
+        this->runAction(Sequence::create(DelayTime::create(40.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_HIT_WITH_CIRCLE_ON_GROUND;
+    }else if (unitType == UNIT_HERO_PARASITE) {
+        this->runAction(Sequence::create(DelayTime::create(32.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_BLUE_SLASH;
+    }else if (unitType == UNIT_HERO_WATERMELON) {
+        this->runAction(Sequence::create(DelayTime::create(32.0f/30), CallFunc::create(CC_CALLBACK_0(Movable::showSkillEffect, this)), nullptr));
+        skillEffectIndex = EFFECT_FIREBALL_EXPLOSION;
     }
 }
 void Movable::updateSkillAura(float dt){
-    int diff = 50;
+    if(!WORLD){
+        log("world is not valied");
+        return;
+    }
+    int diff = 50*WORLD->imageScale;
     if(selectedSkillAura == AURA_LIGHTNING){
         Sprite* spt = Sprite::createWithSpriteFrameName("lightningAura0.png");
         GM->runAnimation(spt, "auraLightning", false, true);
-        this->addChild(spt, 2);
+        WORLD->batch->addChild(spt, 2);
         spt->setRotation(rand()%360);
         if (spine) {
             spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), spine->getBoundingBox().size.height/2 + diff - rand()%(diff*2)));
         }else{
-            spt->setPosition(Vec2(getContentSize().width/2 - diff + rand()%(diff*2), getContentSize().height/2 - diff + rand()%(diff*2)));
+            spt->setPosition(this->getPosition() +Vec2(getContentSize().width/2 - diff + rand()%(diff*2), getContentSize().height/2 - diff + rand()%(diff*2)));
         }
         spt->setScale(1/getScaleX());
     }else if(selectedSkillAura == AURA_FIRE){
         for(int i = 0; i < 2; i++){
-            Sprite* spt = Sprite::create("whiteCircle.png");
+            Sprite* spt = Sprite::createWithSpriteFrameName("whiteCircle.png");
             spt->runAction(Sequence::create(TintTo::create(0.02, Color3B::BLACK), TintTo::create(0.02, Color3B::WHITE), TintTo::create(0.02, Color3B(255, 233, 0)), TintTo::create(0.08, Color3B::RED), TintTo::create(0.08, Color3B::GRAY), TintTo::create(0.08, Color3B::BLACK), NULL));
             spt->runAction(Sequence::create(DelayTime::create(0.18f), FadeOut::create(0.14f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
-            spt->runAction(MoveBy::create(0.3, Vec2(0, 60)));
+            spt->runAction(MoveBy::create(0.3, Vec2(0, 60*WORLD->imageScale)));
             spt->setScale(0.2f + (rand()%10)*0.01f);
             spt->runAction(Sequence::create(DelayTime::create(0.2f), ScaleTo::create(0.1f, spt->getScale()*1.4f), NULL));
-            this->addChild(spt, 2);
+            WORLD->batch->addChild(spt, 2);
             if (spine) {
                 spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%30));
             }else{
-                spt->setPosition(Vec2(getContentSize().width/2 - diff + rand()%(diff*2), rand()%30));
+                spt->setPosition(this->getPosition() +Vec2(getContentSize().width/2 - diff + rand()%(diff*2), rand()%30));
             }
         }
     }else if(selectedSkillAura == AURA_ICE){
         for(int i = 0; i < 2; i++){
-            Sprite* spt = Sprite::create("whiteBigCircle.png");
+            Sprite* spt = Sprite::createWithSpriteFrameName("whiteBigCircle.png");
             spt->runAction(Sequence::create(TintTo::create(3, Color3B(12, 175, 239)), NULL));
             spt->runAction(Sequence::create(DelayTime::create(2), FadeOut::create(1), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
             float x = rand()%100 - 50;
@@ -1034,16 +1143,16 @@ void Movable::updateSkillAura(float dt){
             spt->runAction(JumpBy::create(2, Vec2::ZERO, 20, 1));
             spt->setScale(0.2f + (rand()%10)*0.01f);
             spt->runAction(Sequence::create(DelayTime::create(2), ScaleTo::create(1, spt->getScale()*1.4f), NULL));
-            this->addChild(spt, 2);
+            WORLD->batch->addChild(spt, 2);
             if (spine) {
                 spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%10));
             }else{
-                spt->setPosition(Vec2(getContentSize().width/2 - diff + rand()%(diff*2), rand()%30));
+                spt->setPosition(this->getPosition() +Vec2(getContentSize().width/2 - diff + rand()%(diff*2), rand()%30));
             }
             
             spt = Sprite::createWithSpriteFrameName(strmake("iceCrystalPart%d.png", rand()%2));
-            WORLD->spriteBatch->addChild(spt);
-            spt->setPosition(getPosition() + Vec2(diff - rand()%(diff*2), rand()%10));
+            WORLD->batch->addChild(spt);
+            spt->setPosition(this->getPosition() +getPosition() + Vec2(diff - rand()%(diff*2), rand()%10));
             spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.3f, Vec2(rand()%60-30, rand()%60-30)), 2), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
             spt->runAction(Sequence::create(DelayTime::create(0.2f), FadeOut::create(0.1f), NULL));
             spt->setOpacity(150);
@@ -1051,7 +1160,7 @@ void Movable::updateSkillAura(float dt){
         }
     }else if(selectedSkillAura == AURA_GREEN){
         for(int i = 0; i < 3; i++){
-            Sprite* spt = Sprite::create("whiteBigCircle.png");
+            Sprite* spt = Sprite::createWithSpriteFrameName("whiteBigCircle.png");
             spt->setColor(Color3B(6, 129, 48));
             spt->setBlendFunc(BlendFunc::ADDITIVE);
             spt->runAction(Sequence::create(TintTo::create(0.3, Color3B(121, 255, 137)), NULL));
@@ -1061,12 +1170,12 @@ void Movable::updateSkillAura(float dt){
             spt->setPosition(spine->getPosition() + Vec2(x, rand()%30));
             spt->runAction(MoveBy::create(0.3, Vec2(rand()%2==0?-50:50, 60)));
             spt->setScale(0.2f + (rand()%10)*0.01f);
-            this->addChild(spt, 2);
+            WORLD->batch->addChild(spt, 2);
             
         }
     }else if(selectedSkillAura == AURA_LIGHT){
         Sprite* spt = Sprite::createWithSpriteFrameName("yellowBall.png");
-        this->addChild(spt);
+        WORLD->batch->addChild(spt);
         spt->runAction(Sequence::create(FadeIn::create(0.18f), FadeOut::create(0.14f), SPT_REMOVE_FUNC, NULL));
         float widthScale = getContentSize().width*1.3f/spt->getContentSize().width;
         spt->setScale(widthScale, widthScale*0.3f);
@@ -1077,7 +1186,7 @@ void Movable::updateSkillAura(float dt){
             spt->runAction(MoveBy::create(0.3, Vec2(0, 60)));
             spt->setScale(0.8f + (rand()%6)*0.1f);
             spt->runAction(Sequence::create(DelayTime::create(0.2f), ScaleTo::create(0.1f, spt->getScale()*1.4f), NULL));
-            this->addChild(spt, 2);
+            WORLD->batch->addChild(spt, 2);
             spt->setPosition(spine->getPosition() + Vec2(diff - rand()%(diff*2), rand()%30));
         }
     }
@@ -1090,7 +1199,7 @@ void Movable::showSkillEffect(){
     if (skillEffectIndex == EFFECT_LIGHTNING ){
         WORLD->runEffect(skillEffectIndex, skillTarget->getPosition());
     }else if (skillEffectIndex == EFFECT_FIREBOMB ){
-        WORLD->runEffect(skillEffectIndex, this->getPosition() + Vec2(isFlippedX()?200:-200, 100), 180);
+        WORLD->runEffect(skillEffectIndex, this->getPosition() + Vec2(isFlippedX()?100:-100, 100)*WORLD->imageScale, 180);
     }else if (skillEffectIndex == EFFECT_ICE_RAISE ){
         Sprite* spt;
         for (int i = 0; i < 6; i++) {
@@ -1100,40 +1209,41 @@ void Movable::showSkillEffect(){
             }else if(i > 0){
                 float angle = 360*i/5;
                 float theta = angle*3.14f/180;
-                extraPos = Vec2(cos(theta)*100, sin(theta)*50);
+                extraPos = Vec2(cos(theta)*100*WORLD->imageScale, sin(theta)*50/WORLD->getScaleY());
             }
             for (int j = 0; j < 2; j++) {
                 spt = Sprite::createWithSpriteFrameName(strmake("iceCrystalPart%d.png", rand()%2));
-                WORLD->spriteBatch->addChild(spt);
+                WORLD->batch->addChild(spt);
                 spt->setPosition(skillTarget->getPosition() + extraPos);
-                spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.3f, Vec2(rand()%100-50, rand()%100-50)), 2), SPT_REMOVE_FUNC, NULL));
+                spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.3f, Vec2(rand()%100-50, rand()%100-50)*WORLD->imageScale), 2), SPT_REMOVE_FUNC, NULL));
                 spt->runAction(Sequence::create(DelayTime::create(0.2f), FadeOut::create(0.1f), NULL));
                 spt->runAction(RotateBy::create(0.3f, rand()%200-100));
             }
             
             spt = Sprite::createWithSpriteFrameName("iceCrystal.png");
             spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.4f + (rand()%10)*0.01f, Vec2(0, 150)), 2), FadeOut::create(0.3f), SPT_REMOVE_FUNC, NULL));
-            WORLD->spriteBatch->addChild(spt);
+            WORLD->batch->addChild(spt);
             spt->setRotation(-43);
             spt->setPosition(skillTarget->getPosition() + extraPos);
         }
     }else if (skillEffectIndex == EFFECT_BLUE_TEETH && skillTarget){
-        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 50), 180);
+        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 50)*WORLD->imageScale, 180);
     }else if (skillEffectIndex == EFFECT_BLUE_SLASH){
         if (unitType == UNIT_HERO_ARCHER) {
-            WORLD->runEffect(skillEffectIndex, getPosition() + Vec2(rand()%100-50, 100), -90 + rand()%10-5);
+            WORLD->runEffect(skillEffectIndex, getPosition() + Vec2(rand()%100-50, 100)*WORLD->imageScale, -90 + rand()%10-5);
         }else{
-            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 50 + rand()%100-50), (isFlippedX()?0:180) + rand()%30-15);
+            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, rand()%100-50)*WORLD->imageScale, (isFlippedX()?0:180) + rand()%30-15);
         }
     }else if (skillEffectIndex == EFFECT_EXPLODE_MIDDLE && skillTarget){
-        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 180);
+        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30)*WORLD->imageScale, 180);
     }else if (skillEffectIndex == EFFECT_FIRE_SLASH && skillTarget){
-        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 30 + rand()%30);
+        WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30)*WORLD->imageScale, 30 + rand()%30);
     }else if (skillEffectIndex == EFFECT_HEAL && skillTarget){
-        healNearFriend();
+//        healNearFriend();
+        WORLD->healHeroesNearPoint(this, getPosition(), ap*10, 3);
     }else{
         if(skillTarget){
-            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30), 180);
+            WORLD->runEffect(skillEffectIndex, skillTarget->getPosition() + Vec2(0, 30)*WORLD->imageScale, 180);
         }
     }
 }
@@ -1176,8 +1286,20 @@ void Movable::attack(){
             if (unitType == UNIT_HERO_ORC ||
                 unitType == UNIT_HERO_GOBLIN ||
                 unitType == UNIT_HERO_LIZARDMAN ||
-                unitType == UNIT_HERO_TANKER){
+                unitType == UNIT_HERO_RUDOLPH ||
+                unitType == UNIT_HERO_SANTADOG ||
+                unitType == UNIT_HERO_ENT){
                 WORLD->splashDamage(skillTarget->getPosition(), 10500, ap*1.5f, isEnemy, this);
+            }else if (unitType == UNIT_HERO_SALAMANDER ||
+                      unitType == UNIT_HERO_TANKER ||
+                      unitType == UNIT_HERO_MOLE ||
+                      unitType == UNIT_HERO_PENGUIN ){
+                WORLD->splashDamage(skillTarget->getPosition(), 10500, ap*1.5f, isEnemy, this);
+            }else if (unitType == UNIT_HERO_LADY_LION ||
+                      unitType == UNIT_HERO_TOYMOUSE ||
+                      unitType == UNIT_HERO_BATMONSTER ||
+                      unitType == UNIT_HERO_WATERMELON){
+                WORLD->splashDamage(skillTarget->getPosition(), 14500, ap*2.0f, isEnemy, this);
             }else if(unitType == UNIT_HERO_WEREWOLF ||
                      unitType == UNIT_HERO_BEAR ||
                      unitType == UNIT_HERO_MONK ||
@@ -1185,6 +1307,11 @@ void Movable::attack(){
                 WORLD->splashDamage(skillTarget->getPosition(), 100, ap*3, isEnemy, this);
             }else if(unitType == UNIT_HERO_ASSASSIN){
                 if(skillTarget && skillTarget->getHitAndIsDead(ap*6, this)){
+                    WORLD->removeDeadUnit((EnemyBase*)target);
+                    stopNew();
+                }
+            }else if(unitType == UNIT_HERO_CATINBOOTS){
+                if(skillTarget && skillTarget->getHitAndIsDead(ap*4, this)){
                     WORLD->removeDeadUnit((EnemyBase*)target);
                     stopNew();
                 }
@@ -1200,9 +1327,17 @@ void Movable::attack(){
         }
     }
     if (attackType == ATTACK_TYPE_NEAR) {
-        if(target->getHitAndIsDead(ap, this)){
-            WORLD->removeDeadUnit((EnemyBase*)target);
-            stopNew();
+        if(unitType == UNIT_HERO_LADY_LION){
+            WORLD->runEffect(EFFECT_HIT_WITH_CIRCLE_ON_GROUND, target->getPosition());
+            WORLD->splashDamage(target->getPosition(), 10500, ap, isEnemy, this);
+        }else if(unitType == UNIT_HERO_TOYMOUSE){
+            WORLD->runEffect(EFFECT_FIREBALL_EXPLOSION, target->getPosition());
+            WORLD->splashDamage(target->getPosition(), 10500, ap, isEnemy, this);
+        }else{
+            if(target->getHitAndIsDead(ap, this)){
+                WORLD->removeDeadUnit((EnemyBase*)target);
+                stopNew();
+            }
         }
     }else if(attackType == ATTACK_TYPE_RANGE){
         float speed = 1000;
@@ -1222,22 +1357,53 @@ void Movable::attack(){
         }else if(unitType == UNIT_WIZARD){
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "fireBall0.png");
             speed = 300;
-        }else if(unitType == UNIT_WIZARD || unitType == UNIT_HERO_WIZARD){
+        }else if(unitType == UNIT_HERO_WIZARD){
             if(isSkillOn){
                 apValue *= 2;
             }
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "fireBall0.png");
-            if(unitType == UNIT_WIZARD){
-                speed = 300;
-            }else if(unitType == UNIT_HERO_WIZARD){
-                if(isSkillOn){
-                    missile->setScale(2);
-                }
-                speed = 600;
+            if(isSkillOn){
+                missile->setScale(2);
             }
+            speed = 600;
+        }else if(unitType == UNIT_HERO_UNDINE){
+            if(isSkillOn){
+                apValue *= 1.8f;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "waterSplash0.png");
+            if(isSkillOn){
+                missile->setScale(1);
+            }else{
+                missile->setScale(0.5f);
+            }
+            speed = 600;
+        }else if(unitType == UNIT_HERO_LADY_WEREWOLF){
+            if(isSkillOn){
+                apValue *= 1.8f;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "werewolfFurball.png");
+            if(isSkillOn){
+                missile->setScale(1);
+            }else{
+                missile->setScale(0.5f);
+            }
+            speed = 600;
+        }else if(unitType == UNIT_HERO_LADY_BEAR){
+            if(isSkillOn){
+                apValue *= 1.8f;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "heart.png");
+            if(isSkillOn){
+                missile->setScale(2);
+            }else{
+                missile->setScale(1);
+            }
+            speed = 600;
         }else if(unitType == UNIT_HERO_HEALER){
-            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "yellowBall.png");
-            speed = 300;
+//            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "yellowBall.png");
+//            speed = 300;
+            healNearFriend();
+            return;
         }else if(unitType == UNIT_HERO_REAPER){
             if(target->getHitAndIsDead(ap, this)){
                 WORLD->removeDeadUnit((EnemyBase*)target);
@@ -1246,6 +1412,24 @@ void Movable::attack(){
             WORLD->runEffect(EFFECT_PURPLE_SLASH, target->getPosition());
             isSkillOn = false;
             return;
+        }else if(unitType == UNIT_HERO_SANTA){
+            if(isSkillOn){
+                apValue *= 2;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "present.png");
+            if(isSkillOn){
+                missile->setScale(2);
+            }
+            speed = 600;
+        }else if(unitType == UNIT_HERO_PARASITE){
+            if(isSkillOn){
+                apValue *= 2;
+            }
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, apValue, 0, "flyingWorm.png");
+            if(isSkillOn){
+                missile->setScale(2);
+            }
+            speed = 600;
         }else{
             return;
         }
@@ -1258,7 +1442,14 @@ void Movable::attack(){
         missile->ap = apValue;
         missile->target = target;
         missile->attackTargetType = attackTargetType;
-        WORLD->spriteBatch->addChild(missile, 100);
+        if(isSkillOn){
+            if(unitType == UNIT_HERO_LADY_WEREWOLF ||
+               unitType == UNIT_HERO_LADY_BEAR ||
+               unitType == UNIT_HERO_PARASITE){
+                missile->attackTargetType = ATTACK_TARGET_TYPE_SPLASH;
+            }
+        }
+        WORLD->batch->addChild(missile, 100);
 //        this->getParent()->addChild(missile, 100);
         float distance = getPosition().distance(target->getPosition());
         float dur = distance/speed;
@@ -1266,25 +1457,35 @@ void Movable::attack(){
         if(height > 250){
             height = 250;
         }
+        bool fixAngle = true;
         if(unitType == UNIT_ARCHER || unitType == UNIT_ORC_SPEAR || unitType == UNIT_HERO_ARCHER){
-            missile->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur/2, Point(height*(isTowardLeft?-1:1), 0)), 2), EaseIn::create(MoveBy::create(dur/2, Point(-height*(isTowardLeft?-1:1), 0)), 2), NULL));
+            missile->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur/2, Vec2(height*(isTowardLeft?-1:1), 0)), 2), EaseIn::create(MoveBy::create(dur/2, Vec2(-height*(isTowardLeft?-1:1), 0)), 2), NULL));
         }
-        Point extraPos = Point::ZERO;
+        Vec2 extraPos = Vec2::ZERO;
         if(unitType == UNIT_WATCHERTOWER || unitType == UNIT_ORC_BUNKER || unitType == UNIT_ORC_HQ){ // straight
             if(unitType == UNIT_WATCHERTOWER || unitType == UNIT_HELICOPTER){
-                extraPos = Point(0, 100);
+                extraPos = Vec2(0, 100);
             }
             missile->setRotation(-GM->getAngle(getPosition(), target->getPosition()) - 90);
-        }else if(unitType == UNIT_WIZARD){
+        }else if(unitType == UNIT_WIZARD || unitType == UNIT_HERO_SANTA || (unitType == UNIT_HERO_LADY_BEAR && !isSkillOn)){
+            if(unitType == UNIT_HERO_SANTA){
+                extraPos = Vec2(isFlippedX()?70:-70, 70);
+            }
+            fixAngle = false;
             // straight not rotated
         }else{ // curve
-            missile->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur/2, Point(0, height)), 2), EaseIn::create(MoveBy::create(dur/2, Point(0, -height)), 2), NULL));
-            
+            missile->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur/2, Vec2(0, height)), 2), EaseIn::create(MoveBy::create(dur/2, Vec2(0, -height)), 2), NULL));
             missile->setRotation(isTowardLeft?-45:45);
+            if(unitType == UNIT_HERO_LADY_BEAR){
+                fixAngle = false;
+                missile->setRotation(0);
+            }
         }
-        missile->schedule(schedule_selector(Movable::updateMissileAngle), 0.05f);
+        if(fixAngle){
+            missile->schedule(schedule_selector(Movable::updateMissileAngle), 0.05f);
+            missile->updateMissileAngle(0);
+        }
         missile->setPosition(getPosition() + extraPos);
-        missile->updateMissileAngle(0);
         missile->untouchable = true;
         missile->shooter = this;
         missile->isEnemy = isEnemy;
@@ -1296,16 +1497,23 @@ void Movable::attack(){
     }
 }
 void Movable::updateMissileAngle(float dt){
-    if(lastMissilePosition != Point::ZERO)
+    if(lastMissilePosition != Vec2::ZERO){
         this->setRotation(-GM->getAngle(lastMissilePosition, getPosition()) - 90);
+    }
     lastMissilePosition = getPosition();
 //    this->setRotation(90);
 }
 void Movable::onMissileMoveDone(){
     removeFromParent();
     if (attackTargetType == ATTACK_TARGET_TYPE_SPLASH) {
-        if(this->shooter && (this->shooter->unitType == UNIT_WIZARD || this->shooter->unitType == UNIT_HERO_WIZARD)){
+        if(this->shooter && (this->shooter->unitType == UNIT_WIZARD || this->shooter->unitType == UNIT_HERO_WIZARD || this->shooter->unitType == UNIT_HERO_SANTA)){
             WORLD->runEffect(EFFECT_FIREBALL_EXPLOSION, getPosition());
+        }else if(this->shooter && this->shooter->unitType == UNIT_HERO_UNDINE){
+            WORLD->runEffect(EFFECT_WATER_SPLASH, getPosition());
+        }else if(this->shooter && this->shooter->unitType == UNIT_HERO_LADY_WEREWOLF){
+            WORLD->runEffect(EFFECT_HIT_WITH_CIRCLE_ON_GROUND, getPosition());
+        }else if(this->shooter && this->shooter->unitType == UNIT_HERO_LADY_BEAR){
+            WORLD->runEffect(EFFECT_HIT_WITH_CIRCLE_ON_GROUND, getPosition());
         }else{
             WORLD->runEffect(EFFECT_EXPLODE_MIDDLE, getPosition());
         }
@@ -1322,23 +1530,23 @@ void Movable::onMissileMoveDone(){
 }
 void Movable::refreshApproachPoints(){
     int index = 0;
-    Point currentPos = getPosition();
+    Vec2 currentPos = getPosition();
     if (isBuilding) {
         int offset = 2;
-        Point startPos = WORLD->getPositionFromTileCoordinate(buildingStartCoordinate.x, buildingStartCoordinate.y + buildingOccupySize.height) + Point(-TILE_SIZE/2, TILE_SIZE/2);
-        approachingPoints[0] = startPos + Point(-offset, -offset);
-        approachingPoints[1] = startPos + Point(buildingOccupySize.width*TILE_SIZE + offset, -offset);
-        approachingPoints[2] = startPos + Point(-offset, buildingOccupySize.height*TILE_SIZE + offset);
-        approachingPoints[3] = startPos + Point(buildingOccupySize.width*TILE_SIZE + offset, buildingOccupySize.height*TILE_SIZE + offset);
+        Vec2 startPos = WORLD->getPositionFromTileCoordinate(buildingStartCoordinate.x, buildingStartCoordinate.y + buildingOccupySize.height) + Vec2(-TILE_SIZE/2, TILE_SIZE/2);
+        approachingPoints[0] = startPos + Vec2(-offset, -offset);
+        approachingPoints[1] = startPos + Vec2(buildingOccupySize.width*TILE_SIZE + offset, -offset);
+        approachingPoints[2] = startPos + Vec2(-offset, buildingOccupySize.height*TILE_SIZE + offset);
+        approachingPoints[3] = startPos + Vec2(buildingOccupySize.width*TILE_SIZE + offset, buildingOccupySize.height*TILE_SIZE + offset);
         index = 4;
         for (int i = 0; i < buildingOccupySize.width; i++) {
-            approachingPoints[index] = startPos + Point(TILE_SIZE/2 + TILE_SIZE*i, -offset);
-            approachingPoints[index + 1] = startPos + Point(TILE_SIZE/2 + TILE_SIZE*i, buildingOccupySize.height*TILE_SIZE + offset);
+            approachingPoints[index] = startPos + Vec2(TILE_SIZE/2 + TILE_SIZE*i, -offset);
+            approachingPoints[index + 1] = startPos + Vec2(TILE_SIZE/2 + TILE_SIZE*i, buildingOccupySize.height*TILE_SIZE + offset);
             index += 2;
         }
         for (int i = 0; i < buildingOccupySize.height; i++) {
-            approachingPoints[index] = startPos + Point(-offset, TILE_SIZE/2 + TILE_SIZE*i);
-            approachingPoints[index + 1] = startPos + Point(buildingOccupySize.width*TILE_SIZE + offset, TILE_SIZE/2 + TILE_SIZE*i);
+            approachingPoints[index] = startPos + Vec2(-offset, TILE_SIZE/2 + TILE_SIZE*i);
+            approachingPoints[index + 1] = startPos + Vec2(buildingOccupySize.width*TILE_SIZE + offset, TILE_SIZE/2 + TILE_SIZE*i);
             index += 2;
         }
     }else{
@@ -1348,7 +1556,7 @@ void Movable::refreshApproachPoints(){
                 if(x == 0 && y == 1){
                     continue;
                 }
-                approachingPoints[index] = Point(currentPos.x + x*51, bottomY + y*51);
+                approachingPoints[index] = Vec2(currentPos.x + x*51, bottomY + y*51);
                 index++;
             }
         }
@@ -1368,7 +1576,7 @@ void Movable::refreshApproachPoints(){
         
     }
 }
-cocos2d::Point Movable::getApproachingPoint(cocos2d::Point from){
+cocos2d::Vec2 Movable::getApproachingPoint(cocos2d::Vec2 from){
     if (lastApprochingPointCheckPosition != getPosition()) { // calculate points
         refreshApproachPoints();
     }
@@ -1376,8 +1584,8 @@ cocos2d::Point Movable::getApproachingPoint(cocos2d::Point from){
     int minLength = 90000;
     int pickedIndex = -1;
     PointArray* array;
-    Point minPos;
-    Point coordinate, destCoordinate;
+    Vec2 minPos;
+    Vec2 coordinate, destCoordinate;
     
     for (int i = 0; i < approachPointCount; i++) {
         coordinate = WORLD->getCoordinateFromPosition(from, WORLD->theMap);
@@ -1429,12 +1637,14 @@ bool Movable::getHitAndIsDead(int ap, Movable* attacker){
 //    }
     energy -= ap;
     updateEnergy();
-    if (isBuilding && energy < maxEnergy/2 && !this->getChildByName("sptFire")) {
+    if (isBuilding && energy < maxEnergy/2 && !isOnFire) {
+        isOnFire = true;
         Sprite* spt = Sprite::createWithSpriteFrameName("fire0.png");
-        this->addChild(spt);
+        WORLD->batch->addChild(spt);
         spt->setName("sptFire");
-        spt->setPosition(Point(getContentSize().width/3, getContentSize().height*2/3));
+        spt->setPosition(getPosition() + Vec2(getContentSize().width/6, getContentSize().height/5));
         GM->runAnimation(spt, "fire", true);
+        childrenSprite.pushBack(spt);
     }
     if (this->unitType != UNIT_MINE) {
         if(WORLD->isInScreen(getPosition())){
@@ -1475,26 +1685,26 @@ void Movable::showEffect(int effect, float delay){
     if(effect == EFFECT_WING){
         for (int i = 0; i < 2; i++) {
             Sprite* sptWing = Sprite::createWithSpriteFrameName("wing.png");
-            this->addChild(sptWing, 100);
+            WORLD->batch->addChild(sptWing, 100);
             sptWing->setFlippedX(i==1);
-            sptWing->setAnchorPoint(Point(i==0?0:1, 0));
+            sptWing->setAnchorPoint(Vec2(i==0?0:1, 0));
             sptWing->setOpacity(0);
             sptWing->setScale(0.5f);
-            sptWing->setPosition(Point(i==0?this->getContentSize().width + 3:-3, -this->getContentSize().height));
+            sptWing->setPosition(Vec2(i==0?this->getContentSize().width + 3:-3, -this->getContentSize().height));
             float fadeInTime = 0.1f;
             float moveTime = 1;
             float fadeOutTime = 0.3f;
-            sptWing->runAction(Sequence::create(DelayTime::create(delay), MoveBy::create(0.2f, Point(i==0?5:-5, 0)), nullptr));
+            sptWing->runAction(Sequence::create(DelayTime::create(delay), MoveBy::create(0.2f, Vec2(i==0?5:-5, 0)), nullptr));
             sptWing->runAction(Sequence::create(DelayTime::create(delay), EaseInOut::create(ScaleTo::create(0.2f, 1, 1), 2), nullptr));
-            sptWing->runAction(Sequence::create(DelayTime::create(delay), EaseInOut::create(MoveBy::create(0.2f, Point(0, 15)), 2),  nullptr));
+            sptWing->runAction(Sequence::create(DelayTime::create(delay), EaseInOut::create(MoveBy::create(0.2f, Vec2(0, 15)), 2),  nullptr));
             sptWing->runAction(Sequence::create(DelayTime::create(delay), FadeIn::create(0.1f), DelayTime::create(moveTime - fadeInTime - fadeOutTime), FadeOut::create(fadeOutTime), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, sptWing)), nullptr));
             
         }
     }else if(effect == EFFECT_BOTTOM_RECT_GLOW){
         Sprite* spt = Sprite::createWithSpriteFrameName("glowRect.png");
-        this->addChild(spt, -1);
-        spt->setAnchorPoint(Point(0.5, 0.5));
-        spt->setPosition(Point(getContentSize().width/2, getContentSize().height/2));
+        WORLD->batch->addChild(spt, -1);
+        spt->setAnchorPoint(Vec2(0.5, 0.5));
+        spt->setPosition(Vec2(getContentSize().width/2, getContentSize().height/2));
         spt->setOpacity(0);
         spt->setScale(1);
         spt->runAction(Sequence::create(DelayTime::create(delay), ScaleTo::create(0.2f, 2.5), nullptr));
@@ -1504,15 +1714,15 @@ void Movable::showEffect(int effect, float delay){
         for (int i = 0; i < 6; i++) { // sequence
             for (int j = 0; j < 3; j++) {   // particle at once
                 Sprite* spt = Sprite::createWithSpriteFrameName("glowParticle.png");
-                this->addChild(spt);
+                WORLD->batch->addChild(spt);
                 spt->setOpacity(0);
                 float fadeInTime = 0.1f;
                 float moveTime = 0.4f;
                 float fadeOutTime = 0.2f;
                 
-                spt->setPosition(Point(rand()%(int)this->getContentSize().width, rand()%(int)getContentSize().height + (rand()%10)*0.1f));
+                spt->setPosition(Vec2(rand()%(int)this->getContentSize().width, rand()%(int)getContentSize().height + (rand()%10)*0.1f));
                 spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), FadeIn::create(fadeInTime), DelayTime::create(moveTime - fadeInTime - fadeOutTime), FadeOut::create(fadeOutTime), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
-                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), MoveBy::create(moveTime, Point(0, 10)), nullptr));
+                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), MoveBy::create(moveTime, Vec2(0, 10)), nullptr));
             }
             extraDelay += 0.2f;
         }
@@ -1522,13 +1732,13 @@ void Movable::showEffect(int effect, float delay){
             extraDelay = i*0.07f;
             for (int j = 0; j < 16; j++) {   // particle at once
                 Sprite* spt = Sprite::createWithSpriteFrameName("glowParticle.png");
-                this->addChild(spt);
-                spt->setPosition(Point(-3, i*3));
+                WORLD->batch->addChild(spt);
+                spt->setPosition(Vec2(-3, i*3));
                 spt->setOpacity(0);
 //                spt->setScale(0.5f);
                 spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), FadeIn::create(0.05f), DelayTime::create(0.1f), FadeOut::create(0.05f), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
-                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), MoveBy::create(0.2f, Point(this->getContentSize().width + 6, 0)), NULL));
-                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), EaseInOut::create(MoveBy::create(0.2f, Point(0, 5)), 2), nullptr));
+                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), MoveBy::create(0.2f, Vec2(this->getContentSize().width + 6, 0)), NULL));
+                spt->runAction(Sequence::create(DelayTime::create(delay + extraDelay), EaseInOut::create(MoveBy::create(0.2f, Vec2(0, 5)), 2), nullptr));
                 extraDelay += 0.08f;
             }
 //            extraDelay += 0.1f;
@@ -1559,7 +1769,7 @@ void Movable::moveToTarget(Movable* unit){
             if(dummyTarget == nullptr){
                 dummyTarget = new Movable();
                 dummyTarget->initWithSpriteFrameName("workerAxeStand0.png");
-                this->addChild(dummyTarget);
+                WORLD->batch->addChild(dummyTarget);
                 dummyTarget->setVisible(false);
                 dummyTarget->untouchable = true;
             }
@@ -1575,16 +1785,30 @@ void Movable::moveToTarget(Movable* unit){
     }
 }
 void Movable::attackDdangTo(Vec2 pos){
-    moveFlagPos = pos;
-    log("attackddang: %f, %f", pos.x, pos.y);
+//    moveFlagPos = pos;
+//
+//    moveToPos = Vec2::ZERO;
+//    attackDdangPos = pos;
+//    unitAct = UNIT_ACT_ATTACK_DDANG;
+//    unitActDetail = UNIT_ACT_DETAIL_IDLE;
+//    runAnimation(ANIMATION_TYPE_IDLE);
+    
+    // new
     moveToPos = Vec2::ZERO;
-    attackDdangPos = pos;
-    unitAct = UNIT_ACT_ATTACK_DDANG;
+    moveFlagPos = pos;
+    target = nullptr;
+    unitAct = UNIT_ACT_MOVE;
+    canRevengeAttack = true;
     unitActDetail = UNIT_ACT_DETAIL_IDLE;
-    runAnimation(ANIMATION_TYPE_IDLE);
+    cancelAttackSchedule();
+    
+    attackFlagPos = moveFlagPos;
+    unitAct = UNIT_ACT_ATTACK_DDANG;
+    target = nullptr;
+    
 }
-void Movable::moveToTarget(cocos2d::Point targetPos){
-    Point selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
+void Movable::moveToTarget(cocos2d::Vec2 targetPos){
+    Vec2 selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
     targetMoveTilePos = WORLD->getCoordinateFromPosition(targetPos);
     if(WORLD->isDecoBlock(WORLD->decoLayer->getTileGIDAt(targetMoveTilePos)) || WORLD->isDecoBlock(WORLD->decoLayer->getTileGIDAt(selfPos))){
         return;
@@ -1618,7 +1842,7 @@ void Movable::moveToTarget(cocos2d::Point targetPos){
             return;
         }
         
-        Point pos;
+        Vec2 pos;
         int startI = array->count()-1;
         if(startI > 1){
             startI--;
@@ -1641,7 +1865,7 @@ void Movable::moveToTarget(cocos2d::Point targetPos){
                 
             }else{
                 if(!isZombie){
-                    attackFlagPos = Point::ZERO;
+                    attackFlagPos = Vec2::ZERO;
                     stop();
                 }
             }
@@ -1656,13 +1880,13 @@ void Movable::moveToTarget(){
 //        return;
 //    }
 //
-    Point newTargetPos;
-    Point currentPos = getPosition();
-    if (lastValidPoint != Point::ZERO) {
+    Vec2 newTargetPos;
+    Vec2 currentPos = getPosition();
+    if (lastValidPoint != Vec2::ZERO) {
 //        currentPos = lastValidPoint;
     }
     
-    Point approachPos = target->getApproachingPoint(currentPos);
+    Vec2 approachPos = target->getApproachingPoint(currentPos);
 //    if(isFlying || isTemporaryFlying){
 //        newTargetPos = target->getPosition();
 //    }else{
@@ -1674,7 +1898,7 @@ void Movable::moveToTarget(){
     }
     
     targetCoordinate = newTargetPos;
-    Point selfPos = WORLD->getCoordinateFromPosition(currentPos, WORLD->theMap);
+    Vec2 selfPos = WORLD->getCoordinateFromPosition(currentPos, WORLD->theMap);
     if(newTargetPos != targetMoveTilePos){
         targetMoveTilePos = newTargetPos;
     }
@@ -1705,7 +1929,7 @@ void Movable::moveToTarget(){
         }else{
             PointArray* array = GM->getPath(selfPos, targetMoveTilePos);
 //            GM->drawPath();
-//            Point nextPos = target->getPosition();
+//            Vec2 nextPos = target->getPosition();
             if(array == nullptr || array->count() == 0){
                 failedFindPathStart = selfPos;
                 failedFindPathEnd = targetMoveTilePos;
@@ -1718,7 +1942,7 @@ void Movable::moveToTarget(){
 //                array = GM->getPath(selfPos, targetMoveTilePos);
             }
             
-            Point pos;
+            Vec2 pos;
             int startI = array->count()-1;
             if(startI > 1){
                 startI--;
@@ -1732,7 +1956,7 @@ void Movable::moveToTarget(){
 //                    if(target->isBuilding){
 //                        lastValidPoint = routePositionArray->getControlPointAtIndex(routePositionArray->count() - 1);
 //                    }else{
-//                        lastValidPoint = Point::ZERO;
+//                        lastValidPoint = Vec2::ZERO;
 //                    }
                     
 //                    addRoute(approachPos); // test
@@ -1762,7 +1986,7 @@ void Movable::resetRoute(){
         routePositionArray->removeControlPointAtIndex(0);
     }
 }
-void Movable::addRoute(cocos2d::Point dest){
+void Movable::addRoute(cocos2d::Vec2 dest){
     isArrived = false;
     movePointCounter = 0;
     if(routePositionArray == nullptr){
@@ -1826,7 +2050,7 @@ void Movable::attackTree(){
         
         tree->energy -= ap;
         if(tree->energy <= 0){
-            Point treePos = WORLD->getCoordinateFromPosition(tree->getPosition(), WORLD->theMap);//Point((int)currentTree->getPositionX()/TILE_SIZE, (int)currentTree->getPositionY()/TILE_SIZE);
+            Vec2 treePos = WORLD->getCoordinateFromPosition(tree->getPosition(), WORLD->theMap);//Vec2((int)currentTree->getPositionX()/TILE_SIZE, (int)currentTree->getPositionY()/TILE_SIZE);
             WORLD->decoLayer->setTileGID(0, treePos);
             WORLD->updateMiniMapForNonMoving();
             WORLD->resetPathState();
@@ -1844,18 +2068,18 @@ void Movable::attackTree(){
             }
             WORLD->mutualArray.eraseObject((EnemyBase*)currentTree);
             
-            for(auto spt: tree->childrenSprite){
-                spt->setSpriteFrame(strmake("treeTrunk%d.png", rand()%3));
-                spt->setLocalZOrder(-10000);
-                spt->runAction(Sequence::create(FadeOut::create(5), SPT_REMOVE_FUNC, NULL));
-            }
+//            for(auto spt: tree->childrenSprite){
+                tree->setSpriteFrame(strmake("treeTrunk%d.png", rand()%3));
+                tree->setLocalZOrder(-10000);
+            tree->runAction(Sequence::create(FadeOut::create(5), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, tree)), NULL));
+//            }
 //            tree->setLocalZOrder(-10000);
             tree->setLocalZOrder(-this->getBoundingBox().origin.y - 100);
             tree->childrenSprite.clear();
             
-//            Point pos;
+//            Vec2 pos;
 //            for(auto unit: WORLD->mutualArray){
-//                pos = Point((int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE);
+//                pos = Vec2((int)unit->getPositionX()/TILE_SIZE, (int)unit->getPositionY()/TILE_SIZE);
 //                if(pos == treePos){
 //                    spt = (Sprite*)unit;
 //                    spt->setSpriteFrame("treeTrunk.png");
@@ -1872,20 +2096,21 @@ void Movable::queueUnit(int index){
     this->getParent()->getParent()->addChild(btn, 10);
     btn->setTag(index);
     btns.pushBack(btn);
-    btn->setScale(0.4f);
-    Sprite* sptBuilding = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(index));
+    btn->setScale(0.4f*WORLD->imageScale);
+    Sprite* sptBuilding = WORLD->getSpriteForUnit(index);
     btn->addClickEventListener(CC_CALLBACK_1(Movable::cancelProduct, this));
     btn->addChild(sptBuilding);
-    sptBuilding->setPosition(Point(btn->getContentSize().width/2, btn->getContentSize().height/2));
+    sptBuilding->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
     sptBuilding->setOpacity(50);
     
-    sptBuilding = Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(index));
+    sptBuilding = WORLD->getSpriteForUnit(index);
     auto timer = ProgressTimer::create(sptBuilding);
     timer->setType(ProgressTimer::Type::RADIAL);
     btn->addChild(timer);
     timer->setName("timer");
+    timer->setScale(2);
     //        timer->setReverseProgress(true);
-    timer->setPosition(Point(btn->getContentSize().width/2, btn->getContentSize().height/2));
+    timer->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
     timer->setPercentage(0);
     
     timer->setPosition(btn->getContentSize()/2);
@@ -1905,8 +2130,8 @@ void Movable::queueUnit(int index){
 //            spt->stopAllActions();
 //            Sprite* sptTemp = Sprite::create("handIcon.png");
 //            spt->setSpriteFrame(sptTemp->getSpriteFrame());
-//            Size size = Director::getInstance()->getWinSize();
-//            spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750 - 100, 330 + 50)), MoveBy::create(0.5f, Point(150, -200)), DelayTime::create(1), NULL)));
+//            cocos2d::Size size = Director::getInstance()->getWinSize();
+//            spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750 - 100, 330 + 50)), MoveBy::create(0.5f, Vec2(150, -200)), DelayTime::create(1), NULL)));
 //        }
         
         if (WORLD->stageIndex == 0 && HUD->tutorialIndex == 8) {
@@ -1916,10 +2141,11 @@ void Movable::queueUnit(int index){
             HUD->talkText = LM->getText("tutorial 10");
             Sprite* spt = (Sprite*)HUD->tutorialNode->getChildByName("sptIcon");
             Sprite* sptTemp = Sprite::create("handIcon.png");
+            spt->setScale(1);
             spt->setSpriteFrame(sptTemp->getSpriteFrame());
-            Size size = Director::getInstance()->getWinSize();
+            cocos2d::Size size = Director::getInstance()->getWinSize();
             spt->stopAllActions();
-            spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Point(0, -100)), MoveBy::create(0.1f, Point(0, 100)), MoveBy::create(0.1f, Point(0, -100)), MoveBy::create(0.15f, Point(0, 100)), DelayTime::create(1), NULL)));
+            spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Vec2(0, -100)), MoveBy::create(0.1f, Vec2(0, 100)), MoveBy::create(0.1f, Vec2(0, -100)), MoveBy::create(0.15f, Vec2(0, 100)), DelayTime::create(1), NULL)));
         }
     }
 }
@@ -1970,7 +2196,7 @@ void Movable::updateProductButtons(){
     int counter = 0;
     for(auto btn: btns){
 //        int index = btn->getTag();
-        btn->setPosition(this->getPosition() + Point(-buildingOccupySize.width*TILE_SIZE/2 + counter*80, TILE_SIZE));
+        btn->setPosition(this->getPosition() + Vec2(-buildingOccupySize.width*TILE_SIZE/2 + counter*80*WORLD->imageScale, TILE_SIZE));
         counter++;
     }
 }
@@ -2060,7 +2286,7 @@ void Movable::stopNew(){
             goRandom = true;
         }
         if(goRandom){
-            coordinate = Point(coordinate.x + rand()%3 - 1, coordinate.y + rand()%3 - 1);
+            coordinate = Vec2(coordinate.x + rand()%3 - 1, coordinate.y + rand()%3 - 1);
         }
         if(coordinate.x + 1 >= WORLD->mapSize.width){
             coordinate.x = WORLD->mapSize.width - 1;
@@ -2073,7 +2299,7 @@ void Movable::stopNew(){
             coordinate.y = 0;
         }
         
-        Point newPos = WORLD->getPositionFromTileCoordinate(coordinate.x, coordinate.y);
+        Vec2 newPos = WORLD->getPositionFromTileCoordinate(coordinate.x, coordinate.y);
         //        WORLD->moveTo((EnemyBase*)this, newPos);
         unitAct = UNIT_ACT_MOVE;
         moveToPos = Vec2::ZERO;
@@ -2089,9 +2315,9 @@ void Movable::stopNew(){
         // progress
         
         Sprite* spt = Sprite::create("uiBox.png");
-        spt->setPosition(unit->getPosition() + Point(50, unit->getContentSize().height/2 + 10));
+        spt->setPosition(unit->getPosition() + Vec2(50, unit->getContentSize().height/2 + 10));
         WORLD->addChild(spt, 1000);
-        auto timer = ProgressTimer::create(Sprite::createWithSpriteFrameName(WORLD->getSpriteNameForUnit(unit->unitType)));
+        auto timer = ProgressTimer::create(WORLD->getSpriteForUnit(unit->unitType));
         processTimer = timer;
         timer->setType(ProgressTimer::Type::RADIAL);
         spt->addChild(timer);
@@ -2127,6 +2353,7 @@ void Movable::stopNew(){
                                          NULL));
         this->runAction(Sequence::create(DelayTime::create(unit->buildingCompleteTime), CallFunc::create(CC_CALLBACK_0(Movable::onBuildComplete, this)), NULL));
         this->setVisible(false); // test
+        this->isBuildingABuilding = true;
         this->attackType = ATTACK_TYPE_NONE;
         this->untouchable = true;
     }
@@ -2170,7 +2397,7 @@ void Movable::moveNew(float dt){// movenew start
 //                stopNew();
 //                return;
 //            }
-            Point selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
+            Vec2 selfPos = WORLD->getCoordinateFromPosition(this->getPosition());
             resetRoute();
             PointArray* array = PointArray::create(1);
             if (target) { // check target occupy the ground
@@ -2181,7 +2408,7 @@ void Movable::moveNew(float dt){// movenew start
                         }
                     }
                 }else if(target->unitType == UNIT_TREE || target->unitType == UNIT_TREE_FOR_BATTLE){
-                    Point targetPos = WORLD->getCoordinateFromPosition(target->getPosition());
+                    Vec2 targetPos = WORLD->getCoordinateFromPosition(target->getPosition());
                     GM->setPathState(targetPos.x, targetPos.y, false);
                 }
             }
@@ -2203,7 +2430,7 @@ void Movable::moveNew(float dt){// movenew start
                             }
                         }
                     }else if(theObjectThisIsIn->unitType == UNIT_TREE || theObjectThisIsIn->unitType == UNIT_TREE_FOR_BATTLE){
-                        Point targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
+                        Vec2 targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
                         GM->setPathState(targetPos.x, targetPos.y, false);
                     }
                 }
@@ -2243,7 +2470,7 @@ void Movable::moveNew(float dt){// movenew start
                         }
                     }
                 }else if(target->unitType == UNIT_TREE || target->unitType == UNIT_TREE_FOR_BATTLE){
-                    Point targetPos = WORLD->getCoordinateFromPosition(target->getPosition());
+                    Vec2 targetPos = WORLD->getCoordinateFromPosition(target->getPosition());
                     GM->setPathState(targetPos.x, targetPos.y, true);
                 }
             }
@@ -2255,7 +2482,7 @@ void Movable::moveNew(float dt){// movenew start
                         }
                     }
                 }else if(theObjectThisIsIn->unitType == UNIT_TREE || theObjectThisIsIn->unitType == UNIT_TREE_FOR_BATTLE){
-                    Point targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
+                    Vec2 targetPos = WORLD->getCoordinateFromPosition(theObjectThisIsIn->getPosition());
                     GM->setPathState(targetPos.x, targetPos.y, true);
                 }
             }
@@ -2284,7 +2511,7 @@ void Movable::moveNew(float dt){// movenew start
                     
                 }else{
                     if(!isZombie){
-                        attackFlagPos = Point::ZERO;
+                        attackFlagPos = Vec2::ZERO;
                         stopNew();
                     }
                 }
@@ -2356,8 +2583,8 @@ void Movable::moveNew(float dt){// movenew start
                 }
             }
         }else{
-            if (isVisible() && (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE || unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET)) {
-                Point dest, current;
+            if ((unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE || unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET)) {
+                Vec2 dest, current;
                 if (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE) {
                     dest = routePositionArray->getControlPointAtIndex(movePointCounter);
                 }else{
@@ -2385,10 +2612,13 @@ void Movable::moveNew(float dt){// movenew start
                     this->setPosition(dest);
                     movePointCounter++;
                 }else{
-                    this->setPosition(current + Point(xWillMove, yWillMove));
+                    this->setPosition(current + Vec2(xWillMove, yWillMove));
                 }
                 if (unitAct == UNIT_ACT_ATTACK) {
                     checkAttackTargetReturnSuccess(dt);
+                }
+                if(spine){
+                    spine->setPosition(getPosition());
                 }
                 if (sptSelectedCircle != nullptr) {
                     sptSelectedCircle->setPosition(getEffectStartPosition());
@@ -2439,8 +2669,8 @@ void Movable::moveNew(float dt){// movenew start
     
     // energy bar
     if(energyBar != nullptr){
-        energyBar->setPosition(getPosition() + Point(0, energyBarY));
-        energyBarContent->setPosition(energyBar->getPosition() + Point(-37, 0));
+        energyBar->setPosition(getPosition() + Vec2(0, energyBarY));
+        energyBarContent->setPosition(energyBar->getPosition() + Vec2(-18.5f, 0));
         energyBarBack->setPosition(energyBar->getPosition());
     }
     
@@ -2462,7 +2692,7 @@ void Movable::moveNew(float dt){// movenew start
         if(!currentMine || currentMine == nullptr){
             return;
         }
-        Rect rect = currentMine->getBoundingBoxForIntersect();
+        cocos2d::Rect rect = currentMine->getBoundingBoxForIntersect();
         Vec2 pos = getPosition();
         if (!isCarryingGold && rect.containsPoint(pos)){
             if(currentMine->energy <= 0){
@@ -2471,11 +2701,13 @@ void Movable::moveNew(float dt){// movenew start
                 this->untouchable = false;
                 currentMine = nullptr;
                 isGatheringGold = false;
+                isInMine = false;
                 return;
             }
-            if(this->isVisible()){
+            if(isVisible()){
                 this->setVisible(false);
                 this->stopNew();
+                this->isInMine = true;
                 this->untouchable = true;
                 this->attackType = ATTACK_TYPE_NONE;
                 this->unitAct = UNIT_ACT_GATHER_GOLD;
@@ -2499,6 +2731,7 @@ void Movable::moveNew(float dt){// movenew start
                     }
                     isCarryingGold = true;
                     this->setVisible(true);
+                    isInMine = false;
                     this->untouchable = false;
                     EnemyBase* castle = WORLD->getNearestCastle(getPosition());
                     unitName = strmake("%sGold", getName().c_str());
@@ -2520,6 +2753,7 @@ void Movable::moveNew(float dt){// movenew start
                 }else{
                     this->stopNew();
                     this->setVisible(true);
+                    isInMine = false;
                     this->untouchable = false;
                     isGatheringGold = false;
                 }
@@ -2573,6 +2807,7 @@ void Movable::moveNew(float dt){// movenew start
         }else if(scheduledProductTime >= 0){
             if (scheduledProductTime < timeCollapse) {
                 timeCollapse -= scheduledProductTime;
+                log("move new");
                 for(int i = 0;i < scheduledProductUnitCount; i++){
                     int unitType = scheduledProductUnit;
                     if(unitType == UNIT_ZOMBIE_SWORDSMAN){
@@ -2580,7 +2815,7 @@ void Movable::moveNew(float dt){// movenew start
                     }else if(unitType == UNIT_ORC_AXE){
                         unitType = rand()%2==0?UNIT_ORC_AXE:UNIT_ORC_SPEAR;
                     }
-                    EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Point(i*100, - 300), GM->getUnitName(unitType));
+                    EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Vec2(i*100*WORLD->imageScale, - 200*WORLD->imageScale), GM->getUnitName(unitType));
                     createdUnit->wantToEli = true;
                 }
             }
@@ -2637,9 +2872,9 @@ void Movable::move(float dt){
     oneSecTimeChecker += dt;
     if (oneSec < oneSecTimeChecker) {
         oneSecTimeChecker = 0;
-        if (isZombie && isVisible()) { 
+        if (isZombie) {
             if(target == nullptr && (routePositionArray == nullptr || routePositionArray->count() == 0)){
-                Point minPos;
+                Vec2 minPos;
                 bool shouldMove = false;
                 int minLength = 999999;
                 for (int i = -1; i < 2; i++) {
@@ -2647,7 +2882,7 @@ void Movable::move(float dt){
                         if (i == 0 && j == 0) {
                             continue;
                         }
-                        Point newPos = Point(getPositionX() + i*TILE_SIZE, getPositionY() + j*TILE_SIZE);;
+                        Vec2 newPos = Vec2(getPositionX() + i*TILE_SIZE, getPositionY() + j*TILE_SIZE);;
                         if (minLength > abs(getPositionX() - attackFlagPos.x + i*TILE_SIZE) + abs(getPositionY() - attackFlagPos.y + j*TILE_SIZE) && !WORLD->isDecoBlock(WORLD->decoLayer->getTileGIDAt(WORLD->getCoordinateFromPosition(newPos))) && WORLD->isThisSpotAvailable(newPos)) {
                             minPos = newPos;
                             minLength = abs(getPositionX() - attackFlagPos.x + i*TILE_SIZE) + abs(getPositionY() - attackFlagPos.y + j*TILE_SIZE);
@@ -2680,6 +2915,7 @@ void Movable::move(float dt){
         }else if(scheduledProductTime >= 0){
             if (scheduledProductTime < timeCollapse) {
                 timeCollapse -= scheduledProductTime;
+                log("move");
 //                for(auto unit: WORLD->heroArray){
 //                    if(unit->unitType == UNIT_CASTLE){
                         for(int i = 0;i < scheduledProductUnitCount; i++){
@@ -2689,9 +2925,10 @@ void Movable::move(float dt){
                             }else if(unitType == UNIT_ORC_AXE){
                                 unitType = rand()%2==0?UNIT_ORC_AXE:UNIT_ORC_SPEAR;
                             }
-                            EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Point(i*50, - 300), GM->getUnitName(unitType));
+                            EnemyBase* createdUnit = WORLD->createUnit(unitType, isEnemy, false, this->getPosition() + Vec2(i*50, - 300), GM->getUnitName(unitType));
 //                            WORLD->moveAndAttackTo((EnemyBase*)createdUnit, unit->getApproachingPoint(createdUnit->getPosition()));
                             createdUnit->wantToEli = true;
+                            
                         }
                         
 //                        break;
@@ -2709,8 +2946,8 @@ void Movable::move(float dt){
             }
         }
         
-        energyBar->setPosition(getPosition() + Point(0, energyBarY));
-        energyBarContent->setPosition(energyBar->getPosition() + Point(-37, 0));
+        energyBar->setPosition(getPosition() + Vec2(0, energyBarY));
+        energyBarContent->setPosition(energyBar->getPosition() + Vec2(-18.5f, 0));
         energyBarBack->setPosition(energyBar->getPosition());
     }
     if (isGatheringGold) {
@@ -2732,9 +2969,10 @@ void Movable::move(float dt){
                 this->untouchable = false;
                 currentMine = nullptr;
                 isGatheringGold = false;
+                isInMine = false;
                 return;
             }
-            if(this->isVisible()){
+            if(isVisible()){
                 this->setVisible(false);
                 this->stop();
                 this->untouchable = true;
@@ -2758,6 +2996,7 @@ void Movable::move(float dt){
                     }
                     isCarryingGold = true;
                     this->setVisible(true);
+                    isInMine = false;
                     this->untouchable = false;
                     EnemyBase* castle = WORLD->getNearestCastle(getPosition());
 //                    this->setName("workerGold");
@@ -2780,6 +3019,7 @@ void Movable::move(float dt){
                     this->setVisible(true);
                     this->untouchable = false;
                     isGatheringGold = false;
+                    isInMine = false;
                 }
             }
         }
@@ -2834,7 +3074,7 @@ void Movable::move(float dt){
         }
     }
     
-    if(target == nullptr && attackFlagPos == Point::ZERO){
+    if(target == nullptr && attackFlagPos == Vec2::ZERO){
         return;
     }
     
@@ -2846,8 +3086,8 @@ void Movable::move(float dt){
     if(targetPositionCheckTime < 0 && target != nullptr && target->canMove && !target->untouchable && canMove && !target->isGatheringGold && !target->isGatheringTree){
         targetPositionCheckTime = 1;
         
-//        Point newTargetPos = WORLD->getCoordinateFromPosition(target->getBoundingBox().origin + Point(target->getBoundingBox().size.width/2, target->collisionBoundingBox().size.height/2), WORLD->theMap);
-        Point newTargetPos;
+//        Vec2 newTargetPos = WORLD->getCoordinateFromPosition(target->getBoundingBox().origin + Vec2(target->getBoundingBox().size.width/2, target->collisionBoundingBox().size.height/2), WORLD->theMap);
+        Vec2 newTargetPos;
 //        if(isFlying || isTemporaryFlying){
 //            newTargetPos = target->getPosition();
 //        }else{
@@ -2921,12 +3161,12 @@ void Movable::move(float dt){
             }
         }
 //        log("what?");
-//        targetCoordinate = Point::ZERO;
+//        targetCoordinate = Vec2::ZERO;
 //        resetRoute();
 //        moveToTarget();
     }else{
-        Point dest = routePositionArray->getControlPointAtIndex(movePointCounter);
-        Point current = this->getPosition();
+        Vec2 dest = routePositionArray->getControlPointAtIndex(movePointCounter);
+        Vec2 current = this->getPosition();
         this->setFlippedX(dest.x > current.x);
         if(this->unitType == UNIT_CATAPULT){
             int angle = 10;
@@ -2973,7 +3213,7 @@ void Movable::move(float dt){
             this->setPosition(dest);
             movePointCounter++;
         }else{
-            this->setPosition(current + Point(xWillMove, yWillMove));
+            this->setPosition(current + Vec2(xWillMove, yWillMove));
             
         }
         if (sptSelectedCircle != nullptr) {
@@ -2984,25 +3224,38 @@ void Movable::move(float dt){
         }
     }
 }
-Rect Movable::getBoundingBoxForIntersect(){
-    if (spine || isBuilding) {
+cocos2d::Rect Movable::getBoundingBoxForIntersect(){
+    if (isBuilding) {
         return Sprite::getBoundingBox();
+    }else if(spine){
+        return cocos2d::Rect(getPositionX()-50, getPositionY()-30, 100, 130);
     }else{
-        return Rect(getPositionX()-50, getPositionY()-30, 100, 60);
+        return cocos2d::Rect(getPositionX()-30, getPositionY()-30, 60, 60);
     }
 }
-//Rect Movable::getBoundingBox() const {
+//cocos2d::Rect Movable::getBoundingBox() const {
 //    if (spine || isBuilding) {
 //        return Sprite::getBoundingBox();
 //    }else{
-//        return Rect(getPositionX()-50, getPositionY()-30, 100, 60);
+//        return cocos2d::Rect(getPositionX()-50, getPositionY()-30, 100, 60);
 //    }
 //}
 Vec2 Movable::getEffectStartPosition(){
     if(isBuilding){
-        return getPosition() + Point(0, -getContentSize().height/2 + 25);
+        if (unitType == UNIT_WATCHERTOWER) {
+            return getPosition() + Vec2(0, (-80)*WORLD->imageScale);
+        }else if (unitType == UNIT_AIRPORT) {
+            return getPosition() + Vec2(0, (-80)*WORLD->imageScale);
+        }else if (unitType == UNIT_BARRACKS) {
+            return getPosition() + Vec2((-10)*WORLD->imageScale, (-54)*WORLD->imageScale);
+        }else{
+            return getPosition() + Vec2(0, (-getContentSize().height/2 + 25)*WORLD->imageScale);
+        }
+        
+//        return getPosition();
     }else{
-        return getPosition() + Point(0, 14);//Point(0, -getContentSize().height/2 + 30);
+//        return getPosition() + Vec2(0, 14*WORLD->imageScale);//Vec2(0, -getContentSize().height/2 + 30);
+        return getPosition() + Vec2(0, 0);
     }
 }
 void Movable::playTreeSound(){
@@ -3035,18 +3288,18 @@ void Movable::updateGroundEffect(float dt){
             spt = Sprite::createWithSpriteFrameName("darkPixel.png");
         }
         this->getParent()->addChild(spt);
-        spt->setPosition(this->getPosition() + Point(-7 + rand()%16, 4 - rand()%9));
-        spt->runAction(Sequence::create(MoveBy::create(1.5f, Point(0, 32)), SPT_REMOVE_FUNC, NULL));
+        spt->setPosition(this->getPosition() + Vec2(-7 + rand()%16, 4 - rand()%9));
+        spt->runAction(Sequence::create(MoveBy::create(1.5f, Vec2(0, 32)), SPT_REMOVE_FUNC, NULL));
         spt->runAction(Sequence::create(DelayTime::create(1.0f), FadeOut::create(0.5f), NULL));
     }
 }
 
 void Movable::updateEnergy(){
     if(energyBar == nullptr){
-//        SpriteBatchNode* spriteBatch = WORLD->spriteBatch;
-        Node* spriteBatch = WORLD->spriteBatch;
+//        batchNode* batch = WORLD->batch;
+        Node* batch = WORLD->batch;
         if(this->isBuilding){
-            spriteBatch = WORLD->spriteBatchBuilding;
+            batch = WORLD->batch;
             energyBarBack = Sprite::createWithSpriteFrameName("energyBarContentForBuilding.png");
             energyBarContent = Sprite::createWithSpriteFrameName("energyBarContentForBuilding.png");
             energyBar = Sprite::createWithSpriteFrameName("energyBarFrame0ForBuilding.png");
@@ -3058,31 +3311,31 @@ void Movable::updateEnergy(){
             GM->runAnimation(energyBar, "energyBarFrame", true);
         }
         
-        spriteBatch->addChild(energyBarBack);
+        batch->addChild(energyBarBack);
         energyBarBack->setColor(Color3B(38, 44, 52));
         
-        spriteBatch->addChild(energyBarContent);
-        energyBarContent->setAnchorPoint(Point(0, 0.5));
+        batch->addChild(energyBarContent);
+        energyBarContent->setAnchorPoint(Vec2(0, 0.5));
         
-        spriteBatch->addChild(energyBar);
+        batch->addChild(energyBar);
 
         if(energyBarY < 0){
             if(spine){
                 energyBarY = this->spine->getBoundingBox().size.height*0.9f;
             }else if(isBuilding){
-                energyBarY = this->getBoundingBox().size.height*0.4f;
+                energyBarY = 60*WORLD->imageScale;
             }else{
                 energyBarY = this->getBoundingBox().size.height*0.9f;
             }
         }
         
-        energyBar->setPosition(getPosition() + Point(0, energyBarY));
-        energyBarContent->setPosition(energyBar->getPosition() + Point(-37, 0));
+        energyBar->setPosition(getPosition() + Vec2(0, energyBarY));
+        energyBarContent->setPosition(energyBar->getPosition() + Vec2(-18.5f, 0));
         energyBarBack->setPosition(energyBar->getPosition());
     }
     float rate = energy*1.0f/maxEnergy;
-    Rect textureRect = energyBarContent->getTextureRect();
-    energyBarContent->setTextureRect(Rect(textureRect.origin.x, textureRect.origin.y, 74*rate, 24));
+    cocos2d::Rect textureRect = energyBarContent->getTextureRect();
+    energyBarContent->setTextureRect(cocos2d::Rect(textureRect.origin.x, textureRect.origin.y, 37*rate, 12));
     if(rate > 0.7f){
         energyBarContent->setColor(Color3B(141, 254, 33));
     }else if(rate > 0.3f){
@@ -3099,8 +3352,8 @@ void Movable::makingSmoke(float dt){
     spt->setScale(0.2f);
     spt->setRotation(rand()%50 - 25);
     spt->runAction(Sequence::create(ScaleTo::create(0.1f, 1), DelayTime::create(1), ScaleTo::create(3, 1.5f), nullptr));
-    spt->runAction(Sequence::create(MoveBy::create(dur, Point(200, 0)), SPT_REMOVE_FUNC, NULL));
-    spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur*2/3, Point(0, 200)), 2), MoveBy::create(dur/3, Point(0, 10)), nullptr));
+    spt->runAction(Sequence::create(MoveBy::create(dur, Vec2(200, 0)), SPT_REMOVE_FUNC, NULL));
+    spt->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur*2/3, Vec2(0, 200)), 2), MoveBy::create(dur/3, Vec2(0, 10)), nullptr));
     spt->runAction(Sequence::create(DelayTime::create(dur*3/4), FadeOut::create(dur/4), NULL));
     this->getParent()->addChild(spt);
 }
@@ -3117,12 +3370,16 @@ void Movable::showSelectedCircle(bool show){
                 WORLD->spriteBatchBuilding->addChild(sptSelectedCircle, -20000);
             }else{
                 sptSelectedCircle = Sprite::createWithSpriteFrameName("selectedCircle.png");
-                WORLD->spriteBatch->addChild(sptSelectedCircle, -20000);
+                WORLD->spriteBatchBuilding->addChild(sptSelectedCircle, -20000);
             }
             if(spine){
                 sptSelectedCircle->setScale((this->getContentSize().width)*1.5f/sptSelectedCircle->getContentSize().width);
             }else{
-                sptSelectedCircle->setScale((this->getContentSize().width)/sptSelectedCircle->getContentSize().width);
+                if(isBuilding){
+                    sptSelectedCircle->setScale((this->getContentSize().width)*1.3f/sptSelectedCircle->getContentSize().width);
+                }else{
+                    sptSelectedCircle->setScale((this->getContentSize().width)/sptSelectedCircle->getContentSize().width);
+                }
             }
             
             if(isEnemy){
@@ -3138,9 +3395,31 @@ void Movable::showSelectedCircle(bool show){
         sptSelectedCircle->stopAllActions();
         sptSelectedCircle->setVisible(true);
         sptSelectedCircle->setPosition(getEffectStartPosition());
+        isInMine = false;
     }else{
         if (sptSelectedCircle != nullptr) {
             sptSelectedCircle->setVisible(false);
         }
     }
+}
+void Movable::setPosition(const Vec2 &position){
+    Sprite::setPosition(position);
+    if(spine){
+        spine->setPosition(position);
+    }
+}
+
+void Movable::checkVisible(){
+    if (isInMine || isBuildingABuilding) {
+        if(isBuildingABuilding)
+            log("isbuilding %d", rand()%3);
+    }else{
+        this->setVisible(!isUnderFog && isInScreen);
+        if(spine){
+            spine->setVisible(!isUnderFog && isInScreen);
+        }
+    }
+}
+void Movable::setVisible(bool visible){
+    Sprite::setVisible(visible);
 }

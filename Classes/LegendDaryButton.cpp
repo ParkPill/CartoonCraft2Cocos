@@ -20,7 +20,7 @@ void LegendDaryButton::addListener(){
         if (GameManager::getInstance()->getWorld() && !GameManager::getInstance()->getWorld()->isSetStageDone) {
             return true;
         }
-        Point p = touch->getLocation();
+        Vec2 p = touch->getLocation();
         cocos2d::Rect rect = this->getBoundingBox();
         
         if(rect.containsPoint(p))
@@ -51,11 +51,11 @@ void LegendDaryButton::addListener(){
     
     cocos2d::Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(listener, 30);
 }
-Rect LegendDaryButton::rect()
+cocos2d::Rect LegendDaryButton::rect()
 {
-    Size s = getTexture()->getContentSize();
-    s = Size(s.width*this->getScale(), s.height*this->getScale());
-    return Rect(-(s.width / 2)*1.3f, -(s.height/2)*1.3f, s.width*1.3f, s.height*1.3f);
+    cocos2d::Size s = getTexture()->getContentSize();
+    s = cocos2d::Size(s.width*this->getScale(), s.height*this->getScale());
+    return cocos2d::Rect(-(s.width / 2)*1.3f, -(s.height/2)*1.3f, s.width*1.3f, s.height*1.3f);
 }
 LegendDaryButton* LegendDaryButton::buttonWithTexture(Texture2D* aTexture, int buttonType)
 {
@@ -154,16 +154,16 @@ bool LegendDaryButton::onTouchBegan(Touch *touch, Event *unused_event)
    
     
     if (btnType == BUTTON_LEFT_RIGHT) {
-        Point touchPoint = touch->getLocation();
+        Vec2 touchPoint = touch->getLocation();
         
-        //setPosition( Point(touchPoint.x, getPosition().y) );
-//        Rect first = Rect(getPosition().x - getContentSize().width/2,
+        //setPosition( Vec2(touchPoint.x, getPosition().y) );
+//        cocos2d::Rect first = cocos2d::Rect(getPosition().x - getContentSize().width/2,
 //                                  0,//getPosition().y - getContentSize().height/2,
 //                                  getContentSize().width/2,
 //                                  size.height);//getContentSize().height);
                           
         
-//        Rect second = Rect(getPosition().x,// - getContentSize().width/2,
+//        cocos2d::Rect second = cocos2d::Rect(getPosition().x,// - getContentSize().width/2,
 //                                   0, //getPosition().y - getContentSize().height/2,
 //                                   getContentSize().width/2,
 //                                   size.height);//getContentSize().height);
@@ -193,15 +193,15 @@ void LegendDaryButton::onTouchMoved(Touch *touch, Event *unused_event)
     }
 
     if (btnType == BUTTON_LEFT_RIGHT) {
-        Point touchPoint = touch->getLocation();
+        Vec2 touchPoint = touch->getLocation();
         
-        //setPosition( Point(touchPoint.x, getPosition().y) );
-        Rect first = Rect(getPosition().x - getContentSize().width/2,
+        //setPosition( Vec2(touchPoint.x, getPosition().y) );
+        cocos2d::Rect first = cocos2d::Rect(getPosition().x - getContentSize().width/2,
                                   getPosition().y - getContentSize().height/2,
                                   getContentSize().width/2,
                                   getContentSize().height);
         
-        Rect second = Rect(getPosition().x,// - getContentSize().width/2,
+        cocos2d::Rect second = cocos2d::Rect(getPosition().x,// - getContentSize().width/2,
                                    getPosition().y - getContentSize().height/2,
                                    getContentSize().width/2,
                                    getContentSize().height);

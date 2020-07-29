@@ -50,6 +50,7 @@ extern "C"
     JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onConsumeFinished(JNIEnv* env, jobject thiz, jstring skuName);
     JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onRestored(JNIEnv* env, jobject thiz, jstring skuName);
     JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onSignInPlayStore(JNIEnv* env, jobject thiz, jstring skuName);
+    JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onSmartPassError(JNIEnv* env, jobject thiz, jstring strError);
 };
 
 JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_callCppCallback(JNIEnv* env, jobject thiz)
@@ -117,7 +118,28 @@ JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onSignInPlayStore(JNIEn
     std::string strSkuName = jstring2string(env, skuName);
     GM->playerGPSID = strSkuName;
 }
+JNIEXPORT void JNICALL Java_org_cocos2dx_cpp_AppActivity_onSmartPassError(JNIEnv* env, jobject thiz, jstring strError)
+{
+    std::string str = jstring2string(env, strError);
+    GM->strSmartPassError = str;
+}
 #endif
+void GameSharing::clearCacheForSmartPass(){
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    JniMethodInfo mInfo;
+    if (JniHelper::getStaticMethodInfo(mInfo
+                                       , "org/cocos2dx/cpp/AppActivity"
+                                       , "clearCacheForSmartPass"
+                                       , "()V"))
+    {
+        mInfo.env->CallStaticVoidMethod(mInfo.classID, mInfo.methodID);
+        mInfo.env->DeleteLocalRef(mInfo.classID);
+    }
+#endif
+#if CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+    
+#endif
+}
 void GameSharing::restoreIAP(){
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
     JniMethodInfo mInfo;
@@ -131,7 +153,7 @@ void GameSharing::restoreIAP(){
     }
 #endif
 #if CC_TARGET_PLATFORM == CC_PLATFORM_IOS
-    
+    restoreIOS();
 #endif
 }
 void GameSharing::onIAPSuccess(){
@@ -753,6 +775,8 @@ void GameSharing::setupIAB(){
     list.push_back(IAP_DETAIL_CLASSIC_WAR_PACKAGE);
     list.push_back(IAP_DETAIL_CREW_MANAGER_PACKAGE);
     list.push_back(IAP_DETAIL_MASTER_CREW_PACKAGE);
+    list.push_back(IAP_DETAIL_EVENT_HERO_PACKAGE);
+    list.push_back(IAP_DETAIL_MID_MONTH_PACKAGE);
     for (int i = 0; i < list.size(); i++) {
         addSkuItemForStore(list.at(i));
         if(list.at(i).compare(IAP_DETAIL_CHAPTER2) == 0 ||

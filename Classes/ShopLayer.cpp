@@ -36,6 +36,7 @@ bool ShopLayer::init()
     Button* btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(ShopLayer::closeShop, this));
     btn->setPositionY(btn->getPositionY() + layer->getPositionY());
+    btn->setPositionX(btn->getPositionX() - 100);
     
     TopBar* topBar = TopBar::create();
     layer->addChild(topBar);
@@ -48,6 +49,11 @@ bool ShopLayer::init()
     }
     onShopTabClick(layer->getChildByName(strmake("btnTab%d", 1)));
     this->schedule(schedule_selector(ShopLayer::update), 0.1f);
+    
+    if (GM->market == MARKET_SMARTPASS) {
+        this->hideTab(2);
+    }
+    midMonthHeroType = GM->getMidMonthHeroType();
     log("init done");
     return true;
 }
@@ -84,6 +90,70 @@ void ShopLayer::update(float dt){
             GM->addGoldKey(5);
             iapPoint += 10000;
             closeRequired = true;
+        }else if (GM->iapDetail.compare(IAP_DETAIL_EVENT_HERO_PACKAGE) == 0) {
+            GM->addGem(1000);
+            GM->addWoodKey(3);
+            GM->addGoldKey(3);
+            int monthlyBoughtCount = getEventHeroBoughtCount();
+            monthlyBoughtCount++;
+            int count = UDGetInt(KEY_EVENT_ITEM_BOUGHT_COUNT, 0);
+            count++;
+            UDSetInt(KEY_EVENT_ITEM_BOUGHT_COUNT, count);
+            ScrollView* sv = (ScrollView*)ndShopLayer->getChildByName("sv");
+            Button* btn = (Button*)sv->getChildByName("btnEventHeroPackage");
+            if(monthlyBoughtCount < 2){
+                Text* lbl = (Text*)btn->getChildByName("lblDesc");
+                LM->setLocalizedStringNotKey(lbl, strmake("%s(%d/2)", LM->getText("two time buy for the account").c_str(), getEventHeroBoughtCount()));
+            }else{
+                btn->setVisible(false);
+            }
+            
+            std::string strInventory = UDGetStr(KEY_UNITS_HERO_INVENTORY, "");
+            int heroType = GM->getMonthlyHeroType();
+            strInventory += strmake("%d/%d_", heroType, 200);
+            strInventory += strmake("%d/%d_", heroType, 200);
+            UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory);
+            datas.push_back(DATA_TYPE_HERO_INVENTORY);
+            std::vector<UnitInfo*> list = GM->getHeroInventory();
+            UnitInfo* info = new UnitInfo();
+            info->unitType = heroType;
+            info->rank = 2;
+            list.push_back(info);
+            info = new UnitInfo();
+            info->unitType = heroType;
+            info->rank = 2;
+            list.push_back(info);
+            GM->saveHeroInventory(list);
+            
+            heroesAreChanged = true;
+            iapPoint += 8900;
+            closeRequired = true;
+        }else if (GM->iapDetail.compare(IAP_DETAIL_MID_MONTH_PACKAGE) == 0) {
+            GM->addGem(264);
+            GM->addWoodKey(2);
+            GM->addGoldKey(1);
+            int monthlyBoughtCount = getEventHeroBoughtCount();
+            monthlyBoughtCount++;
+            int count = getEventHeroSetBoughtCount();
+            count++;
+            UDSetInt(KEY_MID_MONTH_ITEM_BOUGHT_COUNT, count);
+            ScrollView* sv = (ScrollView*)ndShopLayer->getChildByName("sv");
+            Button* btn = (Button*)sv->getChildByName("btnEventHeroSet");
+            Text* lbl = (Text*)btn->getChildByName("lblDesc");
+            LM->setLocalizedStringNotKey(lbl, strmake("%s(%d/3)", LM->getText("n time buy for day").c_str(), getEventHeroBoughtCount()));
+            int heroType = GM->getMidMonthHeroType();
+            datas.push_back(DATA_TYPE_HERO_INVENTORY);
+            std::vector<UnitInfo*> list = GM->getHeroInventory();
+            for (int i = 0; i < 3; i++) {
+                UnitInfo* info = new UnitInfo();
+                info->unitType = heroType;
+                info->rank = 0;
+                list.push_back(info);
+            }
+            GM->saveHeroInventory(list);
+            heroesAreChanged = true;
+            iapPoint += 3900;
+            closeRequired = true;
         }else if (GM->iapDetail.compare(IAP_DETAIL_MARTIAL_ART_PACKAGE) == 0) {
             GM->addGem(1000);
             GM->addWoodKey(3);
@@ -94,6 +164,18 @@ void ShopLayer::update(float dt){
             strInventory += strmake("%d/%d_", UNIT_HERO_MONK, 0 + 3*100);
             UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory);
             datas.push_back(DATA_TYPE_HERO_INVENTORY);
+            
+            std::vector<UnitInfo*> list = GM->getHeroInventory();
+            UnitInfo* info = new UnitInfo();
+            info->unitType = UNIT_HERO_FIGHTER;
+            info->rank = 3;
+            list.push_back(info);
+            info = new UnitInfo();
+            info->unitType = UNIT_HERO_MONK;
+            info->rank = 3;
+            list.push_back(info);
+            GM->saveHeroInventory(list);
+            
             heroesAreChanged = true;
             iapPoint += 10000;
             closeRequired = true;
@@ -109,6 +191,21 @@ void ShopLayer::update(float dt){
             UDSetStr(KEY_UNITS_HERO_INVENTORY, strInventory);
             datas.push_back(DATA_TYPE_HERO_INVENTORY);
             heroesAreChanged = true;
+            
+            std::vector<UnitInfo*> list = GM->getHeroInventory();
+            UnitInfo* info = new UnitInfo();
+            info->unitType = UNIT_HERO_ARCHER;
+            info->rank = 3;
+            list.push_back(info);
+            info = new UnitInfo();
+            info->unitType = UNIT_HERO_KNIGHT;
+            info->rank = 3;
+            list.push_back(info);
+            info = new UnitInfo();
+            info->unitType = UNIT_HERO_SPEARMAN;
+            info->rank = 3;
+            list.push_back(info);
+            GM->saveHeroInventory(list);
             
             iapPoint += 10000;
             closeRequired = true;
@@ -184,7 +281,31 @@ void ShopLayer::update(float dt){
             HeroPage* layer = (HeroPage*)this->getParent();
             layer->updateHeroes();
         }
+        this->unschedule(schedule_selector(ShopLayer::update));
         closeThis();
+        return;
+    }
+    ScrollView* sv = (ScrollView*)ndShopLayer->getChildByName("sv");
+    if (sv != nullptr) {
+        Button* btn = (Button*)sv->getChildByName("btnEventHeroPackage");
+        if(btn != nullptr){
+            Text* lbl = (Text*)btn->getChildByName("lblTimeLeft");
+            time_t now = BSM->getCurrentTimeT();
+            int timeLeft = 86400 - (long)now%86400;
+            
+            int month = BSM->getMonth();
+            int day = BSM->getDay();
+            int lastDay = BSM->getLastDayOfMonth(month);
+            timeLeft += (lastDay - day)*(60*60*24);
+            lbl->setString(strmake("%s", GM->getTimeLeftInString(timeLeft).c_str()));
+        }
+        
+        btn = (Button*)sv->getChildByName("btnEventHeroSet");
+        if(btn != nullptr){
+            Text* lbl = (Text*)btn->getChildByName("lblTimeLeft");
+            int timeLeft = GM->getMidMonthHeroTimeLeft();
+            lbl->setString(strmake("%s", GM->getTimeLeftInString(timeLeft).c_str()));
+        }
     }
 }
 void ShopLayer::onShopTabClick(Ref* ref){
@@ -194,7 +315,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
     Node* tabBack = layer->getChildByName("tabBack");
     for (int i = 0; i < 3; i++) {
         btn = (Button*)layer->getChildByName(strmake("btnTab%d", i));
-        btn->setContentSize(i == currentTab?Size(250.35f, 237.16f):Size(250.35f, 199.01));
+        btn->setContentSize(i == currentTab?cocos2d::Size(250.35f, 237.16f):cocos2d::Size(250.35f, 199.01));
         btn->setColor(i == currentTab?Color3B::WHITE:Color3B::GRAY);
         btn->setLocalZOrder(tabBack->getLocalZOrder() + (i == currentTab?1:-1));
         layer->getChildByName(strmake("imgTabIcon%d", i))->setLocalZOrder(btn->getLocalZOrder());
@@ -203,7 +324,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
     Button* btnTemp;Text* lbl;ImageView* img;
     ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
     sv->removeAllChildren();
-    int x = 387.93f;
+    int x = 487.93f;
     int gapX = 740.45f;
     int y = 429.55f;
     if (currentTab == 0) {
@@ -224,7 +345,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             int currentBuildingCount =  BHUD->getCurrentBuildingCount(i);
             int maxBuildingCount =  BHUD->getMaxBuildingCount(i);
             ImageView* sptBuilding = ImageView::create(BHUD->getBuildingSpriteName(i), ui::Widget::TextureResType::PLIST);
-            
+            sptBuilding->setScale(1/WORLD->imageScale);
             img = (ImageView*)btn->getChildByName("img");
             sptBuilding->setPosition(img->getPosition());
             btn->addChild(sptBuilding);
@@ -292,6 +413,73 @@ void ShopLayer::onShopTabClick(Ref* ref){
         }
     }else if (currentTab == 2) {
         std::string iapList = UDGetStr(KEY_IAP_LIST, "");
+        int monthlyBoughtCount = getEventHeroBoughtCount();
+        int heroType = GM->getMonthlyHeroType();
+        if(monthlyBoughtCount < 2 && heroType >= 0){
+            Node* child = layer->getChildByName("btnEventHeroPackageTemp");
+            btn = (Button*)((Button*)child)->clone();
+            btn->setName("btnEventHeroPackage");
+            btn->addClickEventListener(CC_CALLBACK_0(ShopLayer::onBuyEventHeroPackage, this));
+            sv->addChild(btn);
+            btn->setPosition(Vec2(x, y));
+            x += gapX;
+            GM->addYellowRisingBallEffect(btn);
+            lbl = (Text*)btn->getChildByName("lblTitle");
+            LM->setLocalizedString(lbl, "event hero package");
+            lbl->setLocalZOrder(1);
+            lbl = (Text*)btn->getChildByName("lblTimeLeft");
+            lbl->setLocalZOrder(1);
+            lbl = (Text*)btn->getChildByName("lblPrice");
+            lbl->setFontName(LM->getLocalizedFont());
+            lbl->setFontSize(lbl->getFontSize());
+            lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_EVENT_HERO_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            lbl = (Text*)btn->getChildByName("lblDesc");
+            LM->setLocalizedStringNotKey(lbl, strmake("%s(%d/2)", LM->getText("two time buy for the account").c_str(), getEventHeroBoughtCount()));
+            
+            spine::SkeletonAnimation* spChar = GM->getHeroSpine(heroType);
+            btn->addChild(spChar);
+            spChar->setAnimation(0, "idle", true);
+            spChar->setPosition(Vec2(243.95f, 335.0f));
+            spChar = GM->getHeroSpine(heroType);
+            btn->addChild(spChar);
+            spChar->setAnimation(0, "idle", true);
+            spChar->setPosition(Vec2(493.15f, 335.0f));
+        }
+        int midMonthBoughtCount = getEventHeroSetBoughtCount(); 
+        heroType = midMonthHeroType;
+        if(midMonthHeroType > 0 && heroType >= 0){
+            Node* child = layer->getChildByName("btnEventHeroSetTemp");
+            btn = (Button*)((Button*)child)->clone();
+            btn->setName("btnEventHeroSet");
+            btn->addClickEventListener(CC_CALLBACK_0(ShopLayer::onBuyMidMonthEventHeroSet, this));
+            sv->addChild(btn);
+            btn->setPosition(Vec2(x, y));
+            x += gapX;
+            GM->addYellowRisingBallEffect(btn);
+            lbl = (Text*)btn->getChildByName("lblTitle");
+            LM->setLocalizedString(lbl, "event hero package");
+            lbl->setLocalZOrder(1);
+            lbl = (Text*)btn->getChildByName("lblTimeLeft");
+            lbl->setLocalZOrder(1);
+            lbl = (Text*)btn->getChildByName("lblPrice");
+            lbl->setFontName(LM->getLocalizedFont());
+            lbl->setFontSize(lbl->getFontSize());
+            lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MID_MONTH_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            lbl = (Text*)btn->getChildByName("lblDesc");
+            std::string strLimit = LM->getText("n time buy for day");
+            strLimit = strLimit.replace(strLimit.find("7"), 1, "3");
+            LM->setLocalizedStringNotKey(lbl, strmake("%s(%d/3)", strLimit.c_str(), getEventHeroBoughtCount()));
+            btn->setEnabled(midMonthBoughtCount < 3);
+            
+            for (int i = 0; i < 3; i++) {
+                spine::SkeletonAnimation* spChar = GM->getHeroSpine(heroType);
+                btn->addChild(spChar);
+                spChar->setAnimation(0, "idle", true);
+                spChar->setPosition(btn->getChildByName(strmake("imgHero%d", i))->getPosition()+Vec2(0, -70));
+            }
+        }
         if(iapList.find(IAP_DETAIL_STARTER_KEY) == std::string::npos){
             Node* child = layer->getChildByName("btnStarterKeys");
             btn = (Button*)((Button*)child)->clone();
@@ -301,11 +489,12 @@ void ShopLayer::onShopTabClick(Ref* ref){
             x += gapX;
             
             lbl = (Text*)btn->getChildByName("lblTitle");
-            lbl->setString(LM->getText("starter pack"));
+            LM->setLocalizedString(lbl, "starter pack");
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale("cc_starterkey"));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
         }
         if(iapList.find(IAP_DETAIL_MARTIAL_ART_PACKAGE) == std::string::npos){
             Node* child = layer->getChildByName("btnMartialArtPackage");
@@ -316,11 +505,12 @@ void ShopLayer::onShopTabClick(Ref* ref){
             x += gapX;
             
             lbl = (Text*)btn->getChildByName("lblTitle");
-            lbl->setString(LM->getText("martial art package"));
+            LM->setLocalizedString(lbl, "martial art package");
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MARTIAL_ART_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
             
             lbl = (Text*)btn->getChildByName("lblRank0");
             LM->setLocalizedString(lbl, "rare hero");
@@ -344,11 +534,12 @@ void ShopLayer::onShopTabClick(Ref* ref){
             x += gapX;
             
             lbl = (Text*)btn->getChildByName("lblTitle");
-            lbl->setString(LM->getText("classic war package"));
+            LM->setLocalizedString(lbl, "classic war package");
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CLASSIC_WAR_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
             
             lbl = (Text*)btn->getChildByName("lblRank0");
             LM->setLocalizedString(lbl, "rare hero");
@@ -378,11 +569,12 @@ void ShopLayer::onShopTabClick(Ref* ref){
             x += gapX;
             GM->addYellowRisingBallEffect(btn);
             lbl = (Text*)btn->getChildByName("lblTitle");
-            lbl->setString(LM->getText("crew manager package"));
+            LM->setLocalizedString(lbl, "crew manager package");
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CREW_MANAGER_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
         }
         if(iapList.find(IAP_DETAIL_MASTER_CREW_PACKAGE) == std::string::npos){
             Node* child = layer->getChildByName("btnMasterCrew");
@@ -393,12 +585,14 @@ void ShopLayer::onShopTabClick(Ref* ref){
             x += gapX;
             GM->addYellowRisingBallEffect(btn);
             lbl = (Text*)btn->getChildByName("lblTitle");
-            lbl->setString(LM->getText("master crew package"));
+            LM->setLocalizedString(lbl, "master crew package");
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MASTER_CREW_PACKAGE));
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
         }
+        
         for (int i = 0; i < 4; i++) {
             btn = (Button*)((Button*)layer->getChildByName(strmake("btnGem%d", i)))->clone();
             btn->addClickEventListener(CC_CALLBACK_1(ShopLayer::onBuyGem, this));
@@ -416,12 +610,19 @@ void ShopLayer::onShopTabClick(Ref* ref){
             btn->getChildByName("imgFirstBonusBack")->setVisible(firstBonusAvailable);
             lbl = (Text*)btn->getChildByName("lblFirstBonus");
             std::string str = LM->getText("first purchase bonus");
-            lbl->setString(str.replace(str.find("-77"), 3, ((Text*)btn->getChildByName("lblGemCount"))->getString()));
-            lbl->setVisible(firstBonusAvailable);
+            if(str.length() > 3){
+                LM->setLocalizedStringNotKey(lbl, (str.replace(str.find("-77"), 3, ((Text*)btn->getChildByName("lblGemCount"))->getString())));
+                lbl->setVisible(firstBonusAvailable);
+            }
+            if (GM->market == MARKET_SMARTPASS) {
+                btn->setVisible(false);
+                x -= gapX;
+            }
             
             lbl = (Text*)btn->getChildByName("lblTitle");
             //            PPLabel* lblPP = replaceTextToPPLabel(lbl);
-            lbl->setString(strmake("%s %d", LM->getText("gem pack").c_str(), i+1));
+            
+            LM->setLocalizedString(lbl, strmake("%s %d", LM->getText("gem pack").c_str(), i+1));
             //            lblPP->setWidth(btn->getContentSize().width*0.8f);
             lbl = (Text*)btn->getChildByName("lblPrice");
             lbl->setFontName(LM->getLocalizedFont());
@@ -435,6 +636,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             }else if(i == 3){
                 lbl->setString(GameSharing::getPriceLocale("cc_gem100"));
             }
+            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
         }
     }
 //    x -= gapX*4/5;
@@ -444,9 +646,44 @@ void ShopLayer::onShopTabClick(Ref* ref){
             maxX = item->getPositionX() + item->getBoundingBox().size.width/2;
         }
     }
-    sv->setInnerContainerSize(Size(maxX, sv->getContentSize().height));
+    sv->setInnerContainerSize(cocos2d::Size(maxX, sv->getContentSize().height));
     sv->setPositionX(0);
-    sv->setContentSize(Size(size.width, sv->getContentSize().height));
+    sv->setContentSize(cocos2d::Size(size.width, sv->getContentSize().height));
+}
+int ShopLayer::getEventHeroBoughtCount(){
+    int monthlyBoughtCount = 0;
+    std::string strKey = "lastEventItemMonth";
+    int lastEventMonth = UDGetInt(strKey.c_str(), 0);
+    int month = BSM->getMonth();
+    if (lastEventMonth != month) {
+        UDSetInt(strKey.c_str(), month);
+        UDSetInt(KEY_EVENT_ITEM_BOUGHT_COUNT, 0);
+    }
+    monthlyBoughtCount = UDGetInt(KEY_EVENT_ITEM_BOUGHT_COUNT, 0);
+    
+//    std::string iapList = UDGetStr(KEY_IAP_LIST, "");
+//    string::size_type pos = iapList.find( IAP_DETAIL_EVENT_HERO_PACKAGE, 0 );
+//    if(pos != std::string::npos){
+//        string::size_type pos2 = iapList.find( IAP_DETAIL_EVENT_HERO_PACKAGE, pos + 24 );
+//        monthlyBoughtCount++;
+//        if (pos2 != std::string::npos) {
+//            monthlyBoughtCount++;
+//        }
+//    }
+    return monthlyBoughtCount;
+}
+
+int ShopLayer::getEventHeroSetBoughtCount(){
+    const char* strWhatDay = "lastEventSetItemMonthWhatDay";
+    int lastDay = UDGetInt(strWhatDay, 0);
+    int today = BSM->getDay();
+    if (lastDay != today) {
+        UDSetInt(KEY_MID_MONTH_ITEM_BOUGHT_COUNT, 0);
+        UDSetInt(strWhatDay, today);
+        return 0;
+    }else{
+        return UDGetInt(KEY_MID_MONTH_ITEM_BOUGHT_COUNT, 0);
+    }
 }
 int ShopLayer::getMineGoldPerHour(int level){
     string str = GM->buildingAbilityForCastleLevelTable[Value(level).asString()].asValueMap()["mine"].asString();
@@ -501,6 +738,16 @@ void ShopLayer::onBuyCrewManagerPackage(){
 }
 void ShopLayer::onBuyMasterCrewPackage(){
     GameSharing::buyItem(IAP_DETAIL_MASTER_CREW_PACKAGE);
+    showIndicator();
+}
+void ShopLayer::onBuyEventHeroPackage(){
+    GameSharing::buyItem(IAP_DETAIL_EVENT_HERO_PACKAGE);
+    showIndicator();
+//    GM->consumeSkuNameList.push_back(IAP_DETAIL_EVENT_HERO_PACKAGE); // test
+//    GM->iapDetail.compare(IAP_DETAIL_EVENT_HERO_PACKAGE); // test
+}
+void ShopLayer::onBuyMidMonthEventHeroSet(){
+    GameSharing::buyItem(IAP_DETAIL_MID_MONTH_PACKAGE);
     showIndicator();
 }
 void ShopLayer::onBuyTree(Ref* ref){
@@ -568,18 +815,19 @@ void ShopLayer::onBuyBuilding(Ref* ref){
     int index = btn->getTag();
     cocos2d::Size occupySize;
     if (index == BUILDING_MINE || index == BUILDING_LUMBURMILL || index == BUILDING_BARRACKS || index == BUILDING_FACTORY || index == BUILDING_AIRPORT) {
-        occupySize = Size(3, 3);
+        occupySize = cocos2d::Size(3, 3);
     }else if(index == BUILDING_TREE){
-        occupySize = Size(1, 1);
+        occupySize = cocos2d::Size(1, 1);
     }else if(index == BUILDING_FARM){// || index == BUILDING_UNDERGROUND_BUNKER){
-        occupySize = Size(3, 2);
+        occupySize = cocos2d::Size(3, 2);
     }else if(index == BUILDING_WATCHER_TOWER){
-        occupySize = Size(2, 2);
+        occupySize = cocos2d::Size(2, 2);
     }
     //    else if(index == BUILDING_TRIGGER){
-    //        occupySize = Size(1, 1);
+    //        occupySize = cocos2d::Size(1, 1);
     //    }
-    closePopup();
+//    closePopup();
+    closeShop();
     WORLD->createBuildingTemplate(BHUD->getUnitIndex(index), occupySize.width, occupySize.height, WORLD->getSpriteNameForUnit(BHUD->getUnitIndex(index)));
     BHUD->currentJob = JOB_MOVE_BUILDING_TEMPATE;
     BHUD->currentJobDetailIndex = index;

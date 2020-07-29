@@ -21,7 +21,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgBackground" ActionTag="-56091508" Tag="913" IconVisible="False" LeftMargin="494.9297" RightMargin="494.9395" TopMargin="66.2494" BottomMargin="122.1352" TouchEnable="True" Scale9Enable="True" LeftEage="879" RightEage="719" TopEage="386" BottomEage="386" Scale9OriginX="879" Scale9OriginY="386" Scale9Width="1" Scale9Height="398" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgBackground" ActionTag="-56091508" Tag="913" IconVisible="False" LeftMargin="494.9297" RightMargin="494.9395" TopMargin="66.2493" BottomMargin="122.1352" TouchEnable="True" Scale9Enable="True" LeftEage="879" RightEage="719" TopEage="386" BottomEage="386" Scale9OriginX="879" Scale9OriginY="386" Scale9Width="1" Scale9Height="398" ctype="ImageViewObjectData">
             <Size X="1378.1309" Y="1145.6155" />
             <AnchorPoint ScaleX="0.5000" />
             <Position X="1183.9951" Y="122.1352" />
@@ -31,7 +31,7 @@
             <PreSize X="0.5820" Y="0.8588" />
             <FileData Type="Normal" Path="horizontalScrollBackground.png" Plist="" />
           </AbstractNodeData>
-          <AbstractNodeData Name="lblDescription" ActionTag="-2104248750" Tag="920" IconVisible="False" LeftMargin="811.0307" RightMargin="823.8059" TopMargin="439.9023" BottomMargin="442.3052" IsCustomSize="True" FontSize="40" LabelText="DO YOU WANT TO EXIT?" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+          <AbstractNodeData Name="lblDescription" ActionTag="-2104248750" Tag="920" IconVisible="False" LeftMargin="811.0306" RightMargin="823.8058" TopMargin="439.9023" BottomMargin="442.3052" IsCustomSize="True" FontSize="40" LabelText="DO YOU WANT TO EXIT?" HorizontalAlignmentType="HT_Center" VerticalAlignmentType="VT_Center" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
             <Size X="733.1635" Y="451.7925" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.4649" />
             <Position X="1177.6124" Y="652.3435" />
@@ -39,22 +39,20 @@
             <CColor A="255" R="14" G="14" B="14" />
             <PrePosition X="0.4973" Y="0.4890" />
             <PreSize X="0.3096" Y="0.3387" />
-            <FontResource Type="Normal" Path="" Plist="" />
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
           <AbstractNodeData Name="btnYes" ActionTag="1094798221" Tag="915" IconVisible="False" LeftMargin="1442.2609" RightMargin="592.7391" TopMargin="1083.9119" BottomMargin="100.4466" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="333.0000" Y="149.6416" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="-323482608" Tag="917" IconVisible="False" LeftMargin="120.6074" RightMargin="134.3926" TopMargin="46.0690" BottomMargin="63.5726" FontSize="40" LabelText="YES" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-                <Size X="78.0000" Y="40.0000" />
+              <AbstractNodeData Name="lbl" ActionTag="-323482608" Tag="917" IconVisible="False" LeftMargin="119.1074" RightMargin="132.8926" TopMargin="43.5690" BottomMargin="61.0726" FontSize="40" LabelText="YES" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="81.0000" Y="45.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                 <Position X="159.6074" Y="83.5726" />
                 <Scale ScaleX="1.5000" ScaleY="1.5000" />
                 <CColor A="255" R="14" G="14" B="14" />
                 <PrePosition X="0.4793" Y="0.5585" />
-                <PreSize X="0.2342" Y="0.2673" />
-                <FontResource Type="Normal" Path="" Plist="" />
+                <PreSize X="0.2432" Y="0.3007" />
                 <OutlineColor A="255" R="255" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
@@ -75,15 +73,14 @@
           <AbstractNodeData Name="btnNo" ActionTag="256338755" Tag="32" IconVisible="False" LeftMargin="1111.8513" RightMargin="923.1487" TopMargin="1083.9119" BottomMargin="100.4466" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="754" Scale9Height="228" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="333.0000" Y="149.6416" />
             <Children>
-              <AbstractNodeData Name="lbl" ActionTag="-1329194057" Tag="33" IconVisible="False" LeftMargin="132.1074" RightMargin="145.8926" TopMargin="46.0690" BottomMargin="63.5726" FontSize="40" LabelText="NO" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-                <Size X="55.0000" Y="40.0000" />
+              <AbstractNodeData Name="lbl" ActionTag="-1329194057" Tag="33" IconVisible="False" LeftMargin="129.6074" RightMargin="143.3926" TopMargin="43.5690" BottomMargin="61.0726" FontSize="40" LabelText="NO" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                <Size X="60.0000" Y="45.0000" />
                 <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                 <Position X="159.6074" Y="83.5726" />
                 <Scale ScaleX="1.5000" ScaleY="1.5000" />
                 <CColor A="255" R="14" G="14" B="14" />
                 <PrePosition X="0.4793" Y="0.5585" />
-                <PreSize X="0.1652" Y="0.2673" />
-                <FontResource Type="Normal" Path="" Plist="" />
+                <PreSize X="0.1802" Y="0.3007" />
                 <OutlineColor A="255" R="255" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>

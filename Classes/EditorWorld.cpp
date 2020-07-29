@@ -26,7 +26,7 @@ Scene* EditorWorld::scene(int stage, bool boss)
     GameManager::getInstance()->cPressed = false;
     GameManager::getInstance()->downPressed = false;
     GameManager::getInstance()->upPressed = false;
-    Size size = Director::getInstance()->getWinSize();
+    cocos2d::Size size = Director::getInstance()->getWinSize();
     Scene *scene = Scene::create();
     int theme = GameManager::getInstance()->theme;
     GameManager::getInstance()->currentStageIndex = stage;
@@ -79,7 +79,7 @@ Scene* EditorWorld::scene(int stage, bool boss)
     }
     
 
-    Point pos = Point(110, 110);
+    Vec2 pos = Vec2(110, 110);
     EHUD->selectedMode = MODE_PENCIL;
     EHUD->selectedBrush = BRUSH_SWORDSMAN;
     EHUD->doBrush(pos);
@@ -108,7 +108,7 @@ bool EditorWorld::init()
     }
     loadUnitSheet();
     isReloading = false;
-    center = cocos2d::Point(size.width/2, size.height/2);
+    center = cocos2d::Vec2(size.width/2, size.height/2);
     killCountForRecord = 0;
     isSetStageDone = false;
     everySecond = false;
@@ -149,7 +149,7 @@ bool EditorWorld::init()
     battleReadyCountDown = 2;
     
     draw = DrawNode::create();
-    //    draw->drawSolidRect(Point(8*TILE_SIZE, 8*TILE_SIZE), Point(9*TILE_SIZE, 9*TILE_SIZE), Color4F::GREEN);
+    //    draw->drawSolidRect(Vec2(8*TILE_SIZE, 8*TILE_SIZE), Vec2(9*TILE_SIZE, 9*TILE_SIZE), Color4F::GREEN);
     this->addChild(draw, 125);
     
     targetHand = EnemyBase::createEnemy(UNIT_WORKER, 0, 0, "workerAxeStand0.png");
@@ -188,7 +188,7 @@ void EditorWorld::checkAndShowQuestOnMap(cocos2d::experimental::TMXTiledMap* map
 //        int mapIndex = rows.at(0).asInt();
 //        int x = rows.at(1).asInt();
 //        int y = rows.at(2).asInt();
-//        Point pos = Point((x*3+1+2)*TILE_SIZE + TILE_SIZE/2, (16-1+(y*2)-12)*TILE_SIZE) + Point(-TILE_SIZE, TILE_SIZE*1.0f);
+//        Vec2 pos = Vec2((x*3+1+2)*TILE_SIZE + TILE_SIZE/2, (16-1+(y*2)-12)*TILE_SIZE) + Vec2(-TILE_SIZE, TILE_SIZE*1.0f);
 //        if (isQuestConditionMet()) {
 //            addTalkBalloon(map, "exclaim.png", pos);
 //        }else{
@@ -225,7 +225,7 @@ void EditorWorld::checkAndShowQuestOnMap(cocos2d::experimental::TMXTiledMap* map
 //                int npcY = rows.at(2).asInt();
 //
 //                if(mapIndex == npcMapIndex){
-//                    Point pos = Point((npcX*3+1+2)*TILE_SIZE + TILE_SIZE/2, (16-1+(npcY*2)-12)*TILE_SIZE) + Point(-TILE_SIZE, TILE_SIZE*1.0f);
+//                    Vec2 pos = Vec2((npcX*3+1+2)*TILE_SIZE + TILE_SIZE/2, (16-1+(npcY*2)-12)*TILE_SIZE) + Vec2(-TILE_SIZE, TILE_SIZE*1.0f);
 //                    addTalkBalloon(map, "question.png", pos);
 //                }
 //                //                    break;
@@ -281,7 +281,7 @@ bool EditorWorld::pickUpItem(){
     runEffect(EFFECT_TWINKLE, encounteredDropItem->getPosition());
     
     dropItemArray.eraseObject(encounteredDropItem);
-    encounteredDropItem->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.1f, Point(60, -80)), 2), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, encounteredDropItem)), NULL));
+    encounteredDropItem->runAction(Sequence::create(EaseOut::create(MoveBy::create(0.1f, Vec2(60, -80)), 2), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, encounteredDropItem)), NULL));
     
     encounteredDropItem = nullptr;
     
@@ -391,7 +391,7 @@ void EditorWorld::updateUnitMove(float dt){
         enemy->move(dt);
     }
 }
-Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, Point pos, bool isFromEnemy, std::string weaponName){
+Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, Vec2 pos, bool isFromEnemy, std::string weaponName){
     Movable* sptMissile;
     
     if(missileType == MISSILE_SLASH){
@@ -408,7 +408,7 @@ Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, floa
     spriteBatch->addChild(sptMissile, 11);
     sptMissile->setPosition(pos);
     float delta = speed*time;
-    sptMissile->runAction(Sequence::create(MoveBy::create(time, Point(delta*cos(angle*3.14f/180), delta*sin(angle*3.14f/180))), CallFuncN::create(CC_CALLBACK_1(EditorWorld::missileMoveDone, this)), nullptr));
+    sptMissile->runAction(Sequence::create(MoveBy::create(time, Vec2(delta*cos(angle*3.14f/180), delta*sin(angle*3.14f/180))), CallFuncN::create(CC_CALLBACK_1(EditorWorld::missileMoveDone, this)), nullptr));
     sptMissile->setRotation(-angle + 90);
     if(isFromEnemy){
         enemyMissileArray.pushBack(sptMissile);
@@ -456,7 +456,7 @@ void EditorWorld::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_ev
 }
 void EditorWorld::showWarpAnimation(){
     Sprite* sptBeam = Sprite::createWithSpriteFrameName("blueBeamVertical0.png");
-    sptBeam->setAnchorPoint(Point(0.5, 0));
+    sptBeam->setAnchorPoint(Vec2(0.5, 0));
     sptBeam->setScaleY(10);
     sptBeam->setScaleX(2);
     spriteBatch->addChild(sptBeam, 11);
@@ -467,9 +467,9 @@ void EditorWorld::showWarpAnimation(){
     Animation* animation = AnimationCache::getInstance()->getAnimation(beamName);
     Animate* animate = Animate::create(animation);
     sptBeam->runAction(Sequence::create(animate, CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptBeam)), CallFunc::create(CC_CALLBACK_0( EditorWorld::checkEnding, this)), NULL));
-    Point pos;
+    Vec2 pos;
     
-    sptBeam->setPosition(pos + Point(0, 100));
+    sptBeam->setPosition(pos + Vec2(0, 100));
     sptBeam->runAction(MoveTo::create(0.05, pos));
     
     
@@ -519,7 +519,7 @@ void EditorWorld::enemyUpdate(float dt)
     //    dnDamageBoxes->drawRect(player->damageBoundingBox().origin, player->damageBoundingBox().origin + player->damageBoundingBox().size, Color4F::RED);
     //    dnCollisionBoxes->clear();
     //    dnCollisionBoxes->drawRect(player->collisionBoundingBox().origin, player->collisionBoundingBox().origin + player->collisionBoundingBox().size, Color4F::BLUE);
-    Rect projectileRect;
+    cocos2d::Rect projectileRect;
     bool isEffectOn = false;
     missileEffectCollapsedTime += dt;
     if(missileEffectCollapsedTime < 0.023){
@@ -552,7 +552,7 @@ void EditorWorld::enemyUpdate(float dt)
     }
     
     for (auto missile: enemyMissileArray) {
-        projectileRect = Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
+        projectileRect = cocos2d::Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
                               missile->getPosition().y - (missile->getContentSize().height*missile->getScaleY()/2),
                               missile->getContentSize().width*missile->getScaleX(),
                               missile->getContentSize().height*missile->getScaleY());
@@ -582,7 +582,7 @@ void EditorWorld::destructableUpdate()
         return;
     }
     
-    Rect projectileRect, mRect;
+    cocos2d::Rect projectileRect, mRect;
     Vector<Movable*> missileToRemove;
     EnemyBase* drop;
     for (auto missile: heroMissileArray) {
@@ -595,7 +595,7 @@ void EditorWorld::destructableUpdate()
                 continue;
             }
             
-            //            mRect = Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
+            //            mRect = cocos2d::Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
             //                         missile->getPosition().y - (missile->getContentSize().height*missile->getScaleY()/2),
             //                         missile->getContentSize().width*missile->getScaleX(),
             //                         missile->getContentSize().height*missile->getScaleY());
@@ -642,7 +642,7 @@ void EditorWorld::destructableUpdate()
                 continue;
             }
             
-            mRect = Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
+            mRect = cocos2d::Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
                          missile->getPosition().y - (missile->getContentSize().height*missile->getScaleY()/2),
                          missile->getContentSize().width*missile->getScaleX(),
                          missile->getContentSize().height*missile->getScaleY());
@@ -706,13 +706,13 @@ void EditorWorld::destroyDestructable(Movable* drop){
         auto rotate = RotateBy::create(1, rand()%2 == 0?300:-300);
         rotate->setTag(ACTION_TAG_ROTATION);
         part->runAction(rotate);
-        part->velocity = Point(rand()%500 - 250, 250);
+        part->velocity = Vec2(rand()%500 - 250, 250);
         part->runAction(Sequence::create(DelayTime::create(3), CallFuncN::create(CC_CALLBACK_1(EditorWorld::coinWaitDone, this)), NULL));
         MovableCoinArray.pushBack(part);
     }
     runEffect(EFFECT_EXPLODE_BIG, drop->getPosition());
 }
-void EditorWorld::showDamage(int damage, Point pos){
+void EditorWorld::showDamage(int damage, Vec2 pos){
     if (damage <= 0) {
         return;
     }
@@ -721,7 +721,7 @@ void EditorWorld::showDamage(int damage, Point pos){
     spriteBatch->addChild(sptNumber, 100);
     sptNumber->setScale(1.5f);
     sptNumber->setPosition(pos);
-    sptNumber->runAction(EaseIn::create(MoveBy::create(1, cocos2d::Point(0, 25)), 0.3));
+    sptNumber->runAction(EaseIn::create(MoveBy::create(1, cocos2d::Vec2(0, 25)), 0.3));
     sptNumber->runAction(Sequence::create(DelayTime::create(0.7), FadeOut::create(0.3), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptNumber)), NULL));
 }
 void EditorWorld::attackEnemy(EnemyBase* drop, int damage){
@@ -801,9 +801,9 @@ void EditorWorld::unfreezePlayer(float dt)
 {
 }
 
-Rect EditorWorld::RectInset(Rect rect, float x, float y)
+cocos2d::Rect EditorWorld::RectInset(cocos2d::Rect rect, float x, float y)
 {
-    return Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width - x*2, rect.size.height - y*2);
+    return cocos2d::Rect(rect.origin.x + x, rect.origin.y + y, rect.size.width - x*2, rect.size.height - y*2);
 }
 
 void EditorWorld::angelReviveLater(float dt){
@@ -918,13 +918,13 @@ void EditorWorld::updateResult(float dt){
     Sprite* cursor = Sprite::create("targetWhite.png");
     resultLayer->addChild(cursor, 99990);
     cursor->runAction(RepeatForever::create(RotateBy::create(1, 100)));
-    cursor->setPosition(lblOk->getPosition() + Point(-20, 0));
+    cursor->setPosition(lblOk->getPosition() + Vec2(-20, 0));
     
     Sprite* innerCursor = Sprite::create("targetWhite.png");
     cursor->addChild(innerCursor, 99990);
     innerCursor->runAction(RepeatForever::create(RotateBy::create(1, -160)));
     innerCursor->setScale(0.7);
-    innerCursor->setPosition(Point(cursor->getContentSize().width/2, cursor->getContentSize().height/2));
+    innerCursor->setPosition(Vec2(cursor->getContentSize().width/2, cursor->getContentSize().height/2));
 }
 void EditorWorld::gameOver()
 {
@@ -945,13 +945,13 @@ void EditorWorld::missileUpdate(float dt)
         return;
     }
     
-    Rect mRect;
+    cocos2d::Rect mRect;
     //    enemiesToRemove.clear();
     
     Vector<Movable*> missileToRemove;
     EnemyBase* drop;
     for (auto missile: heroMissileArray) {
-        mRect = Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
+        mRect = cocos2d::Rect(missile->getPosition().x - (missile->getContentSize().width*missile->getScaleX()/2),
                      missile->getPosition().y - (missile->getContentSize().height*missile->getScaleY()/2),
                      missile->getContentSize().width*missile->getScaleX(),
                      missile->getContentSize().height*missile->getScaleY());
@@ -966,7 +966,7 @@ void EditorWorld::missileUpdate(float dt)
             }
             
             if (drop->damageBoundingBox().intersectsRect(mRect)) {
-                Point pos = drop->getPosition();
+                Vec2 pos = drop->getPosition();
                 if(!drop->untouchable){
                     if (!drop->immortal) {
                         float damage = missile->energy + missile->energy*extraPower/100.0f;
@@ -984,8 +984,8 @@ void EditorWorld::missileUpdate(float dt)
                             critical->getTexture()->setAliasTexParameters();
                             //                            critical->setColor(aColor3B(0,0,0));
                             critical->setScale(0.5f);
-                            critical->setPosition(drop->getPosition() + Point(0, 15));
-                            critical->runAction(EaseIn::create(MoveBy::create(1, Point(0, 25)), 0.3));
+                            critical->setPosition(drop->getPosition() + Vec2(0, 15));
+                            critical->runAction(EaseIn::create(MoveBy::create(1, Vec2(0, 25)), 0.3));
                             critical->runAction(Sequence::create(DelayTime::create(0.7), FadeOut::create(0.3), CallFuncN::create(CC_CALLBACK_1(EditorWorld::spriteMoveDone, this)), NULL));
                             
                             shakeScreen(1);
@@ -996,8 +996,8 @@ void EditorWorld::missileUpdate(float dt)
                             //                            GameManager::getInstance()->getEditorHud()->setBossEnergy(theBoss->energy*100.0f/theBoss->maxEnergy);
                         }else{
                             if(MovableArray.find(drop) != MovableArray.end()){
-                                drop->desiredPosition = drop->desiredPosition + Point(0, 2);
-                                drop->setPosition(drop->getPosition() + Point(0, 2));
+                                drop->desiredPosition = drop->desiredPosition + Vec2(0, 2);
+                                drop->setPosition(drop->getPosition() + Vec2(0, 2));
                             }
                         }
                         
@@ -1054,9 +1054,9 @@ void EditorWorld::makeGate(float dt){
 }
 void EditorWorld::bossExplode(float dt){
     if (rand()%2 == 0) {
-        runEffect(EFFECT_EXPLODE_HUGE, theBoss->getPosition() + Point(rand()%20 - 10, rand()%20 - 30));
+        runEffect(EFFECT_EXPLODE_HUGE, theBoss->getPosition() + Vec2(rand()%20 - 10, rand()%20 - 30));
     }else{
-        runEffect(EFFECT_BOMB_WALL, theBoss->getPosition() + Point(rand()%20 - 10, rand()%30 - 30));
+        runEffect(EFFECT_BOMB_WALL, theBoss->getPosition() + Vec2(rand()%20 - 10, rand()%30 - 30));
     }
 }
 void EditorWorld::shakeScreenOnce(){
@@ -1069,23 +1069,23 @@ void EditorWorld::shakeScreen(int count){
         //        array.pushBack(DelayTime::create(0.03));
         //        array.pushBack(CallFunc::create(CC_CALLBACK_0(EditorWorld::shakeScreenSecond, this)));
         //        array.pushBack(DelayTime::create(0.05));
-        array.pushBack(MoveBy::create(0.07, Point(4, 0)));
-        array.pushBack(MoveBy::create(0.07, Point(-4, 0)));
+        array.pushBack(MoveBy::create(0.07, Vec2(4, 0)));
+        array.pushBack(MoveBy::create(0.07, Vec2(-4, 0)));
     }
     //    array.pushBack(CallFunc::create(CC_CALLBACK_0(EditorWorld::shakeScreenEnd, this)));
     //    array.pushBack(DelayTime::create(0.03));
     this->runAction(Sequence::create(array));
 }
 void EditorWorld::shakeScreenFirst(){
-    //    extraCameraPos = Point((rand()%10)*0.1, (rand()%10)*0.1);
-    extraCameraPos = Point(1, 0);
+    //    extraCameraPos = Vec2((rand()%10)*0.1, (rand()%10)*0.1);
+    extraCameraPos = Vec2(1, 0);
 }
 void EditorWorld::shakeScreenSecond(){
-    //    extraCameraPos = Point(-(rand()%10)*0.1, -(rand()%10)*0.1);
-    extraCameraPos = Point(-1, 0);
+    //    extraCameraPos = Vec2(-(rand()%10)*0.1, -(rand()%10)*0.1);
+    extraCameraPos = Vec2(-1, 0);
 }
 void EditorWorld::shakeScreenEnd(){
-    extraCameraPos = Point::ZERO;
+    extraCameraPos = Vec2::ZERO;
 }
 void EditorWorld::removeHero(EnemyBase* spt){
     Movable* drop;
@@ -1133,7 +1133,7 @@ void EditorWorld::creatingStarToGreatBall(float dt){
         spt->runAction(RepeatForever::create(Sequence::create(FadeTo::create(0.05f, 50 + rand()%50), DelayTime::create(0.01f*(rand()%40)), FadeTo::create(0.05f, 240), NULL)));
         float duration = 1 + (rand()%10)*0.2f;
         spt->runAction(Sequence::create(DelayTime::create(duration), SPT_REMOVE_FUNC, NULL));
-        spt->runAction(MoveBy::create(duration, Point(0, 16 + rand()%10)));
+        spt->runAction(MoveBy::create(duration, Vec2(0, 16 + rand()%10)));
     }
 }
 void EditorWorld::removeDeadUnit(EnemyBase* unit){
@@ -1186,8 +1186,8 @@ void EditorWorld::removeDeadUnit(EnemyBase* unit){
         runEffect(EFFECT_EXPLODE_BIG, unit->getPosition());
         unit->removeFromParent();
     }else if(unit->unitType == UNIT_HELICOPTER){
-        unit->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.5f, Point(200, 300)), 2), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, unit)), NULL));
-        unit->setAnchorPoint(Point(0, 0));
+        unit->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.5f, Vec2(200, 300)), 2), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, unit)), NULL));
+        unit->setAnchorPoint(Vec2(0, 0));
         unit->runAction(EaseInOut::create(RotateBy::create(0.5f, 720), 2));
     }else{
         std::string name = unit->getName();
@@ -1264,25 +1264,25 @@ void EditorWorld::fixStageLayerFourTiles(experimental::TMXTiledMap* map){
     for (int x = 2; x < map->getMapSize().width - 2; x++) {
         for (int rawY = 2; rawY < map->getMapSize().height - 2; rawY++) {
             y = map->getMapSize().height - rawY - 1;
-            if (!isWay(stageLayer->getTileGIDAt(Point(x, y)))) {
+            if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y)))) {
                 if (compareFourTiles(0, 1, 1, 1, x, y, stageLayer)) {// top
-                    stageLayer->setTileGID(6, Point(x, y));
+                    stageLayer->setTileGID(6, Vec2(x, y));
                 }else if (compareFourTiles(1, 0, 1, 1, x, y, stageLayer)) { // left
-                    stageLayer->setTileGID(37, Point(x, y));
+                    stageLayer->setTileGID(37, Vec2(x, y));
                 }else if (compareFourTiles(1, 1, 0, 1, x, y, stageLayer)) { // right
-                    stageLayer->setTileGID(39, Point(x, y));
+                    stageLayer->setTileGID(39, Vec2(x, y));
                 }else if (compareFourTiles(1, 1, 1, 0, x, y, stageLayer)) { // bottom
-                    stageLayer->setTileGID(70, Point(x, y));
+                    stageLayer->setTileGID(70, Vec2(x, y));
                 }else if (compareFourTiles(0, 0, 1, 1, x, y, stageLayer)) { // left top
-                    stageLayer->setTileGID(5, Point(x, y));
+                    stageLayer->setTileGID(5, Vec2(x, y));
                 }else if (compareFourTiles(0, 1, 0, 1, x, y, stageLayer)) { // right top
-                    stageLayer->setTileGID(7, Point(x, y));
+                    stageLayer->setTileGID(7, Vec2(x, y));
                 }else if (compareFourTiles(1, 0, 1, 0, x, y, stageLayer)) { // left bottom
-                    stageLayer->setTileGID(69, Point(x, y));
+                    stageLayer->setTileGID(69, Vec2(x, y));
                 }else if (compareFourTiles(1, 1, 0, 0, x, y, stageLayer)) { // right bottom
-                    stageLayer->setTileGID(71, Point(x, y));
+                    stageLayer->setTileGID(71, Vec2(x, y));
                 }else if (compareFourTiles(1, 1, 1, 1, x, y, stageLayer)) {
-                    stageLayer->setTileGID(38, Point(x, y));
+                    stageLayer->setTileGID(38, Vec2(x, y));
                 }
             }
         }
@@ -1291,13 +1291,13 @@ void EditorWorld::fixStageLayerFourTiles(experimental::TMXTiledMap* map){
 
 bool EditorWorld::compareFourTiles(int t,int l, int r, int b, int x, int y, experimental::TMXLayer* stageLayer){
     bool result = true;
-    if (!isWay(stageLayer->getTileGIDAt(Point(x, y - 1))) != t) {
+    if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y - 1))) != t) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x - 1, y))) != l) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x - 1, y))) != l) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x + 1, y))) != r) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x + 1, y))) != r) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x, y + 1))) != b) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y + 1))) != b) {
         return false;
     }
     return result;
@@ -1309,57 +1309,57 @@ void EditorWorld::fixStageLayerTiles(experimental::TMXTiledMap* map){
     for (int x = 1; x < map->getMapSize().width - 1; x++) {
         for (int rawY = 1; rawY < map->getMapSize().height - 1; rawY++) {
             y = map->getMapSize().height - rawY - 1;
-            if (!isWay(stageLayer->getTileGIDAt(Point(x, y)))) {
+            if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y)))) {
                 if (compareNineTiles(1, 1, 1, 1, 1, 1, 1, 1, x, y, stageLayer)) { // center
-                    stageLayer->setTileGID(38, Point(x, y));
+                    stageLayer->setTileGID(38, Vec2(x, y));
                 }else if (compareNineTiles(0, 0, 0, 1, 0, 1, 1, 0, x, y, stageLayer)) { // right top corner
-                    stageLayer->setTileGID(7, Point(x, y));
+                    stageLayer->setTileGID(7, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 0, 1, 0, 1, 1, 0, x, y, stageLayer)) { // right corner
-                    stageLayer->setTileGID(39, Point(x, y));
+                    stageLayer->setTileGID(39, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 0, 1, 0, 0, 0, 0, x, y, stageLayer)) { // right bottom corner
-                    stageLayer->setTileGID(71, Point(x, y));
+                    stageLayer->setTileGID(71, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 0, 0, 0, x, y, stageLayer)) { // bottom corner
-                    stageLayer->setTileGID(70, Point(x, y));
+                    stageLayer->setTileGID(70, Vec2(x, y));
                 }else if (compareNineTiles(0, 1, 1, 0, 1, 0, 0, 0, x, y, stageLayer)) { // left bottom corner
-                    stageLayer->setTileGID(69, Point(x, y));
+                    stageLayer->setTileGID(69, Vec2(x, y));
                 }else if (compareNineTiles(0, 1, 1, 0, 1, 0, 1, 1, x, y, stageLayer)) { // left corner
-                    stageLayer->setTileGID(37, Point(x, y));
+                    stageLayer->setTileGID(37, Vec2(x, y));
                 }else if (compareNineTiles(0, 0, 0, 0, 1, 0, 1, 1, x, y, stageLayer)) { // left top corner
-                    stageLayer->setTileGID(5, Point(x, y));
+                    stageLayer->setTileGID(5, Vec2(x, y));
                 }else if (compareNineTiles(0, 0, 0, 1, 1, 1, 1, 1, x, y, stageLayer)) { // top corner
-                    stageLayer->setTileGID(6, Point(x, y));
+                    stageLayer->setTileGID(6, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 0, 1, 1, x, y, stageLayer)) { // right top wall
-                    stageLayer->setTileGID(15, Point(x, y));
+                    stageLayer->setTileGID(15, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 0, 1, 1, 1, 1, x, y, stageLayer)) { // right wall
-                    stageLayer->setTileGID(47, Point(x, y));
+                    stageLayer->setTileGID(47, Vec2(x, y));
                 }else if (compareNineTiles(0, 1, 1, 1, 1, 1, 1, 1, x, y, stageLayer)) { // right bottom wall
-                    stageLayer->setTileGID(79, Point(x, y));
+                    stageLayer->setTileGID(79, Vec2(x, y));
                 }else if (compareNineTiles(1, 0, 1, 1, 1, 1, 1, 1, x, y, stageLayer)) { // bottom wall
-                    stageLayer->setTileGID(78, Point(x, y));
+                    stageLayer->setTileGID(78, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 0, 1, 1, 1, 1, 1, x, y, stageLayer)) { // left bottom wall
-                    stageLayer->setTileGID(77, Point(x, y));
+                    stageLayer->setTileGID(77, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 0, 1, 1, 1, x, y, stageLayer)) { // left wall
-                    stageLayer->setTileGID(45, Point(x, y));
+                    stageLayer->setTileGID(45, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 1, 1, 0, x, y, stageLayer)) { // left top wall
-                    stageLayer->setTileGID(13, Point(x, y));
+                    stageLayer->setTileGID(13, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 1, 0, 1, x, y, stageLayer)) { // top wall
-                    stageLayer->setTileGID(14, Point(x, y));
+                    stageLayer->setTileGID(14, Vec2(x, y));
                 }else if (compareNineTiles(0, 1, 1, 0, 1, 1, 1, 1, x, y, stageLayer)) { // right wall top oepn
-                    stageLayer->setTileGID(47, Point(x, y));
+                    stageLayer->setTileGID(47, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 0, 1, 0, 1, 1, x, y, stageLayer)) { // right wall bottom open
-                    stageLayer->setTileGID(47, Point(x, y));
+                    stageLayer->setTileGID(47, Vec2(x, y));
                 }else if (compareNineTiles(0, 0, 1, 1, 1, 1, 1, 1, x, y, stageLayer)) { // bottom wall left open
-                    stageLayer->setTileGID(78, Point(x, y));
+                    stageLayer->setTileGID(78, Vec2(x, y));
                 }else if (compareNineTiles(1, 0, 0, 1, 1, 1, 1, 1, x, y, stageLayer)) { // bottom wall right open
-                    stageLayer->setTileGID(78, Point(x, y));
+                    stageLayer->setTileGID(78, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 0, 1, 0, 1, 1, 1, x, y, stageLayer)) { // left wall top open
-                    stageLayer->setTileGID(45, Point(x, y));
+                    stageLayer->setTileGID(45, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 0, 1, 1, 0, x, y, stageLayer)) { // left wall bottom open
-                    stageLayer->setTileGID(45, Point(x, y));
+                    stageLayer->setTileGID(45, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 0, 0, 1, x, y, stageLayer)) { // top wall left open
-                    stageLayer->setTileGID(14, Point(x, y));
+                    stageLayer->setTileGID(14, Vec2(x, y));
                 }else if (compareNineTiles(1, 1, 1, 1, 1, 1, 0, 0, x, y, stageLayer)) { // top wall right open
-                    stageLayer->setTileGID(14, Point(x, y));
+                    stageLayer->setTileGID(14, Vec2(x, y));
                 }
             }
         }
@@ -1367,21 +1367,21 @@ void EditorWorld::fixStageLayerTiles(experimental::TMXTiledMap* map){
 }
 bool EditorWorld::compareNineTiles(int lt, int t, int rt, int l, int r, int lb, int b, int rb, int x, int y, experimental::TMXLayer* stageLayer){
     bool result = true;
-    if (!isWay(stageLayer->getTileGIDAt(Point(x - 1, y - 1)) != lt)) {
+    if (!isWay(stageLayer->getTileGIDAt(Vec2(x - 1, y - 1)) != lt)) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x, y - 1))) != t) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y - 1))) != t) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x + 1, y - 1))) != rt) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x + 1, y - 1))) != rt) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x - 1, y))) != l) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x - 1, y))) != l) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x + 1, y))) != r) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x + 1, y))) != r) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x - 1, y + 1))) != lb) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x - 1, y + 1))) != lb) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x, y + 1))) != b) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x, y + 1))) != b) {
         return false;
-    }else if (!isWay(stageLayer->getTileGIDAt(Point(x + 1, y + 1))) != rb) {
+    }else if (!isWay(stageLayer->getTileGIDAt(Vec2(x + 1, y + 1))) != rb) {
         return false;
     }
     return result;
@@ -1415,7 +1415,7 @@ void EditorWorld::createRewards(EnemyBase* enemy){
         Movable* sptItem = Movable::createMovable(UNIT_ITEM, 0, 0, spriteName.c_str());
         sptItem->setPosition(enemy->getPosition());
         sptItem->setName(dropName);
-        sptItem->runAction(EaseOut::create(MoveBy::create(0.2f, Point(rand()%40 - 20, rand()%40 - 20)), 2));
+        sptItem->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(rand()%40 - 20, rand()%40 - 20)), 2));
         sptItem->runAction(EaseOut::create(RotateBy::create(0.3f, rand()%360), 2));
         spriteBatch->addChild(sptItem, 5);
         dropItemArray.pushBack(sptItem);
@@ -1424,13 +1424,13 @@ void EditorWorld::createRewards(EnemyBase* enemy){
     
     addHeroExp(0, enemy->rewardExp);
     EHUD->setExp(getHeroLevel(0), getHeroExp(0), getMaxExp(getHeroLevel(0)));
-    showLabelFromPool(theMap, enemy->getPosition()+Point(0, 5), strmake("EXP +%d", enemy->rewardExp), 15, 0.2f);
+    showLabelFromPool(theMap, enemy->getPosition()+Vec2(0, 5), strmake("EXP +%d", enemy->rewardExp), 15, 0.2f);
 }
 void EditorWorld::backToLabelPool(Ref* ref){
     Label* lbl = (Label*)ref;
     lbl->removeFromParentAndCleanup(false);
 }
-Label* EditorWorld::showLabelFromPool(Node* parent, cocos2d::Point pos, std::string text, int moveHeight, float delay){
+Label* EditorWorld::showLabelFromPool(Node* parent, cocos2d::Vec2 pos, std::string text, int moveHeight, float delay){
     Label* lbl = labelPool.at(labelPoolIndex);
     if (lbl->getParent()) {
         lbl->removeFromParentAndCleanup(false);
@@ -1442,7 +1442,7 @@ Label* EditorWorld::showLabelFromPool(Node* parent, cocos2d::Point pos, std::str
     lbl->stopAllActions();
     lbl->setPosition(pos);
     lbl->setOpacity(0);
-    lbl->runAction(Sequence::create(DelayTime::create(delay), MoveBy::create(visibleTime+fadingTime, Point(0, moveHeight)), nullptr));
+    lbl->runAction(Sequence::create(DelayTime::create(delay), MoveBy::create(visibleTime+fadingTime, Vec2(0, moveHeight)), nullptr));
     lbl->runAction(Sequence::create(DelayTime::create(delay), FadeIn::create(0.1f), DelayTime::create(visibleTime), FadeOut::create(fadingTime), CallFuncN::create(CC_CALLBACK_1(EditorWorld::backToLabelPool,   this)), NULL));
     labelPoolIndex++;
     if (labelPoolIndex >= labelPoolCount) {
@@ -1469,7 +1469,7 @@ Sprite* EditorWorld::getLightSpin(float persistTime){
     f = {GL_DST_COLOR, GL_DST_ALPHA};
     shining2->setBlendFunc(f);
     shining->addChild(shining2);
-    shining2->setPosition(Point(shining->getContentSize().width/2, shining->getContentSize().height/2));
+    shining2->setPosition(Vec2(shining->getContentSize().width/2, shining->getContentSize().height/2));
     
     return shining;
 }
@@ -1512,7 +1512,7 @@ Sprite* EditorWorld::createNumberSprite(int number)
             first = sprite;
             continue;
         }
-        sprite->setPosition(Point(startWidth + sprite->getContentSize().width/2, sprite->getContentSize().height/2));
+        sprite->setPosition(Vec2(startWidth + sprite->getContentSize().width/2, sprite->getContentSize().height/2));
         startWidth += (sprite->getContentSize().width - 1);
         first->addChild(sprite);
     }
@@ -1533,8 +1533,8 @@ void EditorWorld::onjewelryBoxOpen(Ref* sender){
     lightSpin->setPosition(jewelryBox->getPosition());
     sptWeapon->runAction(FadeIn::create(0.3));
     lightSpin->runAction(FadeIn::create(0.3));
-    sptWeapon->runAction(Sequence::create(MoveBy::create(1, Point(0, 18)), DelayTime::create(4), FadeOut::create(0.5), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptWeapon)), nullptr));
-    lightSpin->runAction(MoveBy::create(1, Point(0, 18)));
+    sptWeapon->runAction(Sequence::create(MoveBy::create(1, Vec2(0, 18)), DelayTime::create(4), FadeOut::create(0.5), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptWeapon)), nullptr));
+    lightSpin->runAction(MoveBy::create(1, Vec2(0, 18)));
     spriteBatch->addChild(sptWeapon, 1);
     this->addChild(lightSpin);
     UserDefault::getInstance()->setBoolForKey(__String::createWithFormat(KEY_JEWEL_COLLECTED_FORMAT, jewelryBox->secondTag)->getCString(), true);
@@ -1565,8 +1565,8 @@ void EditorWorld::openWeapon(Ref* sender){
     lightSpin->setPosition(suitcase->getPosition());
     sptWeapon->runAction(FadeIn::create(0.3));
     lightSpin->runAction(FadeIn::create(0.3));
-    sptWeapon->runAction(Sequence::create(MoveBy::create(1, Point(0, 18)), DelayTime::create(4), FadeOut::create(0.5), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptWeapon)), nullptr));
-    lightSpin->runAction(MoveBy::create(1, Point(0, 18)));
+    sptWeapon->runAction(Sequence::create(MoveBy::create(1, Vec2(0, 18)), DelayTime::create(4), FadeOut::create(0.5), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptWeapon)), nullptr));
+    lightSpin->runAction(MoveBy::create(1, Vec2(0, 18)));
     spriteBatch->addChild(sptWeapon, 1);
     this->addChild(lightSpin);
     
@@ -1655,7 +1655,7 @@ Sprite* EditorWorld::getShining(float delayTime){
     Sprite* shining = Sprite::createWithSpriteFrameName("shining0.png");
     Animation* animation = AnimationCache::getInstance()->getAnimation("shining");
     Animate* animate = Animate::create(animation);
-    shining->runAction(Sequence::create(DelayTime::create(delayTime), MoveBy::create(0.7, Point(6, 6)), nullptr));
+    shining->runAction(Sequence::create(DelayTime::create(delayTime), MoveBy::create(0.7, Vec2(6, 6)), nullptr));
     shining->runAction(Sequence::create(DelayTime::create(delayTime), RotateBy::create(0.7, 250), nullptr));
     shining->runAction(Sequence::create(DelayTime::create(delayTime), animate, CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, shining)), NULL));
     
@@ -1744,7 +1744,7 @@ void EditorWorld::teleportLater(float dt){
 void EditorWorld::jumpBySpring(float dt)
 {
 }
-void EditorWorld::runEffect(int effect, Point point, float angle){
+void EditorWorld::runEffect(int effect, Vec2 point, float angle){
     float duration = 0.2;
     float baseDuration = 0.08;
     duration = baseDuration*2 + baseDuration*(rand()%3 + 1);
@@ -1755,7 +1755,7 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
             Sprite* explode = Sprite::createWithSpriteFrameName(strmake("snowFlake%d.png", rand()%4));
             spriteBatch->addChild(explode, 5);
             explode->setScale(1);
-            explode->runAction(Sequence::create(MoveBy::create(duration, Point(rand()%(radius*2) - radius, rand()%(radius*2) - radius)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, explode)), NULL));
+            explode->runAction(Sequence::create(MoveBy::create(duration, Vec2(rand()%(radius*2) - radius, rand()%(radius*2) - radius)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, explode)), NULL));
             explode->runAction(Sequence::create(DelayTime::create(duration/2), FadeOut::create(duration/2), nullptr));
             explode->runAction(RotateBy::create(duration, rand()%260 - 130));
             explode->setPosition(point);
@@ -1775,11 +1775,11 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
             spriteBatch->addChild(explode, 5);
             explode->setColor(Color3B(90, 90, 90));
             explode->setOpacity(0);
-            explode->runAction(Sequence::create(MoveBy::create(duration, Point(0, 10)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, explode)), NULL));
+            explode->runAction(Sequence::create(MoveBy::create(duration, Vec2(0, 10)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, explode)), NULL));
             explode->runAction(Sequence::create(DelayTime::create(duration/4), FadeTo::create(duration/4, 100), DelayTime::create(duration/4), FadeOut::create(duration/4), nullptr));
             //            explode->setScale(0.8);
             explode->runAction(RotateBy::create(duration, rand()%260 + 250));
-            explode->setPosition(point + Point(rand()%(radius*2) - radius, rand()%(radius*2) - radius));
+            explode->setPosition(point + Vec2(rand()%(radius*2) - radius, rand()%(radius*2) - radius));
         }
     }else if (effect == EFFECT_EXPLODE_MIDDLE) {
         Sprite* spt = Sprite::createWithSpriteFrameName("cartoonyFastExplosion0.png");
@@ -1805,14 +1805,14 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
         float duration = 0.5;
         Sprite* spt = Sprite::createWithSpriteFrameName("whiteCircle.png");
         spriteBatch->addChild(spt, 100);
-        spt->setPosition(point + Point(4-rand()%8, 4));
+        spt->setPosition(point + Vec2(4-rand()%8, 4));
         spt->setScale((rand()%5 + 5)*0.1f);
         spt->setOpacity(100);
         //        spt->setRotation(rand()%360);
         int num = 150 + rand()%100;
         spt->setColor(Color3B(num,num,num));
-        spt->runAction(Sequence::create(EaseIn::create(MoveBy::create(duration, Point(0, 7)), 2), CallFuncN::create(CC_CALLBACK_1(EditorWorld::enemyBaseMoveDone, this)), NULL));
-        spt->runAction(EaseOut::create(MoveBy::create(duration, Point(8 - rand()%16, 0)), 4));
+        spt->runAction(Sequence::create(EaseIn::create(MoveBy::create(duration, Vec2(0, 7)), 2), CallFuncN::create(CC_CALLBACK_1(EditorWorld::enemyBaseMoveDone, this)), NULL));
+        spt->runAction(EaseOut::create(MoveBy::create(duration, Vec2(8 - rand()%16, 0)), 4));
         spt->runAction(FadeOut::create(duration));
         spt->runAction(TintTo::create(duration, 0, 0, 0));
         spt->runAction(ScaleBy::create(duration, 1.5f));
@@ -1890,7 +1890,7 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
             particle->setColor(Color3B(237, 70, 37));
             particle->runAction(FadeOut::create(baseDuration));
             particle->setPosition(point);
-            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(baseDuration, Point(x, y)), easeRate), CallFuncN::create(CC_CALLBACK_1(EditorWorld::spriteMoveDone, this)), NULL));
+            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(baseDuration, Vec2(x, y)), easeRate), CallFuncN::create(CC_CALLBACK_1(EditorWorld::spriteMoveDone, this)), NULL));
         }
     }else if(effect == EFFECT_EXPLODE_HUGE){
         Sprite* explode = Sprite::createWithSpriteFrameName("bombEffect0.png");
@@ -1918,7 +1918,7 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
         spt->setRotation(rand()%360);
         spt->setScale(0.5);
         spt->setColor(Color3B(237, 70, 37));
-        spt->runAction(Sequence::create(EaseIn::create(MoveBy::create(duration, Point(0, 7)), 2), CallFuncN::create(CC_CALLBACK_1(EditorWorld::enemyBaseMoveDone, this)), NULL));
+        spt->runAction(Sequence::create(EaseIn::create(MoveBy::create(duration, Vec2(0, 7)), 2), CallFuncN::create(CC_CALLBACK_1(EditorWorld::enemyBaseMoveDone, this)), NULL));
         spt->runAction(EaseIn::create(FadeOut::create(duration), 2));
         spt->runAction(RotateBy::create(duration, 160));
     }else if(effect == EFFECT_TWINKLE){
@@ -1938,18 +1938,18 @@ void EditorWorld::runEffect(int effect, Point point, float angle){
             duration = baseDuration + baseDuration*(rand()%10)*0.1;
             particle->runAction(FadeOut::create(duration));
             particle->setPosition(point);
-            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(duration, Point(x, y)), 1.6f), CallFuncN::create(CC_CALLBACK_1(EditorWorld::spriteMoveDone, this)), NULL));
+            particle->runAction(Sequence::create(EaseOut::create(MoveBy::create(duration, Vec2(x, y)), 1.6f), CallFuncN::create(CC_CALLBACK_1(EditorWorld::spriteMoveDone, this)), NULL));
         }
     }
 }
-void EditorWorld::runEffect(int effect, Point point)
+void EditorWorld::runEffect(int effect, Vec2 point)
 {
     runEffect(effect, point, 0);
 }
 /*
- void EditorWorld::addGlowEffect(Sprite* sprite,const Color3B& colour, const Size& size)
+ void EditorWorld::addGlowEffect(Sprite* sprite,const Color3B& colour, const cocos2d::Size& size)
  {
- Point pos = Point(sprite->getContentSize().width / 2,
+ Vec2 pos = Vec2(sprite->getContentSize().width / 2,
  sprite->getContentSize().height / 2);
  
  Sprite* glowSprite = Sprite::createWithSpriteFrameName("lizardStand.png");
@@ -1989,7 +1989,7 @@ Sprite* EditorWorld::getLight(){
 void EditorWorld::setStageCoverOpacity(int opacity){
     for (int i = 0; i < theMap->getMapSize().width; i++) {
         for (int j = 0; j < theMap->getMapSize().height; j++) {
-            Sprite* spt = stageCover->getTileAt(Point(i, j));
+            Sprite* spt = stageCover->getTileAt(Vec2(i, j));
             if(spt){
                 spt->setOpacity(opacity);
             }
@@ -2035,7 +2035,7 @@ void EditorWorld::setBossMap(int stage){
     //    GameManager::getInstance()->getEditorHud()->showStageTitle();
     stageIndex = stage;
     
-    Rect rect;
+    cocos2d::Rect rect;
     
     experimental::TMXTiledMap* map = cocos2d::experimental::TMXTiledMap::create(buf);
     
@@ -2064,7 +2064,7 @@ void EditorWorld::setBossMap(int stage){
 void EditorWorld::setEntireMap(int stage){
     //    Sprite* sptRect = Sprite::create("res/258_gray_rect.png");
     //    this->addChild(sptRect);
-    //    sptRect->setPosition(Point(128, 128));
+    //    sptRect->setPosition(Vec2(128, 128));
     bool shouldBeNodeGrid = false;
     theMap = cocos2d::experimental::TMXTiledMap::create("stage_70_templete.tmx");
     mapSize = theMap->getMapSize();
@@ -2072,17 +2072,17 @@ void EditorWorld::setEntireMap(int stage){
     mapHeight = mapSize.height*TILE_SIZE;
     
     // fog setting
-    fogMapSize = Size(mapWidth/FOG_SIZE, mapHeight/FOG_SIZE);
+    fogMapSize = cocos2d::Size(mapWidth/FOG_SIZE, mapHeight/FOG_SIZE);
     for (int j = 0; j < mapHeight; j+=FOG_SIZE) {
         for (int i = 0; i < mapWidth; i+= FOG_SIZE) {
             Fog* fog = Fog::create();
             fogArray.pushBack(fog);
             spriteBatchEffect->addChild(fog, 100);
-            fog->coordinate = Point(i, j);
-            fog->setPosition(Point(i + FOG_SIZE/2, j + FOG_SIZE/2));
+            fog->coordinate = Vec2(i, j);
+            fog->setPosition(Vec2(i + FOG_SIZE/2, j + FOG_SIZE/2));
             
             if(GM->nextScene != STAGE_FIELD){
-                fog->setPosition(Point::ZERO);
+                fog->setPosition(Vec2::ZERO);
             }
         }
     }
@@ -2152,7 +2152,7 @@ void EditorWorld::setEntireMap(int stage){
     miniMapFrameWidth = 400;
     miniMapFrameHeight = 400;
     int offset = 20;
-    miniMapStartPos = cocos2d::Point(offsetX + 20, 20);
+    miniMapStartPos = cocos2d::Vec2(offsetX + 20, 20);
     drawMiniMapFrame->setPosition(miniMapStartPos);
     drawMiniMapForNonMoving->setPosition(miniMapStartPos);
     drawMiniMapForMoving->setPosition(miniMapStartPos);
@@ -2160,9 +2160,9 @@ void EditorWorld::setEntireMap(int stage){
     ImageView* img = ImageView::create("uiBox.png");
     EHUD->addChild(img, 99);
     img->setScale9Enabled(true);
-    img->setContentSize(Size(miniMapFrameWidth + offset*2 + 5, miniMapFrameHeight + offset*2 + 5));
-    img->setAnchorPoint(Point(0, 0));
-    img->setPosition(miniMapStartPos - Point(offset, offset));
+    img->setContentSize(cocos2d::Size(miniMapFrameWidth + offset*2 + 5, miniMapFrameHeight + offset*2 + 5));
+    img->setAnchorPoint(Vec2(0, 0));
+    img->setPosition(miniMapStartPos - Vec2(offset, offset));
     if (GM->nextScene == STAGE_INTRO) {
         img->setVisible(false);
         drawMiniMapFrame->setVisible(false);
@@ -2171,19 +2171,19 @@ void EditorWorld::setEntireMap(int stage){
     }
     if (mapSize.width/mapSize.height < miniMapFrameWidth/miniMapFrameHeight) { // fix height
         miniMapScale = miniMapFrameHeight/(mapSize.height*TILE_SIZE);
-        miniMapDrawStartPos = Point(miniMapFrameWidth/2 - mapSize.width*TILE_SIZE*miniMapScale/2, 0);
+        miniMapDrawStartPos = Vec2(miniMapFrameWidth/2 - mapSize.width*TILE_SIZE*miniMapScale/2, 0);
         miniMapHeight = miniMapFrameHeight;
         miniMapWidth = miniMapHeight*mapSize.width/mapSize.height;
     }else{ // fix width
         miniMapScale = miniMapFrameWidth/(mapSize.width*TILE_SIZE);
-        miniMapDrawStartPos = Point(0, miniMapFrameHeight/2 - mapSize.height*TILE_SIZE*miniMapScale/2);
+        miniMapDrawStartPos = Vec2(0, miniMapFrameHeight/2 - mapSize.height*TILE_SIZE*miniMapScale/2);
         miniMapWidth = miniMapFrameWidth;
         miniMapHeight = miniMapWidth*mapSize.height/mapSize.width;
     }
     miniMapBit = miniMapScale*TILE_SIZE;
-    drawMiniMapFrame->drawSolidRect(Point::ZERO, Point(miniMapFrameWidth, miniMapFrameHeight), Color4F::GRAY);
-    drawMiniMapFrame->drawSolidRect(miniMapDrawStartPos, miniMapDrawStartPos + Point(miniMapWidth, miniMapHeight), Color4F(0.4f, 0.4f, 0.4f, 1));
-    miniMapViewRect = Rect(miniMapDrawStartPos.x + (-getPosition().x)*miniMapScale, miniMapDrawStartPos.y + (-getPosition().y)*miniMapScale, size.width*miniMapScale, size.height*miniMapScale);
+    drawMiniMapFrame->drawSolidRect(Vec2::ZERO, Vec2(miniMapFrameWidth, miniMapFrameHeight), Color4F::GRAY);
+    drawMiniMapFrame->drawSolidRect(miniMapDrawStartPos, miniMapDrawStartPos + Vec2(miniMapWidth, miniMapHeight), Color4F(0.4f, 0.4f, 0.4f, 1));
+    miniMapViewRect = cocos2d::Rect(miniMapDrawStartPos.x + (-getPosition().x)*miniMapScale, miniMapDrawStartPos.y + (-getPosition().y)*miniMapScale, size.width*miniMapScale, size.height*miniMapScale);
     updateMiniMapForNonMoving();
     
     //    if(shouldBeNodeGrid){
@@ -2200,12 +2200,12 @@ void EditorWorld::setEntireMap(int stage){
 
 void EditorWorld::purgatoryUpdate(float dt){
     int startX = 8*TILE_SIZE;
-    Point pos = Point(startX, (16-(-6)-1)*TILE_SIZE) + Point(-TILE_SIZE/2, TILE_SIZE/2);
+    Vec2 pos = Vec2(startX, (16-(-6)-1)*TILE_SIZE) + Vec2(-TILE_SIZE/2, TILE_SIZE/2);
     
     for (int i = 0; i < 4; i++) {
         Sprite* spt = Sprite::createWithSpriteFrameName("whiteCircle.png");
         spt->setScale(0.1f, 0.2f);
-        //        spt->runAction(RepeatForever::create(Waves::create(1, Size(15, 15), 4, 4, 10, true)));
+        //        spt->runAction(RepeatForever::create(Waves::create(1, cocos2d::Size(15, 15), 4, 4, 10, true)));
         pos.x = 0;
         int color = 50 + rand()%150;
         spt->setColor(Color3B(color, color, color));
@@ -2215,7 +2215,7 @@ void EditorWorld::purgatoryUpdate(float dt){
         x += startX;
         midX += startX;
         spt->setPosition(pos);
-        Point targetPos = Point(x, (16-(18)-1)*TILE_SIZE) + Point(-TILE_SIZE/2, TILE_SIZE/2);
+        Vec2 targetPos = Vec2(x, (16-(18)-1)*TILE_SIZE) + Vec2(-TILE_SIZE/2, TILE_SIZE/2);
         //        spt->runAction(Sequence::create(MoveTo::create(1, targetPos), SPT_REMOVE_FUNC, NULL));
         if(i == 0){
             spriteBatch->addChild(spt);
@@ -2226,7 +2226,7 @@ void EditorWorld::purgatoryUpdate(float dt){
         
         ccBezierConfig config;
         config.controlPoint_1 = pos;//ccp(0 , 0); //開始位置
-        config.controlPoint_2 = Point(midX, (16-(6)-1)*TILE_SIZE);//ccp(0 , -100);  //曲線のベクトル(というのかな？)
+        config.controlPoint_2 = Vec2(midX, (16-(6)-1)*TILE_SIZE);//ccp(0 , -100);  //曲線のベクトル(というのかな？)
         config.endPosition = targetPos;//ccp(100,100);   //終了位置
         spt->runAction(Sequence::create(BezierTo::create(1, config), SPT_REMOVE_FUNC, NULL));
         spt->runAction(ScaleTo::create(1, 1, 2));
@@ -2242,7 +2242,7 @@ void EditorWorld::tournamentSchedule(float dt){
     }
 }
 void EditorWorld::addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore, bool blueKey){
-    Point pos;
+    Vec2 pos;
     int enemyCountLeft = map->getMapSize().height*map->getMapSize().width/120;
     float dur = 2;
     if (enemyCountLeft <= 0) {
@@ -2253,8 +2253,8 @@ void EditorWorld::addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore
     experimental::TMXLayer* stageLayer = map->getLayer("stage");
     while (enemyCountLeft > 0) {
         while(true){
-            //pos = Point(3 + rand()%(int)(map->getMapSize().width - 6), map->getMapSize().height/2 + rand()%(int)(map->getMapSize().height/2) - 3);
-            pos = Point(3 + rand()%(int)(map->getMapSize().width - 6), 4 + rand()%(int)(map->getMapSize().height - 6));
+            //pos = Vec2(3 + rand()%(int)(map->getMapSize().width - 6), map->getMapSize().height/2 + rand()%(int)(map->getMapSize().height/2) - 3);
+            pos = Vec2(3 + rand()%(int)(map->getMapSize().width - 6), 4 + rand()%(int)(map->getMapSize().height - 6));
             if (!!isWay(map->getLayer("stage")->getTileGIDAt(pos))) {
                 break;
             }
@@ -2268,7 +2268,7 @@ void EditorWorld::addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore
         while(tryCount < tryCountMax){
             tryCount++;
             if (!isWay(stageLayer->getTileGIDAt(pos))) {
-                pos = Point(pos.x, pos.y + 1);
+                pos = Vec2(pos.x, pos.y + 1);
                 if (pos.y >= map->getMapSize().height) {
                     break;
                 }else{
@@ -2293,8 +2293,8 @@ void EditorWorld::addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore
         found = false;
         while(tryCount < tryCountMax){
             tryCount++;
-            pos = Point(3 + rand()%(int)(map->getMapSize().width - 6), map->getMapSize().height/2 + rand()%(int)(map->getMapSize().height/2) - 2);
-            int tileIndex = map->getLayer("stage")->getTileGIDAt(Point(pos.x, pos.y + 1));
+            pos = Vec2(3 + rand()%(int)(map->getMapSize().width - 6), map->getMapSize().height/2 + rand()%(int)(map->getMapSize().height/2) - 2);
+            int tileIndex = map->getLayer("stage")->getTileGIDAt(Vec2(pos.x, pos.y + 1));
             if ((!isWay(tileIndex) || isOneWay(tileIndex)) && map->getLayer("stage")->getTileGIDAt(pos) == 0 && tileIndex != 322) {
                 found = true;
                 break;
@@ -2304,7 +2304,7 @@ void EditorWorld::addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore
             continue;
         }
         
-        Point thePos = map->getPosition() + Point(pos.x*TILE_SIZE + rand()%TILE_SIZE, (map->getMapSize().height - pos.y - 1)*TILE_SIZE + TILE_SIZE/2 - 2);
+        Vec2 thePos = map->getPosition() + Vec2(pos.x*TILE_SIZE + rand()%TILE_SIZE, (map->getMapSize().height - pos.y - 1)*TILE_SIZE + TILE_SIZE/2 - 2);
         int destructableIndex = rand()%8;
         int coinCount = 0;
         int goldPossibility=10;
@@ -2335,32 +2335,32 @@ void EditorWorld::setEmptyMap(experimental::TMXTiledMap* map){
     int currentX = 3;
     int currentY = 4;
     int squareWidth = 10;
-    Point pos;
+    Vec2 pos;
     
     while(currentY < mapSizeY - 3){
         while(currentX < mapSizeX - 3){
-            pos = Point(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
+            pos = Vec2(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
             if (pos.x < map->getMapSize().width - 3 && pos.y < map->getMapSize().height - 3) {
                 stageLayer->setTileGID(34, pos);
             }
-            pos = Point(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
+            pos = Vec2(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
             if (pos.x < map->getMapSize().width - 3 && pos.y < map->getMapSize().height - 3) {
                 stageLayer->setTileGID(34, pos);
             }
             
-            pos = Point(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
+            pos = Vec2(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
             if (pos.x < map->getMapSize().width - 3 && pos.y < map->getMapSize().height - 3) {
                 stageLayer->setTileGID(130, pos);
             }
             
-            pos = Point(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
+            pos = Vec2(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
             if (pos.x < map->getMapSize().width - 3 && pos.y < map->getMapSize().height - 3) {
                 stageLayer->setTileGID(130, pos);
             }
             
             /*
              if (rand()%100 < 20) {
-             pos = Point(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
+             pos = Vec2(currentX + rand()%squareWidth, currentY + rand()%squareWidth);
              if (pos.y >= mapSizeY) {
              pos.y = mapSizeY - 1;
              }
@@ -2377,7 +2377,7 @@ void EditorWorld::setEmptyMap(experimental::TMXTiledMap* map){
     }
 }
 
-FireableBase* EditorWorld::addEnemyToLoadStack(experimental::TMXTiledMap* map, int levelScore, Point pos, int missile, int enemyModel, bool addGround){
+FireableBase* EditorWorld::addEnemyToLoadStack(experimental::TMXTiledMap* map, int levelScore, Vec2 pos, int missile, int enemyModel, bool addGround){
     
     return nullptr;
 }
@@ -2395,7 +2395,7 @@ void EditorWorld::loadEnemies(){
 }
 void EditorWorld::addAppearEffect(Sprite* parent){
     Sprite* sptEffect = Sprite::createWithSpriteFrameName("bombEffect0.png");
-    sptEffect->setPosition(Point(parent->getContentSize().width/2, parent->getContentSize().height/2));
+    sptEffect->setPosition(Vec2(parent->getContentSize().width/2, parent->getContentSize().height/2));
     sptEffect->runAction(RotateBy::create(1, 400));
     sptEffect->setScale(0.5);
     sptEffect->runAction(Sequence::create(ScaleTo::create(0.3, 1.5), ScaleTo::create(0.2, 0.1), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptEffect)), NULL));
@@ -2404,80 +2404,80 @@ void EditorWorld::addAppearEffect(Sprite* parent){
 void EditorWorld::updateMiniMapForMoving(){
     drawMiniMapForMoving->clear();
     
-    Point startPos;
+    Vec2 startPos;
     for (auto unit: heroArray) {
         if(!unit->isBuilding){
-            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Point(miniMapBit/2, miniMapBit/2);
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit/2, miniMapBit/2);
             if (unit->isAlli) {
-                drawMiniMapForMoving->drawSolidRect(startPos, startPos + Point(miniMapBit, miniMapBit), Color4F::YELLOW);
+                drawMiniMapForMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F::YELLOW);
             }else{
-                drawMiniMapForMoving->drawSolidRect(startPos, startPos + Point(miniMapBit, miniMapBit), Color4F::GREEN);
+                drawMiniMapForMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F::GREEN);
             }
         }
     }
     for (auto unit: enemyArray) {
         if(!unit->isBuilding && unit->isVisible()){
-            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Point(miniMapBit/2, miniMapBit/2);
-            drawMiniMapForMoving->drawSolidRect(startPos, startPos + Point(miniMapBit, miniMapBit), Color4F::RED);
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit/2, miniMapBit/2);
+            drawMiniMapForMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F::RED);
         }
     }
-    drawMiniMapForMoving->drawRect(miniMapViewRect.origin, Point(miniMapViewRect.getMaxX(), miniMapViewRect.getMaxY()), Color4F::WHITE);
+    drawMiniMapForMoving->drawRect(miniMapViewRect.origin, Vec2(miniMapViewRect.getMaxX(), miniMapViewRect.getMaxY()), Color4F::WHITE);
 }
 
 void EditorWorld::updateMiniMapForNonMoving(){
     drawMiniMapForNonMoving->clear();
     
-    Point startPos;
-    Point fogCoordinate;
+    Vec2 startPos;
+    Vec2 fogCoordinate;
     Fog* fogAboveUnit;
     for (int i = 0; i < mapSize.width; i ++) {
         for (int j = 0; j < mapSize.height; j++) {
-            fogCoordinate = Point(i*TILE_SIZE/FOG_SIZE, (mapSize.height - j - 1)*TILE_SIZE/FOG_SIZE);
+            fogCoordinate = Vec2(i*TILE_SIZE/FOG_SIZE, (mapSize.height - j - 1)*TILE_SIZE/FOG_SIZE);
             fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-            if (fogAboveUnit->appliedState > FOG_SEEN_NOT && decoLayer->getTileGIDAt(Point(i, j)) == 49) {
-                startPos = miniMapDrawStartPos + Point(i, mapSize.height - j - 1)*TILE_SIZE*miniMapScale;
-                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit, miniMapBit), Color4F(0.2f, 0.2f, 0.2f, 1));
+            if (fogAboveUnit->appliedState > FOG_SEEN_NOT && decoLayer->getTileGIDAt(Vec2(i, j)) == 49) {
+                startPos = miniMapDrawStartPos + Vec2(i, mapSize.height - j - 1)*TILE_SIZE*miniMapScale;
+                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F(0.2f, 0.2f, 0.2f, 1));
             }
         }
     }
     
     for(auto fog: fogArray){
         if (fog->appliedState == FOG_SEEN_NOT || fog->appliedState == FOG_SEEN_NOT_NOW) {
-            startPos = miniMapDrawStartPos + Point(fog->getBoundingBox().origin.x*miniMapScale + 2, fog->getBoundingBox().origin.y*miniMapScale + 3);
-            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit*FOG_SIZE/TILE_SIZE, miniMapBit*FOG_SIZE/TILE_SIZE), fog->appliedState == FOG_SEEN_NOT?Color4F::BLACK:Color4F(0, 0, 0, 0.5f));
+            startPos = miniMapDrawStartPos + Vec2(fog->getBoundingBox().origin.x*miniMapScale + 2, fog->getBoundingBox().origin.y*miniMapScale + 3);
+            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*FOG_SIZE/TILE_SIZE, miniMapBit*FOG_SIZE/TILE_SIZE), fog->appliedState == FOG_SEEN_NOT?Color4F::BLACK:Color4F(0, 0, 0, 0.5f));
         }
     }
     
     for (auto unit: mutualArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
         fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
         if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
-            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Point(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
-            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
+            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
         }
     }
     for (auto unit: heroArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
         fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
         if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
-            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Point(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
             
             if (unit->isAlli) {
-                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
+                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
             }else{
-                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::GREEN);
+                drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::GREEN);
             }
         }
     }
     for (auto unit: enemyArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
         fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
         if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW && unit->isDetected){
-            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Point(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
-            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Point(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::RED);
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
+            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::RED);
         }
     }
 }
@@ -2488,12 +2488,12 @@ void EditorWorld::setNamingRoom(experimental::TMXTiledMap* map){
 }
 void EditorWorld::setLobby(experimental::TMXTiledMap* map){
     //    if (UserDefault::getInstance()->getBoolForKey(KEY_IS_TUTORIAL_CLEAR, false)) {  // naming
-    //        map->getLayer("stage")->removeTileAt(Point(21, 17));
-    //        map->getLayer("stage")->removeTileAt(Point(22, 17));
-    //        map->getLayer("stage")->removeTileAt(Point(23, 17));
-    //        map->getLayer("stage")->removeTileAt(Point(21, 18));
-    //        map->getLayer("stage")->removeTileAt(Point(22, 18));
-    //        map->getLayer("stage")->removeTileAt(Point(23, 18));
+    //        map->getLayer("stage")->removeTileAt(Vec2(21, 17));
+    //        map->getLayer("stage")->removeTileAt(Vec2(22, 17));
+    //        map->getLayer("stage")->removeTileAt(Vec2(23, 17));
+    //        map->getLayer("stage")->removeTileAt(Vec2(21, 18));
+    //        map->getLayer("stage")->removeTileAt(Vec2(22, 18));
+    //        map->getLayer("stage")->removeTileAt(Vec2(23, 18));
     //    }
     for (int i = 0; i < WEAPON_NO_MORE; i++) {
         setWeaponAtSlot(i, WEAPON_NOT_EXIST);
@@ -2510,8 +2510,8 @@ void EditorWorld::setLobby(experimental::TMXTiledMap* map){
     GameManager::getInstance()->jewelryCollected = false;
     
 }
-bool EditorWorld::isRoomEmpty(Rect rect){
-    Rect targetRect;
+bool EditorWorld::isRoomEmpty(cocos2d::Rect rect){
+    cocos2d::Rect targetRect;
     for (int i = 0; i < mapArray.size(); i++) {
         targetRect = mapArray.at(i)->getBoundingBox();
         
@@ -2526,9 +2526,9 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
     bool found = false;
     int directionToFind = rand()%4;
     int directionCounter = 0;
-    Rect nextRect;
-    Rect srcRect;
-    Size dstSize = dstMap->getContentSize();
+    cocos2d::Rect nextRect;
+    cocos2d::Rect srcRect;
+    cocos2d::Size dstSize = dstMap->getContentSize();
     int randomData;
     while(true){   // find room for the selected map
         srcRect = srcMap->getBoundingBox();
@@ -2540,7 +2540,7 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 randomData = dstMap->getMapSize().height - 3;
             }
             randomData *= TILE_SIZE;
-            nextRect = Rect(srcRect.getMaxX(), srcRect.origin.y + ((int)srcMap->getMapSize().height/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, dstSize.width, dstSize.height);
+            nextRect = cocos2d::Rect(srcRect.getMaxX(), srcRect.origin.y + ((int)srcMap->getMapSize().height/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, dstSize.width, dstSize.height);
         }else if (directionToFind == 1) { // check bottom
             randomData = (rand()%(int)dstMap->getMapSize().width);
             if (randomData <= 1) {
@@ -2550,7 +2550,7 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
             }
             randomData *= TILE_SIZE;
             
-            nextRect = Rect( srcRect.origin.x + ((int)srcMap->getMapSize().width/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, srcRect.getMinY() - dstSize.height, dstSize.width, dstSize.height);
+            nextRect = cocos2d::Rect( srcRect.origin.x + ((int)srcMap->getMapSize().width/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, srcRect.getMinY() - dstSize.height, dstSize.width, dstSize.height);
         }else if (directionToFind == 2) { // check left
             randomData = (rand()%(int)dstMap->getMapSize().height);
             if (randomData <= 1) {
@@ -2559,7 +2559,7 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 randomData = dstMap->getMapSize().height - 3;
             }
             randomData *= TILE_SIZE;
-            nextRect = Rect(srcRect.getMinX() - dstSize.width, srcRect.origin.y + ((int)srcMap->getMapSize().height/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, dstSize.width, dstSize.height);
+            nextRect = cocos2d::Rect(srcRect.getMinX() - dstSize.width, srcRect.origin.y + ((int)srcMap->getMapSize().height/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, dstSize.width, dstSize.height);
         }else if (directionToFind == 3) { // check top
             randomData = (rand()%(int)dstMap->getMapSize().width);
             if (randomData <= 1) {
@@ -2568,7 +2568,7 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 randomData = dstMap->getMapSize().width - 3;
             }
             randomData *= TILE_SIZE;
-            nextRect = Rect( srcRect.origin.x + ((int)srcMap->getMapSize().width/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, srcRect.getMaxY(), dstSize.width, dstSize.height);
+            nextRect = cocos2d::Rect( srcRect.origin.x + ((int)srcMap->getMapSize().width/2)*TILE_SIZE - randomData - randomData%TILE_SIZE, srcRect.getMaxY(), dstSize.width, dstSize.height);
         }
         
         if (isRoomEmpty(nextRect)) {
@@ -2585,16 +2585,16 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 int y = srcMap->getMapSize().height - (midY - srcRect.getMinY())/TILE_SIZE;
                 int counter = 0;
                 while(true){
-                    if (srcMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        srcMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (srcMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        srcMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            srcMap->getLayer("stage")->setTileGID(6, Point(x, y + 1));
+                            srcMap->getLayer("stage")->setTileGID(6, Vec2(x, y + 1));
                         }else if (counter == 1) {
-                            srcMap->getLayer("stage")->setTileGID(70, Point(x, y - 1));
+                            srcMap->getLayer("stage")->setTileGID(70, Vec2(x, y - 1));
                         }else if (counter == 2) {
-                            srcMap->getLayer("stage")->setTileGID(5, Point(x, y + 1));
+                            srcMap->getLayer("stage")->setTileGID(5, Vec2(x, y + 1));
                         }else if (counter == 3) {
-                            srcMap->getLayer("stage")->setTileGID(69, Point(x, y - 1));
+                            srcMap->getLayer("stage")->setTileGID(69, Vec2(x, y - 1));
                         }
                     }else{
                         break;
@@ -2613,16 +2613,16 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 y = dstMap->getMapSize().height - (midY - nextRect.getMinY())/TILE_SIZE;
                 counter = 0;
                 while(true){
-                    if (dstMap->getLayer("stage")->getTileGIDAt(Point(x, y)) && y > 0) {
-                        dstMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (dstMap->getLayer("stage")->getTileGIDAt(Vec2(x, y)) && y > 0) {
+                        dstMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            dstMap->getLayer("stage")->setTileGID(6, Point(x, y + 1));
+                            dstMap->getLayer("stage")->setTileGID(6, Vec2(x, y + 1));
                         }else if (counter == 1) {
-                            dstMap->getLayer("stage")->setTileGID(70, Point(x, y - 1));
+                            dstMap->getLayer("stage")->setTileGID(70, Vec2(x, y - 1));
                         }else if (counter == 2) {
-                            dstMap->getLayer("stage")->setTileGID(7, Point(x, y + 1));
+                            dstMap->getLayer("stage")->setTileGID(7, Vec2(x, y + 1));
                         }else if (counter == 3) {
-                            dstMap->getLayer("stage")->setTileGID(71, Point(x, y - 1));
+                            dstMap->getLayer("stage")->setTileGID(71, Vec2(x, y - 1));
                         }
                     }else{
                         break;
@@ -2645,22 +2645,22 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 int y = srcMap->getMapSize().height - 1;
                 int counter = 0;
                 while(true){
-                    if (srcMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        srcMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (srcMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        srcMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            srcMap->getLayer("stage")->setTileGID(37, Point(x + 1, y));
+                            srcMap->getLayer("stage")->setTileGID(37, Vec2(x + 1, y));
                         }else if (counter == 1) {
-                            srcMap->getLayer("stage")->setTileGID(39, Point(x - 1, y));
+                            srcMap->getLayer("stage")->setTileGID(39, Vec2(x - 1, y));
                         }else if (counter == 2) {
-                            srcMap->getLayer("stage")->setTileGID(5, Point(x + 1, y));
+                            srcMap->getLayer("stage")->setTileGID(5, Vec2(x + 1, y));
                         }else if (counter == 3) {
-                            srcMap->getLayer("stage")->setTileGID(7, Point(x - 1, y));
+                            srcMap->getLayer("stage")->setTileGID(7, Vec2(x - 1, y));
                         }
                     }else{
                         break;
                     }
                     if (counter==1) {
-                        srcMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                        srcMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                     }
                     
                     if (counter%2==0) {
@@ -2676,23 +2676,23 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 y = 0;//dstMap->getMapSize().height - 1;
                 counter = 0;
                 while(true){
-                    if (dstMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        dstMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (dstMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        dstMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            dstMap->getLayer("stage")->setTileGID(37, Point(x + 1, y));
+                            dstMap->getLayer("stage")->setTileGID(37, Vec2(x + 1, y));
                         }else if (counter == 1) {
-                            dstMap->getLayer("stage")->setTileGID(39, Point(x - 1, y));
+                            dstMap->getLayer("stage")->setTileGID(39, Vec2(x - 1, y));
                         }else if (counter == 2) {
-                            dstMap->getLayer("stage")->setTileGID(69, Point(x + 1, y));
+                            dstMap->getLayer("stage")->setTileGID(69, Vec2(x + 1, y));
                         }else if (counter == 3) {
-                            dstMap->getLayer("stage")->setTileGID(71, Point(x - 1, y));
+                            dstMap->getLayer("stage")->setTileGID(71, Vec2(x - 1, y));
                         }
                     }else{
                         break;
                     }
                     
                     if (counter==1) {
-                        dstMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                        dstMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                     }
                     if (counter%2==0) {
                         x--;
@@ -2706,10 +2706,10 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 // ladder for top
                 counter = 0;
                 while(true){
-                    if (dstMap->getLayer("stage")->getTileGIDAt(Point(x, y)) == 0 && dstMap->getMapSize().height > y &&
-                        dstMap->getLayer("stage")->getTileGIDAt(Point(x - 1, y)) == 0) {
+                    if (dstMap->getLayer("stage")->getTileGIDAt(Vec2(x, y)) == 0 && dstMap->getMapSize().height > y &&
+                        dstMap->getLayer("stage")->getTileGIDAt(Vec2(x - 1, y)) == 0) {
                         if (counter >= 3) {
-                            dstMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                            dstMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                             counter = 0;
                         }
                     }else{
@@ -2728,16 +2728,16 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 int y = srcMap->getMapSize().height - (midY - srcRect.getMinY())/TILE_SIZE;
                 int counter = 0;
                 while(true){
-                    if (srcMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        srcMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (srcMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        srcMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            srcMap->getLayer("stage")->setTileGID(6, Point(x, y + 1));
+                            srcMap->getLayer("stage")->setTileGID(6, Vec2(x, y + 1));
                         }else if (counter == 1) {
-                            srcMap->getLayer("stage")->setTileGID(70, Point(x, y - 1));
+                            srcMap->getLayer("stage")->setTileGID(70, Vec2(x, y - 1));
                         }else if (counter == 2) {
-                            srcMap->getLayer("stage")->setTileGID(7, Point(x, y + 1));
+                            srcMap->getLayer("stage")->setTileGID(7, Vec2(x, y + 1));
                         }else if (counter == 3) {
-                            srcMap->getLayer("stage")->setTileGID(71, Point(x, y - 1));
+                            srcMap->getLayer("stage")->setTileGID(71, Vec2(x, y - 1));
                         }
                     }else{
                         break;
@@ -2756,16 +2756,16 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 y = dstMap->getMapSize().height - (midY - nextRect.getMinY())/TILE_SIZE;
                 counter = 0;
                 while(true){
-                    if (dstMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        dstMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (dstMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        dstMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            dstMap->getLayer("stage")->setTileGID(6, Point(x, y + 1));
+                            dstMap->getLayer("stage")->setTileGID(6, Vec2(x, y + 1));
                         }else if (counter == 1) {
-                            dstMap->getLayer("stage")->setTileGID(70, Point(x, y - 1));
+                            dstMap->getLayer("stage")->setTileGID(70, Vec2(x, y - 1));
                         }else if (counter == 2) {
-                            dstMap->getLayer("stage")->setTileGID(5, Point(x, y + 1));
+                            dstMap->getLayer("stage")->setTileGID(5, Vec2(x, y + 1));
                         }else if (counter == 3) {
-                            dstMap->getLayer("stage")->setTileGID(69, Point(x, y - 1));
+                            dstMap->getLayer("stage")->setTileGID(69, Vec2(x, y - 1));
                         }
                     }else{
                         break;
@@ -2788,23 +2788,23 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 int y = 0;//srcMap->getMapSize().height - 1;
                 int counter = 0;
                 while(true){
-                    if (srcMap->getLayer("stage")->getTileGIDAt(Point(x, y))) {
-                        srcMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (srcMap->getLayer("stage")->getTileGIDAt(Vec2(x, y))) {
+                        srcMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            srcMap->getLayer("stage")->setTileGID(37, Point(x + 1, y));
+                            srcMap->getLayer("stage")->setTileGID(37, Vec2(x + 1, y));
                         }else if (counter == 1) {
-                            srcMap->getLayer("stage")->setTileGID(39, Point(x - 1, y));
+                            srcMap->getLayer("stage")->setTileGID(39, Vec2(x - 1, y));
                         }else if (counter == 2) {
-                            srcMap->getLayer("stage")->setTileGID(69, Point(x + 1, y));
+                            srcMap->getLayer("stage")->setTileGID(69, Vec2(x + 1, y));
                         }else if (counter == 3) {
-                            srcMap->getLayer("stage")->setTileGID(71, Point(x - 1, y));
+                            srcMap->getLayer("stage")->setTileGID(71, Vec2(x - 1, y));
                         }
                     }else{
                         
                         break;
                     }
                     if (counter==1) {
-                        srcMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                        srcMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                     }
                     
                     if (counter%2==0) {
@@ -2819,10 +2819,10 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 // ladder for top
                 counter = 0;
                 while(true){
-                    if (srcMap->getLayer("stage")->getTileGIDAt(Point(x, y)) == 0 && y < srcMap->getMapSize().height &&
-                        srcMap->getLayer("stage")->getTileGIDAt(Point(x - 1, y)) == 0) {
+                    if (srcMap->getLayer("stage")->getTileGIDAt(Vec2(x, y)) == 0 && y < srcMap->getMapSize().height &&
+                        srcMap->getLayer("stage")->getTileGIDAt(Vec2(x - 1, y)) == 0) {
                         if (counter >= 3) {
-                            srcMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                            srcMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                             counter = 0;
                         }
                     }else{
@@ -2836,23 +2836,23 @@ experimental::TMXTiledMap* EditorWorld::findDirectionAndPlaceTheMap(experimental
                 y = dstMap->getMapSize().height - 1;
                 counter = 0;
                 while(true){
-                    if (dstMap->getLayer("stage")->getTileGIDAt(Point(x, y)) && y > 0) {
-                        dstMap->getLayer("stage")->setTileGID(0, Point(x, y));
+                    if (dstMap->getLayer("stage")->getTileGIDAt(Vec2(x, y)) && y > 0) {
+                        dstMap->getLayer("stage")->setTileGID(0, Vec2(x, y));
                         if (counter == 0) {
-                            dstMap->getLayer("stage")->setTileGID(37, Point(x + 1, y));
+                            dstMap->getLayer("stage")->setTileGID(37, Vec2(x + 1, y));
                         }else if (counter == 1) {
-                            dstMap->getLayer("stage")->setTileGID(39, Point(x - 1, y));
+                            dstMap->getLayer("stage")->setTileGID(39, Vec2(x - 1, y));
                         }else if (counter == 2) {
-                            dstMap->getLayer("stage")->setTileGID(5, Point(x + 1, y));
+                            dstMap->getLayer("stage")->setTileGID(5, Vec2(x + 1, y));
                         }else if (counter == 3) {
-                            dstMap->getLayer("stage")->setTileGID(7, Point(x - 1, y));
+                            dstMap->getLayer("stage")->setTileGID(7, Vec2(x - 1, y));
                         }
                     }else{
                         break;
                     }
                     
                     if (counter==1) {
-                        dstMap->getLayer("stage")->setTileGID(130, Point(x, y));
+                        dstMap->getLayer("stage")->setTileGID(130, Vec2(x, y));
                     }
                     
                     if (counter%2==0) {
@@ -2911,7 +2911,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
     int mapIndex = 0;
     int x = -1;
     int y = -1;
-    Point checkPoint = Point(14, 8);
+    Vec2 checkPoint = Vec2(14, 8);
     if(rows.size() > 2){
         mapIndex = rows.at(0).asInt();
         x = rows.at(1).asInt();
@@ -2921,7 +2921,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
     // change coin tile into coin animation
     int totalWidth = tileMap->getMapSize().width;
     int totalHeight = tileMap->getMapSize().height;
-    Point point;
+    Vec2 point;
     int talkCount = 0;
     
     experimental::TMXLayer* stageLayer = tileMap->getLayer("stage");
@@ -2935,18 +2935,18 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
     
     for (int i = 0; i < tileMap->getMapSize().width; i++) {
         for (int j = 0; j < tileMap->getMapSize().height; j++) {
-            if (!isWay(stageLayer->getTileGIDAt(Point(i, j)))) {
-                stageTileRectArray.push_back(Rect(i*TILE_SIZE + tileMap->getPositionX(), (tileMap->getMapSize().height - j - 1)*TILE_SIZE + tileMap->getPositionY(), TILE_SIZE, TILE_SIZE));
+            if (!isWay(stageLayer->getTileGIDAt(Vec2(i, j)))) {
+                stageTileRectArray.push_back(cocos2d::Rect(i*TILE_SIZE + tileMap->getPositionX(), (tileMap->getMapSize().height - j - 1)*TILE_SIZE + tileMap->getPositionY(), TILE_SIZE, TILE_SIZE));
             }
         }
     }
     
-    Point cameraPos = Point::ZERO;
+    Vec2 cameraPos = Vec2::ZERO;
     for (int i = 0; i < totalWidth; i++) {
         for (int j = 0; j < totalHeight; j++) {
-            point = Point(i,j);
+            point = Vec2(i,j);
             int gid = unitLayer->getTileGIDAt(point);
-            Point pos = getPositionFromTileCoordinate(i, j);
+            Vec2 pos = getPositionFromTileCoordinate(i, j);
             if (gid) {
                 //                if(!keyExist(map, "MovingPlatformLine") &&
                 //                   !keyExist(map, "MovingPlatformEnd")){
@@ -2997,10 +2997,10 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                 }else if(gid == 5){ // hero
                     hero = createUnit(UNIT_SWORDMAN, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "swordman");
                     hero->setName("hero");
-                    //this->setPosition(-pos + Point(size.width/2 + TILE_SIZE, size.height*2/4));
+                    //this->setPosition(-pos + Vec2(size.width/2 + TILE_SIZE, size.height*2/4));
                     npcArray.pushBack(hero);
                 }else if(gid == 63){ // camera init pos
-                    this->setPosition(-pos + Point(size.width/2 + TILE_SIZE, size.height*2/4));
+                    this->setPosition(-pos + Vec2(size.width/2 + TILE_SIZE, size.height*2/4));
                     log("camera init pos");
                 }else if(gid == 4){ // orc chief
                     EnemyBase* unit = createUnit(UNIT_ORC_AXE, gid == 88?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcAxe");
@@ -3036,7 +3036,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                     createUnit(UNIT_GOBLIN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblin")->scheduledAttackTime = 60*2;
                 }else if(gid == 19 || gid == 28 || gid == 27 || gid == 39 || gid == 88){ // orc axe
                     int vary = 40;
-                    EnemyBase* unit = createUnit(UNIT_ORC_AXE, gid == 88?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos + Point(rand()%vary - vary/2, rand()%vary - vary), "orcAxe");
+                    EnemyBase* unit = createUnit(UNIT_ORC_AXE, gid == 88?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos + Vec2(rand()%vary - vary/2, rand()%vary - vary), "orcAxe");
                     
                     if(GM->nextScene == STAGE_INTRO){
                         unit->setFlippedX(true);
@@ -3062,14 +3062,14 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                 }else if(gid == 26){ // orc spear
                     createUnit(UNIT_ORC_SPEAR, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcSpear")->scheduledAttackTime = 60*3;
                 }else if(gid == 69 || gid == 89){ // bunker
-                    EnemyBase* unit = createUnit(UNIT_ORC_BUNKER, gid == 89?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(50, 0), "bunker", 1, "bunker.png");
+                    EnemyBase* unit = createUnit(UNIT_ORC_BUNKER, gid == 89?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(50, 0), "bunker", 1, "bunker.png");
                     if (gid == 89) {
                         unit->isAlli = true;
                     }
                     unit->canFindTarget = true;
                     setOccupy(pos, 2, 2, true, unit);
                 }else if(gid == 70 || gid == 80 || gid == 79 || gid == 78 || gid == 90 || gid == 46){ // hq
-                    EnemyBase* unit = createUnit(UNIT_ORC_HQ, gid == 90?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(150, -50), "hq", 1, "hq.png");
+                    EnemyBase* unit = createUnit(UNIT_ORC_HQ, gid == 90?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(150, -50), "hq", 1, "hq.png");
                     if (gid == 90) {
                         unit->isAlli = true;
                     }
@@ -3078,7 +3078,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                     Sprite* spt = Sprite::createWithSpriteFrameName("redFlag0.png");
                     GM->runAnimation(spt, "redFlag", true);
                     unit->addChild(spt);
-                    spt->setPosition(Point(232, 335));
+                    spt->setPosition(Vec2(232, 335));
                     
                     if(gid == 80 || gid == 79 || gid == 78 ){
                         unit->scheduledProductUnit = UNIT_ORC_AXE;
@@ -3099,36 +3099,36 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                         unit->scheduledProductTime = 30;
                     }
                 }else if(gid == 68){ // factory
-                    EnemyBase* unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "factory", 1, "factory.png");
+                    EnemyBase* unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "factory", 1, "factory.png");
                     setOccupy(pos, 3, 3, true, unit);
                     unit->isBuildingComplete = true;
                     unit->startProductSchedule();
                 }else if(gid == 54){ // farm
-                    EnemyBase* unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -0), "farm", 1, "farm.png");
+                    EnemyBase* unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -0), "farm", 1, "farm.png");
                     addFoodMax(getFoodGive(UNIT_FARM));
                     setOccupy(pos, 3, 2, true, unit);
                     unit->isBuildingComplete = true;
                     unit->schedule(schedule_selector(Movable::makingSmoke), 1.7f);
-                    unit->smokePoint = unit->getPosition() + Point(-18, 110);
+                    unit->smokePoint = unit->getPosition() + Vec2(-18, 110);
                 }else if(gid == 55){ // lumber mill
-                    EnemyBase* unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "lumberMill", 1, "lumberMill.png");
+                    EnemyBase* unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "lumberMill", 1, "lumberMill.png");
                     setOccupy(pos, 3, 3, true, unit);
                     unit->isBuildingComplete = true;
                 }else if(gid == 56){ // airport
-                    EnemyBase* unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "airport", 1, "airport.png");
+                    EnemyBase* unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "airport", 1, "airport.png");
                     setOccupy(pos, 3, 3, true, unit);
                     unit->isBuildingComplete = true;
                     unit->startProductSchedule();
                     Sprite* spt = Sprite::createWithSpriteFrameName("airportPropeller0.png");
                     GM->runAnimation(spt, "propeller", true);
                     unit->addChild(spt);
-                    spt->setPosition(Point(134, 206));
+                    spt->setPosition(Vec2(134, 206));
                 }else if(gid == 57){ // mine
-                    EnemyBase* unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos+ Point(100, -100), "mine", 1, "mine.png");
+                    EnemyBase* unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos+ Vec2(100, -100), "mine", 1, "mine.png");
                     setOccupy(pos, 3, 3, true, unit);
                     unit->setTag(0);
                 }else if(gid == 58){ // barracks
-                    EnemyBase* unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "barracks", 1, "barracks.png");
+                    EnemyBase* unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "barracks", 1, "barracks.png");
                     setOccupy(pos, 3, 3, true, unit);
                     unit->isBuildingComplete = true;
                     unit->startProductSchedule();
@@ -3139,9 +3139,9 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                     }else if(gid == 64){
                         side = WHICH_SIDE_READY_HERO;
                     }
-                    EnemyBase* unit = createUnit(gid == 40?UNIT_ZOMBIE_CASTLE:UNIT_CASTLE, side, ITS_BUILDING, pos + Point(150, -100), "castle", 1, "castle.png");
+                    EnemyBase* unit = createUnit(gid == 40?UNIT_ZOMBIE_CASTLE:UNIT_CASTLE, side, ITS_BUILDING, pos + Vec2(150, -100), "castle", 1, "castle.png");
                     if(gid == 59){
-                        //                        this->setPosition(-pos + Point(size.width/2 - TILE_SIZE*1, size.height*3/4));
+                        //                        this->setPosition(-pos + Vec2(size.width/2 - TILE_SIZE*1, size.height*3/4));
                     }
                     
                     if(getPositionY() > 0){
@@ -3155,14 +3155,14 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
                     Sprite* spt = Sprite::createWithSpriteFrameName("blueFlag0.png");
                     GM->runAnimation(spt, "blueFlag", true);
                     unit->addChild(spt);
-                    spt->setPosition(Point(192, 255));
+                    spt->setPosition(Vec2(192, 255));
                     if(gid == 40){
                         unit->scheduledProductUnit = UNIT_ZOMBIE_SWORDSMAN;
                         unit->scheduledProductUnitCount = 1;
                         unit->scheduledProductTime = 25;
                     }
                 }else if(gid == 60 || gid == 100){ // watcher tower
-                    EnemyBase* unit = createUnit(UNIT_WATCHERTOWER, gid == 60?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(50, 0), "watcherTower", 1, "watcherTower.png");
+                    EnemyBase* unit = createUnit(UNIT_WATCHERTOWER, gid == 60?WHICH_SIDE_HERO:WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(50, 0), "watcherTower", 1, "watcherTower.png");
                     unit->canFindTarget = true;
                     setOccupy(pos, 2, 2, true, unit);
                     unit->isBuildingComplete = true;
@@ -3202,7 +3202,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
             if(decoLayer){
                 gid = decoLayer->getTileGIDAt(point);
                 if (gid) {
-                    Point pos = tileMap->getPosition() + Point(i*TILE_SIZE + TILE_SIZE/2, (totalHeight-j-1)*TILE_SIZE) + Point(0, TILE_SIZE/2);
+                    Vec2 pos = tileMap->getPosition() + Vec2(i*TILE_SIZE + TILE_SIZE/2, (totalHeight-j-1)*TILE_SIZE) + Vec2(0, TILE_SIZE/2);
                     if(gid == 50){ // tree
                         createTree(pos);
                     }
@@ -3285,7 +3285,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
             //            }
             //            if (spt != nullptr) {
             //                spriteBatch->addChild(spt);
-            //                spt->setPosition(pos + Point(-50 + rand()%100, -50 + rand()%100));
+            //                spt->setPosition(pos + Vec2(-50 + rand()%100, -50 + rand()%100));
             //                spt->setLocalZOrder(-100000);
             //            }
         }
@@ -3298,7 +3298,7 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
     CCLOG("setStage object map done");
     if (pointArrayToRemoveInUnitLayer) {
         for (int i = 0; i < pointArrayToRemoveInUnitLayer->count(); i++) {
-            Point pos = pointArrayToRemoveInUnitLayer->getControlPointAtIndex(i);
+            Vec2 pos = pointArrayToRemoveInUnitLayer->getControlPointAtIndex(i);
             unitLayer->removeTileAt(pos);
         }
     }
@@ -3354,12 +3354,12 @@ void EditorWorld::setStage(experimental::TMXTiledMap* tileMap)
         Sprite* spt = Sprite::createWithSpriteFrameName("bird0.png");
         GM->runAnimation(spt, strmake("bird%d", rand()%3).c_str(), true);
         spriteBatchEffect->addChild(spt);
-        spt->setPosition(Point(startX - rowCounter*birdGapX/2 + birdGapX*columnCounter + rand()%400 + 200, startY - rowCounter*birdGapY - columnCounter*columnOffset + rand()%400 + 200));
+        spt->setPosition(Vec2(startX - rowCounter*birdGapX/2 + birdGapX*columnCounter + rand()%400 + 200, startY - rowCounter*birdGapY - columnCounter*columnOffset + rand()%400 + 200));
         
         columnCounter++;
         spt->setRotation(20 + rand()%30);
         spt->setScale(0.7f + (rand()%60)*0.01f);
-        spt->runAction(Sequence::create(MoveBy::create(dur/spt->getScale(), Point(2000 + rand()%200, 2200+ rand()%400)), SPT_REMOVE_FUNC, NULL));
+        spt->runAction(Sequence::create(MoveBy::create(dur/spt->getScale(), Vec2(2000 + rand()%200, 2200+ rand()%400)), SPT_REMOVE_FUNC, NULL));
         spt->runAction(ScaleTo::create(dur, 0.7f + (rand()%60)*0.01f));
         int columnMaxCount = rowCounter;
         if (rowCounter > 4) {
@@ -3417,9 +3417,9 @@ void EditorWorld::attackNearHero(EnemyBase* enemy){
         }
     }
 }
-bool EditorWorld::isSpotAvailable(bool isEnemy, cocos2d::Point pos){
+bool EditorWorld::isSpotAvailable(bool isEnemy, cocos2d::Vec2 pos){
     if (isEnemy) {
-        Point coordinate = getCoordinateFromPosition(pos);
+        Vec2 coordinate = getCoordinateFromPosition(pos);
         for(auto unit: enemyArray){
             if (getCoordinateFromPosition(unit->getPosition()) == coordinate) {
                 return false;
@@ -3428,21 +3428,21 @@ bool EditorWorld::isSpotAvailable(bool isEnemy, cocos2d::Point pos){
     }
     return true;
 }
-void EditorWorld::setOccupy(cocos2d::Point pos, int width, int height, bool occupy, EnemyBase* building){
+void EditorWorld::setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy, EnemyBase* building){
     setOccupy(pos, width, height, occupy);
     building->buildingStartCoordinate = getCoordinateFromPosition(pos, theMap);
-    building->buildingOccupySize = Size(width, height);
+    building->buildingOccupySize = cocos2d::Size(width, height);
 //    building->refreshApproachPoints();
 }
-void EditorWorld::setOccupy(cocos2d::Point pos, int width, int height, bool occupy){
-    Point point = getCoordinateFromPosition(pos, theMap);
+void EditorWorld::setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy){
+    Vec2 point = getCoordinateFromPosition(pos, theMap);
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            decoLayer->setTileGID(occupy?48:0, Point(point.x + i, point.y + j));
+            decoLayer->setTileGID(occupy?48:0, Vec2(point.x + i, point.y + j));
         }
     }
 }
-void EditorWorld::addSprite(std::string sptName, cocos2d::Point pos){
+void EditorWorld::addSprite(std::string sptName, cocos2d::Vec2 pos){
     Sprite* spt = Sprite::createWithSpriteFrameName(sptName);
     spt->setPosition(pos);
     spriteBatch->addChild(spt);
@@ -3461,11 +3461,11 @@ void EditorWorld::cameraUpdateForEvent(float dt){
 void EditorWorld::eventUpdate(float dt){
     if(talkingNPC != nullptr && talkingNPC->getName().compare("undead") == 0){
         if(imgTalkBox != nullptr && imgTalkBox->getScale() == 1){
-            imgTalkBox->setPosition(talkingNPC->getPosition() + Point(0, 10));
+            imgTalkBox->setPosition(talkingNPC->getPosition() + Vec2(0, 10));
         }else{
             sptPointer->setScale(imgTalkBox->getScale());
         }
-        sptPointer->setPosition(imgTalkBox->getPosition() + Point(0, 2));
+        sptPointer->setPosition(imgTalkBox->getPosition() + Vec2(0, 2));
     }
 }
 void EditorWorld::eventDone(){
@@ -3474,25 +3474,25 @@ void EditorWorld::eventDone(){
 
 void EditorWorld::headingUp(Ref* ref){
     EnemyBase* unit = (EnemyBase*)ref;
-    unit->velocity = Point(0, 1);
+    unit->velocity = Vec2(0, 1);
 //    unit->move(DIRECTION_N);
 //    unit->updateWeaponPosition();
 }
 void EditorWorld::headingDown(Ref* ref){
     EnemyBase* unit = (EnemyBase*)ref;
-    unit->velocity = Point(0, -1);
+    unit->velocity = Vec2(0, -1);
 //    unit->move(DIRECTION_S);
 //    unit->updateWeaponPosition();
 }
 void EditorWorld::headingLeft(Ref* ref){
     EnemyBase* unit = (EnemyBase*)ref;
-    unit->velocity = Point(-1, 0);
+    unit->velocity = Vec2(-1, 0);
 //    unit->move(DIRECTION_W);
 //    unit->updateWeaponPosition();
 }
 void EditorWorld::headingRight(Ref* ref){
     EnemyBase* unit = (EnemyBase*)ref;
-    unit->velocity = Point(1, 0);
+    unit->velocity = Vec2(1, 0);
 //    unit->move(DIRECTION_E);
 //    unit->updateWeaponPosition();
 }
@@ -3512,7 +3512,7 @@ void EditorWorld::turnOnEnemyDamaging(Ref* obj){
     enemy->isDamaging = true;
     runEffect(EFFECT_EXPLODE_SMALL, enemy->getPosition());
 }
-void EditorWorld::addDecoBlock(Point coordinate, Point position, std::string spriteName){
+void EditorWorld::addDecoBlock(Vec2 coordinate, Vec2 position, std::string spriteName){
     Sprite* spt = Sprite::createWithSpriteFrameName(spriteName);
     spriteBatch->addChild(spt);
     spt->setPosition(position);
@@ -3520,32 +3520,32 @@ void EditorWorld::addDecoBlock(Point coordinate, Point position, std::string spr
     spt->setName(strmake("deco_%d_%d", (int)coordinate.x, (int)coordinate.y));
     decoLayer->setTileGID(138, coordinate);
 }
-Point EditorWorld::getPositionFromTileCoordinate(int x, int y){
-    return Point(x*TILE_SIZE + TILE_SIZE/2, (theMap->getMapSize().height-y-1)*TILE_SIZE) + Point(0, TILE_SIZE/2);
+Vec2 EditorWorld::getPositionFromTileCoordinate(int x, int y){
+    return Vec2(x*TILE_SIZE + TILE_SIZE/2, (theMap->getMapSize().height-y-1)*TILE_SIZE) + Vec2(0, TILE_SIZE/2);
 }
 void EditorWorld::resetPathState(){
     int gid;
     experimental::TMXLayer* stageLayer = theMap->getLayer("stage");
-    Size mapSize = theMap->getMapSize();
+    cocos2d::Size mapSize = theMap->getMapSize();
     for (int j = 0; j < mapSize.height; j++) {
         for (int i = 0; i < mapSize.width; i++) {
             
-            gid = stageLayer->getTileGIDAt(Point(i, j));
+            gid = stageLayer->getTileGIDAt(Vec2(i, j));
             if (gid) {
-                GM->setPathState(i, j, (!isWay(gid) || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Point(i, j)))))?TILE_STATE_OCCUPIED:TILE_STATE_EMPTY);
+                GM->setPathState(i, j, (!isWay(gid) || (decoLayer && isDecoBlock(decoLayer->getTileGIDAt(Vec2(i, j)))))?TILE_STATE_OCCUPIED:TILE_STATE_EMPTY);
                 
             }
         }
     }
 }
-void EditorWorld::createTrap(EnemyBase* enemy, cocos2d::Point pos){
+void EditorWorld::createTrap(EnemyBase* enemy, cocos2d::Vec2 pos){
     enemy->setPosition(pos);
     enemy->ap = getHeroMaxHP(0)/4;
     spriteBatch->addChild(enemy);
     enemy->setLocalZOrder(-1000);
     enemyArray.pushBack(enemy);
 }
-EnemyBase* EditorWorld::addNPC(cocos2d::Point pos, std::string name){
+EnemyBase* EditorWorld::addNPC(cocos2d::Vec2 pos, std::string name){
     EnemyBase* unit = createUnit(UNIT_NPC, WHICH_SIDE_MUTUAL, ITS_NOT_BUILDING, pos, name.c_str());
     heroArray.eraseObject(unit);
     MovableArray.eraseObject(unit);
@@ -3599,19 +3599,19 @@ void EditorWorld::updateNPCQuestState(EnemyBase* npc){
 void EditorWorld::addTalkBalloon(EnemyBase* npc, std::string imgName){
     Sprite* spt = Sprite::createWithSpriteFrameName(imgName);
     npc->addChild(spt, 10);
-    spt->setPosition(Point(npc->getBoundingBox().size.width/2, npc->getContentSize().height + spt->getContentSize().height/2));
-    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Point(0, 2)), MoveBy::create(0.2f, Point(0, -2)), NULL)));
+    spt->setPosition(Vec2(npc->getBoundingBox().size.width/2, npc->getContentSize().height + spt->getContentSize().height/2));
+    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Vec2(0, 2)), MoveBy::create(0.2f, Vec2(0, -2)), NULL)));
     spt->setName("questState");
 }
-void EditorWorld::addTalkBalloon(experimental::TMXTiledMap* map, std::string imgName, cocos2d::Point pos){
+void EditorWorld::addTalkBalloon(experimental::TMXTiledMap* map, std::string imgName, cocos2d::Vec2 pos){
     Sprite* spt = Sprite::createWithSpriteFrameName(imgName);
     map->addChild(spt, 10);
-    //    spt->setPosition(Point(npc->getContentSize().width/2, npc->getContentSize().height + spt->getContentSize().height/2));
+    //    spt->setPosition(Vec2(npc->getContentSize().width/2, npc->getContentSize().height + spt->getContentSize().height/2));
     spt->setPosition(pos);
-    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Point(0, 2)), MoveBy::create(0.2f, Point(0, -2)), NULL)));
+    spt->runAction(RepeatForever::create(Sequence::create(MoveBy::create(0.2f, Vec2(0, 2)), MoveBy::create(0.2f, Vec2(0, -2)), NULL)));
     spt->setName("questState");
 }
-EnemyBase* EditorWorld::createUnit(int index, int whichSide, bool isBuilding, Point pos, std::string name, int scaleX, std::string charName){
+EnemyBase* EditorWorld::createUnit(int index, int whichSide, bool isBuilding, Vec2 pos, std::string name, int scaleX, std::string charName){
     int eng = 50;
     int spd = 25;
     
@@ -3898,16 +3898,16 @@ void EditorWorld::stopWoongSound(){
     readyToMove = true;
     
 }
-void EditorWorld::addDirtToTile(experimental::TMXTiledMap* map, Point pos){
+void EditorWorld::addDirtToTile(experimental::TMXTiledMap* map, Vec2 pos){
     Sprite* sptDirt;
     for (int i = 0; i < 4; i++) {
         sptDirt = Sprite::createWithSpriteFrameName(rand()%2==0?"dirt1.png":"dirt0.png");
         spriteBatch->addChild(sptDirt, 100);
         float dur = 1;
-        sptDirt->runAction(MoveBy::create(0.1, Point(0, -2)));
-        sptDirt->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur, Point(i%2==0?-4:4, 4)), 6), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptDirt)), NULL));
+        sptDirt->runAction(MoveBy::create(0.1, Vec2(0, -2)));
+        sptDirt->runAction(Sequence::create(EaseOut::create(MoveBy::create(dur, Vec2(i%2==0?-4:4, 4)), 6), CallFuncN::create(CC_CALLBACK_1(Sprite::removeFromParentAndCleanup, sptDirt)), NULL));
         sptDirt->runAction(Sequence::create(DelayTime::create(dur/2), FadeOut::create(dur/2),NULL));
-        sptDirt->setPosition(Point(pos.x*TILE_SIZE + (i%2==0?0:TILE_SIZE), (map->getMapSize().height - pos.y - 1)*TILE_SIZE + (i>1?TILE_SIZE:0)) + map->getPosition());
+        sptDirt->setPosition(Vec2(pos.x*TILE_SIZE + (i%2==0?0:TILE_SIZE), (map->getMapSize().height - pos.y - 1)*TILE_SIZE + (i>1?TILE_SIZE:0)) + map->getPosition());
         //log("dirt %f, %f", sptDirt->getPosition().x, sptDirt->getPosition().y);
     }
 }
@@ -3916,7 +3916,7 @@ void EditorWorld::addDirtToTile(experimental::TMXTiledMap* map, Point pos){
 void EditorWorld::cloudSchedule(float dt){
     for (auto cloud : cloudArray) {
         if(cloud->getPosition().x < 0){
-            cloud->setPosition(Point(cloud->getParent()->getContentSize().width + cloud->getContentSize().width/2, cloud->getPosition().y));
+            cloud->setPosition(Vec2(cloud->getParent()->getContentSize().width + cloud->getContentSize().width/2, cloud->getPosition().y));
         }
     }
 }
@@ -3938,7 +3938,7 @@ void EditorWorld::sacrificeDone(Ref* obj){
     
 }
 
-void EditorWorld::addRide(int unit, Point pos){
+void EditorWorld::addRide(int unit, Vec2 pos){
     const char* sptName = "rideTop.png";
     
     Movable* board = Movable::createMovable(unit, 1, 0, sptName);
@@ -3946,22 +3946,22 @@ void EditorWorld::addRide(int unit, Point pos){
     board->setTag(unit);
     
     /*Sprite* sprite = Sprite::createWithSpriteFrameName("silverCoin0.png");
-     sprite->setPosition(Point(16, 20));
-     sprite->runAction(RepeatForever::create((ActionInterval*)Sequence::create(MoveBy::create(0.3f, Point(0, 15)), MoveBy::create(0.3f, Point(0, -15)), NULL)));
+     sprite->setPosition(Vec2(16, 20));
+     sprite->runAction(RepeatForever::create((ActionInterval*)Sequence::create(MoveBy::create(0.3f, Vec2(0, 15)), MoveBy::create(0.3f, Vec2(0, -15)), NULL)));
      board->addChild(sprite);*/
     
     spriteBatch->addChild(board);
     helperArray.pushBack(board);
     float time = 0.6f;
-    MoveTo* moveUpTop = MoveTo::create(time, pos + Point(0, 10));
+    MoveTo* moveUpTop = MoveTo::create(time, pos + Vec2(0, 10));
     MoveTo* moveDownTop = MoveTo::create(time, pos);
-    MoveTo* moveDownBottom = MoveTo::create(time, pos + Point(0, - 10));
+    MoveTo* moveDownBottom = MoveTo::create(time, pos + Vec2(0, - 10));
     MoveTo* moveUpBottom = MoveTo::create(time, pos);
     float rate = 1;
     
     board->runAction(RepeatForever::create((ActionInterval*)Sequence::create(EaseIn::create(moveUpTop, rate), EaseOut::create(moveDownTop, rate), EaseIn::create(moveDownBottom, rate), EaseOut::create(moveUpBottom, rate), NULL)));
 }
-void EditorWorld::splashDamage(Point pos, int radius, int damage, bool isFromEnemy, Movable* attacker){
+void EditorWorld::splashDamage(Vec2 pos, int radius, int damage, bool isFromEnemy, Movable* attacker){
     GM->playSoundEffect(SOUND_EXPLOSION_MIDDLE);
     //    draw->drawSolidCircle(pos, radius, 360, 20, 1, 1, Color4F::RED);
     //    for(auto unit:heroArray){
@@ -3991,7 +3991,7 @@ void EditorWorld::updateIndicators(){
     float eY = 0;
     float centerX = -this->getPosition().x + size.width/2;
     float centerY = -this->getPosition().y + size.height/2;
-    float a;float y;float x;Rect rect;
+    float a;float y;float x;cocos2d::Rect rect;
     int outOfBoxCount = 0;
     Sprite* indicator;
     Sprite* spt;
@@ -4001,7 +4001,7 @@ void EditorWorld::updateIndicators(){
         spt = (Sprite*)indicatedArray.at(i);
         
         
-        rect = Rect(-this->getPosition().x/scale, -this->getPosition().y/scale, size.width/scale, size.height/scale);
+        rect = cocos2d::Rect(-this->getPosition().x/scale, -this->getPosition().y/scale, size.width/scale, size.height/scale);
         if(rect.containsPoint(unit->getPosition())){
             continue;
         }else{
@@ -4038,7 +4038,7 @@ void EditorWorld::updateIndicators(){
             spt->setTag(79);
             indicator->addChild(spt);
             
-            spt->setPosition(Point(-50, indicator->getContentSize().height*indicator->getScale()/2));
+            spt->setPosition(Vec2(-50, indicator->getContentSize().height*indicator->getScale()/2));
             indicator->setScale(0.5);
             this->getParent()->addChild(indicator);
             GameManager::getInstance()->makeItSiluk(indicator);
@@ -4046,7 +4046,7 @@ void EditorWorld::updateIndicators(){
         }
         
         indicator->setRotation(-atan2(y,x)*180.0f/3.14f);
-        indicator->setPosition(Point(size.width/2 + x, size.height/2 + y));
+        indicator->setPosition(Vec2(size.width/2 + x, size.height/2 + y));
         
         spt = (Sprite*)indicator->getChildByTag(79);
         spt->setRotation(-indicator->getRotation());
@@ -4149,8 +4149,8 @@ void EditorWorld::doTheBombToMissiles(float dt){
     enemyMissileArray.eraseObject(drop);
     spriteBatch->removeChild(drop, true);
     
-    Point screenPos = this->getPosition();
-    this->runAction(Sequence::create(MoveBy::create(0.05, Point(rand()%36 - 18, rand()%36 - 18)),
+    Vec2 screenPos = this->getPosition();
+    this->runAction(Sequence::create(MoveBy::create(0.05, Vec2(rand()%36 - 18, rand()%36 - 18)),
                                      MoveTo::create(0.05, screenPos),NULL));
 }
 
@@ -4185,8 +4185,8 @@ void EditorWorld::doTheBombToEnemies(float dt){
                 if (enemy == theBoss) {
                     //                    GameManager::getInstance()->getEditorHud()->setBossEnergy(theBoss->energy*100.0f/theBoss->maxEnergy);
                 }else{
-                    enemy->desiredPosition = enemy->desiredPosition + Point(enemy->isTowardLeft?2:-2, 2);
-                    enemy->setPosition(enemy->getPosition() + Point(enemy->isTowardLeft?2:-2, 2));
+                    enemy->desiredPosition = enemy->desiredPosition + Vec2(enemy->isTowardLeft?2:-2, 2);
+                    enemy->setPosition(enemy->getPosition() + Vec2(enemy->isTowardLeft?2:-2, 2));
                 }
                 
                 showDamage(demage, enemy->getPosition());
@@ -4214,8 +4214,8 @@ void EditorWorld::doTheBombToEnemies(float dt){
     spriteBatch->addChild(sprite);
     sprite->setPosition(enemy->getPosition());
     
-    Point screenPos = this->getPosition();
-    this->runAction(Sequence::create(MoveBy::create(0.05, Point(rand()%18 - 9, rand()%18 - 9)),
+    Vec2 screenPos = this->getPosition();
+    this->runAction(Sequence::create(MoveBy::create(0.05, Vec2(rand()%18 - 9, rand()%18 - 9)),
                                      MoveTo::create(0.05, screenPos),NULL));
     
     bombTargetEnemyIndex++;
@@ -4291,10 +4291,10 @@ void EditorWorld::bubbleUpdate(float dt)
     
     for(auto bubble: bubbleArray)
     {
-        bubble->setPosition(Point(bubble->getPosition().x, bubble->getPosition().y + 50*dt));
+        bubble->setPosition(Vec2(bubble->getPosition().x, bubble->getPosition().y + 50*dt));
         
         experimental::TMXTiledMap* map = getTileMap(bubble->getPosition());
-        //        Point plPos = this->getCoordinateFromPosition(bubble->getPosition() + Point(0, - bubble->getContentSize().height), map);
+        //        Vec2 plPos = this->getCoordinateFromPosition(bubble->getPosition() + Vec2(0, - bubble->getContentSize().height), map);
         int tgid = getTileAtPosition(bubble->getPosition(), TAG_FORE_LAYER, map);
         if (tgid == 0) {
             bubbleArray.eraseObject(bubble);
@@ -4341,11 +4341,11 @@ void EditorWorld::autoTargeting(){
     float dx = cosf(angle) * radius;
     float dy = sinf(angle) * radius;
     
-    //    Point velocity = Point(dx/joystickRadius, dy/joystickRadius);
+    //    Vec2 velocity = Vec2(dx/joystickRadius, dy/joystickRadius);
     //    float degrees = angle * SJ_RAD2DEG;
     //
     //    // Update the thumb's position
-    //    Point stickPosition = Point(dx, dy);
+    //    Vec2 stickPosition = Vec2(dx, dy);
     //
     //    Vec2 location = Vec2(size.width/2 + dx*6, size.height/2 + dy*6);
     //
@@ -4395,8 +4395,8 @@ void EditorWorld::gravityUpdate(float dt)
     }
     
     if(stageCover != nullptr){
-        //        Point plPos = this->getCoordinateFromPosition(player->getPosition() + Point(0, -player->collectBoundingBox().size.height/2), theMap);
-        Point plPos;
+        //        Vec2 plPos = this->getCoordinateFromPosition(player->getPosition() + Vec2(0, -player->collectBoundingBox().size.height/2), theMap);
+        Vec2 plPos;
         int tgid = stageCover->getTileGIDAt(plPos);
         if(tgid && !isStageCoverTransparent){
             setStageCoverOpacity(167);
@@ -4452,14 +4452,14 @@ void EditorWorld::gravityUpdate(float dt)
             int xMove = 30;
             int yMove = 50;
             sptSnow->setPosition(rand()%256 + xMove, rand()%256 + yMove);
-            sptSnow->runAction(Sequence::create(MoveBy::create(dur, Point(rand()%xMove + 5, -yMove)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, sptSnow)), NULL));
+            sptSnow->runAction(Sequence::create(MoveBy::create(dur, Vec2(rand()%xMove + 5, -yMove)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, sptSnow)), NULL));
         }
     }
     
     draw->clear();
     //    GM->drawPath(); // test
     //    for(auto unit: selectedArray){
-    //        draw->drawCircle(unit->getPosition() + Point(0, -unit->getContentSize().height/2), unit->getContentSize().width/2, 360, 20, false, 1, 0.25f, Color4F::GREEN);
+    //        draw->drawCircle(unit->getPosition() + Vec2(0, -unit->getContentSize().height/2), unit->getContentSize().width/2, 360, 20, false, 1, 0.25f, Color4F::GREEN);
     //    }
     
     if (dt > 0.03) {
@@ -4581,35 +4581,35 @@ void EditorWorld::checkGameSchedule(){
     if (stageIndex == 3) {
         if (lastGameScheduleIndex == -1 && gameTimer > 60*4) {
             for(int i = 12; i < 19;i++){
-                decoLayer->setTileGID(0, Point(28, i));
+                decoLayer->setTileGID(0, Vec2(28, i));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 0 && gameTimer > 60*7) {
             for(int i = 13; i < 21;i++){
-                decoLayer->setTileGID(0, Point(i, 31));
+                decoLayer->setTileGID(0, Vec2(i, 31));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 1 && gameTimer > 60*10) {
             for(int i = 12; i < 19;i++){
-                decoLayer->setTileGID(0, Point(41, i));
+                decoLayer->setTileGID(0, Vec2(41, i));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 2 && gameTimer > 60*13) {
             for(int i = 13; i < 21;i++){
-                decoLayer->setTileGID(0, Point(i, 39));
+                decoLayer->setTileGID(0, Vec2(i, 39));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 3 && gameTimer > 60*5) {
             for(int i = 57; i < 61;i++){
-                decoLayer->setTileGID(0, Point(30, i));
+                decoLayer->setTileGID(0, Vec2(30, i));
             }
             resetPathState();
             makeZombiesAttack();
@@ -4619,14 +4619,14 @@ void EditorWorld::checkGameSchedule(){
     if (stageIndex == 4) {
         if (lastGameScheduleIndex == -1 && gameTimer > 60*11) {
             for(int i = 8; i < 14;i++){
-                decoLayer->setTileGID(0, Point(i, 17));
+                decoLayer->setTileGID(0, Vec2(i, 17));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 0 && gameTimer > 60*8) {
             for(int i = 57; i < 61;i++){
-                decoLayer->setTileGID(0, Point(i, 16));
+                decoLayer->setTileGID(0, Vec2(i, 16));
             }
             resetPathState();
             makeZombiesAttack();
@@ -4637,21 +4637,21 @@ void EditorWorld::checkGameSchedule(){
     if (stageIndex == 5) {
         if (lastGameScheduleIndex == -1 && gameTimer > 60*11) {
             for(int i = 11; i < 17;i++){
-                decoLayer->setTileGID(0, Point(i, 9));
+                decoLayer->setTileGID(0, Vec2(i, 9));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 0 && gameTimer > 60*8) {
             for(int i = 8; i < 12;i++){
-                decoLayer->setTileGID(0, Point(40, i));
+                decoLayer->setTileGID(0, Vec2(40, i));
             }
             resetPathState();
             makeZombiesAttack();
             lastGameScheduleIndex++;
         }else if (lastGameScheduleIndex == 1 && gameTimer > 60*8) {
             for(int i = 33; i < 39;i++){
-                decoLayer->setTileGID(0, Point(i, 32));
+                decoLayer->setTileGID(0, Vec2(i, 32));
             }
             resetPathState();
             makeZombiesAttack();
@@ -4683,7 +4683,7 @@ void EditorWorld::updateFog(){
         fog->newState = FOG_SEEN_NOT;
     }
     updateMiniMapForNonMoving();
-    Point fogCoordinate;
+    Vec2 fogCoordinate;
     Fog* fogAboveUnit;
     for(auto unit: heroArray){
         if(unit->isBuilding){
@@ -4714,7 +4714,7 @@ void EditorWorld::updateFog(){
                 }
             }
         }else{
-            fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+            fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
             fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
             fogAboveUnit->newState = FOG_SEEN_NOW;
             for(auto fog:fogAboveUnit->adjacentFogs){
@@ -4754,7 +4754,7 @@ void EditorWorld::updateFog(){
     }
     
     for(auto unit: enemyArray){
-        fogCoordinate = Point(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
         fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
         unit->setVisible(fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW || unit->isDetected);
         if(unit->energyBar != nullptr){
@@ -4884,23 +4884,23 @@ void EditorWorld::chasingMissileUpdate(float dt)
         checkForAndResolveCollisionsForMissile(drop);
     }
 }
-void EditorWorld::setViewPointCenter(Point position, bool forceMove)
+void EditorWorld::setViewPointCenter(Vec2 position, bool forceMove)
 {
     float scale = getScale();
     int x = position.x*scale;
     int y = position.y*scale;
     
-    Point actualPosition = Point(x, y);
+    Vec2 actualPosition = Vec2(x, y);
     
-    Point centerOfView = Point(size.width/2, size.height*3/4 - 30);
-    Point viewPoint = centerOfView - actualPosition;
+    Vec2 centerOfView = Vec2(size.width/2, size.height*3/4 - 30);
+    Vec2 viewPoint = centerOfView - actualPosition;
     float distance = 0;
     float maxDistance = 300;
     if (distance > maxDistance) {
         distance = maxDistance;
     }
     float angle = GameManager::getInstance()->getAngle(center, center);
-    Point aimingPos = Point(cos(angle*3.14/180)*distance, -sin(-angle*3.14/180)*distance);
+    Vec2 aimingPos = Vec2(cos(angle*3.14/180)*distance, -sin(-angle*3.14/180)*distance);
     if(forceMove){
         this->setPosition(viewPoint - aimingPos*0.7f);
     }else{
@@ -4913,27 +4913,27 @@ void EditorWorld::showBigMiniMap(bool isBig){
     //    if (isBig) {
     //        float height = size.height*3/4;
     //        float width = miniMapSize.width*height/miniMapSize.height;
-    //        currentMapSize = Size(width, height);
-    //        scrollView->setContentSize(Size(width, height));
+    //        currentMapSize = cocos2d::Size(width, height);
+    //        scrollView->setContentSize(cocos2d::Size(width, height));
     //        log("mini map pos: %f, %f", scrollView->getPositionX(), scrollView->getPositionY());
-    //        scrollView->setPosition(Point(size.width/2 + width/2, size.height/2 + height/2));
+    //        scrollView->setPosition(Vec2(size.width/2 + width/2, size.height/2 + height/2));
     //        scrollView->setBackGroundColorOpacity(200);
     //    }else{
     //        currentMapSize = miniMapSize;
     //        scrollView->setContentSize(miniMapSize);
     //        log("mini map pos: %f, %f", scrollView->getPositionX(), scrollView->getPositionY());
-    //        scrollView->setPosition(Point(size.width - 10, size.height - 10));
+    //        scrollView->setPosition(Vec2(size.width - 10, size.height - 10));
     //        scrollView->setBackGroundColorOpacity(100);
     //    }
     //    Node* dnHero = scrollView->getInnerContainer()->getChildByName("Hero");
     //    if (dnHero != nullptr) {
     //        dnHero->setPosition(scrollView->getContentSize()/2);
-    //        dnHero->setPosition(dnHero->getPosition() + Point(-TILE_SIZE*0.3f*0.5f, -TILE_SIZE*0.3f*0.5f));
+    //        dnHero->setPosition(dnHero->getPosition() + Vec2(-TILE_SIZE*0.3f*0.5f, -TILE_SIZE*0.3f*0.5f));
     //    }
     //
     //    scrollView->setInnerContainerSize(scrollView->getContentSize());
 }
-void EditorWorld::setCurrentTileMap(Point pos){
+void EditorWorld::setCurrentTileMap(Vec2 pos){
     for(auto map: mapArray){
         if (map->getBoundingBox().containsPoint(pos)) {
             //            if (currentTileMap != map) {
@@ -4945,7 +4945,7 @@ void EditorWorld::setCurrentTileMap(Point pos){
         }
     }
 }
-experimental::TMXTiledMap* EditorWorld::getTileMap(Point pos){
+experimental::TMXTiledMap* EditorWorld::getTileMap(Vec2 pos){
     return theMap;
     for(auto map: mapArray){
         if (map->getBoundingBox().containsPoint(pos)) {
@@ -4954,10 +4954,10 @@ experimental::TMXTiledMap* EditorWorld::getTileMap(Point pos){
     }
     return nullptr;
 }
-cocos2d::Point EditorWorld::getCoordinateFromPosition(cocos2d::Point position){
+cocos2d::Vec2 EditorWorld::getCoordinateFromPosition(cocos2d::Vec2 position){
     return getCoordinateFromPosition(position, theMap);
 }
-Point EditorWorld::getCoordinateFromPosition(Point position, experimental::TMXTiledMap* map)
+Vec2 EditorWorld::getCoordinateFromPosition(Vec2 position, experimental::TMXTiledMap* map)
 {
     //    int mapRowCount = map->getMapSize().height;
     //    int mapColumnCount = map->getMapSize().width;
@@ -4967,25 +4967,25 @@ Point EditorWorld::getCoordinateFromPosition(Point position, experimental::TMXTi
     float y = floor(((map->getMapSize().height * TILE_SIZE) - position.y) / TILE_SIZE);
     //    if (y < 0) y =  0;
     //    if (y >= mapRowCount - 1) y = mapRowCount - 1;
-    return Point(x, y);
+    return Vec2(x, y);
 }
 
-Rect EditorWorld::tileRectFromTileCoords(Point tileCoords, experimental::TMXTiledMap* map)
+cocos2d::Rect EditorWorld::tileRectFromTileCoords(Vec2 tileCoords, experimental::TMXTiledMap* map)
 {
-    return Rect(tileCoords.x*TILE_SIZE + map->getPositionX(), (map->getMapSize().height - tileCoords.y - 1)*TILE_SIZE + map->getPositionY(), TILE_SIZE, TILE_SIZE);
+    return cocos2d::Rect(tileCoords.x*TILE_SIZE + map->getPositionX(), (map->getMapSize().height - tileCoords.y - 1)*TILE_SIZE + map->getPositionY(), TILE_SIZE, TILE_SIZE);
     //    float levelHeightInPixels = tileMap->getMapSize().height * tileMap->getTileSize().height;
-    //    Point origin = Point(tileCoords.x * tileMap->getTileSize().width, levelHeightInPixels - ((tileCoords.y + 1) * tileMap->getTileSize().height));
-    //    return Rect(origin.x, origin.y, tileMap->getTileSize().width, tileMap->getTileSize().height);
+    //    Vec2 origin = Vec2(tileCoords.x * tileMap->getTileSize().width, levelHeightInPixels - ((tileCoords.y + 1) * tileMap->getTileSize().height));
+    //    return cocos2d::Rect(origin.x, origin.y, tileMap->getTileSize().width, tileMap->getTileSize().height);
 }
 
-int EditorWorld::getTileAtPosition(Point position, int tag, experimental::TMXTiledMap* map)
+int EditorWorld::getTileAtPosition(Vec2 position, int tag, experimental::TMXTiledMap* map)
 {
     float mapX = map->getPositionX();
     float mapY = map->getPositionY();
     if (position.x < mapX || position.y < mapY || mapX + map->getMapSize().width*TILE_SIZE < position.x || mapY + map->getMapSize().height*TILE_SIZE < position.y ) {
         return 5;
     }
-    Point plPos = this->getCoordinateFromPosition(position - map->getPosition(), map); //1
+    Vec2 plPos = this->getCoordinateFromPosition(position - map->getPosition(), map); //1
     //experimental::TMXLayer* layer = map->getLayer("stage");
     //Node* parent = layer->getParent();
     return ((experimental::TMXLayer*)map->getChildByTag(tag))->getTileGIDAt(plPos); //4
@@ -5005,7 +5005,7 @@ void EditorWorld::registerScriptAccelerateHandler(int handler)
 }
 
 
-void EditorWorld::setPlayerPosition(Point position) {
+void EditorWorld::setPlayerPosition(Vec2 position) {
     
 }
 void EditorWorld::Dispose(){
@@ -5042,10 +5042,10 @@ void EditorWorld::addListener(){
         
         Touch* touch = touches.at(0);
         isTouchBeganFromMiniMap = false;
-        if (Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
+        if (cocos2d::Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, cocos2d::Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
             //            if(selectedArray.size() == 0){
-            Point newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
-            Point newPos = -newTargetPos + size/2;
+            Vec2 newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
+            Vec2 newPos = -newTargetPos + size/2;
             moveScreen(newPos);
             //            }
             isTouchBeganFromMiniMap = true;
@@ -5061,11 +5061,11 @@ void EditorWorld::addListener(){
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
             extraY = TILE_SIZE;
 #endif
-            Point coordinate = getCoordinateFromPosition(touch->getLocation() + Point(0, TILE_SIZE +extraY), theMap);
+            Vec2 coordinate = getCoordinateFromPosition(touch->getLocation() + Vec2(0, TILE_SIZE +extraY), theMap);
             if(buildingTempleteCoordinate != coordinate){
                 //                log("diff x: %d, y: %d", (int)coordinate.x, (int)coordinate.y);
                 isBuildingTempleteMoved = true;
-                Point pos = this->getPositionFromTileCoordinate(coordinate.x - buildingTempleteSize.width/2 + 1, coordinate.y + buildingTempleteSize.height/2) - Point(getPositionX() - (int)getPositionX()%100, getPositionY() - (int)getPositionY()%100);
+                Vec2 pos = this->getPositionFromTileCoordinate(coordinate.x - buildingTempleteSize.width/2 + 1, coordinate.y + buildingTempleteSize.height/2) - Vec2(getPositionX() - (int)getPositionX()%100, getPositionY() - (int)getPositionY()%100);
                 if(pos.x < TILE_SIZE){
                     pos.x = TILE_SIZE;
                 }
@@ -5078,7 +5078,7 @@ void EditorWorld::addListener(){
                 if(pos.y >= (mapSize.height - buildingTempleteSize.height)*TILE_SIZE){
                     pos.y = (mapSize.height - buildingTempleteSize.height)*TILE_SIZE;
                 }
-                buildingTemplete->setPosition(Point(pos.x - ((int)pos.x)%100, pos.y - ((int)pos.y)%100));
+                buildingTemplete->setPosition(Vec2(pos.x - ((int)pos.x)%100, pos.y - ((int)pos.y)%100));
                 //                buildingTemplete->setPosition(pos);
                 checkBuildingTemplete();
             }else{
@@ -5095,10 +5095,10 @@ void EditorWorld::addListener(){
         }
         float touchBeganToEndDiff = touchBeganPos.distanceSquared(touch->getLocation());
         if (isTouchBeganFromMiniMap && touchBeganToEndDiff > 150){ // click
-            if (Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
+            if (cocos2d::Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, cocos2d::Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
                 isMapMovingByMiniMap = true;
-                Point newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
-                Point newPos = -newTargetPos + size/2;
+                Vec2 newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
+                Vec2 newPos = -newTargetPos + size/2;
                 moveScreen(newPos);
                 
                 
@@ -5108,7 +5108,7 @@ void EditorWorld::addListener(){
         EHUD->draw->clear();
         //        if(twoTouchEnabled || touches.size() > 1){
         if(secondTouch != nullptr && touches.size() > 1){
-            Point dtPos = secondTouch->getLocation() - lastTouchPoint;
+            Vec2 dtPos = secondTouch->getLocation() - lastTouchPoint;
             moveScreen(getPosition() + dtPos);
             
             lastTouchPoint = secondTouch->getLocation();
@@ -5133,14 +5133,14 @@ void EditorWorld::addListener(){
                 EHUD->talkIndex = 0;
                 EHUD->talkText = LM->getText("tutorial 3");
                 Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
-                spt->setPosition(Point(size.width/2 - 750, 330));
+                spt->setPosition(Vec2(size.width/2 - 750, 330));
                 spt->stopAllActions();
                 spt->setSpriteFrame("mine.png");
             }
         }else if(touchCount < 2 && !isMapMovingByMiniMap){
 //            EHUD->draw->drawRect(touchBeganPos, touches.at(0)->getLocation(), Color4F::GREEN);
             Touch *touch = touches.at(0);
-            Point location = touch->getLocationInView();
+            Vec2 location = touch->getLocationInView();
             if(location.x < 0 || location.y < 0 || location.x >= size.width || location.y >= size.height){
                 return;
             }
@@ -5165,7 +5165,7 @@ void EditorWorld::addListener(){
                 selectedArray.at(0)->builderCoordinate = buildingTempleteCoordinate;
                 selectedArray.at(0)->builderSpriteName = buildingTemplete->getName();
                 selectedArray.at(0)->isGoingToBuild = true;
-                moveTo(selectedArray, this->getPositionFromTileCoordinate(buildingTempleteCoordinate.x, buildingTempleteCoordinate.y) + Point(buildingTempleteSize.width*TILE_SIZE/2, buildingTempleteSize.height*TILE_SIZE/2));
+                moveTo(selectedArray, this->getPositionFromTileCoordinate(buildingTempleteCoordinate.x, buildingTempleteCoordinate.y) + Vec2(buildingTempleteSize.width*TILE_SIZE/2, buildingTempleteSize.height*TILE_SIZE/2));
                 
                 this->onBuildingBetterClick(); // cancel current menues
                 
@@ -5178,25 +5178,25 @@ void EditorWorld::addListener(){
         }
         Touch* touch = touches.at(0);
         if(twoTouchEnabled){
-            Size mapSize = theMap->getMapSize()*TILE_SIZE;
-            Point currentPos = getPosition();
+            cocos2d::Size mapSize = theMap->getMapSize()*TILE_SIZE;
+            Vec2 currentPos = getPosition();
             this->stopAllActions();
             if(this->getPosition().x < -mapSize.width + size.width){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(-mapSize.width + size.width-getPositionX(), 0)), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(-mapSize.width + size.width-getPositionX(), 0)), 3));
             }
             if(this->getPosition().y < -mapSize.height + size.height){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(0, -mapSize.height + size.height-getPositionY())), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(0, -mapSize.height + size.height-getPositionY())), 3));
             }
             if(this->getPosition().x > 0){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(-getPositionX(), 0)), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(-getPositionX(), 0)), 3));
             }
             if(this->getPosition().y > 0){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(0, -getPositionY())), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(0, -getPositionY())), 3));
             }
         }
         
         bool somethingPicked = false;
-        Point pos = lastTouchPoint - getPosition();
+        Vec2 pos = lastTouchPoint - getPosition();
         for(auto unit: heroArray){
             if(unit->getBoundingBox().containsPoint(pos)){
                 somethingPicked = true;
@@ -5208,10 +5208,10 @@ void EditorWorld::addListener(){
         if(touchCount == 1 && !twoTouchEnabled){
             float touchBeganToEndDiff = touchBeganPos.distanceSquared(touch->getLocation());
             if(touchBeganToEndDiff < 2000){ // click
-                if (isTouchBeganFromMiniMap && Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
+                if (isTouchBeganFromMiniMap && cocos2d::Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, cocos2d::Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
                     if(false){
                         if(!isMapMovingByMiniMap){
-                            Point newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
+                            Vec2 newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
                             if(selectedArray.size() > 0){
                                 doClick(newTargetPos);
                             }else{
@@ -5219,8 +5219,8 @@ void EditorWorld::addListener(){
                             }
                         }
                     }else{
-                        Point newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
-                        Point newPos = -newTargetPos + size/2;
+                        Vec2 newTargetPos = (touch->getLocation() - (drawMiniMapForMoving->getPosition() + miniMapDrawStartPos))/miniMapScale;
+                        Vec2 newPos = -newTargetPos + size/2;
                         moveScreen(newPos);
                     }
                 }else{
@@ -5228,7 +5228,7 @@ void EditorWorld::addListener(){
                 }
                 
                 Touch *touch = touches.at(0);
-                Point location = touch->getLocationInView();
+                Vec2 location = touch->getLocationInView();
                 location = Director::getInstance()->convertToGL(location);
                 if(EHUD->selectedMode == MODE_PENCIL || EHUD->selectedMode == MODE_ERASER){
                     EHUD->doBrush(location - getPosition());
@@ -5238,7 +5238,7 @@ void EditorWorld::addListener(){
                 
             }else{ // drag
                 if(!isMapMovingByMiniMap){
-//                    Rect rect = Rect(touchBeganPos-this->getPosition(), Size( touch->getLocation().x - touchBeganPos.x, touch->getLocation().y - touchBeganPos.y));
+//                    cocos2d::Rect rect = cocos2d::Rect(touchBeganPos-this->getPosition(), cocos2d::Size( touch->getLocation().x - touchBeganPos.x, touch->getLocation().y - touchBeganPos.y));
 //                    selectByDrag(rect);
                     GM->playSoundEffect(SOUND_PENCIL_SHORT);
                 }
@@ -5264,7 +5264,7 @@ void EditorWorld::addListener(){
         this->stopAllActions();
     };
     mouseListener->onMouseMove = [&](EventMouse* evt){
-        Point pos = evt->getLocationInView();
+        Vec2 pos = evt->getLocationInView();
         //        log("x: %f, y: %f", pos.x, pos.y);
         
         isMapMoveLeft = pos.x < 10;
@@ -5274,7 +5274,7 @@ void EditorWorld::addListener(){
         //        EHUD->draw->clear();
         //        if(twoTouchEnabled || touches.size() > 1){
         if((int)(evt->getMouseButton()) == 1){
-            Point dtPos = pos - lastTouchPoint;
+            Vec2 dtPos = pos - lastTouchPoint;
             this->setPosition(getPosition() + dtPos);
             lastTouchPoint = pos;
         }else if((int)(evt->getMouseButton()) == 0){
@@ -5284,19 +5284,19 @@ void EditorWorld::addListener(){
     mouseListener->onMouseUp = [&](EventMouse* evt){
         
         if((int)(evt->getMouseButton()) == 1){
-            Size mapSize = theMap->getMapSize()*TILE_SIZE;
-            Point currentPos = getPosition();
+            cocos2d::Size mapSize = theMap->getMapSize()*TILE_SIZE;
+            Vec2 currentPos = getPosition();
             if(this->getPosition().x < -mapSize.width + size.width){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(-mapSize.width + size.width-getPositionX(), 0)), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(-mapSize.width + size.width-getPositionX(), 0)), 3));
             }
             if(this->getPosition().y < -mapSize.height + size.height){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(0, -mapSize.height + size.height-getPositionY())), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(0, -mapSize.height + size.height-getPositionY())), 3));
             }
             if(this->getPosition().x > 0){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(-getPositionX(), 0)), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(-getPositionX(), 0)), 3));
             }
             if(this->getPosition().y > 0){
-                this->runAction(EaseOut::create(MoveBy::create(0.2f, Point(0, -getPositionY())), 3));
+                this->runAction(EaseOut::create(MoveBy::create(0.2f, Vec2(0, -getPositionY())), 3));
             }
         }
         //        EHUD->draw->clear();
@@ -5334,7 +5334,7 @@ void EditorWorld::addListener(){
      */
 }
 
-void EditorWorld::moveScreen(cocos2d::Point pos){
+void EditorWorld::moveScreen(cocos2d::Vec2 pos){
     if(pos.x > 0){
         pos.x = 0;
     }
@@ -5348,12 +5348,12 @@ void EditorWorld::moveScreen(cocos2d::Point pos){
         pos.x = -TILE_SIZE*mapSize.width + size.width;
     }
     this->setPosition(pos);
-    miniMapViewRect = Rect(miniMapDrawStartPos.x + (-pos.x)*miniMapScale, miniMapDrawStartPos.y + (-pos.y)*miniMapScale, size.width*miniMapScale, size.height*miniMapScale);
-    viewRect = Rect(-pos, size);
+    miniMapViewRect = cocos2d::Rect(miniMapDrawStartPos.x + (-pos.x)*miniMapScale, miniMapDrawStartPos.y + (-pos.y)*miniMapScale, size.width*miniMapScale, size.height*miniMapScale);
+    viewRect = cocos2d::Rect(-pos, size);
     
     updateMiniMapForMoving();
 }
-void EditorWorld::doClick(cocos2d::Point pos){
+void EditorWorld::doClick(cocos2d::Vec2 pos){
     EHUD->setMenu(0, BTN_TYPE_NONE);
     EHUD->setMenu(1, BTN_TYPE_NONE);
     EHUD->setMenu(2, BTN_TYPE_NONE);
@@ -5384,7 +5384,7 @@ void EditorWorld::doClick(cocos2d::Point pos){
     EnemyBase* mutual = nullptr;
     if(selectedUnit == nullptr){
         for(auto unit: mutualArray){
-            //            Rect rect = Rect(pos.x - 10, pos.y - 10, unit->getContentSize().width + 20, unit->getContentSize().height + 20);
+            //            cocos2d::Rect rect = cocos2d::Rect(pos.x - 10, pos.y - 10, unit->getContentSize().width + 20, unit->getContentSize().height + 20);
             if(unit->getBoundingBox().containsPoint(pos)){
                 //            if(unit->getBoundingBox().intersectsRect(rect)){
                 mutual = unit;
@@ -5399,8 +5399,8 @@ void EditorWorld::doClick(cocos2d::Point pos){
                 if(mutual->unitType == UNIT_MINE){
                     if(unit->isCarryingGold){
                         unit->isGatheringGold = true;
-                        unit->failedFindPathStart = Point::ZERO;
-                        unit->failedFindPathEnd = Point::ZERO;
+                        unit->failedFindPathStart = Vec2::ZERO;
+                        unit->failedFindPathEnd = Vec2::ZERO;
                         unit->isTemporaryFlying = true;
                         unit->moveToTarget(unit->returningPlace);
                     }else{
@@ -5417,9 +5417,9 @@ void EditorWorld::doClick(cocos2d::Point pos){
                     if(mutual != nullptr){
                         GM->playSoundEffect(SOUND_PENCIL_SHORT);
                         Sprite* spt = Sprite::createWithSpriteFrameName("pickax.png");
-                        spt->setPosition(mutual->getPosition() + Point(0, 100));
+                        spt->setPosition(mutual->getPosition() + Vec2(0, 100));
                         this->addChild(spt, 100);
-                        spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Point(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Point(0, 50)), 2), SPT_REMOVE_FUNC, NULL));
+                        spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Vec2(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Vec2(0, 50)), 2), SPT_REMOVE_FUNC, NULL));
                     }
                 }else if(mutual->unitType == UNIT_TREE || mutual->unitType == UNIT_UNREACHABLE_TREE){
                     if(mutual->unitType == UNIT_UNREACHABLE_TREE){
@@ -5427,13 +5427,13 @@ void EditorWorld::doClick(cocos2d::Point pos){
                     }
                     if(unit->isCarryingTree){
                         unit->isGatheringTree = true;
-                        unit->failedFindPathStart = Point::ZERO;
-                        unit->failedFindPathEnd = Point::ZERO;
+                        unit->failedFindPathStart = Vec2::ZERO;
+                        unit->failedFindPathEnd = Vec2::ZERO;
                         unit->isTemporaryFlying = true;
                         unit->moveToTarget(unit->returningPlace);
                     }else{
-                        Point coordinate = this->getCoordinateFromPosition(unit->getPosition());
-                        Point destCoordinate = this->getCoordinateFromPosition(mutual->getApproachingPoint(unit->getPosition()));
+                        Vec2 coordinate = this->getCoordinateFromPosition(unit->getPosition());
+                        Vec2 destCoordinate = this->getCoordinateFromPosition(mutual->getApproachingPoint(unit->getPosition()));
                         PointArray* array = GM->getPath(coordinate, destCoordinate);
                         if(array->count() > 0){
                             
@@ -5453,9 +5453,9 @@ void EditorWorld::doClick(cocos2d::Point pos){
                             }
                             GM->playSoundEffect(SOUND_PENCIL_SHORT);
                             Sprite* spt = Sprite::createWithSpriteFrameName("axe.png");
-                            spt->setPosition(mutual->getPosition() + Point(0, 100));
+                            spt->setPosition(mutual->getPosition() + Vec2(0, 100));
                             this->addChild(spt, 100);
-                            spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Point(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Point(0, 50)), 2), SPT_REMOVE_FUNC, NULL));
+                            spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Vec2(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Vec2(0, 50)), 2), SPT_REMOVE_FUNC, NULL));
                         }
                     }
                 }
@@ -5480,9 +5480,9 @@ void EditorWorld::doClick(cocos2d::Point pos){
                     Movable* building = nullptr;
                     for(auto unit: heroArray){
                         if(unit->isBuilding){
-                            Point buildingPos = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y);
+                            Vec2 buildingPos = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y);
                             float height = unit->buildingOccupySize.height*TILE_SIZE;
-                            Rect theRect = Rect(buildingPos.x, buildingPos.y - height, unit->buildingOccupySize.width*TILE_SIZE, height);
+                            cocos2d::Rect theRect = cocos2d::Rect(buildingPos.x, buildingPos.y - height, unit->buildingOccupySize.width*TILE_SIZE, height);
                             if(theRect.containsPoint(pos)){
                                 building = unit;
                                 log("building clickek %d", unit->unitType);
@@ -5555,9 +5555,9 @@ void EditorWorld::doClick(cocos2d::Point pos){
                         Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
                         Sprite* sptTemp = Sprite::create("handIcon.png");
                         spt->setSpriteFrame(sptTemp->getSpriteFrame());
-                        Size size = Director::getInstance()->getWinSize();
+                        cocos2d::Size size = Director::getInstance()->getWinSize();
                         spt->stopAllActions();
-                        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Point(0, -100)), MoveBy::create(0.15f, Point(0, 100)), DelayTime::create(1), NULL)));
+                        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Vec2(0, -100)), MoveBy::create(0.15f, Vec2(0, 100)), DelayTime::create(1), NULL)));
                     }
                 }
                 doubleClickTimer = 0.3f;
@@ -5573,7 +5573,7 @@ void EditorWorld::checkBuildingTemplete(){
     for (int j = 0; j < buildingTempleteSize.height; j++) {
         for (int i = 0; i < buildingTempleteSize.width; i++) {
             Sprite* spt = (Sprite*)buildingTemplete->getChildByTag(i + j*buildingTempleteSize.width);
-            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Point(buildingTempleteCoordinate.x + i, buildingTempleteCoordinate.y - j - 1)));
+            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Vec2(buildingTempleteCoordinate.x + i, buildingTempleteCoordinate.y - j - 1)));
             spt->setColor(isBlock?Color3B::RED:Color3B::GREEN);
             if(isBlock){
                 isBuildingReadyToBuild = false;
@@ -5585,7 +5585,7 @@ EnemyBase* EditorWorld::buildTheBuilding(int index, int x, int y,  int width, in
     bool isPlaceReady = true;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
-            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Point(x + i, y - j - 1)));
+            bool isBlock = isDecoBlock(decoLayer->getTileGIDAt(Vec2(x + i, y - j - 1)));
             if(isBlock){
                 isPlaceReady = false;
             }
@@ -5600,8 +5600,8 @@ EnemyBase* EditorWorld::buildTheBuilding(int index, int x, int y,  int width, in
         return nullptr;
     }
     
-    Point pos = getPositionFromTileCoordinate(x, y - height);
-    EnemyBase* unit = createUnit(index, WHICH_SIDE_HERO, ITS_BUILDING, pos + Point(width*TILE_SIZE/2 - TILE_SIZE/2, -(height - 1)*TILE_SIZE + height*TILE_SIZE/2 - TILE_SIZE/2), spriteName.substr(0, spriteName.size() - 4), 1, spriteName);
+    Vec2 pos = getPositionFromTileCoordinate(x, y - height);
+    EnemyBase* unit = createUnit(index, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(width*TILE_SIZE/2 - TILE_SIZE/2, -(height - 1)*TILE_SIZE + height*TILE_SIZE/2 - TILE_SIZE/2), spriteName.substr(0, spriteName.size() - 4), 1, spriteName);
     unit->isBuildingComplete = false;
     setOccupy(pos, width, height, true, unit);
     unit->setRotation(180);
@@ -5614,17 +5614,17 @@ EnemyBase* EditorWorld::buildTheBuilding(int index, int x, int y,  int width, in
 void EditorWorld::addDecoToBuilding(Movable* unit){
     if(unit->unitType == UNIT_FARM){
         unit->schedule(schedule_selector(Movable::makingSmoke), 1.7f);
-        unit->smokePoint = unit->getPosition() + Point(-18, 110);
+        unit->smokePoint = unit->getPosition() + Vec2(-18, 110);
     }else if(unit->unitType == UNIT_AIRPORT){
         Sprite* spt = Sprite::createWithSpriteFrameName("airportPropeller0.png");
         GM->runAnimation(spt, "propeller", true);
         unit->addChild(spt);
-        spt->setPosition(Point(134, 206));
+        spt->setPosition(Vec2(134, 206));
     }else if(unit->unitType == UNIT_CASTLE){
         Sprite* spt = Sprite::createWithSpriteFrameName("blueFlag0.png");
         GM->runAnimation(spt, "blueFlag", true);
         unit->addChild(spt);
-        spt->setPosition(Point(192, 255));
+        spt->setPosition(Vec2(192, 255));
     }
 }
 std::string EditorWorld::getSpriteNameForUnit(int index){
@@ -5724,36 +5724,36 @@ Sprite* EditorWorld::getSpriteForIcon(int index){
     }
     else if(index ==  UNIT_CATAPULT  ){
         sptBuilding = Sprite::createWithSpriteFrameName("catapult0.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x + 20, sptBuilding->getTextureRect().origin.y, 160, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 20, sptBuilding->getTextureRect().origin.y, 160, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_CASTLE  ){
         sptBuilding = Sprite::createWithSpriteFrameName("castle.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y + 50, 230, 210));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y + 50, 230, 210));
     }
     else if(index ==  UNIT_FARM  ){
         sptBuilding = Sprite::createWithSpriteFrameName("farm.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, 230, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_BARRACKS  ){
         sptBuilding = Sprite::createWithSpriteFrameName("barracks.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_LUMBERMILL  ){
         sptBuilding = Sprite::createWithSpriteFrameName("lumberMill.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x + 0, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 0, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }else if(index ==  UNIT_WATCHERTOWER  ){
         sptBuilding = Sprite::createWithSpriteFrameName("watcherTower.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, 210));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, 210));
     }else if(index ==  UNIT_FACTORY  ){
         sptBuilding = Sprite::createWithSpriteFrameName("factory.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_AIRPORT  ){
         sptBuilding = Sprite::createWithSpriteFrameName("airport.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, sptBuilding->getContentSize().height));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, sptBuilding->getContentSize().height));
         Sprite* spt = Sprite::createWithSpriteFrameName("airportPropeller0.png");
         sptBuilding->addChild(spt);
-        spt->setPosition(Point(134, 206));
+        spt->setPosition(Vec2(134, 206));
     }else if(index ==  UNIT_TREE){
         sptBuilding = Sprite::createWithSpriteFrameName("tree2_0.png");
     }else if(index ==  UNIT_MINE){
@@ -5772,7 +5772,7 @@ Sprite* EditorWorld::getSpriteForIcon(int index){
         sptBuilding = Sprite::createWithSpriteFrameName("bunker.png");
     }else if(index ==  UNIT_ORC_HQ){
         sptBuilding = Sprite::createWithSpriteFrameName("hq.png");
-        sptBuilding->setTextureRect(Rect(sptBuilding->getTextureRect().origin.x + 50, sptBuilding->getTextureRect().origin.y + 50 , 220, 210));
+        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 50, sptBuilding->getTextureRect().origin.y + 50 , 220, 210));
     }else if(index ==  UNIT_ZOMBIE_ORC_AXE){
         sptBuilding = Sprite::createWithSpriteFrameName("zombieOrc0.png");
     }else if(index ==  UNIT_ZOMBIE_SWORDSMAN){
@@ -5873,19 +5873,19 @@ void EditorWorld::createBuildingTemplete(int index, int width, int height, std::
     this->addChild(buildingTemplete, 10);
     buildingTemplete->setTag(index);
     moveScreen(getPosition());// to update viewRect
-    Point pos = viewRect.origin + size/2;
-    buildingTemplete->setPosition(Point(pos.x - (int)(pos.x)%100, pos.y - (int)(pos.y)%100 - 1));
+    Vec2 pos = viewRect.origin + size/2;
+    buildingTemplete->setPosition(Vec2(pos.x - (int)(pos.x)%100, pos.y - (int)(pos.y)%100 - 1));
     buildingTemplete->setName(spriteName);
     Sprite* spt = Sprite::createWithSpriteFrameName(spriteName);
     buildingTemplete->addChild(spt, 1);
-    spt->setPosition(Point(width*TILE_SIZE/2, height*TILE_SIZE/2));
+    spt->setPosition(Vec2(width*TILE_SIZE/2, height*TILE_SIZE/2));
     spt->setOpacity(150);
-    buildingTempleteSize = Size(width, height);
+    buildingTempleteSize = cocos2d::Size(width, height);
     for (int i = 0; i < width*height; i++) {
         spt = Sprite::createWithSpriteFrameName("whiteRect.png");
         buildingTemplete->addChild(spt);
-        spt->setAnchorPoint(Point::ZERO);
-        spt->setPosition(Point((i%width)*TILE_SIZE, (i/width)*TILE_SIZE));
+        spt->setAnchorPoint(Vec2::ZERO);
+        spt->setPosition(Vec2((i%width)*TILE_SIZE, (i/width)*TILE_SIZE));
         spt->setTag(i);
         spt->setOpacity(150);
     }
@@ -6023,13 +6023,13 @@ void EditorWorld::selectCommand(int command){
     //        EHUD->lblCommand->setString("CMD: build better");
     //    }
 }
-void EditorWorld::moveTo(EnemyBase* unit, Point pos){
+void EditorWorld::moveTo(EnemyBase* unit, Vec2 pos){
     targetHand->setPosition(pos);
     unit->moveToTarget(targetHand);
     unit->canFindTarget = false;
-    unit->attackFlagPos = Point::ZERO;
+    unit->attackFlagPos = Vec2::ZERO;
 }
-void EditorWorld::moveTo(Vector<EnemyBase*> troop, Point pos){
+void EditorWorld::moveTo(Vector<EnemyBase*> troop, Vec2 pos){
     GM->playSoundEffect(SOUND_PENCIL_SHORT);
     showTargetHand(pos, false);
     bool isHelicopter = false;
@@ -6037,7 +6037,7 @@ void EditorWorld::moveTo(Vector<EnemyBase*> troop, Point pos){
         unit->isTemporaryFlying = false;
         unit->moveToTarget(targetHand);
         unit->canFindTarget = false;
-        unit->attackFlagPos = Point::ZERO;
+        unit->attackFlagPos = Vec2::ZERO;
         unit->isGatheringTree = false;
         unit->isGatheringGold = false;
         if(unit->unitType == UNIT_HELICOPTER){
@@ -6055,9 +6055,9 @@ void EditorWorld::moveTo(Vector<EnemyBase*> troop, Point pos){
         Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
         Sprite* sptTemp = Sprite::create("handIcon2.png");
         spt->setSpriteFrame(sptTemp->getSpriteFrame());
-        Size size = Director::getInstance()->getWinSize();
+        cocos2d::Size size = Director::getInstance()->getWinSize();
         spt->stopAllActions();
-        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750 - 100, 330 + 50)), MoveBy::create(0.5f, Point(150, -200)), DelayTime::create(1), NULL)));
+        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750 - 100, 330 + 50)), MoveBy::create(0.5f, Vec2(150, -200)), DelayTime::create(1), NULL)));
     }
 }
 void EditorWorld::moveTo(Vector<EnemyBase*> troop, EnemyBase* target){
@@ -6066,7 +6066,7 @@ void EditorWorld::moveTo(Vector<EnemyBase*> troop, EnemyBase* target){
     for (auto unit: troop){
         unit->moveToTarget(target);
         unit->canFindTarget = false;
-        unit->attackFlagPos = Point::ZERO;
+        unit->attackFlagPos = Vec2::ZERO;
     }
 }
 void EditorWorld::gatherTo(Vector<EnemyBase*> troop, EnemyBase* target){
@@ -6077,14 +6077,14 @@ void EditorWorld::gatherTo(Vector<EnemyBase*> troop, EnemyBase* target){
         unit->canFindTarget = false;
     }
 }
-void EditorWorld::showTargetHand(cocos2d::Point pos, bool isAttack){
+void EditorWorld::showTargetHand(cocos2d::Vec2 pos, bool isAttack){
     targetHand->setPosition(pos);
     Sprite* spt = Sprite::create(isAttack?"swordIcon.png":"handIcon.png");
     this->addChild(spt, 100);
-    spt->setPosition(pos + Point(50, 50));
+    spt->setPosition(pos + Vec2(50, 50));
     spt->setOpacity(0);
     spt->runAction(Sequence::create(FadeIn::create(0.1f), DelayTime::create(0.5f), FadeOut::create(0.1f), SPT_REMOVE_FUNC, NULL));
-    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Point(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Point(0, 50)), 2), NULL));
+    spt->runAction(Sequence::create(EaseInOut::create(MoveBy::create(0.3f, Vec2(0, -50)), 2), DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(0.3f, Vec2(0, 50)), 2), NULL));
     
     Node* node = Node::create();
     this->addChild(node, 10);
@@ -6095,22 +6095,22 @@ void EditorWorld::showTargetHand(cocos2d::Point pos, bool isAttack){
     node->runAction(Sequence::create(DelayTime::create(1), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, node)), NULL));
     float dur = 0.2f;
     spt->runAction(Sequence::create(FadeIn::create(dur), DelayTime::create(0.6f - dur*2), FadeOut::create(dur), NULL));
-    spt->runAction(Sequence::create(MoveBy::create(dur, Point(0, 10)), DelayTime::create(0.6f - dur*2), MoveBy::create(dur, Point(0, -10)), NULL));
+    spt->runAction(Sequence::create(MoveBy::create(dur, Vec2(0, 10)), DelayTime::create(0.6f - dur*2), MoveBy::create(dur, Vec2(0, -10)), NULL));
 }
 void EditorWorld::stop(Vector<EnemyBase*> troop){
     for(auto unit: selectedArray){
         unit->stop();
     }
 }
-void EditorWorld::moveAndAttackTo(EnemyBase* unit, cocos2d::Point pos){
-    unit->targetCoordinate = Point::ZERO;
+void EditorWorld::moveAndAttackTo(EnemyBase* unit, cocos2d::Vec2 pos){
+    unit->targetCoordinate = Vec2::ZERO;
     unit->target = nullptr;
     unit->isTemporaryFlying = false;
     unit->moveToTarget(pos);
     unit->canFindTarget = unit->attackType != ATTACK_TYPE_NONE;
     unit->attackFlagPos = pos;
 }
-void EditorWorld::moveAndAttackTo(Vector<EnemyBase*> troop, Point pos){
+void EditorWorld::moveAndAttackTo(Vector<EnemyBase*> troop, Vec2 pos){
     showTargetHand(pos, true);
     for (auto unit: troop){
         moveAndAttackTo(unit, pos);
@@ -6124,8 +6124,8 @@ void EditorWorld::moveAndAttackTo(Vector<EnemyBase*> troop, Point pos){
         Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
         spt->setVisible(false);
         //                    spt->setSpriteFrame("handIcon.png");
-        //                    Size size = Director::getInstance()->getWinSize();
-        //                    spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750 - 50, 330 - 50)), MoveBy::create(0.5f, Point(100, -100)), DelayTime::create(1), NULL)));
+        //                    cocos2d::Size size = Director::getInstance()->getWinSize();
+        //                    spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750 - 50, 330 - 50)), MoveBy::create(0.5f, Vec2(100, -100)), DelayTime::create(1), NULL)));
     }
 }
 void EditorWorld::forceAttack(Vector<EnemyBase*> troop, EnemyBase* target){
@@ -6142,14 +6142,14 @@ void EditorWorld::forceAttack(Vector<EnemyBase*> troop, EnemyBase* target){
         unit->moveToTarget(target);
         unit->forceAttackTarget = true;
         unit->canFindTarget = false;
-        unit->attackFlagPos = Point::ZERO;
+        unit->attackFlagPos = Vec2::ZERO;
     }
     selectCommand(COMMAND_NOTHING);
 }
 
 void EditorWorld::selectByDrag(cocos2d::Rect rect){
     deselectAll();
-    //    draw->drawRect(rect.origin, Point(rect.getMaxX(), rect.getMaxY()), Color4F::RED);
+    //    draw->drawRect(rect.origin, Vec2(rect.getMaxX(), rect.getMaxY()), Color4F::RED);
     if(rect.size.width < 0){
         rect.origin.x = rect.origin.x + rect.size.width;
         rect.size.width *= -1;
@@ -6190,9 +6190,9 @@ void EditorWorld::selectByDrag(cocos2d::Rect rect){
         Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
         Sprite* sptTemp = Sprite::create("handIcon.png");
         spt->setSpriteFrame(sptTemp->getSpriteFrame());
-        Size size = Director::getInstance()->getWinSize();
+        cocos2d::Size size = Director::getInstance()->getWinSize();
         spt->stopAllActions();
-        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Point(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Point(0, -100)), MoveBy::create(0.1f, Point(0, 100)), MoveBy::create(0.1f, Point(0, -100)), MoveBy::create(0.15f, Point(0, 100)), DelayTime::create(1), NULL)));
+        spt->runAction(RepeatForever::create(Sequence::create(MoveTo::create(0, Vec2(size.width/2 - 750, 330 + 50)), MoveBy::create(0.1f, Vec2(0, -100)), MoveBy::create(0.1f, Vec2(0, 100)), MoveBy::create(0.1f, Vec2(0, -100)), MoveBy::create(0.15f, Vec2(0, 100)), DelayTime::create(1), NULL)));
     }
 }
 void EditorWorld::deselectAll(){
@@ -6318,7 +6318,7 @@ void EditorWorld::updateMenu(){
     }
 }
 bool EditorWorld::onTouchBegan(Touch *touch, Event *unused_event){
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
     location = Director::getInstance()->convertToGL(location);
     
     /*if(location.y > size.height*3/4){
@@ -6351,7 +6351,7 @@ void EditorWorld::onTouchEnded(Touch *touch, Event *unused_event){
 void EditorWorld::TouchesBegan(const std::vector<Touch*>& touches, Event *unused_event)
 {
     Touch *touch = touches.at(0);
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
     location = Director::getInstance()->convertToGL(location);
     
     //    touchStart = location;
@@ -6360,15 +6360,15 @@ void EditorWorld::TouchesBegan(const std::vector<Touch*>& touches, Event *unused
     
 }
 void EditorWorld::resetTouchStart(float dt){
-    //    touchStart = Point(0, size.height);
+    //    touchStart = Vec2(0, size.height);
 }
-void EditorWorld::setPlayer(Point pos){
+void EditorWorld::setPlayer(Vec2 pos){
     
 }
 void EditorWorld::TouchesMoved(const std::vector<Touch*>& touches, Event *unused_event)
 {
     Touch *touch = touches.at(0);
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
     location = Director::getInstance()->convertToGL(location);
     
     int min = 350;
@@ -6387,7 +6387,7 @@ void EditorWorld::getOffVehicle(){
 void EditorWorld::TouchesEnded(const std::vector<Touch*>& touches, Event *unused_event)
 {
     Touch *touch = (Touch*)(touches.at(0));
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
     location = Director::getInstance()->convertToGL(location);
     
 }
@@ -6395,15 +6395,15 @@ void EditorWorld::TouchesEnded(const std::vector<Touch*>& touches, Event *unused
 //void EditorWorld::TouchesCancelled(const std::vector<Touch*>& touches, Event *unused_event)
 //{
 //    Touch *touch = (Touch*)(touches.at(0));
-//    Point location = touch->getLocationInView();
+//    Vec2 location = touch->getLocationInView();
 //    location = Director::getInstance()->convertToGL(location);
 
 //}
 
-void EditorWorld::solveCollision(Movable* p, Point pos, Rect rect){
+void EditorWorld::solveCollision(Movable* p, Vec2 pos, cocos2d::Rect rect){
     
 }
-EnemyBase* EditorWorld::getEncounteredNPC(cocos2d::Point pos){
+EnemyBase* EditorWorld::getEncounteredNPC(cocos2d::Vec2 pos){
     for(auto npc: npcArray){
         if(npc->getBoundingBox().containsPoint(pos)){
             return npc;
@@ -6457,8 +6457,8 @@ void EditorWorld::stepBackDone(){
 }
 void EditorWorld::setQuest(){
 //    if(currentQuestID == 8){
-//        decoLayer->setTileGID(-1, Point(6, 3));
-//        decoLayer->setTileGID(-1, Point(7, 3));
+//        decoLayer->setTileGID(-1, Vec2(6, 3));
+//        decoLayer->setTileGID(-1, Vec2(7, 3));
 //        UDSetBool(strmake(KEY_QUEST_DONE_FORMAT, 8).c_str(), true);
 //        return;
 //    }
@@ -6529,17 +6529,17 @@ void EditorWorld::showNPCDisposableTalk(std::string talk){
     //    sptPointer->runAction(Sequence::create(DelayTime::create(delay), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, imgTalkBox)), NULL));
 }
 float EditorWorld::checkBottom(Movable* p){
-    Rect rect;
-    Point pos;
-    Point plPos;
-    Point newPlPos;
+    cocos2d::Rect rect;
+    Vec2 pos;
+    Vec2 plPos;
+    Vec2 newPlPos;
     bool ground = false;
     bool escape = false;
     float temp = -1;
     // check bottom
     rect = p->collisionBoundingBox();
     int offset = 1;
-    pos = rect.origin + Point(rect.size.width - offset, 0);
+    pos = rect.origin + Vec2(rect.size.width - offset, 0);
     do{
         if(pos.x <= rect.origin.x + offset){
             pos.x = rect.origin.x + offset;
@@ -6551,10 +6551,10 @@ float EditorWorld::checkBottom(Movable* p){
         int tgid;
         tgid = ((experimental::TMXLayer*)map->getChildByTag(TAG_STAGE_LAYER))->getTileGIDAt(plPos);
         //            if(tgid > 0){
-        Rect tileRect = tileRectFromTileCoords(plPos, map);
+        cocos2d::Rect tileRect = tileRectFromTileCoords(plPos, map);
         //            tileRect.origin.y = floorf(tileRect.origin.y);
         //            rect.origin.y = floorf(rect.origin.y);
-        Rect inter = intersection(tileRect, rect);
+        cocos2d::Rect inter = intersection(tileRect, rect);
         //            inter.size.height = floorf(inter.size.height);
         if(p->velocity.y < 0){
             if(inter.size.width > 0 && inter.size.height > 0 && p->getCurrentY() >= inter.origin.y + inter.size.height){
@@ -6566,11 +6566,11 @@ float EditorWorld::checkBottom(Movable* p){
                     if (p->onGround) {
                         int tgid;
                         if (p->isTowardLeft) {
-                            //                                plPos = getCoordinateFromPosition(rect.origin + Point(0, -5), map);
-                            tgid = getTileAtPosition(rect.origin + Point(0, -5), TAG_STAGE_LAYER, map);
+                            //                                plPos = getCoordinateFromPosition(rect.origin + Vec2(0, -5), map);
+                            tgid = getTileAtPosition(rect.origin + Vec2(0, -5), TAG_STAGE_LAYER, map);
                         }else{
-                            //                                plPos = getCoordinateFromPosition(rect.origin + Point(rect.size.width, -5), map);
-                            tgid = getTileAtPosition(rect.origin + Point(rect.size.width, -5), TAG_STAGE_LAYER, map);
+                            //                                plPos = getCoordinateFromPosition(rect.origin + Vec2(rect.size.width, -5), map);
+                            tgid = getTileAtPosition(rect.origin + Vec2(rect.size.width, -5), TAG_STAGE_LAYER, map);
                         }
                         
                         //                                if(!!isWay(tgid) && !isOneWay(tgid)){
@@ -6585,17 +6585,17 @@ float EditorWorld::checkBottom(Movable* p){
         //            }
         //        }
         
-        pos = pos - Point(TILE_SIZE/2, 0);
+        pos = pos - Vec2(TILE_SIZE/2, 0);
     }while(!escape);
     
     //    return ground;
     return temp;
 }
 void EditorWorld::checkForAndResolveCollisions(Movable* p){
-    Rect rect;
-    Point pos;
-    Point plPos;
-    Point newPlPos;
+    cocos2d::Rect rect;
+    Vec2 pos;
+    Vec2 plPos;
+    Vec2 newPlPos;
     bool ground = false;
     bool escape = false;
     float tempTotal = 0;
@@ -6611,7 +6611,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
     escape = false;
     int xOffset = 1;
     rect = p->collisionBoundingBox();
-    pos = rect.origin + Point(xOffset, rect.size.height);
+    pos = rect.origin + Vec2(xOffset, rect.size.height);
     do{
         if(pos.x >= rect.origin.x + rect.size.width - xOffset){
             pos.x = rect.origin.x + rect.size.width - xOffset;
@@ -6626,13 +6626,13 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             //                if(!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))){
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
             if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
-                Rect tileRect = tileRectFromTileCoords(plPos, map);
-                Rect inter = intersection(tileRect, rect);
+                cocos2d::Rect tileRect = tileRectFromTileCoords(plPos, map);
+                cocos2d::Rect inter = intersection(tileRect, rect);
                 
                 if(inter.size.width > 3 && inter.size.height > 0 && inter.size.width > inter.size.height){
                     
                     //                        if(p->velocity.y >= 0){
-                    //                            //                            plPos = this->getCoordinateFromPosition(pos - Point(0, TILE_SIZE));
+                    //                            //                            plPos = this->getCoordinateFromPosition(pos - Vec2(0, TILE_SIZE));
                     //                            //                            tgid = stageLayer->getTileGIDAt(plPos);
                     //                            //                            property = tileMap->getPropertiesForGID(tgid);
                     //                            if (!isWay(tgid)) {
@@ -6652,7 +6652,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             
         }
         
-        pos = pos + Point(TILE_SIZE/2, 0);
+        pos = pos + Vec2(TILE_SIZE/2, 0);
     }while(!escape);
     
     // check left
@@ -6661,7 +6661,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
     if(tempTotal > 0){
         rect.origin.y += tempTotal;
     }
-    pos = rect.origin + Point(-xOffset, 1);
+    pos = rect.origin + Vec2(-xOffset, 1);
     do{
         if(pos.y >= rect.origin.y + rect.size.height -1){
             pos.y = rect.origin.y + rect.size.height -1;
@@ -6675,8 +6675,8 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             //            if(!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))){
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
             if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
-                Rect tileRect = this->tileRectFromTileCoords(plPos, map);
-                Rect inter = intersection(tileRect, rect);
+                cocos2d::Rect tileRect = this->tileRectFromTileCoords(plPos, map);
+                cocos2d::Rect inter = intersection(tileRect, rect);
                 if(inter.size.width > 0 && inter.size.height > 0) {
                     p->desiredPosition.x += inter.size.width;
                     
@@ -6697,7 +6697,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             }
             
         }
-        pos = pos + Point(0, TILE_SIZE/2);
+        pos = pos + Vec2(0, TILE_SIZE/2);
     }while(!escape);
     
     // check right
@@ -6706,7 +6706,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
     if(tempTotal > 0){
         rect.origin.y += tempTotal;
     }
-    pos = rect.origin + Point(rect.size.width + xOffset, 1);
+    pos = rect.origin + Vec2(rect.size.width + xOffset, 1);
     do{
         if(pos.y >= rect.origin.y + rect.size.height){
             pos.y = rect.origin.y + rect.size.height;
@@ -6721,8 +6721,8 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             //                if (!isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos))) {
             bool way = !isWay(tgid) && !isHighWay(((experimental::TMXLayer*)map->getChildByTag(TAG_HIGH_STAGE_LAYER))->getTileGIDAt(plPos));
             if (way || (decoLayer && isDecoBlock(((experimental::TMXLayer*)map->getChildByTag(TAG_DECO_LAYER))->getTileGIDAt(plPos)))){
-                Rect tileRect = tileRectFromTileCoords(plPos, map);
-                Rect inter = intersection(tileRect, rect);
+                cocos2d::Rect tileRect = tileRectFromTileCoords(plPos, map);
+                cocos2d::Rect inter = intersection(tileRect, rect);
                 if(inter.size.width > 0 && inter.size.height > 0){
                     p->desiredPosition.x -= inter.size.width;
                     
@@ -6744,7 +6744,7 @@ void EditorWorld::checkForAndResolveCollisions(Movable* p){
             
         }
         
-        pos = pos + Point(0, TILE_SIZE/2);
+        pos = pos + Vec2(0, TILE_SIZE/2);
     }while(!escape);
     experimental::TMXTiledMap* map = getTileMap(pos);
     if (map) {
@@ -6908,13 +6908,13 @@ bool EditorWorld::checkMovableMissileCollision(Movable* p){
      return true;
      }*/
     //    bool ground = false;
-    //    Point current = p->getPosition();
-    Rect pRect = p->collisionBoundingBox(); //2
+    //    Vec2 current = p->getPosition();
+    cocos2d::Rect pRect = p->collisionBoundingBox(); //2
     p->setPosition( p->desiredPosition);
     int gid;
     experimental::TMXTiledMap* map = getTileMap(p->getPosition());
-    Point plPos = this->getCoordinateFromPosition(p->getPosition(), map); //1
-    Rect tileRect = tileRectFromTileCoords(plPos, map);//info->rect;
+    Vec2 plPos = this->getCoordinateFromPosition(p->getPosition(), map); //1
+    cocos2d::Rect tileRect = tileRectFromTileCoords(plPos, map);//info->rect;
     if(p->isFregile){
         gid = getTileAtPosition(p->getPosition(), TAG_STAGE_LAYER, map);
         if (gid) {
@@ -6932,25 +6932,25 @@ bool EditorWorld::checkMovableMissileCollision(Movable* p){
         if(p->velocity.y < 0){
             if(!isWay(gid)){
                 p->velocity.y = 0;
-                Rect intersectionR = intersection(pRect, tileRect);
+                cocos2d::Rect intersectionR = intersection(pRect, tileRect);
                 if(intersectionR.size.width > 0 && intersectionR.size.height > 0){
-                    p->setPosition(p->getPosition() + Point(0, intersectionR.size.height));
+                    p->setPosition(p->getPosition() + Vec2(0, intersectionR.size.height));
                 }
             }
         }
         if(p->velocity.y > 0){
             p->velocity.y = -0.0021;
-            Rect intersectionR = intersection(pRect, tileRect);
+            cocos2d::Rect intersectionR = intersection(pRect, tileRect);
             if(intersectionR.size.width > 0 && intersectionR.size.height > 0){
-                p->setPosition(p->getPosition() + Point(0, -intersectionR.size.height));
+                p->setPosition(p->getPosition() + Vec2(0, -intersectionR.size.height));
             }
         }
         
         
         if (p->velocity.x > 0) {
-            gid = getTileAtPosition(p->getPosition() + Point(p->getContentSize().width/2, 0), TAG_STAGE_LAYER, map);
+            gid = getTileAtPosition(p->getPosition() + Vec2(p->getContentSize().width/2, 0), TAG_STAGE_LAYER, map);
         }else if(p->velocity.x < 0){
-            gid = getTileAtPosition(p->getPosition() - Point(p->getContentSize().width/2, 0), TAG_STAGE_LAYER, map);
+            gid = getTileAtPosition(p->getPosition() - Vec2(p->getContentSize().width/2, 0), TAG_STAGE_LAYER, map);
         }
         if (!isWay(gid)) {
             MovableMissileArray.eraseObject(p);
@@ -6963,12 +6963,12 @@ bool EditorWorld::checkMovableMissileCollision(Movable* p){
     }
     return false;
 }
-int EditorWorld::getPlacedUnit(cocos2d::Point coordinate){
+int EditorWorld::getPlacedUnit(cocos2d::Vec2 coordinate){
     return placedArray[(int)coordinate.x][(int)coordinate.y];
 }
-void EditorWorld::eraseTile(cocos2d::Point coordinate){
+void EditorWorld::eraseTile(cocos2d::Vec2 coordinate){
     int index = coordinate.x + coordinate.y*mapSizeWidth;
-    Point pos;
+    Vec2 pos;
     for(auto unit: spriteBatch->getChildren()){
         if(unit->getTag() == index){
 //            pos = unit->getPosition();
@@ -6976,11 +6976,11 @@ void EditorWorld::eraseTile(cocos2d::Point coordinate){
             if(enemy->isBuilding){
                 for(int i = 0; i < enemy->buildingOccupySize.width; i++){
                     for(int j = 0;j < enemy->buildingOccupySize.height; j++){
-                        decoLayer->setTileGID(0, Point(enemy->buildingStartCoordinate.x + i, enemy->buildingStartCoordinate.y + j));
+                        decoLayer->setTileGID(0, Vec2(enemy->buildingStartCoordinate.x + i, enemy->buildingStartCoordinate.y + j));
                     }
                 }
 //                building->buildingStartCoordinate = getCoordinateFromPosition(pos, theMap);
-//                building->buildingOccupySize = Size(width, height);
+//                building->buildingOccupySize = cocos2d::Size(width, height);
                 updateMiniMapForNonMoving();
             }else if(enemy->unitType == UNIT_TREE){
                 decoLayer->setTileGID(0, getCoordinateFromPosition(enemy->getPosition()));
@@ -7010,7 +7010,7 @@ void EditorWorld::setMapData(std::string data){
     ValueVector brushes = GM->split(decompressed, ",");
     for(int i = 0; i < brushes.size(); i++){
         int brush = brushes.at(i).asInt();
-        brushTile(brush, Point(i%mapSizeWidth, i/mapSizeWidth));
+        brushTile(brush, Vec2(i%mapSizeWidth, i/mapSizeWidth));
     }
 }
 std::string EditorWorld::getMapData(){
@@ -7086,8 +7086,8 @@ std::string EditorWorld::getMapData(){
 
 //    return compressed;
 }
-void EditorWorld::brushTile(int brush, cocos2d::Point coordinate){
-    Point pos = getPositionFromTileCoordinate(coordinate.x, coordinate.y);
+void EditorWorld::brushTile(int brush, cocos2d::Vec2 coordinate){
+    Vec2 pos = getPositionFromTileCoordinate(coordinate.x, coordinate.y);
     eraseTile(coordinate);
     placedArray[(int)coordinate.x][(int)coordinate.y] = brush;
     
@@ -7095,7 +7095,7 @@ void EditorWorld::brushTile(int brush, cocos2d::Point coordinate){
     if(brush ==  BRUSH_TREE ){
         createTree(pos);
     }else if(brush ==  BRUSH_MINE ){
-        unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos + Point(100, -100), "mine", 1, "mine.png");
+        unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos + Vec2(100, -100), "mine", 1, "mine.png");
         setOccupy(pos, 3, 3, true, unit);
     }else if(brush ==  BRUSH_SWORDSMAN ){
         unit = createUnit(UNIT_SWORDMAN, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "swordman");
@@ -7108,25 +7108,25 @@ void EditorWorld::brushTile(int brush, cocos2d::Point coordinate){
     }else if(brush ==  BRUSH_HELICOPTER ){
         unit = createUnit(UNIT_HELICOPTER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "helicopter");
     }else if(brush ==  BRUSH_CASTLE ){
-        unit = createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, pos + Point(150, -100), "castle", 1, "castle.png");
+        unit = createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(150, -100), "castle", 1, "castle.png");
         setOccupy(pos, 4, 3, true, unit);
     }else if(brush ==  BRUSH_FARM ){
-        unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -0), "farm", 1, "farm.png");
+        unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -0), "farm", 1, "farm.png");
         setOccupy(pos, 3, 2, true, unit);
     }else if(brush == BRUSH_BARRACKS ){
-        unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "barracks", 1, "barracks.png");
+        unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "barracks", 1, "barracks.png");
         setOccupy(pos, 3, 3, true, unit);
     }else if(brush == BRUSH_LUMBERMILL ){
-        unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "lumberMill", 1, "lumberMill.png");
+        unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "lumberMill", 1, "lumberMill.png");
         setOccupy(pos, 3, 3, true, unit);
     }else if(brush == BRUSH_WATCHER_TOWER ){
-        unit = createUnit(UNIT_WATCHERTOWER, WHICH_SIDE_HERO, ITS_BUILDING, pos + Point(50, 0), "watcherTower", 1, "watcherTower.png");
+        unit = createUnit(UNIT_WATCHERTOWER, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(50, 0), "watcherTower", 1, "watcherTower.png");
         setOccupy(pos, 2, 2, true, unit);
     }else if(brush == BRUSH_FACTORY ){
-        unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "factory", 1, "factory.png");
+        unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "factory", 1, "factory.png");
         setOccupy(pos, 3, 3, true, unit);
     }else if(brush == BRUSH_AIRPORT ){
-        unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Point(100, -100), "airport", 1, "airport.png");
+        unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "airport", 1, "airport.png");
         setOccupy(pos, 3, 3, true, unit);
     }else if(brush == BRUSH_ORC_AXE ){
         unit = createUnit(UNIT_ORC_AXE, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcAxe");
@@ -7139,10 +7139,10 @@ void EditorWorld::brushTile(int brush, cocos2d::Point coordinate){
     }else if(brush == BRUSH_GOLBIN_BOMB ){
         unit = createUnit(UNIT_GOBLIN_BOMB, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblinBomb");
     }else if(brush == BRUSH_BUNKER ){
-        unit = createUnit(UNIT_ORC_BUNKER, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(50, 0), "bunker", 1, "bunker.png");
+        unit = createUnit(UNIT_ORC_BUNKER, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(50, 0), "bunker", 1, "bunker.png");
         setOccupy(pos, 2, 2, true, unit);
     }else if(brush == BRUSH_HQ ){
-        unit = createUnit(UNIT_ORC_HQ, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Point(150, -50), "hq", 1, "hq.png");
+        unit = createUnit(UNIT_ORC_HQ, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(150, -50), "hq", 1, "hq.png");
         setOccupy(pos, 4, 3, true, unit);
     }else if(brush == BRUSH_ZOMBIE_SWORDSMAN ){
         unit = createUnit(UNIT_ZOMBIE_SWORDSMAN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "zombieSwordsman");
@@ -7174,10 +7174,10 @@ bool EditorWorld::intersectsRect(cocos2d::Rect srcRect, cocos2d::Rect dstRect)
              srcRect.getMaxY() <= dstRect.getMinY() ||
              dstRect.getMaxY() <= srcRect.getMinY());
 }
-Rect EditorWorld::intersection(Rect source, Rect rect)
+cocos2d::Rect EditorWorld::intersection(cocos2d::Rect source, cocos2d::Rect rect)
 {
-    Rect intersection;
-    intersection = Rect(source.getMinX()>rect.getMinX()?source.getMinX():rect.getMinX(),
+    cocos2d::Rect intersection;
+    intersection = cocos2d::Rect(source.getMinX()>rect.getMinX()?source.getMinX():rect.getMinX(),
                         source.getMinY()>rect.getMinY()?source.getMinY():rect.getMinY(),
                         0,
                         0);
@@ -7187,35 +7187,35 @@ Rect EditorWorld::intersection(Rect source, Rect rect)
 }
 void EditorWorld::checkForAndResolveCollisionsForWater(Movable* p){
     
-    Point current = p->getGravityPosition();
+    Vec2 current = p->getGravityPosition();
     experimental::TMXTiledMap* map = getTileMap(current);
-    Rect pRect = p->collisionBoundingBox();
+    cocos2d::Rect pRect = p->collisionBoundingBox();
     int gid;
     for (int i = 0; i < 8; i++) {
         if (i == 0) {
-            current = current + Point(0, -TILE_SIZE);
+            current = current + Vec2(0, -TILE_SIZE);
         }else if(i == 1) {
-            current = current + Point(0, TILE_SIZE);
+            current = current + Vec2(0, TILE_SIZE);
         }else if(i == 2) {
-            current = current + Point(-TILE_SIZE, 0);
+            current = current + Vec2(-TILE_SIZE, 0);
         }else if(i == 3) {
-            current = current + Point(TILE_SIZE, 0);
+            current = current + Vec2(TILE_SIZE, 0);
         }else if(i == 4) {
-            current = current + Point(-TILE_SIZE, -TILE_SIZE);
+            current = current + Vec2(-TILE_SIZE, -TILE_SIZE);
         }else if(i == 5) {
-            current = current + Point(TILE_SIZE, -TILE_SIZE);
+            current = current + Vec2(TILE_SIZE, -TILE_SIZE);
         }else if(i == 6) {
-            current = current + Point(-TILE_SIZE, TILE_SIZE);
+            current = current + Vec2(-TILE_SIZE, TILE_SIZE);
         }else if(i == 7) {
-            current = current + Point(TILE_SIZE, TILE_SIZE);
+            current = current + Vec2(TILE_SIZE, TILE_SIZE);
         }
         
         gid = getTileAtPosition(current, TAG_STAGE_LAYER, map);
         if (gid) {
-            Point plPos = this->getCoordinateFromPosition(current - map->getPosition(), map); //1
-            Rect tileRect = tileRectFromTileCoords(plPos, map);//info->rect;
+            Vec2 plPos = this->getCoordinateFromPosition(current - map->getPosition(), map); //1
+            cocos2d::Rect tileRect = tileRectFromTileCoords(plPos, map);//info->rect;
             
-            Rect intersectionR = intersection(pRect, tileRect);
+            cocos2d::Rect intersectionR = intersection(pRect, tileRect);
             if (intersectionR.size.width > 0 && intersectionR.size.height > 0){
                 
                 if (!isWay(gid)) {
@@ -7224,40 +7224,40 @@ void EditorWorld::checkForAndResolveCollisionsForWater(Movable* p){
                     
                     if (tileIndx == 0 && p->velocity.y <= 0) {
                         //tile is directly below Hero
-                        p->desiredPosition = Point(p->desiredPosition.x, p->desiredPosition.y + intersectionR.size.height);
-                        p->velocity = Point(p->velocity.x, 0);
+                        p->desiredPosition = Vec2(p->desiredPosition.x, p->desiredPosition.y + intersectionR.size.height);
+                        p->velocity = Vec2(p->velocity.x, 0);
                         //                        p->setOnGround(true);
                         
                     } else if (tileIndx == 1) {
                         //tile is directly above Hero
-                        p->desiredPosition = Point(p->desiredPosition.x, p->desiredPosition.y - intersectionR.size.height);
-                        p->velocity = Point(p->velocity.x, 0.0);
+                        p->desiredPosition = Vec2(p->desiredPosition.x, p->desiredPosition.y - intersectionR.size.height);
+                        p->velocity = Vec2(p->velocity.x, 0.0);
                     } else if (tileIndx == 2) {
                         //tile is left of Hero
-                        p->desiredPosition = Point(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
+                        p->desiredPosition = Vec2(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
                         
                     } else if (tileIndx == 3) {
                         //tile is right of Hero
-                        p->desiredPosition = Point(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
+                        p->desiredPosition = Vec2(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
                     } else {
                         if (p->velocity.y > 0) {    // rasing
                             if (tileIndx > 5) {
-                                p->desiredPosition = Point(p->desiredPosition.x, p->desiredPosition.y - intersectionR.size.height);
-                                p->velocity = Point(p->velocity.x, 0.0);
+                                p->desiredPosition = Vec2(p->desiredPosition.x, p->desiredPosition.y - intersectionR.size.height);
+                                p->velocity = Vec2(p->velocity.x, 0.0);
                             }else if (tileIndx == 4){
-                                p->desiredPosition = Point(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
+                                p->desiredPosition = Vec2(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
                             }else if (tileIndx == 5){
-                                p->desiredPosition = Point(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
+                                p->desiredPosition = Vec2(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
                             }
                         }else{  // falling
                             if (tileIndx > 5) {
-                                p->desiredPosition = Point(p->desiredPosition.x, p->desiredPosition.y + intersectionR.size.height);
-                                p->velocity = Point(p->velocity.x, 0);
+                                p->desiredPosition = Vec2(p->desiredPosition.x, p->desiredPosition.y + intersectionR.size.height);
+                                p->velocity = Vec2(p->velocity.x, 0);
                                 //                                p->setOnGround(true);
                             }else if (tileIndx == 4){
-                                p->desiredPosition = Point(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
+                                p->desiredPosition = Vec2(p->desiredPosition.x + intersectionR.size.width, p->desiredPosition.y);
                             }else if (tileIndx == 5){
-                                p->desiredPosition = Point(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
+                                p->desiredPosition = Vec2(p->desiredPosition.x - intersectionR.size.width, p->desiredPosition.y);
                             }
                         }
                     }
@@ -7274,9 +7274,9 @@ void EditorWorld::checkForAndResolveCollisionsForWater(Movable* p){
 }
 
 void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
-    Rect rect;
-    Point pos;
-    Point plPos;
+    cocos2d::Rect rect;
+    Vec2 pos;
+    Vec2 plPos;
     bool ground = false;
     
     bool escape = false;
@@ -7286,7 +7286,7 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
     // check top
     escape = false;
     rect = p->collisionBoundingBox();
-    pos = rect.origin + Point(0, rect.size.height);
+    pos = rect.origin + Vec2(0, rect.size.height);
     experimental::TMXTiledMap* map;
     do{
         if(pos.x >= rect.origin.x + rect.size.width){
@@ -7300,8 +7300,8 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
             Value property = map->getPropertiesForGID(tgid);
             if (property.getType() != Value::Type::NONE && keyExist(property.asValueMap(), "Type")) {
                 if(property.asValueMap().at("Type").asString().compare("OneWay") != 0){
-                    Rect tileRect = this->tileRectFromTileCoords(plPos, map);
-                    Rect inter = intersection(tileRect, rect);
+                    cocos2d::Rect tileRect = this->tileRectFromTileCoords(plPos, map);
+                    cocos2d::Rect inter = intersection(tileRect, rect);
                     if(inter.size.width > 3 && inter.size.height > 0 && inter.size.width > inter.size.height){
                         if(p->velocity.y > 0){
                             p->desiredPosition.y -= inter.size.height;
@@ -7312,13 +7312,13 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
                 }
             }
         }
-        pos = pos + Point(TILE_SIZE/2, 0);
+        pos = pos + Vec2(TILE_SIZE/2, 0);
     }while(!escape);
     
     // check left
     escape = false;
     rect = p->collisionBoundingBox();
-    pos = rect.origin + Point(0, rect.size.height);
+    pos = rect.origin + Vec2(0, rect.size.height);
     do{
         if(pos.y <= rect.origin.y){
             break;//pos.y = rect.origin.y + rect.size.height; escape = true;
@@ -7330,8 +7330,8 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
             Value property = map->getPropertiesForGID(tgid);
             if(property.getType() != Value::Type::NONE && property.asValueMap().at("Type").asString().compare("OneWay") != 0){
                 if (property.getType() != Value::Type::NONE && keyExist(property.asValueMap(), "Type")) {
-                    Rect tileRect = this->tileRectFromTileCoords(plPos, map);
-                    Rect inter = intersection(tileRect, rect);
+                    cocos2d::Rect tileRect = this->tileRectFromTileCoords(plPos, map);
+                    cocos2d::Rect inter = intersection(tileRect, rect);
                     if(inter.size.width > 0 && inter.size.height > 0) {
                         p->desiredPosition.x += inter.size.width;
                         
@@ -7344,7 +7344,7 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
                 }
             }
         }
-        pos = pos - Point(0, TILE_SIZE/2);
+        pos = pos - Vec2(0, TILE_SIZE/2);
     }while(!escape);
     
     // check right
@@ -7362,8 +7362,8 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
             Value property = map->getPropertiesForGID(tgid);
             if (property.getType() != Value::Type::NONE && keyExist(property.asValueMap(), "Type")) {
                 if(property.asValueMap().at("Type").asString().compare("OneWay") != 0){
-                    Rect tileRect = this->tileRectFromTileCoords(plPos, map);
-                    Rect inter = intersection(tileRect, rect);
+                    cocos2d::Rect tileRect = this->tileRectFromTileCoords(plPos, map);
+                    cocos2d::Rect inter = intersection(tileRect, rect);
                     if(inter.size.width > 0 && inter.size.height > 0){
                         p->desiredPosition.x -= inter.size.width;
                         
@@ -7376,13 +7376,13 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
             }
         }
         
-        pos = pos - Point(0, TILE_SIZE/2);
+        pos = pos - Vec2(0, TILE_SIZE/2);
     }while(!escape);
     
     // check bottom
     rect = p->collisionBoundingBox();
     int offset = 2;
-    pos = rect.origin + Point(rect.size.width - offset, 0);
+    pos = rect.origin + Vec2(rect.size.width - offset, 0);
     do{
         if(pos.x <= rect.origin.x + offset){
             pos.x = rect.origin.x;
@@ -7392,8 +7392,8 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
         plPos = this->getCoordinateFromPosition(pos - map->getPosition(), map);
         int tgid = ((experimental::TMXLayer*)map->getChildByTag(TAG_STAGE_LAYER))->getTileGIDAt(plPos);
         if(tgid > 0){
-            Rect tileRect = this->tileRectFromTileCoords(plPos, map);
-            Rect inter = intersection(tileRect, rect);
+            cocos2d::Rect tileRect = this->tileRectFromTileCoords(plPos, map);
+            cocos2d::Rect inter = intersection(tileRect, rect);
             
             if(p->velocity.y < 0){
                 if(inter.size.width > 0 && inter.size.height > 0 && p->getCurrentY() >= inter.origin.y + inter.size.height){
@@ -7412,7 +7412,7 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
                         p->desiredPosition.y += inter.size.height;
                         //                        p->setOnGround(true);
                         //                        p->velocity.y = 0;
-                        p->velocity = Point(p->velocity.x*0.8, -p->velocity.y*0.6);
+                        p->velocity = Vec2(p->velocity.x*0.8, -p->velocity.y*0.6);
                         
                         
                         break;
@@ -7421,7 +7421,7 @@ void EditorWorld::checkForAndResolveCollisionsForBouncing(Movable* p){
             }
             
         }
-        pos = pos - Point(TILE_SIZE/2, 0);
+        pos = pos - Vec2(TILE_SIZE/2, 0);
     }while(!escape);
     
     p->setPosition( p->desiredPosition);
@@ -7439,10 +7439,10 @@ bool EditorWorld::checkForAndResolveCollisionsForMissile(Movable* p){
     if(map == nullptr || !isWay(gid)){
         /*if (p->velocity.x > 0){
          runEffect(EFFECT_EXPLODE_SMALL,//EFFECT_BULLET_AGAINST_WALL,
-         p->getPosition());//Point(intersectionR.origin.x, intersectionR.origin.y + intersectionR.size.height/2));//p->getPosition());
+         p->getPosition());//Vec2(intersectionR.origin.x, intersectionR.origin.y + intersectionR.size.height/2));//p->getPosition());
          }else{
          runEffect(EFFECT_EXPLODE_SMALL,//EFFECT_BULLET_AGAINST_WALL_LEFT,
-         p->getPosition());//Point(intersectionR.origin.x + intersectionR.size.width,intersectionR.origin.y + intersectionR.size.height/2));//p->getPosition());
+         p->getPosition());//Vec2(intersectionR.origin.x + intersectionR.size.width,intersectionR.origin.y + intersectionR.size.height/2));//p->getPosition());
          }*/
         runEffect(EFFECT_BULLET_WALL_SMALL, p->getPosition(), p->getRotation());
         
@@ -7518,7 +7518,7 @@ void EditorWorld::showSuccessLayer(float dt)
     //GameManager::getInstance()->getEditorHud()->setVisible(true);
     activityIndicator = Sprite::create("sandglass.png");
     //GameManager::getInstance()->getEditorHud()->addChild(activityIndicator);
-    activityIndicator->setPosition(Point(size.width/2, size.height/2));
+    activityIndicator->setPosition(Vec2(size.width/2, size.height/2));
     activityIndicator->runAction(RepeatForever::create(RotateBy::create(1, 360)));
     GameManager::getInstance()->saveCoin();
     if (starCount >= 3) {
@@ -7876,11 +7876,11 @@ void EditorWorld::showTalkText(std::string text, int whoseTalk, std::string npcN
         sptPointer->removeFromParent();
     }
     imgTalkBox = ImageView::create("talkBoxFrame.png", ImageView::TextureResType::PLIST);
-    imgTalkBox->setAnchorPoint(Point(0.5, 0));
+    imgTalkBox->setAnchorPoint(Vec2(0.5, 0));
     float splitPadding = 10;
-    imgTalkBox->setCapInsets(Rect(splitPadding, splitPadding, imgTalkBox->getContentSize().width - splitPadding*2, imgTalkBox->getContentSize().height - splitPadding*2));
+    imgTalkBox->setCapInsets(cocos2d::Rect(splitPadding, splitPadding, imgTalkBox->getContentSize().width - splitPadding*2, imgTalkBox->getContentSize().height - splitPadding*2));
     imgTalkBox->setScale9Enabled(true);
-    imgTalkBox->setContentSize(Size(100, 10));
+    imgTalkBox->setContentSize(cocos2d::Size(100, 10));
     this->addChild(imgTalkBox, 100);
     
     sptPointer = Sprite::createWithSpriteFrameName("talkBoxPointer.png");
@@ -7891,30 +7891,30 @@ void EditorWorld::showTalkText(std::string text, int whoseTalk, std::string npcN
     talkingNpcName = npcName;
     //    talkingNPC = nullptr;
     if(whoseTalk == WHOSE_TALK_HERO){
-        imgTalkBox->setPosition(hero->getPosition() + Point(0, 100));
+        imgTalkBox->setPosition(hero->getPosition() + Vec2(0, 100));
         talkingNPC = finder;
     }else if(whoseTalk == WHOSE_TALK_NPC){
-        Point npcPos;
+        Vec2 npcPos;
         if(npcName.size() > 0){
             for(auto npc: npcArray){
                 if(npc->getName().compare(npcName) == 0){
-                    npcPos = Point(npc->getPositionX(), npc->getBoundingBox().getMaxY());
+                    npcPos = Vec2(npc->getPositionX(), npc->getBoundingBox().getMaxY());
                     talkingNPC = npc;
                     break;
                 }
             }
         }else{
-            npcPos = Point(encounteredNPC->getPositionX(), encounteredNPC->getBoundingBox().getMaxY());
+            npcPos = Vec2(encounteredNPC->getPositionX(), encounteredNPC->getBoundingBox().getMaxY());
         }
-        imgTalkBox->setPosition(npcPos + Point(0, 5));
+        imgTalkBox->setPosition(npcPos + Vec2(0, 5));
         //        imgTalkBox->setColor(Color3B(188, 188, 188));
         //        sptPointer->setColor(Color3B(188, 188, 188));
         lblTalk->setTextColor(Color4B::BLACK);
     }
     
     
-    sptPointer->setAnchorPoint(Point(0.5, 1));
-    sptPointer->setPosition(imgTalkBox->getPosition() + Point(0, 18));
+    sptPointer->setAnchorPoint(Vec2(0.5, 1));
+    sptPointer->setPosition(imgTalkBox->getPosition() + Vec2(0, 18));
     
     
     lblTalkShadow = LanguageManager::getInstance()->getLocalizedLabel();
@@ -7931,7 +7931,7 @@ void EditorWorld::showTalkText(std::string text, int whoseTalk, std::string npcN
     }
     // resize talkbox
     lblTalkShadow->setString(talkText);
-    Size talkSize = Size(lblTalkShadow->getContentSize().width*lblTalk->getScale(), lblTalkShadow->getContentSize().height*lblTalk->getScale());
+    cocos2d::Size talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalk->getScale(), lblTalkShadow->getContentSize().height*lblTalk->getScale());
     float width = 600;
     if(talkSize.width > width){
         lblTalkShadow->setWidth(width/lblTalkShadow->getScale());
@@ -7939,16 +7939,16 @@ void EditorWorld::showTalkText(std::string text, int whoseTalk, std::string npcN
         lblTalkShadow->setWidth(talkSize.width/lblTalkShadow->getScale());
     }
     lblTalk->setWidth(lblTalkShadow->getWidth());
-    talkSize = Size(lblTalkShadow->getContentSize().width*lblTalk->getScale(), lblTalkShadow->getContentSize().height*lblTalk->getScale());
+    talkSize = cocos2d::Size(lblTalkShadow->getContentSize().width*lblTalk->getScale(), lblTalkShadow->getContentSize().height*lblTalk->getScale());
     float padding = 30;
     int talkBoxWidth = talkSize.width + padding;
     int minTalkBoxWidth = 300;
     if(talkBoxWidth < minTalkBoxWidth){
         talkBoxWidth = minTalkBoxWidth;
     }
-    imgTalkBox->setContentSize(Size(talkBoxWidth, talkSize.height + padding));
-    lblTalk->setPosition(Point(imgTalkBox->getContentSize().width/2, padding/2 + talkSize.height/2));
-    lblTalkShadow->setPosition(Point(imgTalkBox->getContentSize().width/2, padding/2 + talkSize.height/2));
+    imgTalkBox->setContentSize(cocos2d::Size(talkBoxWidth, talkSize.height + padding));
+    lblTalk->setPosition(Vec2(imgTalkBox->getContentSize().width/2, padding/2 + talkSize.height/2));
+    lblTalkShadow->setPosition(Vec2(imgTalkBox->getContentSize().width/2, padding/2 + talkSize.height/2));
     // resize talkbox end
     
     imgTalkBox->addChild(lblTalk);
@@ -7960,9 +7960,9 @@ void EditorWorld::showTalkText(std::string text, int whoseTalk, std::string npcN
             for(auto unit:npcArray){
                 if(unit->getName().compare("undead") == 0){
                     float moveDistance = 3.0f;
-                    unit->runAction(Sequence::create(MoveBy::create(5, Point(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)), CallFunc::create(CC_CALLBACK_0(EditorWorld::onUndeadMoveDone, this)), nullptr));
-                    imgTalkBox->runAction(MoveBy::create(5, Point(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)));
-                    sptPointer->runAction(MoveBy::create(5, Point(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)));
+                    unit->runAction(Sequence::create(MoveBy::create(5, Vec2(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)), CallFunc::create(CC_CALLBACK_0(EditorWorld::onUndeadMoveDone, this)), nullptr));
+                    imgTalkBox->runAction(MoveBy::create(5, Vec2(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)));
+                    sptPointer->runAction(MoveBy::create(5, Vec2(-TILE_SIZE*moveDistance, TILE_SIZE*moveDistance)));
                     unit->runAnimation("lamingtonRun", true);
                 }
             }
@@ -8023,12 +8023,12 @@ void EditorWorld::changeToSuperAdin(){
 void EditorWorld::addSuperEffectToAdin(){
     
 }
-void EditorWorld::createPortal(Point pos){
+void EditorWorld::createPortal(Vec2 pos){
     EnemyBase* portal = addNPC(pos, "portal");
     thePortal = portal;
     portal->setScale(0.1f);;
     portal->runAction(ScaleTo::create(1, 1));
-    portal->setAnchorPoint(Point::ANCHOR_MIDDLE);
+    portal->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
     portal->runAction(RepeatForever::create(RotateBy::create(1, 90)));
     portal->setLocalZOrder(-pos.y);
     //    portal->setOpacity(150);
@@ -8060,16 +8060,16 @@ void EditorWorld::sucking(float dt){
         spt->runAction(ScaleTo::create(1, 0.05f));
         spriteBatch->addChild(spt, 150);
         int distance = 20;
-        spt->setPosition(suckingObject->getPosition() + Point(cos(i*(rand()%360)*3.14f/180)*distance, sin(i*(rand()%360)*3.14f/180)*distance));
+        spt->setPosition(suckingObject->getPosition() + Vec2(cos(i*(rand()%360)*3.14f/180)*distance, sin(i*(rand()%360)*3.14f/180)*distance));
         spt->runAction(Sequence::create(EaseIn::create(MoveTo::create(1, suckingObject->getPosition()), 3), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), NULL));
     }
 }
 void EditorWorld::talkBoxUpdate(float dt){
     for(auto npc: npcArray){
         if(npc->getName().compare(talkingNpcName) == 0 && EHUD->talkIndex < 22){
-            Point npcPos = Point(npc->getPositionX(), npc->getBoundingBox().getMaxY());
-            imgTalkBox->setPosition(npcPos + Point(0, 5));
-            sptPointer->setPosition(imgTalkBox->getPosition() + Point(0, 18));
+            Vec2 npcPos = Vec2(npc->getPositionX(), npc->getBoundingBox().getMaxY());
+            imgTalkBox->setPosition(npcPos + Vec2(0, 5));
+            sptPointer->setPosition(imgTalkBox->getPosition() + Vec2(0, 18));
             break;
         }
     }
@@ -8079,7 +8079,7 @@ void EditorWorld::talkBoxUpdate(float dt){
             //            imgTalkBox->addChild(sptAPress);
             //            sptAPress->setName("aPress");
             //            GameManager::getInstance()->runAnimation(sptAPress, "aPressAni", true);
-            //            sptAPress->setPosition(Point(imgTalkBox->getContentSize().width - 5, -5));
+            //            sptAPress->setPosition(Vec2(imgTalkBox->getContentSize().width - 5, -5));
             
             Label* lbl = LM->getLocalizedLabel("Next", Color4B::WHITE);
             lbl->enableShadow();
@@ -8087,7 +8087,7 @@ void EditorWorld::talkBoxUpdate(float dt){
             lbl->setName("TOUCH");
             lbl->setVisible(false);
             lbl->setColor(Color3B::WHITE);
-            lbl->setPosition(Point(imgTalkBox->getContentSize().width - lbl->getContentSize().width/2, -lbl->getContentSize().height/2));
+            lbl->setPosition(Vec2(imgTalkBox->getContentSize().width - lbl->getContentSize().width/2, -lbl->getContentSize().height/2));
             lbl->runAction(RepeatForever::create(Blink::create(1, 1)));
             lblTalk->setString(talkText);
             return;
@@ -8098,7 +8098,7 @@ void EditorWorld::talkBoxUpdate(float dt){
 }
 void EditorWorld::endEvent(){
     isCameraInCustomMoving = false;
-    extraCameraPos = Point(0, 0);
+    extraCameraPos = Vec2(0, 0);
     this->unschedule(schedule_selector(EditorWorld::talkBoxUpdate));
     if(imgTalkBox != nullptr){
         imgTalkBox->removeFromParent();
@@ -8158,7 +8158,7 @@ void EditorWorld::addHeroExp(int slot, int exp){
             hero->showEffect(EFFECT_WING, 0.1f + i*1);
             hero->showEffect(EFFECT_RISING_PARTICLE, 0.2 + i*1);
             hero->showEffect(EFFECT_PARTICLE_TORNADO, 0.1 + i*1);
-            showLabelFromPool(WORLD, this->getPosition() + Point(0, 10), "LEVEL UP", 15, 0.2f + i*1);
+            showLabelFromPool(WORLD, this->getPosition() + Vec2(0, 10), "LEVEL UP", 15, 0.2f + i*1);
         }
         setHeroExp(0, 0);
         hero->maxEnergy = getHeroMaxHP(0);
@@ -8452,7 +8452,7 @@ int EditorWorld::getFoodGive(int index){
     }
     return 0;
 }
-EnemyBase* EditorWorld::getNearestCastle(cocos2d::Point pos){
+EnemyBase* EditorWorld::getNearestCastle(cocos2d::Vec2 pos){
     long minDistance = 20000000;
     long distance = 0;
     EnemyBase* nearest = nullptr;
@@ -8467,7 +8467,7 @@ EnemyBase* EditorWorld::getNearestCastle(cocos2d::Point pos){
     }
     return nearest;
 }
-EnemyBase* EditorWorld::getNearestLumberTank(cocos2d::Point pos){
+EnemyBase* EditorWorld::getNearestLumberTank(cocos2d::Vec2 pos){
     long minDistance = 20000000;
     long distance = 0;
     EnemyBase* nearest = nullptr;
@@ -8482,7 +8482,7 @@ EnemyBase* EditorWorld::getNearestLumberTank(cocos2d::Point pos){
     }
     return nearest;
 }
-EnemyBase* EditorWorld::getNearestTree(cocos2d::Point pos){
+EnemyBase* EditorWorld::getNearestTree(cocos2d::Vec2 pos){
     long minDistance = 20000000;
     long distance = 0;
     EnemyBase* nearest = nullptr;
@@ -8517,7 +8517,7 @@ void EditorWorld::setClearCondition(int stage){
     }
     Sprite* sptMission = Sprite::create("mission.png");
     EHUD->addChild(sptMission);
-    sptMission->setPosition(Point(offsetX + 50 + sptMission->getContentSize().width/2, size.height - 66));
+    sptMission->setPosition(Vec2(offsetX + 50 + sptMission->getContentSize().width/2, size.height - 66));
     int condition = GM->getStageObjective(stage);
     if(condition == CLEAR_CONDITION_BARRACKS_TWO_FARMS_FOUR_SWORDMAND){
         clearConditionIndex = GM->getStageObjective(stage);
@@ -8525,8 +8525,8 @@ void EditorWorld::setClearCondition(int stage){
             //            Label* lbl = LM->getLocalizedLabel();
             PPLabel* lbl = PPLabel::create("sdf", 40, Color3B::WHITE, false, false, TextHAlignment::LEFT, true);
             EHUD->addChild(lbl);
-            //            lbl->setAnchorPoint(Point(0, 0.5));
-            lbl->setPosition(Point(offsetX + 50, size.height - 166 - 80*i));
+            //            lbl->setAnchorPoint(Vec2(0, 0.5));
+            lbl->setPosition(Vec2(offsetX + 50, size.height - 166 - 80*i));
             lblConditionArray.pushBack(lbl);
             //            lbl->enableShadow();
         }
@@ -8535,14 +8535,14 @@ void EditorWorld::setClearCondition(int stage){
         for (int i = 0; i < 2; i++) {
             PPLabel* lbl = PPLabel::create("sdf", 40, Color3B::WHITE,false,  false, TextHAlignment::LEFT, true);
             EHUD->addChild(lbl);
-            lbl->setPosition(Point(offsetX + 50, size.height - 166 - 80*i));
+            lbl->setPosition(Vec2(offsetX + 50, size.height - 166 - 80*i));
             lblConditionArray.pushBack(lbl);
         }
     }else{
         clearConditionIndex = GM->getStageObjective(stage);
         PPLabel* lbl = PPLabel::create("sdf", 40, Color3B::WHITE, false, false, TextHAlignment::LEFT, true);
         EHUD->addChild(lbl);
-        lbl->setPosition(Point(offsetX + 50, size.height - 166 - 80*0));
+        lbl->setPosition(Vec2(offsetX + 50, size.height - 166 - 80*0));
         lblConditionArray.pushBack(lbl);
     }
     checkClearGame();
@@ -8594,7 +8594,7 @@ bool EditorWorld::checkClearGame(){
                     lblConditionArray.at(i)->setFontColor(Color3B(245, 213, 71));
                     Sprite* spt = Sprite::create("check.png");
                     EHUD->addChild(spt);
-                    spt->setPosition(Point(lblConditionArray.at(i)->getPositionX() + lblConditionArray.at(i)->getSize().width + 50, lblConditionArray.at(i)->getPositionY()));
+                    spt->setPosition(Vec2(lblConditionArray.at(i)->getPositionX() + lblConditionArray.at(i)->getSize().width + 50, lblConditionArray.at(i)->getPositionY()));
                 }
             }
         }
@@ -8632,8 +8632,8 @@ bool EditorWorld::canAttack(Movable* attacker, Movable* target){
     }
     return can;
 }
-bool EditorWorld::inInScreen(cocos2d::Point pos){
-    return Rect(-getPositionX(), -getPositionY(), size.width, size.height).containsPoint(pos);
+bool EditorWorld::inInScreen(cocos2d::Vec2 pos){
+    return cocos2d::Rect(-getPositionX(), -getPositionY(), size.width, size.height).containsPoint(pos);
 }
 void EditorWorld::revengeAttack(Movable* attackee, Movable* attacker){
     if (attacker->isEnemy) {
@@ -8651,15 +8651,15 @@ void EditorWorld::revengeAttack(Movable* attackee, Movable* attacker){
     }
 }
 
-void EditorWorld::createTree(cocos2d::Point pos){
+void EditorWorld::createTree(cocos2d::Vec2 pos){
     EnemyBase* unit = createUnit(UNIT_TREE, WHICH_SIDE_MUTUAL, ITS_NOT_BUILDING, pos, "tree", 1, strmake("tree2_%d.png", rand()%5));
     unit->canMove = false;
     
 //    Sprite* spt = Sprite::createWithSpriteFrameName(strmake("tree2_%d.png", rand()%5));
 //    spriteBatch->addChild(spt);
-    Point coordinate = getCoordinateFromPosition(pos);
+    Vec2 coordinate = getCoordinateFromPosition(pos);
     unit->setTag(coordinate.x + coordinate.y*mapSizeWidth);
-    unit->setPosition(pos + Point(-20 + rand()%40, -20 + rand()%40 + 20));
+    unit->setPosition(pos + Vec2(-20 + rand()%40, -20 + rand()%40 + 20));
     unit->setLocalZOrder(-unit->getBoundingBox().origin.y);
 //    unit->childrenSprite.pushBack(spt);
     

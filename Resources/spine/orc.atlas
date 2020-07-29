@@ -1,54 +1,54 @@
 
 orc.png
-size: 512,256
+size: 266,257
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 body
   rotate: false
-  xy: 252, 112
+  xy: 148, 145
   size: 116, 110
   orig: 116, 110
   offset: 0, 0
   index: -1
 head
   rotate: false
-  xy: 2, 73
+  xy: 2, 106
   size: 144, 149
   orig: 144, 149
   offset: 0, 0
   index: -1
 left leg
-  rotate: false
-  xy: 77, 33
+  rotate: true
+  xy: 223, 99
   size: 44, 38
   orig: 44, 38
   offset: 0, 0
   index: -1
 leftarm
   rotate: false
-  xy: 370, 165
+  xy: 139, 15
   size: 55, 57
   orig: 55, 57
   offset: 0, 0
   index: -1
 right arm
   rotate: false
-  xy: 2, 2
+  xy: 148, 74
   size: 73, 69
   orig: 73, 69
   offset: 0, 0
   index: -1
 right leg
-  rotate: false
-  xy: 370, 126
+  rotate: true
+  xy: 196, 29
   size: 43, 37
   orig: 43, 37
   offset: 0, 0
   index: -1
 weapon
-  rotate: false
-  xy: 148, 87
+  rotate: true
+  xy: 2, 2
   size: 102, 135
   orig: 102, 135
   offset: 0, 0

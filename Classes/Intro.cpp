@@ -17,7 +17,7 @@ bool Intro::init()
         return false;
     }
     size = Director::getInstance()->getWinSize();
-    center = cocos2d::Point(size.width/2, size.height/2);
+    center = cocos2d::Vec2(size.width/2, size.height/2);
     
     this->runAction(Sequence::create(DelayTime::create(0), CallFunc::create(CC_CALLBACK_0(Intro::startAnimation, this)), NULL)); // test 
     return true;
@@ -31,15 +31,15 @@ void Intro::startAnimation(){
     
     Sprite* spt = Sprite::create("studioNapEyes.png");
     sptLogo->addChild(spt);
-    spt->setAnchorPoint(Point(0, 0));
-    spt->setPosition(Point(364, 430 - 239));
+    spt->setAnchorPoint(Vec2(0, 0));
+    spt->setPosition(Vec2(364, 430 - 239));
     float eyesMoveY = 10;
-    spt->runAction(Sequence::create(DelayTime::create(0), EaseInOut::create(MoveBy::create(1, Point(0, eyesMoveY)), 1.5f),DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(1, Point(0, -eyesMoveY)), 1.5f), NULL));
+    spt->runAction(Sequence::create(DelayTime::create(0), EaseInOut::create(MoveBy::create(1, Vec2(0, eyesMoveY)), 1.5f),DelayTime::create(0.1f), EaseInOut::create(MoveBy::create(1, Vec2(0, -eyesMoveY)), 1.5f), NULL));
     
     spt = Sprite::create("studioNapMouth.png");
     sptLogo->addChild(spt);
-    spt->setAnchorPoint(Point(0.5, 0));
-    spt->setPosition(Point(374 + 33, 430 - 289));
+    spt->setAnchorPoint(Vec2(0.5, 0));
+    spt->setPosition(Vec2(374 + 33, 430 - 289));
     spt->runAction(Sequence::create(DelayTime::create(0), EaseInOut::create(ScaleTo::create(1, 1.2f), 1.5f),DelayTime::create(0.15f), EaseInOut::create(ScaleTo::create(1, 1), 1.5f), NULL));
     
     // 767, 430 entire
@@ -63,7 +63,7 @@ void Intro::setIntro(int index){
 void Intro::updateGame(float dt){
     
 }
-void Intro::setViewPointCenter(Point position)
+void Intro::setViewPointCenter(Vec2 position)
 {
    
 }

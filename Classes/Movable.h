@@ -19,7 +19,7 @@
 #define CLIFF_NONE 0
 #define CLIFF_LEFT 1
 #define CLIFF_RIGHT 2
-#define TILE_SIZE 100
+#define TILE_SIZE 50
 #define ANIMATION_TYPE_IDLE 0
 #define ANIMATION_TYPE_MOVE 1
 #define ANIMATION_TYPE_ATTACK 2
@@ -128,6 +128,18 @@
 #define UNIT_HERO_LADY_WEREWOLF 71
 #define UNIT_HERO_LADY_LION 72
 #define UNIT_HERO_LADY_BEAR 73
+#define UNIT_HERO_SANTA 74
+#define UNIT_HERO_RUDOLPH 75
+#define UNIT_HERO_SANTADOG 76
+#define UNIT_HERO_PENGUIN 77
+#define UNIT_HERO_CATINBOOTS 78
+#define UNIT_HERO_MOLE 79
+#define UNIT_HERO_TOYMOUSE 80
+#define UNIT_HERO_SAVAGEARCHER 81
+#define UNIT_HERO_BATMONSTER 82
+#define UNIT_HERO_MEMEAT 83
+#define UNIT_HERO_PARASITE 84
+#define UNIT_HERO_WATERMELON 85
 #define UNIT_MISSILE_NOTHING 100
 
 #define WEAPON_DAGGER 0
@@ -209,15 +221,16 @@ public:
     Vec2 attackDdangPos = Vec2::ZERO;
     bool isInAttackMotion = false;
 
-    cocos2d::Point centerPosition;
-    cocos2d::Point velocity;
-    cocos2d::Point desiredPosition;
+    cocos2d::Vec2 centerPosition;
+    cocos2d::Vec2 velocity;
+    cocos2d::Vec2 desiredPosition;
     cocos2d::Rect demageRect;
     Movable* target = nullptr;
     Movable* dummyTarget = nullptr;
     virtual void setFlippedX(bool flip);
+    virtual void setVisible(bool visible);
     void resetRoute();
-    void addRoute(cocos2d::Point dest);
+    void addRoute(cocos2d::Vec2 dest);
     void move(float dt);
     void moveNew(float dt);
     void stopNew();
@@ -226,6 +239,7 @@ public:
     bool canGather = false;
     void gatherGold(Movable* mine);
     bool isGatheringGold = false;
+    bool isInMine = false;
     float gatheringTimer = 0;
     Movable* currentMine = nullptr;
     bool isCarryingGold = false;
@@ -237,7 +251,7 @@ public:
     bool isCarryingTree = false;
     
     bool isGoingToBuild = false;
-    cocos2d::Point builderCoordinate;
+    cocos2d::Vec2 builderCoordinate;
     cocos2d::Size builderSize;
     std::string builderSpriteName;
     int builderBuildingIndex;
@@ -385,6 +399,7 @@ public:
     virtual cocos2d::Rect collisionBoundingBox();
     virtual cocos2d::Rect collectBoundingBox();
     Vector<Sprite*> childrenSprite;
+    bool isOnFire = false;
     cocos2d::Rect RectOffset(cocos2d::Rect rect, float x, float y);
     cocos2d::Rect RectInset(cocos2d::Rect rect, float x, float y);
     
@@ -393,7 +408,7 @@ public:
     static Movable* createMovable(int unit, int eng, float extraSpd, const char* sptName, const char* animationName);
     static Movable* createMovable(int unit, int eng, float extraSpd, const char* sptName, const char* animationName, bool repeat);
     
-    virtual cocos2d::Point getGravityPosition();
+    virtual cocos2d::Vec2 getGravityPosition();
     void blinkForAWhile();
     void blinkForSec(int sec);
     void blinking(float dt);
@@ -425,19 +440,19 @@ public:
     float attackCoolTimeMax = 1.5f;
     
     float moveInterval = 0;
-    cocos2d::Point targetMoveTilePos = cocos2d::Point::ZERO;
+    cocos2d::Vec2 targetMoveTilePos = cocos2d::Vec2::ZERO;
     
     void moveToTarget();
     void moveToTarget(Movable* unit);
-    void moveToTarget(cocos2d::Point pos);
+    void moveToTarget(cocos2d::Vec2 pos);
     
     
     
-    cocos2d::Point attackFlagPos = cocos2d::Point::ZERO;
-    cocos2d::Point attackFlagTilePos = cocos2d::Point::ZERO;
-    cocos2d::Point failedAttackFlagPos = cocos2d::Point::ZERO;
+    cocos2d::Vec2 attackFlagPos = cocos2d::Vec2::ZERO;
+    cocos2d::Vec2 attackFlagTilePos = cocos2d::Vec2::ZERO;
+    cocos2d::Vec2 failedAttackFlagPos = cocos2d::Vec2::ZERO;
     bool wantToEli = false;
-    cocos2d::Point targetCoordinate;
+    cocos2d::Vec2 targetCoordinate;
     
     int groundEffectType = GROUND_EFFECT_LIGHT;
     Node* groundEffect = nullptr;
@@ -445,13 +460,13 @@ public:
     void updateGroundEffect(float dt);
     
     bool canMove = true;
-    cocos2d::Point approachingPoints[20];
-    cocos2d::Point getApproachingPoint(cocos2d::Point from);
-    cocos2d::Point lastApprochingPointCheckPosition = cocos2d::Point::ZERO;
+    cocos2d::Vec2 approachingPoints[20];
+    cocos2d::Vec2 getApproachingPoint(cocos2d::Vec2 from);
+    cocos2d::Vec2 lastApprochingPointCheckPosition = cocos2d::Vec2::ZERO;
     
-    cocos2d::Point lastMissilePosition = cocos2d::Point::ZERO;
+    cocos2d::Vec2 lastMissilePosition = cocos2d::Vec2::ZERO;
     void updateMissileAngle(float dt);
-    cocos2d::Point buildingStartCoordinate;
+    cocos2d::Vec2 buildingStartCoordinate;
     cocos2d::Size buildingOccupySize;
     void refreshApproachPoints();
     int approachPointCount= 0;
@@ -462,8 +477,8 @@ public:
     void updateEnergy();
     
     void makingSmoke(float dt);
-    cocos2d::Point smokePoint;
-    cocos2d::Point lastValidPoint = cocos2d::Point::ZERO;
+    cocos2d::Vec2 smokePoint;
+    cocos2d::Vec2 lastValidPoint = cocos2d::Vec2::ZERO;
     Sprite* sptSelectedCircle = nullptr;
     Node* ndLevelCircle = nullptr;
     Vec2 getEffectStartPosition();
@@ -477,12 +492,12 @@ public:
     bool isZombie = false;
     float oneSecTimeChecker = 0;
     float oneSec = 1;
-    cocos2d::Point failedFindPathStart = cocos2d::Point::ZERO;
-    cocos2d::Point failedFindPathEnd = cocos2d::Point::ZERO;
+    cocos2d::Vec2 failedFindPathStart = cocos2d::Vec2::ZERO;
+    cocos2d::Vec2 failedFindPathEnd = cocos2d::Vec2::ZERO;
     std::vector<EventInfo*> eventInfoList;
     std::string sptName;
     
-    cocos2d::Point lastTreePos;
+    cocos2d::Vec2 lastTreePos;
     bool wasIDoingLumber = false;
     
     void pauseProcess();
@@ -508,7 +523,8 @@ public:
     Movable* skillTarget = nullptr;
     
     bool checkAttackTargetReturnSuccess(float dt);
-//    virtual Rect getBoundingBox() const override;
+//    virtual cocos2d::Rect getBoundingBox() const override;
+    virtual void setPosition(const Vec2 &position);
     cocos2d::Rect getBoundingBoxForIntersect();
     int attackTag = 78;
     void cancelAttackSchedule();
@@ -516,6 +532,11 @@ public:
     bool canRevengeAttack = true;
     
     void healNearFriend();
+    
+    bool isInScreen = true;
+    bool isUnderFog = false;
+    void checkVisible();
+    bool isBuildingABuilding = false;
 };
 
 #endif

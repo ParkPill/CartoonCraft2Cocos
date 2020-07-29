@@ -16,7 +16,11 @@
 #include "../cocos2d/cocos/ui/UIHelper.h"
 #include "../cocos2d/cocos/2d/CCFastTMXTiledMap.h"
 #include "../cocos2d/cocos/2d/CCFastTMXLayer.h"
-
+//#include "../Source/Colyseus/Client.hpp"
+//#include "../Source/Colyseus/Room.hpp"
+//#include "../Source/msgpack.hpp"
+//#include "../Source/Colyseus/Room.hpp"
+//#include "../Source/State.hpp"
 #ifdef SDKBOX_ENABLED
 //#include "PluginAdMob/PluginAdMob.h"
 #include "PluginIAP/PluginIAP.h"
@@ -87,7 +91,7 @@ using namespace sdkbox;
 //#include "../cocos2d/cocos/ui/UITextField.h"
 //#include "../cocos2d/cocos/ui/UIHelper.h"
 
-//#include "../cocos2d/cocos/2d/CCFastexperimental::TMXTiledMap.h"
+//#include "../cocos2d/cocos/2d/CCFastTMXTiledMap.h"
 //#include "../cocos2d/cocos/2d/CCFastTMXLayer.h"
 
 #define WHICH_SIDE_HERO 0
@@ -116,7 +120,7 @@ protected:
     Vector<Movable*> MovableCoinArray;
     Vector<EnemyBase*> destructableArray;
     Vector<EnemyBase*> trapArray;
-    void createTrap(EnemyBase* enemy, cocos2d::Point pos);
+    void createTrap(EnemyBase* enemy, cocos2d::Vec2 pos);
     Vector<Sprite*> teleportArray;
     Vector<Movable*> dropItemArray;
     Vector<EnemyBase*> enemiesToRemove;
@@ -157,8 +161,8 @@ protected:
     
     
     void addTalkBalloon(EnemyBase* npc, std::string imgName);
-    void addTalkBalloon(experimental::TMXTiledMap* map, std::string imgName, cocos2d::Point pos);
-    EnemyBase* addNPC(cocos2d::Point pos, std::string name);
+    void addTalkBalloon(TMXTiledMap* map, std::string imgName, cocos2d::Vec2 pos);
+    EnemyBase* addNPC(cocos2d::Vec2 pos, std::string name);
     Vector<Movable*> heroMissileArray;
     bool isBattleStarted = false;
     void updateUnitMove(float dt);
@@ -192,7 +196,7 @@ protected:
     float coinDelay;
     float otherDelay;
     bool bulletWasted;
-    cocos2d::Point deadPoint;
+    cocos2d::Vec2 deadPoint;
     bool guidedMissile;
     
     Movable* findTargetEnemy(Movable* finder);
@@ -206,10 +210,10 @@ protected:
     int farHeight;
     int nearWidth;
     int nearHeight;
-    void solveCollision(Movable* p, cocos2d::Point pos, cocos2d::Rect rect);
+    void solveCollision(Movable* p, cocos2d::Vec2 pos, cocos2d::Rect rect);
     void removeLaser();
-    Vector<experimental::TMXTiledMap*> mapArray;
-    Vector<experimental::TMXTiledMap*> revealedMapArray;
+    Vector<TMXTiledMap*> mapArray;
+    Vector<TMXTiledMap*> revealedMapArray;
     std::vector<cocos2d::Rect> mapRectArray;
 //    DrawNode* dnMiniMap;
 //    cocos2d::Size miniMapSize = cocos2d::Size(200,160);
@@ -217,19 +221,18 @@ protected:
 //    int miniMapAlpha=255;
 //    bool isMiniMapFadeIn=false;
 //    void fadeMiniMap(float dt);
-    bool isRoomEmpty(cocos2d::Rect rect);
-    experimental::TMXTiledMap* findDirectionAndPlaceTheMap(experimental::TMXTiledMap* srcMap, experimental::TMXTiledMap* dstMap);
     
     void setEntireMap(int stage);
     void setBossMap(int stage);
     bool intersectsRect(cocos2d::Rect srcRect, cocos2d::Rect dstRect);
-    void addMapToMiniMap(experimental::TMXTiledMap* map);
+    
     
     int suitcaseCount = 0;
     void receivingData(float dt);
 public:
+    Camera* camera;
     bool isBlockExistBetween(Vec2 start, Vec2 end);
-    bool blackSheepWell = true; // test now
+    bool blackSheepWell = false; // test
     bool testSuper = false; // test
     bool isHardMode = false;
     Movable* getGroundOwner(Vec2 pos);
@@ -238,17 +241,17 @@ public:
     Vector<EnemyBase*> enemyArray;
     Vector<EnemyBase*> mutualArray;
     Vector<EnemyBase*> readyHeroArray;
-    EnemyBase* createUnit(int index, int whichSide, bool isBuilding, cocos2d::Point pos, std::string name, int scaleX=1, std::string charName = "workerAxeStand0.png");
+    EnemyBase* createUnit(int index, int whichSide, bool isBuilding, cocos2d::Vec2 pos, std::string name, int scaleX=1, std::string charName = "workerAxeStand0.png");
     void addUnit(Movable* unit, bool addToWorld);
     Vector<EnemyBase*> selectedArray;
     void updateMiniMapForMoving();
     void updateMiniMapForNonMoving();
     
-    experimental::TMXTiledMap* theMap;
-    Movable* createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, cocos2d::Point pos, bool isFromEnemy, std::string weaponName = "");
+    TMXTiledMap* theMap;
+    Movable* createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, cocos2d::Vec2 pos, bool isFromEnemy, std::string weaponName = "");
     void createMissile(std::string strMsName, std::string strArrivedMsName, Vec2 startPos, Vec2 endPos, float moveTime, int damage, bool isEnemy, float angle, Movable* attacker, float delay);
     
-    EnemyBase* getEncounteredNPC(cocos2d::Point pos);
+    EnemyBase* getEncounteredNPC(cocos2d::Vec2 pos);
     EnemyBase* talkingNPC = nullptr;
     void movePlayer(int direction);
     float dashTimer = 0;
@@ -266,14 +269,15 @@ public:
     float playerFireCoolTimeMax;
     float reloadingCoolTime;
     float reloadingCoolTimeSpan;
-    // Method 'init' in cocos2d-x returns bool, instead of 'id' in cocos2d-iphone (an object cocos2d::Pointer)
+    void loadGame();
+    // Method 'init' in cocos2d-x returns bool, instead of 'id' in cocos2d-iphone (an object cocos2d::Vec2er)
     virtual bool init();
     Sprite* heroLight;
-    cocos2d::Point lastTouchPoint;
-    cocos2d::Point touchBeganPos;
+    cocos2d::Vec2 lastTouchPoint;
+    cocos2d::Vec2 touchBeganPos;
     int touchCount = 0;
     int twoTouchEnabled = false;
-    void showDamage(int damage, cocos2d::Point pos);
+    void showDamage(int damage, cocos2d::Vec2 pos);
 //    bool leftPressed;
 //    bool rightPressed;
 //    bool firePressed;
@@ -290,9 +294,9 @@ public:
     bool isFregile(int index);
     int mastery=0;
     int alphabetCount=0;
-    void setNamingRoom(experimental::TMXTiledMap* map);
-    void setLobby();
-    void setEmptyMap(experimental::TMXTiledMap* map);
+    
+    
+    void setEmptyMap(TMXTiledMap* map);
     int itemCount=0;
     PointArray* enemyPointArray;
     PointArray* supportPointArray;
@@ -303,8 +307,8 @@ public:
     Vector<EnemyBase*> enemiesToLoad;
     void loadEnemies();
     void addAppearEffect(Sprite* parent);
-    FireableBase* addEnemyToLoadStack(experimental::TMXTiledMap* map, int levelScore, cocos2d::Point pos, int missile, int enemyModel, bool addGround);
-    void addEnemiesToMap(experimental::TMXTiledMap* map, int levelScore, bool blueKey);
+    FireableBase* addEnemyToLoadStack(TMXTiledMap* map, int levelScore, cocos2d::Vec2 pos, int missile, int enemyModel, bool addGround);
+    void addEnemiesToMap(TMXTiledMap* map, int levelScore, bool blueKey);
     int currentLevelScore;
     long currentScore=0;
     void tournamentSchedule(float dt);
@@ -314,7 +318,7 @@ public:
     void removeMeFromChasing(Ref* ref);
     void bossExplode(float dt);
     void makeGate(float dt);
-//    cocos2d::Point playerSpawnPoint;
+//    cocos2d::Vec2 playerSpawnPoint;
     
     void bossScheduleBazooka(float dt);
     void bossScheduleGiantPenguin(float dt);
@@ -343,7 +347,7 @@ public:
     int getLoadedBulletCountAtSlot(int slot);
     void setLoadedBulletCountAtSlot(int slot, int count);
     int currentSlot;
-    cocos2d::Point positionToTeleport;
+    cocos2d::Vec2 positionToTeleport;
     void teleportLater(float dt);
     void teleportLaterForThemeThree(float dt);
     bool isTeleporting;
@@ -353,18 +357,23 @@ public:
     bool isMapMoveRight = false;
     bool isMapMoveUp = false;
     bool isMapMoveDown = false;
+    float layerScale = 2;
+    float imageScale = 0.5f;
     cocos2d::Size mapSize;
-    // there's no 'id' in cpp, so we recommend to return the class instance cocos2d::Pointer
+    // there's no 'id' in cpp, so we recommend to return the class instance cocos2d::Vec2er
     static cocos2d::Scene* scene(int stage, int mode);
 //    SpriteBatchNode* spriteBatch;
 //    SpriteBatchNode* spriteBatchBuilding;
 //    SpriteBatchNode* spriteBatchEffect;
-    Node* spriteBatch;
+//    Node* spriteBatch;
+    
+//    Node* spriteBatchEffect;
     Node* spriteBatchBuilding;
-    Node* spriteBatchEffect;
-    void setOccupy(cocos2d::Point pos, int width, int height, bool occupy);
-    void setOccupy(cocos2d::Point pos, int width, int height, bool occupy, EnemyBase* building);
-    bool isOccupied(cocos2d::Point coordinate);
+    Node* batch; // test 
+    
+    void setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy);
+    void setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy, EnemyBase* building);
+    bool isOccupied(cocos2d::Vec2 coordinate);
     
     NodeGrid* nodeGrid;
 //    SpriteBatchNode* spriteBatchForHero;
@@ -382,7 +391,7 @@ public:
 //    ~HelloWorld();
     // preprocessor macro for "static create()" constructor ( node() deprecated )
     CREATE_FUNC(HelloWorld);
-    void unscheduleAll();
+    
     int killCountForRecord;
     int collectedCoinPart;
     Label* lblCoinGot = nullptr;
@@ -391,10 +400,10 @@ public:
     
     void attackEnemy(EnemyBase* drop, int damage);
     void attackHero(EnemyBase* drop, int demage);
-    void setViewPointCenter(cocos2d::Point position, bool forceMove = false);
+    void setViewPointCenter(cocos2d::Vec2 position, bool forceMove = false);
     void registerScriptAccelerateHandler(int handler);
-    double getAngle(cocos2d::Point pos1, cocos2d::Point pos2);
-    void setPlayerPosition(cocos2d::Point position);
+    double getAngle(cocos2d::Vec2 pos1, cocos2d::Vec2 pos2);
+    void setPlayerPosition(cocos2d::Vec2 position);
     void bubbleUpdate(float dt);
     void gravityUpdate(float dt);
     void gravityUpdateHandler(float dt);
@@ -440,50 +449,50 @@ public:
 //    int mapColumnCount;
 //    TMXLayer* stageLayer;
 //    TMXLayer* foreLayer;
-    void setCurrentTileMap(cocos2d::Point pos);
-    experimental::TMXTiledMap* getTileMap(cocos2d::Point pos);
-    void setLayerTag(experimental::TMXTiledMap* map);
+    void setCurrentTileMap(cocos2d::Vec2 pos);
+    TMXTiledMap* getTileMap(cocos2d::Vec2 pos);
+    void setLayerTag(TMXTiledMap* map);
     
-//    cocos2d::experimental::TMXTiledMap *currentTileMap;
-//    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::TMXLayer *layer, Movable* p);
-//    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::TMXLayer *layer);
-    int getTileAtPosition(cocos2d::Point position, int tag, experimental::TMXTiledMap* map);
+//    cocos2d::TMXTiledMap *currentTileMap;
+//    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer, Movable* p);
+//    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
+    int getTileAtPosition(cocos2d::Vec2 position, int tag, TMXTiledMap* map);
 /*
  
- cocos2d::experimental::experimental::TMXTiledMap *tileMap;
- cocos2d::experimental::TMXLayer *stageLayer;
- cocos2d::experimental::TMXLayer *unitLayer;
- cocos2d::experimental::TMXLayer *foreLayer;
- cocos2d::experimental::TMXLayer *backLayer;
- Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer, Movable* p);
- Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer);
- TileInfo* getTileAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer);
+ cocos2d::TMXTiledMap *tileMap;
+ cocos2d::TMXLayer *stageLayer;
+ cocos2d::TMXLayer *unitLayer;
+ cocos2d::TMXLayer *foreLayer;
+ cocos2d::TMXLayer *backLayer;
+ Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer, Movable* p);
+ Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
+ TileInfo* getTileAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
-    cocos2d::experimental::experimental::TMXTiledMap *tileMap;
-    cocos2d::experimental::TMXLayer *stageLayer;
-    cocos2d::experimental::TMXLayer *unitLayer;
-    cocos2d::experimental::TMXLayer *foreLayer;
-    cocos2d::experimental::TMXLayer *backLayer;
-    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer, Movable* p);
-    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer);
-    TileInfo* getTileAtPosition(cocos2d::Point position, cocos2d::experimental::TMXLayer *layer);
-#else
-    cocos2d::experimental::TMXTiledMap *tileMap;
+    cocos2d::TMXTiledMap *tileMap;
     cocos2d::TMXLayer *stageLayer;
     cocos2d::TMXLayer *unitLayer;
     cocos2d::TMXLayer *foreLayer;
     cocos2d::TMXLayer *backLayer;
-    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::TMXLayer *layer, Movable* p);
-    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Point position, cocos2d::TMXLayer *layer);
-    TileInfo* getTileAtPosition(cocos2d::Point position, cocos2d::TMXLayer *layer);
+    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer, Movable* p);
+    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
+    TileInfo* getTileAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
+#else
+    cocos2d::TMXTiledMap *tileMap;
+    cocos2d::TMXLayer *stageLayer;
+    cocos2d::TMXLayer *unitLayer;
+    cocos2d::TMXLayer *foreLayer;
+    cocos2d::TMXLayer *backLayer;
+    Vector<TileInfo*>getSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer, Movable* p);
+    Vector<TileInfo*>getAllSurroundingTilesAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
+    TileInfo* getTileAtPosition(cocos2d::Vec2 position, cocos2d::TMXLayer *layer);
 #endif*/
     //bool isPlayerSet=false;
-    cocos2d::Point getCoordinateFromPosition(cocos2d::Point position, experimental::TMXTiledMap* map);
-    cocos2d::Point getCoordinateFromPosition(cocos2d::Point position);
-    cocos2d::Rect tileRectFromTileCoords(cocos2d::Point tileCoords, experimental::TMXTiledMap* map);
+    cocos2d::Vec2 getCoordinateFromPosition(cocos2d::Vec2 position, TMXTiledMap* map);
+    cocos2d::Vec2 getCoordinateFromPosition(cocos2d::Vec2 position);
+    cocos2d::Rect tileRectFromTileCoords(cocos2d::Vec2 tileCoords, TMXTiledMap* map);
     void getDown();
-    void addDirtToTile(experimental::TMXTiledMap* map, cocos2d::Point pos);
+    void addDirtToTile(TMXTiledMap* map, cocos2d::Vec2 pos);
     
     void checkForAndResolveCollisions(Movable* p);
     void checkForAndResolveCollisionsForOthers(Movable* p);
@@ -493,15 +502,15 @@ public:
     bool checkMovableMissileCollision(Movable* p);
     void changePlayerState(int state);
     void saveCoinIfStarCollected();
-    void setStage(experimental::TMXTiledMap* tileMap);
-    void fixStageLayerTiles(experimental::TMXTiledMap* map);
-    bool compareFourTiles(int t,int l, int r, int b, int x, int y, experimental::TMXLayer* stageLayer);
-    void fixStageLayerFourTiles(experimental::TMXTiledMap* map);
+    void setStage(TMXTiledMap* tileMap);
+    void fixStageLayerTiles(TMXTiledMap* map);
+    bool compareFourTiles(int t,int l, int r, int b, int x, int y, TMXLayer* stageLayer);
+    void fixStageLayerFourTiles(TMXTiledMap* map);
     void stopWoongSound();
-    bool compareNineTiles(int lt, int t, int rt, int l, int r, int lb, int b, int rb, int x, int y, experimental::TMXLayer* stageLayer);
+    bool compareNineTiles(int lt, int t, int rt, int l, int r, int lb, int b, int rb, int x, int y, TMXLayer* stageLayer);
     void getOffVehicle();
     bool isCameraInCustomMoving = false;
-    void addRide(int unit, cocos2d::Point pos);
+    void addRide(int unit, cocos2d::Vec2 pos);
     void fire();
     void enemyFireLoop(float dt);
     //int collectedKeyCount=0;
@@ -517,14 +526,14 @@ public:
     void enemyBaseMoveDone(Ref* obj);
     void fireBulletMoveDone(Ref* drop);
     void nodeMoveDone(Ref* obj);
-    void runEffect(int effect, cocos2d::Point point);
-    void runEffect(int effect, cocos2d::Point point, float angle);
+    void runEffect(int effect, cocos2d::Vec2 point);
+    void runEffect(int effect, cocos2d::Vec2 point, float angle);
     void addGlowEffect(Sprite* sprite,const Color3B& colour, const cocos2d::Size& size);
     void gameClearAnimationDone(Ref* obj);
     void gameOver();
     void shakeScreen(int count);
     void shakeScreenOnce();
-    cocos2d::Point extraCameraPos=cocos2d::Point::ZERO;
+    cocos2d::Vec2 extraCameraPos=cocos2d::Vec2::ZERO;
     void shakeScreenFirst();
     void shakeScreenSecond();
     void shakeScreenEnd();
@@ -559,11 +568,11 @@ public:
     float miniMapFrameHeight = 200;
     float miniMapWidth;
     float miniMapHeight;
-    float miniMapScale = 1;
+    float miniMapScale = 2;
     float miniMapBit;
-    cocos2d::Point miniMapStartPos = cocos2d::Point(10, 10);
-    cocos2d::Point miniMapDrawStartPos;
-    void doClick(cocos2d::Point pos);
+    cocos2d::Vec2 miniMapStartPos = cocos2d::Vec2(10, 10);
+    cocos2d::Vec2 miniMapDrawStartPos;
+    void doClick(cocos2d::Vec2 pos);
     void selectByDrag(cocos2d::Rect rect);
     int selectedCommand = -1;
     void selectCommand(int command);
@@ -578,18 +587,18 @@ public:
     Movable* targetHand;
     float doubleClickTimerForAttackDdaing = 0;
     float doubleClickTimerForSelectTheSame = 0;
-    void showTargetHand(cocos2d::Point pos, bool isAttack);
-    void moveTo(EnemyBase* unit, cocos2d::Point pos);
-    void moveTo(Vector<EnemyBase*> troop, cocos2d::Point pos);
+    void showTargetHand(cocos2d::Vec2 pos, bool isAttack);
+    void moveTo(EnemyBase* unit, cocos2d::Vec2 pos);
+    void moveTo(Vector<EnemyBase*> troop, cocos2d::Vec2 pos);
     void moveTo(Vector<EnemyBase*> troop, EnemyBase* target);
     void gatherTo(Vector<EnemyBase*> troop, EnemyBase* target);
     void stop(Vector<EnemyBase*> troop);
-    void moveAndAttackTo(Vector<EnemyBase*> troop, cocos2d::Point pos);
-    void moveAndAttackTo(EnemyBase* unit, cocos2d::Point pos);
+    void moveAndAttackTo(Vector<EnemyBase*> troop, cocos2d::Vec2 pos);
+    void moveAndAttackTo(EnemyBase* unit, cocos2d::Vec2 pos);
     void forceAttack(Vector<EnemyBase*> troop, EnemyBase* target);
     void dialogFinished(Ref* obj);
     virtual void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* unused_event);
-    cocos2d::Point waterBoyPos;
+    cocos2d::Vec2 waterBoyPos;
     bool isReloading;
     void releaseCustomMovingCamera();
     void entranceSchedule(float dt);
@@ -603,7 +612,7 @@ public:
     bool isFired;
     int getMaxLoadedBulletCount(int weapon);
     int getMaxTotalBulletCount(int weapon);
-    cocos2d::Point center;
+    cocos2d::Vec2 center;
     Sprite* cursor;
     Sprite* getLight();
     
@@ -639,7 +648,7 @@ public:
     void showNPCEvent(int index);
     std::string talkingNpcName;
 
-    cocos2d::Point _cameraPoint;
+    cocos2d::Vec2 _cameraPoint;
     void warpOut();
     //DrawNode* dnDamageBoxes;
     //DrawNode* dnCollisionBoxes;
@@ -696,6 +705,7 @@ public:
     float getUnitAttackHappenTime(int index);
     bool isThisSpotAvailable(Movable* me);
     std::string getSpriteNameForUnit(int index);
+    Sprite* getSpriteForUnit(int index);
     Sprite* getSpriteForIcon(int index);
     Node* buildingTemplate = nullptr;
     bool isBuildingTemplateMoved = false;
@@ -709,7 +719,7 @@ public:
     void createBuildingTemplate(int index, int width, int height, std::string spriteName);
     EnemyBase* buildTheBuilding(int index, int x, int y, int width, int height, std::string spriteName);
     cocos2d::Size buildingTemplateSize;
-    cocos2d::Point buildingTemplateCoordinate;
+    cocos2d::Vec2 buildingTemplateCoordinate;
     cocos2d::Size getBuildingOccupySize(int unit);
     bool isBuildingReadyToBuild = false;
     std::string getHeroWeapon(int slot);
@@ -748,8 +758,8 @@ public:
     std::string getWeapon(int heroSlot);
     std::string getShield(int heroSlot);
     std::string getShoes(int heroSlot);
-    experimental::TMXLayer* stageCover = nullptr;
-    void setPlayer(cocos2d::Point pos);
+    TMXLayer* stageCover = nullptr;
+    void setPlayer(cocos2d::Vec2 pos);
     void setStageCoverOpacity(int opacity);
     bool isStageCoverTransparent = false;
     Node* lastExit = nullptr;
@@ -762,19 +772,19 @@ public:
     int labelPoolCount = 10;
     int labelPoolIndex = 0;
     void backToLabelPool(Ref* ref);
-    Label* showLabelFromPool(Node* parent, cocos2d::Point pos, std::string text, int moveHeight, float delay = 0);
+    Label* showLabelFromPool(Node* parent, cocos2d::Vec2 pos, std::string text, int moveHeight, float delay = 0);
 //    Vector<Sprite*> spritePool;
 //    int spritePoolCount = 10;
 //    int spritePoolIndex = 0;
 //    void backToSpritePool(Ref* ref);
-//    Sprite* showSpriteFromPool(Node* parent, cocos2d::Point pos);
+//    Sprite* showSpriteFromPool(Node* parent, cocos2d::Vec2 pos);
 //    Vector<Sprite*> selectedCircleArray;
     
     void resetPathState();
-    cocos2d::Point getPositionFromTileCoordinate(int x, int y);
-    experimental::TMXLayer* decoLayer = nullptr;
-    experimental::TMXLayer* soilLayer = nullptr;
-    void addDecoBlock(cocos2d::Point coordinate, cocos2d::Point position, std::string spriteName);
+    cocos2d::Vec2 getPositionFromTileCoordinate(int x, int y);
+    TMXLayer* decoLayer = nullptr;
+    TMXLayer* soilLayer = nullptr;
+    void addDecoBlock(cocos2d::Vec2 coordinate, cocos2d::Vec2 position, std::string spriteName);
     
     void eventUpdate(float dt);
     void eventDone();
@@ -789,20 +799,20 @@ public:
     void endCameraFollowNPCForEvent();
     void cameraUpdateForEvent(float dt);
     Node* cameraTargetForEvent;
-    void addSprite(std::string sptName, cocos2d::Point pos);
+    void addSprite(std::string sptName, cocos2d::Vec2 pos);
     void immortalForSec(int sec);
     void deselectAll();
     void deselect(Movable* unit);
     void updateMenu();
     void updateFoodMaxState();
     void selectUnit(EnemyBase* unit);
-    void splashDamage(cocos2d::Point pos, int radius, int damage, bool isFromEnemy, Movable* attacker);
+    void splashDamage(cocos2d::Vec2 pos, int radius, int damage, bool isFromEnemy, Movable* attacker);
     void removeDeadUnit(EnemyBase* unit);
     void updateFog();
     void processNewFogState();
-    EnemyBase* getNearestCastle(cocos2d::Point pos);
-    EnemyBase* getNearestLumberTank(cocos2d::Point pos);
-    EnemyBase* getNearestTree(cocos2d::Point pos);
+    EnemyBase* getNearestCastle(cocos2d::Vec2 pos);
+    EnemyBase* getNearestLumberTank(cocos2d::Vec2 pos);
+    EnemyBase* getNearestTree(cocos2d::Vec2 pos);
     float fogUpdateTimer = 0.3f;
     int fogWidth = 0;
     int fogHeight = 0;
@@ -822,14 +832,14 @@ public:
     int getFoodGive(int index);
     bool isTouchBeganFromMiniMap = false;
     bool isMapMovingByMiniMap = false;
-    void moveScreen(cocos2d::Point pos);
+    void moveScreen(cocos2d::Vec2 pos);
     cocos2d::Rect miniMapViewRect;
     cocos2d::Rect viewRect;
     void revengeAttack(Movable* attackee, Movable* attacker);
     
     int getAttackPriority(Movable* unit);
     bool canAttack(Movable* attacker, Movable* target);
-    bool isThisSpotAvailable(cocos2d::Point pos);
+    bool isThisSpotAvailable(cocos2d::Vec2 pos);
     
     int totalEarnedGold = 0;
     int totalEarnedLumber = 0;
@@ -840,7 +850,7 @@ public:
     void onUndeadMoveDone();
     void onNPCMoveDone();
     
-    bool isInScreen(cocos2d::Point pos);
+    bool isInScreen(cocos2d::Vec2 pos);
     void addDecoToBuilding(Movable* unit);
     void attackNearHero(EnemyBase* enemy);
     
@@ -865,7 +875,7 @@ public:
     bool isBuildingMovingFirstTry = false;
     Sprite* addDecoToOutOfField(Sprite* spt);
     
-    void setTileGID(experimental::TMXLayer* layer, int gid, Vec2 pos);
+    void setTileGID(TMXLayer* layer, int gid, Vec2 pos);
 
     bool isBuildingExistWhenStartTheGame = true;
     void placeDeckUnitForRaid(Vec2 pos);
@@ -873,7 +883,8 @@ public:
     float hardModeTimer = 0;
     int cloneCounter = 0;
     bool isHardModeEnded = false;
-    void healHeroNearPoint(Vec2 point, int hp);
+    void healHeroNearPoint(Movable* healer, Vec2 point, int hp);
+    void healHeroesNearPoint(Movable* healer, Vec2 point, int hp, int heroCount);
     int gameSpeed = 1;
     
     int gameMode = GAME_MODE_NORMAL;
@@ -883,6 +894,14 @@ public:
     Vector<EnemyBase*> enemyHeroList;
     Vector<EnemyBase*> heroListToCreate;
     Vector<EnemyBase*> enemyHeroListToCreate;
+    
+    bool isGameEnded = false;
+    void checkVisibilityForInScreen();
+    
+//    void onConnectToServer();
+//    void onJoinRoom();
+//    void onRoomMessage(msgpack::object);
+//    void onRoomStateChange(State*);
 };
 
 

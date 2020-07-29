@@ -34,7 +34,8 @@ public:
     void showInstanceMessage(std::string msg, int offset=0);
     void showIndicator();
     void hideIndicator();
-    
+    bool hideIndicatorRequested = false;
+    void update(float dt);
 };
 
 #endif /* PageBase_hpp */

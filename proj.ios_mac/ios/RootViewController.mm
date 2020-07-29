@@ -56,11 +56,10 @@
                                      numberOfSamples: cocos2d::GLViewImpl::_multisamplingCount ];
     
     // Enable or disable multiple touches
-    [eaglView setMultipleTouchEnabled:NO];
+    [eaglView setMultipleTouchEnabled:YES];
     
     // Set EAGLView as view of RootViewController
     self.view = eaglView;
-    
     
 }
 
@@ -217,9 +216,15 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
 
 // Controls the application's preferred home indicator auto-hiding when this view controller is shown.
 - (BOOL)prefersHomeIndicatorAutoHidden {
-    return YES;
+    return NO;
 }
 
+- (UIRectEdge)preferredScreenEdgesDeferringSystemGestures
+{
+    return UIRectEdgeAll;
+    // NOTE(steve): should probably just defer the bottom swipe (home gesture)
+    //return UIRectEdgeBottom;
+}
 - (void)didReceiveMemoryWarning {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];

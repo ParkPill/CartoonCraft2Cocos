@@ -25,7 +25,7 @@ using namespace cocos2d::ui;
 class HeroPage : public PageBase
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     std::vector<UnitInfo*> unitInfoListHeroInventory;
     std::vector<UnitInfo*> unitInfoListHeroDeck;
@@ -39,6 +39,8 @@ public:
     int requestedChestType = -1;
     void requestTimeForGacha();
     void onTimeRecievedForGacha();
+    bool isTimeReceivedForGacha = false;
+    void handleTimeReceivedForGacha();
     int heroPageTutorialIndex = 0;
     Node* heroPageTutorialNode = nullptr;
     bool shouldSaveHeroDeckInfo = false;
@@ -54,6 +56,7 @@ public:
     void onHeroDrawRateInfoClick();
     void onMoveToDeckUnitClick();
     void onRemoveFromDeckUnitClick();
+    void onFireHeroClick();
     void onSortByRarity();
     void onSortBySlot();
     void onFusionClick();
@@ -91,7 +94,6 @@ public:
     std::vector<int> pvp6RankInfoTrohpy;
     std::vector<std::string> pvp6RankInfoData;
     int pvp6MyRank = -1;
-    int pvp6MyTrophy = 1000;
     int pvp6TotalUserCount = -1;
     std::string pvp6Reward = "";
     
@@ -99,7 +101,6 @@ public:
     std::vector<int> pvp12RankInfoTrohpy;
     std::vector<std::string> pvp12RankInfoData;
     int pvp12MyRank = -1;
-    int pvp12MyTrophy = 1000;
     int pvp12TotalUserCount = -1;
     std::string pvp12Reward = "";
     void onPlayPvpClick(Ref* ref);
@@ -108,5 +109,17 @@ public:
     int pvpNumber = 6;
     
     bool isPvpFindMatchRequested = false;
+    void showPvpReward(std::string strReward);
+    int getPickRate(int unit);
+    std::vector<int> getPickPossibleHeroes();
+    
+    void onVideoForTicketClick(Ref* ref);
+    void onPvpTicketVideoDone();
+    bool isVideoDoneForPvpTicket = false;
+    
+    void showChestOpenWithGemAskPopup(int price);
+    void onConfirmChestOpenWithGem();
+    int chestOpenPrice = 0;
+    void clearVectors();
 };
 #endif /* HeroPage_hpp */

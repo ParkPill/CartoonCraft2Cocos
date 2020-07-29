@@ -20,8 +20,8 @@ bool EndingCredit::init()
     size = Director::getInstance()->getWinSize();
     
     Label* lbl;
-    Point startPos = Point(size.width/2, -50);
-    Point endPos = Point(size.width/2, size.height + 100);
+    Vec2 startPos = Vec2(size.width/2, -50);
+    Vec2 endPos = Vec2(size.width/2, size.height + 100);
     float delay = 1.5f;
     float totalDelay = 0;
     float dur = 20;
@@ -81,7 +81,7 @@ bool EndingCredit::init()
     backgroundLayer = Layer::create();
     this->addChild(backgroundLayer, -5);
     backgroundLayer->setRotation(15);
-    backgroundLayer->setPosition(Point(-150, -50));
+    backgroundLayer->setPosition(Vec2(-150, -50));
     
     float x = 0;
     float y = 0;
@@ -95,14 +95,14 @@ bool EndingCredit::init()
 //        for (int i = 0; i < size.height*3;) {
 //            Sprite* spt = Sprite::create("bottomTile.png");
 //            spt->setScale(4);
-//            spt->setAnchorPoint(Point::ZERO);
+//            spt->setAnchorPoint(Vec2::ZERO);
 //            if(tileWidth == 0){
 //                tileWidth = spt->getContentSize().width*spt->getScale();
 //            }
 //            backgroundLayer->addChild(spt);
-//            spt->setPosition(Point(x, y + yGap));
+//            spt->setPosition(Vec2(x, y + yGap));
 //            time = (x + tileWidth)/speedX;
-//            spt->runAction(Sequence::create(MoveBy::create(time, Point(-x-tileWidth, time*speedY*(tileSpeedy?1:2))), CallFuncN::create(CC_CALLBACK_1(EndingCredit::spriteMoveDone, this)), NULL));
+//            spt->runAction(Sequence::create(MoveBy::create(time, Vec2(-x-tileWidth, time*speedY*(tileSpeedy?1:2))), CallFuncN::create(CC_CALLBACK_1(EndingCredit::spriteMoveDone, this)), NULL));
 //            i += spt->getContentSize().height*spt->getScale();
 //            y = i;
 //        }
@@ -129,12 +129,12 @@ void EndingCredit::backgroundSchedule(float dt){
     for (int i = 0; i < size.height*3;) {
         Sprite* spt = Sprite::create("bottomTile.png");
         spt->setScale(4);
-        spt->setAnchorPoint(Point::ZERO);
+        spt->setAnchorPoint(Vec2::ZERO);
         
         backgroundLayer->addChild(spt);
-        spt->setPosition(Point(backTileStartX, y));
+        spt->setPosition(Vec2(backTileStartX, y));
         time = (backTileStartX + tileWidth)/speedX;
-        spt->runAction(Sequence::create(MoveBy::create(time, Point(-backTileStartX-tileWidth, time*speedY*(tileSpeedy?1:2))), CallFuncN::create(CC_CALLBACK_1(EndingCredit::spriteMoveDone, this)), NULL));
+        spt->runAction(Sequence::create(MoveBy::create(time, Vec2(-backTileStartX-tileWidth, time*speedY*(tileSpeedy?1:2))), CallFuncN::create(CC_CALLBACK_1(EndingCredit::spriteMoveDone, this)), NULL));
         i += spt->getContentSize().height*spt->getScale();
         y = i;
     }

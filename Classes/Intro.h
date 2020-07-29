@@ -44,14 +44,14 @@ class Intro : public LayerColor
 private:
     
 public:
-    cocos2d::Point center;
+    cocos2d::Vec2 center;
     cocos2d::Size size;
     virtual bool init();
     CREATE_FUNC(Intro);
     Movable* player = nullptr;
     void setIntro(int index);
     void updateGame(float dt);
-    void setViewPointCenter(Point position);
+    void setViewPointCenter(Vec2 position);
     void goToNextScene();
     void startAnimation();
 };

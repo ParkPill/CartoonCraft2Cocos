@@ -22,7 +22,7 @@ using namespace cocos2d::ui;
 class QuestLayer : public PageBase
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     virtual bool init();
     CREATE_FUNC(QuestLayer);

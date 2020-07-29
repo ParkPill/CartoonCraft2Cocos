@@ -169,31 +169,54 @@ public:
     bool shouldGetPvp6Info = true;
     void getPvp6ResultAndTicket();
     void onGetPvp6ResultAndTicketComplete(cocos2d::Node *sender, void *data);
-    void getPvp6Info();
-    void onGetPvp6InfoComplete(cocos2d::Node *sender, void *data);
+    void getPvp6Rank();
+    void onGetPvp6RankComplete(cocos2d::Node *sender, void *data);
     void findMatchForPvp6();
     void onFindMatchForPvp6Complete(cocos2d::Node *sender, void *data);
     void sendPvp6Result(int trophy);
     void onSendPvp6ResultComplete(cocos2d::Node *sender, void *data);
+    void rename(std::string strName);
+    void onRenameComplete(cocos2d::Node *sender, void *data);
     
     bool shouldCheckPvp12Result = true;
     bool shouldGetPvp12Info = true;
     void getPvp12ResultAndTicket();
     void onGetPvp12ResultAndTicketComplete(cocos2d::Node *sender, void *data);
-    void getPvp12Info();
-    void onGetPvp12InfoComplete(cocos2d::Node *sender, void *data);
+    void getPvp12Rank();
+    void onGetPvp12RankComplete(cocos2d::Node *sender, void *data);
     void findMatchForPvp12();
     void onFindMatchForPvp12Complete(cocos2d::Node *sender, void *data);
     void sendPvp12Result(int trophy);
     void onSendPvp12ResultComplete(cocos2d::Node *sender, void *data);
     std::string savedRID = "";
+    int pvpTicketMax = 3;
     int pvp6TicketCount = 0;
+    std::string pvp6TicketRefillStartTime = "0";
     int pvp12TicketCount = 0;
+    std::string pvp12TicketRefillStartTime = "0";
     
-    std::string pvpTargetUserID;
+    
     int pvpTargetTrophy = 1000;
     std::string pvpTargetData;
+    std::string pvpTargetName;
+    std::string getIDForPost();
+    int month = 0;
+    int day = 0;
+    bool isCheckServerComplete = false;
     
+    bool isThereSomethingToSaveForMonthlyEventProgress = false;
+    bool shouldSaveGold = false;
+    bool shouldSaveLumber = false;
+    bool shouldSaveGem = false;
+    void saveCheckedData();
+    bool isInitUserDataRequested = false;
+    bool isInitUserDataReceived = false;
+    
+    void checkServer();
+    void onCheckServerCompleted(Node *sender, void *data);
+    std::string postBoxConent = "";
+    int getLastDayOfMonth(int month);
+    bool isOffline = true;
 };
 
 #endif /* defined(__LegendDaryKakao__BuggyServerManager__) */

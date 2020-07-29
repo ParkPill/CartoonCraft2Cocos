@@ -64,8 +64,8 @@ public:
     Sprite* sptShield = nullptr;
     void setShield(std::string shield);
     std::string fireAniName="";
-    cocos2d::Point wanderStart;
-    cocos2d::Point wanderEnd;
+    cocos2d::Vec2 wanderStart;
+    cocos2d::Vec2 wanderEnd;
     
     void hideEnergy();
     

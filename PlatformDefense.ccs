@@ -19,6 +19,8 @@
         <Image Name="btnMove.png" />
         <Image Name="btnOk.png" />
         <Image Name="btnStop.png" />
+        <Project Name="CampaignChest.csd" Type="Scene" />
+        <Image Name="campaignChest.png" />
         <Image Name="cardIcon.png" />
         <Project Name="CastleInfo.csd" Type="Scene" />
         <Image Name="chapter0.png" />
@@ -32,7 +34,16 @@
         <Image Name="comingSoon.png" />
         <Project Name="DailyMission.csd" Type="Scene" />
         <Project Name="DefenceRecord.csd" Type="Scene" />
+        <Project Name="DiscordPopup.csd" Type="Scene" />
         <Project Name="DragButton.csd" Type="Node" />
+        <Project Name="EntBuyPopup.csd" Type="Scene" />
+        <Project Name="EntPopup.csd" Type="Scene" />
+        <Image Name="eventBannerEnt.png" />
+        <Image Name="eventBannerRudolph.png" />
+        <Image Name="eventBannerSanta.png" />
+        <Image Name="eventItem11.png" />
+        <Image Name="eventItem12.png" />
+        <Project Name="EventPopup.csd" Type="Scene" />
         <Image Name="evilIcon.png" />
         <Project Name="ExistNameAndID.csd" Type="Scene" />
         <Project Name="ExitPopup.csd" Type="Scene" />
@@ -50,6 +61,7 @@
         <Project Name="HeroPopup.csd" Type="Scene" />
         <Project Name="HeroPvpDetail.csd" Type="Scene" />
         <Project Name="HeroPvpPopup.csd" Type="Scene" />
+        <Project Name="HeroStarterPack.csd" Type="Scene" />
         <Image Name="horizontalScrollBackground.png" />
         <Image Name="icon2xFast.png" />
         <Image Name="icon3xFast.png" />
@@ -58,6 +70,7 @@
         <Image Name="iconCardMerge.png" />
         <Image Name="iconCollection.png" />
         <Image Name="iconCup.png" />
+        <Image Name="iconDiscord.png" />
         <Image Name="iconDrag.png" />
         <Image Name="iconEnchant.png" />
         <Image Name="iconFacebook.png" />
@@ -81,6 +94,7 @@
         <Image Name="iconRefresh.png" />
         <Image Name="iconRussia.png" />
         <Image Name="iconShield.png" />
+        <Image Name="iconSkill.png" />
         <Image Name="iconSound.png" />
         <Image Name="iconSpain.png" />
         <Image Name="iconStar.png" />
@@ -88,6 +102,7 @@
         <Image Name="iconTrophy.png" />
         <Image Name="iconTurkey.png" />
         <Image Name="iconUsa.png" />
+        <Image Name="iconYoutube.png" />
         <Project Name="ItemGet.csd" Type="Scene" />
         <Image Name="keyGold.png" />
         <Image Name="keyWood.png" />
@@ -95,24 +110,34 @@
         <Image Name="lumberIcon.png" />
         <Image Name="manIcon.png" />
         <Project Name="Menu.csd" Type="Scene" />
+        <Project Name="MenuButton.csd" Type="Node" />
         <Project Name="MessageBox.csd" Type="Scene" />
         <Project Name="MineButton.csd" Type="Node" />
         <Image Name="mission.png" />
+        <Project Name="MultiplayLobby.csd" Type="Scene" />
         <Image Name="networkTag.png" />
         <Image Name="newTag.png" />
         <Image Name="nonMultiplayTag.png" />
         <Project Name="NotEnoughWorkerUseGem.csd" Type="Scene" />
+        <Project Name="NoticePopup.csd" Type="Scene" />
         <Project Name="OrcMagePremium.csd" Type="Scene" />
         <Image Name="orcTroop.png" />
         <Project Name="OrcUnitSelect.csd" Type="Scene" />
         <Image Name="pointerDown.png" />
         <Project Name="PremiumRetry.csd" Type="Scene" />
+        <Project Name="Profile.csd" Type="Scene" />
         <Project Name="PvpRankerInfo.csd" Type="Scene" />
+        <Project Name="PvpReward.csd" Type="Scene" />
+        <Project Name="PvpUI.csd" Type="Scene" />
         <Project Name="QuestLayer.csd" Type="Scene" />
         <Image Name="redDot.png" />
         <Project Name="RegisterName.csd" Type="Scene" />
         <Project Name="RightBottomPanel.csd" Type="Scene" />
         <Project Name="RightBottomPanelForCampaign.csd" Type="Node" />
+        <Project Name="RudolphRoulette.csd" Type="Scene" />
+        <Image Name="rudolphRoulette.png" />
+        <Image Name="santaHat.png" />
+        <Project Name="SantaPopup.csd" Type="Scene" />
         <Project Name="Setting.csd" Type="Scene" />
         <Project Name="Shop.csd" Type="Scene" />
         <Project Name="SpecialOffer.csd" Type="Scene" />
@@ -129,6 +154,8 @@
         <Project Name="Train.csd" Type="Scene" />
         <Image Name="tree0.png" />
         <Image Name="tree1.png" />
+        <Image Name="treeSnow0.png" />
+        <Image Name="treeSnow1.png" />
         <Project Name="TutorialBox.csd" Type="Scene" />
         <Image Name="uiBox.png" />
         <Image Name="uiBoxGold.png" />
@@ -143,18 +170,24 @@
         <Image Name="uiBoxSmallTransparentWhite.png" />
         <Image Name="uiBoxStone.png" />
         <Image Name="uiBoxTiny.png" />
+        <Image Name="uiChristmasBar.png" />
+        <Image Name="uiChristmasCorner.png" />
         <Image Name="uiTab.png" />
+        <Project Name="UnderConstruction.csd" Type="Scene" />
         <Project Name="UnitDetail.csd" Type="Scene" />
+        <Project Name="UnitRewardMessageBox.csd" Type="Scene" />
         <Project Name="UnitTrainInfo.csd" Type="Scene" />
         <Project Name="UserSelect.csd" Type="Scene" />
         <Image Name="verticalScrollBackground.png" />
         <Image Name="videoIcon.png" />
         <Project Name="VideoStore.csd" Type="Scene" />
         <Image Name="weaponX.png" />
+        <Image Name="whiteCircle.png" />
+        <Image Name="whiteGlowCircle.png" />
         <Image Name="whitePointingDownArrow.png" />
+        <Image Name="whiteRect.png" />
         <Project Name="WinPopup.csd" Type="Scene" />
         <Project Name="WorkerPopup.csd" Type="Scene" />
-        <Project Name="PvpUI.csd" Type="Scene" />
       </RootFolder>
     </Group>
   </SolutionFolder>

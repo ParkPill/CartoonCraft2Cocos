@@ -101,7 +101,7 @@ void PPLabel::setString(std::string txt){
             
             lblNormal->setTextColor(Color4B(fontColor, 255));
             if(isShadowEnabled || isBorderEnabled){
-                lblNormal->enableShadow(Color4B(48, 53, 45, 255), Size(4, -4));
+                lblNormal->enableShadow(Color4B(48, 53, 45, 255), cocos2d::Size(4, -4));
             }
             
             this->addChild(lblNormal);
@@ -109,11 +109,11 @@ void PPLabel::setString(std::string txt){
         lblNormal->setString(txt);
         lblNormal->setTextColor(Color4B(fontColor));
         if(hAlign == TextHAlignment::LEFT){
-            lblNormal->setAnchorPoint(Point(0, lblNormal->getAnchorPoint().y));
+            lblNormal->setAnchorPoint(Vec2(0, lblNormal->getAnchorPoint().y));
         }else if(hAlign == TextHAlignment::CENTER){
-            lblNormal->setAnchorPoint(Point(0.5, lblNormal->getAnchorPoint().y));
+            lblNormal->setAnchorPoint(Vec2(0.5, lblNormal->getAnchorPoint().y));
         }else if(hAlign == TextHAlignment::RIGHT){
-            lblNormal->setAnchorPoint(Point(1, lblNormal->getAnchorPoint().y));
+            lblNormal->setAnchorPoint(Vec2(1, lblNormal->getAnchorPoint().y));
         }
         
         return;
@@ -207,7 +207,7 @@ void PPLabel::setString(std::string txt){
             lastSpace = index;
         }
         sprite->setScale(rate);
-        sprite->setPosition(Point(startX + sprite->getContentSize().width*rate/2, y));
+        sprite->setPosition(Vec2(startX + sprite->getContentSize().width*rate/2, y));
         startX += sprite->getContentSize().width*rate + gap;
         spriteBatch->addChild(sprite);
         
@@ -221,7 +221,7 @@ void PPLabel::setString(std::string txt){
             if (lastSpace > 0) {
                 for(int i = lastSpace + 1; i < index; i++){
                     Sprite* spt = sprites.at(i);
-                    spt->setPosition(Point(startX + spt->getContentSize().width*rate/2, y));
+                    spt->setPosition(Vec2(startX + spt->getContentSize().width*rate/2, y));
                     startX += spt->getContentSize().width*rate + gap;
                     previousLineStartX -= spt->getContentSize().width*rate + gap;
                     lastLineStartIndex--;
@@ -280,17 +280,17 @@ void PPLabel::setString(std::string txt){
     if (shadowSprites.size() > 0) {
         for (int i = 0; i < sprites.size(); i++) {
             spriteBatch->addChild(shadowSprites.at(i), -1);
-            shadowSprites.at(i)->setPosition(sprites.at(i)->getPosition() + Point(shadowDistance, -shadowDistance));
+            shadowSprites.at(i)->setPosition(sprites.at(i)->getPosition() + Vec2(shadowDistance, -shadowDistance));
             shadowSprites.at(i)->setScale(sprites.at(i)->getScale());
         }
     }
     shadowSprites.clear();
 }
-Size PPLabel::getSize(){
+cocos2d::Size PPLabel::getSize(){
     if(lblNormal != nullptr){
         return lblNormal->getBoundingBox().size;
     }
-    return Size(totalWidth, totalHeight);
+    return cocos2d::Size(totalWidth, totalHeight);
 }
 //void PPLabel::setOpacity(GLubyte opacity){
 //    for(auto unit: getChildren()){

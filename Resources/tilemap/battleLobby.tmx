@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="100" tileheight="100" nextobjectid="1">
- <tileset firstgid="1" name="grassTilemap" tilewidth="100" tileheight="100" tilecount="130">
-  <image source="grassTilemap.png" width="1024" height="1300"/>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="30" height="30" tilewidth="50" tileheight="50" nextobjectid="1">
+ <tileset firstgid="1" name="grassTilemap" tilewidth="50" tileheight="50" tilecount="130">
+  <image source="50TileSet.png" width="512" height="1024"/>
   <terraintypes>
    <terrain name="soil" tile="-1"/>
   </terraintypes>

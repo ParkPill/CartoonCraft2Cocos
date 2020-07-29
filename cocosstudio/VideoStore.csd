@@ -156,7 +156,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="imgTitle" ActionTag="953165055" Tag="104" IconVisible="False" LeftMargin="-3205.4871" RightMargin="4586.3994" TopMargin="251.6687" BottomMargin="938.1288" Scale9Enable="True" LeftEage="32" RightEage="32" TopEage="32" BottomEage="32" Scale9OriginX="32" Scale9OriginY="32" Scale9Width="33" Scale9Height="33" ctype="ImageViewObjectData">
+          <AbstractNodeData Name="imgTitle" ActionTag="953165055" Tag="104" IconVisible="False" LeftMargin="-3205.4871" RightMargin="4586.3994" TopMargin="251.6688" BottomMargin="938.1288" Scale9Enable="True" LeftEage="32" RightEage="32" TopEage="32" BottomEage="32" Scale9OriginX="32" Scale9OriginY="32" Scale9Width="33" Scale9Height="33" ctype="ImageViewObjectData">
             <Size X="987.0872" Y="144.2024" />
             <Children>
               <AbstractNodeData Name="imgSwordL" ActionTag="-1159982702" Tag="53" IconVisible="False" LeftMargin="-66.6179" RightMargin="873.7051" TopMargin="-34.0321" BottomMargin="-7.7655" LeftEage="30" RightEage="30" TopEage="28" BottomEage="28" Scale9OriginX="30" Scale9OriginY="28" Scale9Width="120" Scale9Height="130" ctype="ImageViewObjectData">
@@ -2679,23 +2679,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1862379060" Tag="1526" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1862379060" Tag="1526" IconVisible="False" LeftMargin="63.0045" RightMargin="179.9403" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0045" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1284066124" Tag="1527" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1284066124" Tag="1527" IconVisible="False" LeftMargin="166.5775" RightMargin="57.3673" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="215.0775" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6701" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -2739,23 +2739,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1485996111" Tag="1531" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1485996111" Tag="1531" IconVisible="False" LeftMargin="63.0050" RightMargin="179.9398" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0050" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-493001481" Tag="1532" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-493001481" Tag="1532" IconVisible="False" LeftMargin="166.5784" RightMargin="57.3664" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="215.0784" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6701" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -2799,23 +2799,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-501520768" Tag="1536" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-501520768" Tag="1536" IconVisible="False" LeftMargin="63.0037" RightMargin="179.9411" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0037" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1608162617" Tag="1537" IconVisible="False" LeftMargin="177.2593" RightMargin="46.6855" TopMargin="170.9074" BottomMargin="14.2943" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1608162617" Tag="1537" IconVisible="False" LeftMargin="165.6548" RightMargin="58.2899" TopMargin="170.9075" BottomMargin="14.2942" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
-                    <AnchorPoint ScaleX="0.5142" ScaleY="0.4703" />
-                    <Position X="227.1367" Y="60.3837" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="214.1548" Y="63.2942" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7077" Y="0.2132" />
+                    <PrePosition X="0.6673" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -2859,23 +2859,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1674533258" Tag="1541" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1674533258" Tag="1541" IconVisible="False" LeftMargin="63.0034" RightMargin="179.9414" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0034" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1431672162" Tag="1542" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1431672162" Tag="1542" IconVisible="False" LeftMargin="166.5792" RightMargin="57.3656" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="215.0792" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6701" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -2919,23 +2919,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-159638553" Tag="1546" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-159638553" Tag="1546" IconVisible="False" LeftMargin="63.0120" RightMargin="179.9328" TopMargin="169.0357" BottomMargin="22.1660" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0120" Y="68.1660" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="286390314" Tag="1547" IconVisible="False" LeftMargin="167.7506" RightMargin="56.1942" TopMargin="170.9065" BottomMargin="14.2952" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="286390314" Tag="1547" IconVisible="False" LeftMargin="156.1522" RightMargin="67.7926" TopMargin="170.9034" BottomMargin="14.2983" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
-                    <AnchorPoint ScaleX="0.6605" ScaleY="0.5391" />
-                    <Position X="231.8191" Y="67.1270" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="204.6522" Y="63.2983" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7223" Y="0.2370" />
+                    <PrePosition X="0.6377" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3050,23 +3050,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="1432819123" Tag="1556" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="1432819123" Tag="1556" IconVisible="False" LeftMargin="58.6789" RightMargin="184.2659" TopMargin="169.0368" BottomMargin="22.1649" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6789" Y="68.1649" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3043" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1964276189" Tag="1557" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1964276189" Tag="1557" IconVisible="False" LeftMargin="162.2518" RightMargin="55.6930" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="213.7518" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6660" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3110,23 +3110,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1871433008" Tag="1561" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1871433008" Tag="1561" IconVisible="False" LeftMargin="58.6824" RightMargin="184.2624" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6824" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1019539855" Tag="1562" IconVisible="False" LeftMargin="155.2964" RightMargin="62.6484" TopMargin="170.9069" BottomMargin="14.2948" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1019539855" Tag="1562" IconVisible="False" LeftMargin="156.2557" RightMargin="61.6891" TopMargin="170.9068" BottomMargin="14.2949" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
-                    <AnchorPoint ScaleX="0.7801" ScaleY="0.5232" />
-                    <Position X="235.6467" Y="65.5684" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="207.7557" Y="63.2949" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7342" Y="0.2315" />
+                    <PrePosition X="0.6473" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3170,23 +3170,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1827421721" Tag="1566" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1827421721" Tag="1566" IconVisible="False" LeftMargin="58.6837" RightMargin="184.2611" TopMargin="169.0368" BottomMargin="22.1649" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6837" Y="68.1649" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-297326649" Tag="1567" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-297326649" Tag="1567" IconVisible="False" LeftMargin="161.3350" RightMargin="56.6098" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="212.8350" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6632" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3230,23 +3230,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="1819521578" Tag="1571" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="1819521578" Tag="1571" IconVisible="False" LeftMargin="58.6865" RightMargin="184.2583" TopMargin="169.0368" BottomMargin="22.1649" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6865" Y="68.1649" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="971941852" Tag="1572" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="971941852" Tag="1572" IconVisible="False" LeftMargin="162.2623" RightMargin="55.6825" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="213.7623" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6660" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3290,23 +3290,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1650393526" Tag="1576" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1650393526" Tag="1576" IconVisible="False" LeftMargin="58.6958" RightMargin="184.2490" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6958" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-85994452" Tag="1577" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-85994452" Tag="1577" IconVisible="False" LeftMargin="151.8362" RightMargin="66.1086" TopMargin="170.9063" BottomMargin="14.2954" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="203.3362" Y="63.2954" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6336" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3404,7 +3404,7 @@
             <PrePosition />
             <PreSize X="0.0000" Y="0.0000" />
           </AbstractNodeData>
-          <AbstractNodeData Name="ndTabUnit" ActionTag="-488595588" VisibleForFrame="False" Tag="1587" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
+          <AbstractNodeData Name="ndTabUnit" ActionTag="-488595588" Tag="1587" IconVisible="True" RightMargin="2368.0000" TopMargin="1334.0000" ctype="SingleNodeObjectData">
             <Size X="0.0000" Y="0.0000" />
             <Children>
               <AbstractNodeData Name="btnGem0" ActionTag="-348168012" Tag="1588" IconVisible="False" LeftMargin="75.4283" RightMargin="-396.3731" TopMargin="-790.8884" BottomMargin="507.6868" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="32" RightEage="32" TopEage="33" BottomEage="48" Scale9OriginX="32" Scale9OriginY="33" Scale9Width="203" Scale9Height="155" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
@@ -3432,23 +3432,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="1947332964" Tag="1591" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="1947332964" Tag="1591" IconVisible="False" LeftMargin="63.0046" RightMargin="179.9402" TopMargin="169.0368" BottomMargin="22.1649" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0046" Y="68.1649" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1437693652" Tag="1592" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1437693652" Tag="1592" IconVisible="False" LeftMargin="166.5775" RightMargin="57.3673" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="215.0775" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6701" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3492,23 +3492,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1575060777" Tag="1596" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1575060777" Tag="1596" IconVisible="False" LeftMargin="63.0051" RightMargin="179.9397" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0051" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1369842992" Tag="1597" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1369842992" Tag="1597" IconVisible="False" LeftMargin="160.5785" RightMargin="63.3663" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="209.0785" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6514" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3552,23 +3552,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="545984085" Tag="1601" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="545984085" Tag="1601" IconVisible="False" LeftMargin="63.0037" RightMargin="179.9411" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0037" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1262177032" Tag="1602" IconVisible="False" LeftMargin="177.2593" RightMargin="46.6855" TopMargin="170.9074" BottomMargin="14.2943" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1262177032" Tag="1602" IconVisible="False" LeftMargin="165.6551" RightMargin="58.2897" TopMargin="170.9073" BottomMargin="14.2944" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
-                    <AnchorPoint ScaleX="0.5142" ScaleY="0.4703" />
-                    <Position X="227.1367" Y="60.3837" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="214.1551" Y="63.2944" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7077" Y="0.2132" />
+                    <PrePosition X="0.6673" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3612,23 +3612,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="1647219355" Tag="1606" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="1647219355" Tag="1606" IconVisible="False" LeftMargin="63.0034" RightMargin="179.9414" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0034" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1183230187" Tag="1607" IconVisible="False" LeftMargin="178.1834" RightMargin="45.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1183230187" Tag="1607" IconVisible="False" LeftMargin="166.5793" RightMargin="57.3654" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="215.0793" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6701" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3672,23 +3672,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1807797736" Tag="1611" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1807797736" Tag="1611" IconVisible="False" LeftMargin="63.0122" RightMargin="179.9326" TopMargin="169.0368" BottomMargin="22.1649" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="102.0122" Y="68.1649" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3178" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1538071095" Tag="1612" IconVisible="False" LeftMargin="167.7506" RightMargin="56.1942" TopMargin="170.9065" BottomMargin="14.2952" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1538071095" Tag="1612" IconVisible="False" LeftMargin="156.1525" RightMargin="67.7923" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="20" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="97.0000" Y="98.0000" />
-                    <AnchorPoint ScaleX="0.6605" ScaleY="0.5391" />
-                    <Position X="231.8191" Y="67.1270" />
+                    <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
+                    <Position X="204.6525" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7223" Y="0.2370" />
+                    <PrePosition X="0.6377" Y="0.2235" />
                     <PreSize X="0.3022" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3792,23 +3792,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="1567063434" Tag="1622" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="1567063434" Tag="1622" IconVisible="False" LeftMargin="58.6789" RightMargin="184.2659" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6789" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3043" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-1162169237" Tag="1623" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-1162169237" Tag="1623" IconVisible="False" LeftMargin="162.2518" RightMargin="55.6930" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="213.7518" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6660" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3852,23 +3852,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1809148578" Tag="1627" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1809148578" Tag="1627" IconVisible="False" LeftMargin="58.6824" RightMargin="184.2624" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6824" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1163699805" Tag="1628" IconVisible="False" LeftMargin="155.2964" RightMargin="62.6484" TopMargin="170.9069" BottomMargin="14.2948" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1163699805" Tag="1628" IconVisible="False" LeftMargin="156.2557" RightMargin="61.6891" TopMargin="170.9069" BottomMargin="14.2948" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="206.7964" Y="63.2948" />
+                    <Position X="207.7557" Y="63.2948" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.6443" Y="0.2235" />
+                    <PrePosition X="0.6473" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3912,23 +3912,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-2105516553" Tag="1632" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-2105516553" Tag="1632" IconVisible="False" LeftMargin="58.6838" RightMargin="184.2610" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6838" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="-295649543" Tag="1633" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="-295649543" Tag="1633" IconVisible="False" LeftMargin="161.3351" RightMargin="56.6097" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="212.8351" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6632" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -3972,23 +3972,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-1215735507" Tag="1637" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-1215735507" Tag="1637" IconVisible="False" LeftMargin="58.6864" RightMargin="184.2584" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6864" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="2146875142" Tag="1638" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="2146875142" Tag="1638" IconVisible="False" LeftMargin="162.2625" RightMargin="55.6823" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="213.7625" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6660" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />
@@ -4032,23 +4032,23 @@
                     <OutlineColor A="255" R="0" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="imgIconGold" ActionTag="-559429795" Tag="1642" IconVisible="False" LeftMargin="74.6106" RightMargin="168.3342" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
+                  <AbstractNodeData Name="imgIconGold" ActionTag="-559429795" Tag="1642" IconVisible="False" LeftMargin="58.6958" RightMargin="184.2490" TopMargin="169.0369" BottomMargin="22.1648" LeftEage="32" RightEage="32" TopEage="25" BottomEage="25" Scale9OriginX="32" Scale9OriginY="25" Scale9Width="14" Scale9Height="42" ctype="ImageViewObjectData">
                     <Size X="78.0000" Y="92.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="113.6106" Y="68.1648" />
+                    <Position X="97.6958" Y="68.1648" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.3540" Y="0.2407" />
+                    <PrePosition X="0.3044" Y="0.2407" />
                     <PreSize X="0.2430" Y="0.3249" />
                     <FileData Type="Normal" Path="lumberIcon.png" Plist="" />
                   </AbstractNodeData>
-                  <AbstractNodeData Name="lblGold" ActionTag="1644540336" Tag="1643" IconVisible="False" LeftMargin="175.1834" RightMargin="42.7614" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                  <AbstractNodeData Name="lblGold" ActionTag="1644540336" Tag="1643" IconVisible="False" LeftMargin="151.8362" RightMargin="66.1086" TopMargin="170.9064" BottomMargin="14.2953" FontSize="70" LabelText="40" OutlineSize="6" OutlineEnabled="True" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
                     <Size X="103.0000" Y="98.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-                    <Position X="226.6834" Y="63.2953" />
+                    <Position X="203.3362" Y="63.2953" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="255" G="255" B="255" />
-                    <PrePosition X="0.7063" Y="0.2235" />
+                    <PrePosition X="0.6336" Y="0.2235" />
                     <PreSize X="0.3209" Y="0.3460" />
                     <FontResource Type="Normal" Path="BMDOHYEON.ttf" Plist="" />
                     <OutlineColor A="255" R="0" G="0" B="0" />

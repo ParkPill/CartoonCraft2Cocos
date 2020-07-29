@@ -15,9 +15,9 @@ bool SneakyJoystick::init()
 {
 	bool pRet = false;
 	//if(Sprite::init()){
-		stickPosition = Point::ZERO;
+		stickPosition = Vec2::ZERO;
 		degrees = 0.0f;
-		velocity = Point::ZERO;
+		velocity = Vec2::ZERO;
 		autoCenter = true;
 		isDPad = false;
 		hasDeadzone = false;
@@ -31,7 +31,7 @@ bool SneakyJoystick::init()
         addListener();
     
 		//Cocos node stuff
-		setPosition(Point(0,0));
+		setPosition(Vec2(0,0));
 		pRet = true;
 	//}
     size = Director::getInstance()->getWinSize();
@@ -65,7 +65,7 @@ float SneakyJoystick::round(float r) {
     return (r > 0.0) ? floor(r + 0.5) : ceil(r - 0.5);
 }
 
-void SneakyJoystick::updateVelocity(Point point)
+void SneakyJoystick::updateVelocity(Vec2 point)
 {
 	// Calculate distance and angle from the center.
 	float dx = point.x;
@@ -73,7 +73,7 @@ void SneakyJoystick::updateVelocity(Point point)
 	float dSq = dx * dx + dy * dy;
 	
 	if(dSq <= deadRadiusSq){
-		velocity = Point::ZERO;
+		velocity = Vec2::ZERO;
 		degrees = 0.0f;
 		stickPosition = point;
         
@@ -122,11 +122,11 @@ void SneakyJoystick::updateVelocity(Point point)
 		dy = sinAngle * joystickRadius;
 	}
 	
-	velocity = Point(dx/joystickRadius, dy/joystickRadius);
+	velocity = Vec2(dx/joystickRadius, dy/joystickRadius);
 	degrees = angle * SJ_RAD2DEG;
 	
 	// Update the thumb's position
-	stickPosition = Point(dx, dy);
+	stickPosition = Vec2(dx, dy);
     int vel = 5;
     if (stickType == STICK_LEFT) {
         if(abs(dx) < vel && abs(dy) < vel){
@@ -210,7 +210,7 @@ bool SneakyJoystick::onTouchBegan(Touch *touch, Event *unused_event)
     if(!this->isVisible()){
         return false;
     }
-	Point location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
+	Vec2 location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
 	//if([background containsPoint:[background convertToNodeSpace:location]]){
 	location = this->convertToNodeSpace(location);
 	//Do a fast rect check before doing a circle hit check:
@@ -232,7 +232,7 @@ void SneakyJoystick::onTouchMoved(Touch *touch, Event *unused_event)
     if(!this->isVisible()){
         return;
     }
-	Point location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
+	Vec2 location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
 	location = this->convertToNodeSpace(location);
 	this->updateVelocity(location);
     if (touch->getCurrentForce() > 0) {
@@ -247,9 +247,9 @@ void SneakyJoystick::onTouchEnded(Touch *touch, Event *unused_event)
     if(!this->isVisible()){
         return;
     }
-    Point location = Point::ZERO;
+    Vec2 location = Vec2::ZERO;
 	if(!autoCenter){
-		Point location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
+		Vec2 location = CCDirector::getInstance()->convertToGL(touch->getLocationInView());
 		location = this->convertToNodeSpace(location);
 	}
 	this->updateVelocity(location);

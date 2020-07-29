@@ -21,14 +21,14 @@ bool AwesomeDialogBox::init()
         size = Director::getInstance()->getWinSize();
         touchCount = 0;
         _backgroundTop = DrawNode::create();
-        _backgroundTop->setContentSize(Size(size.width, size.height/4));
-        _backgroundTop->drawSolidRect(Point(0, size.height), Point(size.width, size.height - size.height/4), Color4F(0, 0, 0, 0.5));
-        _backgroundTop->setPosition(Point::ZERO);
+        _backgroundTop->setContentSize(cocos2d::Size(size.width, size.height/4));
+        _backgroundTop->drawSolidRect(Vec2(0, size.height), Vec2(size.width, size.height - size.height/4), Color4F(0, 0, 0, 0.5));
+        _backgroundTop->setPosition(Vec2::ZERO);
 		addChild(_backgroundTop);
         
         
 		
-//        labelPoint  = Point(-_background->getContentSize().width*_background->getScale()/2 + 60, _background->getContentSize().height*_background->getScale()/4);
+//        labelPoint  = Vec2(-_background->getContentSize().width*_background->getScale()/2 + 60, _background->getContentSize().height*_background->getScale()/4);
 
         _labelTop = this->getLabel("        ");
         this->addChild(_labelTop, 1);
@@ -37,13 +37,13 @@ bool AwesomeDialogBox::init()
         
         _blinkLabel = getLabel(LanguageManager::getInstance()->getText("continue").c_str());
         _blinkLabel->setWidth(-1);
-        _blinkLabel->setAnchorPoint(Point(1, 0.5));
+        _blinkLabel->setAnchorPoint(Vec2(1, 0.5));
         this->addChild(_blinkLabel, 1);
         
         Label* lblSkip = getLabel("SKIP (Y)");
-        lblSkip->setAnchorPoint(Point(1, 0));
+        lblSkip->setAnchorPoint(Vec2(1, 0));
         lblSkip->setWidth(-1);
-        lblSkip->setPosition(Point(size.width, 0) + Point(-2, 2));
+        lblSkip->setPosition(Vec2(size.width, 0) + Vec2(-2, 2));
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID || CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
         lblSkip->setVisible(false);
 #endif
@@ -73,7 +73,7 @@ void AwesomeDialogBox::removeUsedAssets(){
 Label* AwesomeDialogBox::getLabel(const char* txt)
 {
     Label* label = LanguageManager::getInstance()->getLocalizedLabel(txt, Color4B(235, 235, 235, 255));//Label::createWithTTF(txt, GameManager::getInstance()->getFont(FONT_DEFAULT), 30);
-    label->setAnchorPoint(Point(0, 0.5));
+    label->setAnchorPoint(Vec2(0, 0.5));
     label->setWidth(size.width - 40);
     return label;
 }
@@ -179,14 +179,14 @@ void AwesomeDialogBox::showNextTalk()
             //				const char* path = name.c_str();
             //				_leftSide = Sprite::create(path);
             //                _leftSide->setScaleX(-1);
-            //				_leftSide->setPosition(_backgroundTop->getPosition() + Point(-_backgroundTop->getContentSize().width/2 + 100,0));
+            //				_leftSide->setPosition(_backgroundTop->getPosition() + Vec2(-_backgroundTop->getContentSize().width/2 + 100,0));
             //                if (_label) {
             //                    _label->removeFromParentAndCleanup(true);
             //                }
             
-            _labelTop->setPosition(Point(20, size.height - size.height/8));
+            _labelTop->setPosition(Vec2(20, size.height - size.height/8));
             //				addChild(_leftSide);
-            _blinkLabel->setPosition(Point(Director::getInstance()->getWinSize().width - 20, size.height - size.height/4));
+            _blinkLabel->setPosition(Vec2(Director::getInstance()->getWinSize().width - 20, size.height - size.height/4));
 //            _talkIndex++;
             _currentTalk = _talkVec[_talkIndex];
             _blinkLabel->setVisible(false);
@@ -211,7 +211,7 @@ std::vector<std::string> AwesomeDialogBox::split(const std::string &s, char deli
     return elems;
 }
 bool AwesomeDialogBox::onTouchBegan(Touch *touch, Event *unused_event){
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
 	location = Director::getInstance()->convertToGL(location);
   
     touchCount++;
@@ -219,7 +219,7 @@ bool AwesomeDialogBox::onTouchBegan(Touch *touch, Event *unused_event){
 }
 
 void AwesomeDialogBox::onTouchMoved(Touch *touch, Event *unused_event){
-    Point location = touch->getLocationInView();
+    Vec2 location = touch->getLocationInView();
 	location = Director::getInstance()->convertToGL(location);
    
 }

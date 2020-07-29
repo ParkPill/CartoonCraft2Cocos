@@ -21,9 +21,9 @@ protected:
 	float thumbRadiusSq;
 	float deadRadiusSq;
     
-	CC_SYNTHESIZE_READONLY(cocos2d::Point, stickPosition, StickPosition);
+	CC_SYNTHESIZE_READONLY(cocos2d::Vec2, stickPosition, StickPosition);
 	CC_SYNTHESIZE_READONLY(float, degrees, Degrees);
-	CC_SYNTHESIZE_READONLY(cocos2d::Point, velocity, Velocity);
+	CC_SYNTHESIZE_READONLY(cocos2d::Vec2, velocity, Velocity);
 	CC_SYNTHESIZE(bool, autoCenter, AutoCenter);
 	CC_SYNTHESIZE_READONLY(bool, isDPad, IsDPad);
 	CC_SYNTHESIZE(bool, hasDeadzone, HasDeadzone);
@@ -54,7 +54,7 @@ protected:
     float round(float r) ;
 
 private:
-	void updateVelocity(cocos2d::Point point);
+	void updateVelocity(cocos2d::Vec2 point);
 	void setTouchRadius();
     
 };

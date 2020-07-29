@@ -203,7 +203,7 @@ SwingAxe* SwingAxe::create(){
 //    spike->init(UNIT_SWING_AXE, 0, 10, "doubleAxe.png");
     spike->immortal = true;
     spike->canMove = false;
-    spike->setAnchorPoint(Point(0.5, -2));
+    spike->setAnchorPoint(Vec2(0.5, -2));
     spike->runAction(RepeatForever::create(RotateBy::create(1, 200)));
     return spike;
 }

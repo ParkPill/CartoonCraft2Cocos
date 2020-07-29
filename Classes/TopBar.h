@@ -21,7 +21,7 @@ using namespace cocos2d::ui;
 class TopBar : public Layer
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     virtual bool init();
     CREATE_FUNC(TopBar);
@@ -39,6 +39,10 @@ public:
     void onTreeClick();
     void onGemClick();
     Node* getShopLayer();
+    
+    void addGem(Ref* ref);
+    void addLumber(Ref* ref);
+    void addGold(Ref* ref);
 };
 
 

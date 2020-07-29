@@ -16,24 +16,9 @@
 //#include "NativeInterface.h"
 #include "ShopLayer.h"
 #include "HeroPage.h"
-enum CafeSdkTags {
-    kTagHome,
-    kTagNotice,
-    kTagEvent,
-    kTagMenu,
-    kTagProfile,
-    kTagArticle,
-    kTagWrite1,
-    kTagWrite2,
-    kTagLogin,
-    kTagLogout,
-    kTagIsLogin,
-    kTagGetProfile,
-    kTagShowRecord,
-    kTagShowScreenShot,
-    kTagSendNewUser,
-    kTagSendPayUser,
-};
+#include "EventPopup.h"
+#include "MultiplayLobby.h"
+#include "ChatRoom.h"
 bool Title::init()
 {
 //    UDSetInt(KEY_GOLDEN_TICKET, 0); // test
@@ -54,29 +39,31 @@ bool Title::init()
     float moveTime = 1;
     
     Node* title = CSLoader::createNodeWithVisibleSize("Title.csb");
+    titleLayer = title;
     this->addChild(title);
+    title->setName("titleLayer");
     title->setPositionX(size.width/2 - title->getContentSize().width/2);
     Node* sptBackground = title->getChildByName("btnBackground");//Sprite::create("titleBackground.png");
 //    this->addChild(sptBackground);
-//    sptBackground->setPosition(Point(size.width/2, size.height/2 - 300));
+//    sptBackground->setPosition(Vec2(size.width/2, size.height/2 - 300));
 //    sptBackground->setScale(defaultScale*2224.0f/2048);
-    sptBackground->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime, Point(0, -30)), 3), NULL));
+    sptBackground->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime, Vec2(0, -30)), 3), NULL));
     
     sptTitle = Sprite::create("title.png");
     title->addChild(sptTitle);
-    sptTitle->setPosition(Point(size.width/2 - 420, size.height/2 + 280));
+    sptTitle->setPosition(Vec2(size.width/2 - 420, size.height/2 + 280));
     sptTitle->setScale(defaultScale);
-    sptTitle->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime, Point(-200, 100)), 3), NULL));
+    sptTitle->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime, Vec2(-200, 100)), 3), NULL));
     
 //    float btnX = 570;
     Button* btn = (Button*)title->getChildByName("btnPlay");//Button::create("btnBox.png");
 //    this->addChild(btn);
-//    btn->setPosition(Point(btnX, 680));
+//    btn->setPosition(Vec2(btnX, 680));
     btn->addClickEventListener(CC_CALLBACK_0(Title::showChapterSelect, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     PPLabel* lbl = addLabelToButton(btn, "play", 60, Color3B(4, 90, 4));
-    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
     doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     
     btn = (Button*)title->getChildByName("btnHero");//Button::create("btnBox.png");
@@ -84,45 +71,69 @@ bool Title::init()
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     lbl = addLabelToButton(btn, "hero", 60, Color3B(4, 90, 4));
-    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
     doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     btn->setVisible(false); // test
+
+    btn = (Button*)title->getChildByName("btnEvent");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onEventClick, this));
+//    btn->setVisible(false);
+    GM->addGlowBack(btn);
     
+    btn = (Button*)title->getChildByName("btnChat");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onChatClick, this));
 
     btn = (Button*)title->getChildByName("btnCommunity");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onCommunityClick, this));
-        btn->setOpacity(0);
-        btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     if(LM->getLanguageType() == LanguageType::KOREAN){
         
     }else{
-        btn->setVisible(false);
+//        btn->setVisible(false);
     }
     
     btn = (Button*)title->getChildByName("btnFacebook");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onFacebookClick, this));
         btn->setOpacity(0);
         btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
-    
+    if (GM->market == MARKET_SMARTPASS) {
+        btn->setVisible(false);
+    }
+    btn->setVisible(false);
 //    Sprite* spt = Sprite::create("weaponX.png");
 //    btn->addChild(spt);
-//    spt->setPosition(Point(590, 135));
+//    spt->setPosition(Vec2(590, 135));
 //    spt->setOpacity(0);
 //    spt->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
     btn = (Button*)title->getChildByName("btnArena");//Button::create("btnBox.png");
 //    this->addChild(btn);
-//    btn->setPosition(Point(btnX, 415));
+//    btn->setPosition(Vec2(btnX, 415));
     btn->addClickEventListener(CC_CALLBACK_0(Title::onArenaClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     lbl = addLabelToButton(btn, "arena", 60, Color3B(4, 90, 4));
-    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
     doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    
+    btn = (Button*)title->getChildByName("btnMultiplay");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onMultiplayClick, this));
+    btn->setVisible(false);// test 
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
+    lbl = addLabelToButton(btn, "arena", 60, Color3B(4, 90, 4));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
+    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
+    
+    btn = (Button*)title->getChildByName("btnYoutube");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onYoutubeChannelClick, this));
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
 //    spt = Sprite::create("comingSoon.png");
 //    btn->addChild(spt);
-//    spt->setPosition(Point(590, 135));
+//    spt->setPosition(Vec2(590, 135));
 //    spt->setOpacity(0);
 //    spt->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
@@ -131,21 +142,21 @@ bool Title::init()
 //    Sprite* spt1 = Sprite::create("networkTag.png");
 //    btn->addChild(spt1);
 //    spt1->setScale(tagScale);
-//    spt1->setPosition(Point(590, 170));
+//    spt1->setPosition(Vec2(590, 170));
 //    spt1->setOpacity(0);
 //    spt1->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
 //
 //    Sprite* spt2 = Sprite::create("nonMultiplayTag.png");
 //    btn->addChild(spt2);
 //    spt2->setScale(tagScale);
-//    spt2->setPosition(Point(590, 110));
+//    spt2->setPosition(Vec2(590, 110));
 //    spt2->setOpacity(0);
 //    spt2->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
     btn = (Button*)title->getChildByName("btnBattle");//Button::create("btnBox.png");
 //    this->addChild(btn);
-//    btn->setPosition(Point(btnX, 150));
-    btn->addClickEventListener(CC_CALLBACK_0(Title::onBattleClick, this));
+//    btn->setPosition(Vec2(btnX, 150));
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onBattleClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
 //    GM->makeItScaleUpAndDown(btn->getChildByName("imgNewTag"));
@@ -153,12 +164,12 @@ bool Title::init()
 
 
     lbl = addLabelToButton(btn, "battle", 60, Color3B(4, 90, 4));
-    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
     doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     
 //    Sprite* sptComingSoonTag = Sprite::create("comingSoon.png");
 //    btn->addChild(sptComingSoonTag);
-//    sptComingSoonTag->setPosition(Point(610, 144));
+//    sptComingSoonTag->setPosition(Vec2(610, 144));
 //    sptComingSoonTag->setOpacity(0);
 //    sptComingSoonTag->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
@@ -169,20 +180,19 @@ bool Title::init()
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
 //    lbl = addLabelToButton(btn, "setting", 60, Color3B(4, 90, 4));
-//    lbl->setPosition(lbl->getPosition() + Point(-110, 10));
+//    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
 //    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     
-    
     Sprite* spt = Sprite::createWithSpriteFrameName("helicopter0.png");
-    this->addChild(spt);
-    spt->setPosition(size.width/2 + 800, size.height + 300);
+    titleLayer->addChild(spt);
+    spt->setPosition(size.width/2 + 740, size.height + 300);
     GM->runAnimation(spt, "helicopterStand", true);
-    spt->setScale(1.5);
-    spt->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime+0.15f, Point(0, -500)), 3), NULL));
+    spt->setScale(3);
+    spt->runAction(Sequence::create(DelayTime::create(idleTime), EaseInOut::create(MoveBy::create(moveTime+0.15f, Vec2(0, -500)), 3), NULL));
     
     if(GM->market == MARKET_ONESTORE_FREE){
         
-        Point pos = Point(size.width - 150, size.height - 150);
+        Vec2 pos = Vec2(size.width - 150, size.height - 150);
         for(int i = 0; i < 5; i++){
             Sprite* spt = Sprite::create("longLight.png");
             this->addChild(spt);
@@ -210,16 +220,6 @@ bool Title::init()
     
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
     
-#ifdef SDKBOX_ENABLED
-    log("Title PluginSdkboxPlay init");
-    if(sdkbox::PluginSdkboxPlay::isSignedIn()){
-        log("signed in");
-    }else{
-        log("not signed in");
-//        sdkbox::PluginSdkboxPlay::signin();
-    }
-    log("Title PluginSdkboxPlay signin");
-#endif
     int freeTicketUsedDay = UDGetInt(KEY_GOLDEN_TICKET_FREE_USED_DAY, 0);
     if(freeTicketUsedDay != BSM->getDay()){
         UDSetInt(KEY_CURRENT_COLOSSEUM_LEAGUE_INDEX, DEFAULT_LEAGUE_INDEX);
@@ -236,19 +236,19 @@ bool Title::init()
 //        this->addChild(crossLayer);
     }
     
-//    Label* lblVersion = LM->getLocalizedLabel();
-//    this->addChild(lblVersion);
-//    lblVersion->setAnchorPoint(Vec2::ONE);
-//    lblVersion->setPosition(size);
-//    lblVersion->setString(strmake("Ver.%s_rls", GM->version));
-//    lblVersion->setTextColor(Color4B::BLACK);
-    
     lblID = LM->getLocalizedLabel();
     this->addChild(lblID);
     lblID->setAnchorPoint(Vec2(0, 1));
-    lblID->setPosition(Vec2(0, size.height));
+    lblID->setPosition(Vec2(130, size.height));
     lblID->setString(strmake("GAME ID: "));
     lblID->setTextColor(Color4B::BLACK);
+    
+    lblName = LM->getLocalizedLabel();
+    this->addChild(lblName);
+    lblName->setAnchorPoint(Vec2(0, 0));
+    lblName->setPosition(Vec2(130, 0));
+    lblName->setString(strmake("Ver. %s", GM->version));
+    lblName->setTextColor(Color4B::WHITE);
     
     lblLoading = LM->getLocalizedLabel();
     this->addChild(lblLoading);
@@ -278,7 +278,7 @@ bool Title::init()
 //    if(true){ // test
         // check its free
         UDSetBool(KEY_FIRST_LAUNCH, false); // test  uncomment it when release
-        showIndicator(); // test
+//        showIndicator(); // test
 //        BSM->isThisAppFree(); // test
     }
     
@@ -290,21 +290,142 @@ bool Title::init()
     }
     
     std::string name = UDGetStr(KEY_NAME, "");
-    std::string _id =  UDGetStr(KEY_RID, "");
-    if(name.length() > 0 && _id.length() == 0){
-        BSM->registerName(name);
-    }else if(name.length() == 0){
+    std::string id = UDGetStr(KEY_SAVED_ID, "-1");
+    BSM->requestedID = id;
+    if(name.length() == 0 && id.compare("-1") == 0){
         nameHandleState = NETWORK_HANDLE_STATE_COMPLETE;
         showRegisterName();
+    }else{
+        // id setting
+        // 35 for localhost
+        // 133848 and 5dbcc1e7003219060f95df67 for real server
+//            UDSetStr(KEY_SAVED_ID, "133848"); // test
+//            UDSetStr(KEY_RID, "5dbcc1e7003219060f95df67"); // test
+        
+//            UDSetStr(KEY_SAVED_ID, "35"); // test
+//            UDSetStr(KEY_RID, ""); // test
+//        UDSetStr(KEY_SAVED_ID, "2"); // super girl test
+//        UDSetStr(KEY_RID, ""); // test
+//        BSM->requestedID = UDGetStr(KEY_SAVED_ID, "-1"); // test
+        
+//        BSM->isInitUserDataRequested = true;
+//
+//        showIndicator();
+//        firstIndicatorDisposed = false;
     }
     
+    if (BSM->timeEstablished) {
+//        firstIndicatorDisposed = true;
+    }else{
+//        showIndicator();
+    }
+    
+    btn = (Button*)title->getChildByName("btnPlay");
+    if (GM->getTimeLeftForCampaignChest(0) <= 0 ||
+        GM->getTimeLeftForCampaignChest(1) <= 0 ||
+        GM->getTimeLeftForCampaignChest(2) <= 0) { // new chest
+        btn->getChildByName("imgRedDot")->setVisible(true);
+    }else{
+        btn->getChildByName("imgRedDot")->setVisible(false);
+    }
+//    const char* keyConvertHeroStrToInt = "key_convertHeroStrToInt";
+//    if(UDGetBool(keyConvertHeroStrToInt, false) == false){
+//        UDSetBool(keyConvertHeroStrToInt, true);
+//        std::string strEquipped = UDGetStr(KEY_UNITS_INVENTORY, "");
+//        ValueVector units = GameManager::getInstance()->split(strEquipped, "_");
+//        std::string str;
+//        int counter = 0;
+//        std::vector<UnitInfo*> unitInfoListInventory;
+//        for(int i = 0; i < units.size(); i++){
+//            str = units.at(i).asString();
+//            if(str.length() > 0){
+//                UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+//                if(info->unitType < 0){
+//                    continue;
+//                }
+//                unitInfoListInventory.push_back(info);
+//            }
+//        }
+//        GM->saveBattleUnitInventory(unitInfoListInventory);
+//        
+//        strEquipped = UDGetStr(KEY_UNITS_DECK, "");
+//        units = GameManager::getInstance()->split(strEquipped, "_");
+//        counter = 0;
+//        std::vector<UnitInfo*> unitInfoListDeck;
+//        for(int i = 0; i < units.size(); i++){
+//            if(units.at(i).asString().length() > 0){
+//                UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+//                unitInfoListDeck.push_back(info);
+//            }
+//        }
+//        GM->saveBattleUnitDeck(unitInfoListDeck);
+//        
+//        strEquipped = UDGetStr(KEY_UNITS_HERO_INVENTORY, "");
+//        units = GameManager::getInstance()->split(strEquipped, "_");
+//        counter = 0;
+//        std::vector<UnitInfo*> unitInfoHeroListInventory;
+//        for(int i = 0; i < units.size(); i++){
+//            if(units.at(i).asString().length() > 0){
+//                UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+//                unitInfoHeroListInventory.push_back(info);
+//            }
+//        }
+//        GM->saveHeroInventory(unitInfoHeroListInventory);
+//        
+//        strEquipped = UDGetStr(KEY_UNITS_HERO_DECK, "");
+//        units = GameManager::getInstance()->split(strEquipped, "_");
+//        counter = 0;
+//        std::vector<UnitInfo*> unitInfoHeroListDeck;
+//        for(int i = 0; i < units.size(); i++){
+//            if(units.at(i).asString().length() > 0){
+//                UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
+//                unitInfoHeroListDeck.push_back(info);
+//            }
+//        }
+//        GM->saveHeroDeck(unitInfoHeroListDeck);
+//        
+//        std::string strMonthly = UDGetStr(KEY_MONTHLY_EVENT_INFO, "-1/0_0_0_0_0_0_0_0_0_0_0_0");
+////        std::string strData = getMonthlyEventInfoString();
+////        checkIsNewMonthlyEvent();
+//        ValueVector list = GM->split(strMonthly, "_");
+//        ValueVector monthAndReceive = GM->split(list.at(0).asString(), "/");
+//        UDSetInt(KEY_MONTHLY_EVENT_INFO_MONTH, monthAndReceive.at(0).asInt());
+//        UDSetInt(KEY_MONTHLY_EVENT_INFO_RECEIVE_COUNT, monthAndReceive.at(1).asInt());
+//        for (int i = 0; i < EVENT_MISSION_TOTAL_COUNT; i++) {
+//            if (i >= list.size()-1) {
+//                UDSetInt(strmake(KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT, i).c_str(), 0);
+//            }else{
+//                UDSetInt(strmake(KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT, i).c_str(), list.at(i+1).asInt());
+//            }
+//        }
+//    }
+    
+    btn = (Button*)title->getChildByName("btnNotice");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::showPostPopup, this));
+    btn->getChildByName("imgRedDot")->setVisible(false);
+    btn->setOpacity(0);
+    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
 //    showIndicator();
 //    BSM->getGameInfo();
     
+    for (int i = 35; i >= 0; i--) {
+        std::string key = strmake("KEY_HARD_MODE_CLEAR_FORMAT_%d", i);
+        bool isClear = UDGetBool(key.c_str(), false);
+        if (isClear) {
+            int previousClearStage = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, -1);
+            if (previousClearStage < i) {
+                UDSetInt(KEY_HARD_MODE_CLEAR_STAGE, previousClearStage);
+                break;
+            }
+        }
+    }
+    
 //    isFreeApp = true; // test
 //    isFreeAppResultArrived = true; // test
-//    UDSetStr(KEY_SAVED_ID, "2"); // test 
+//    log("rid: %s", UDGetStr(KEY_RID).c_str()); // test
+    
+    
     
 //    BSM->getHttpTime();
 //    UDSetInt(KEY_LAST_CLEAR_STAGE, 11); // test
@@ -315,23 +436,132 @@ bool Title::init()
 //    UDSetStr(KEY_UNITS_HERO_INVENTORY, ""); // test
 //    UDSetBool(KEY_HERO_PAGE_TUTORIAL_DONE, false); // test
     
+//    onHeroClick(); // test
     
-    onHeroClick(); // test now
+//    UDSetStr(KEY_DAILY_REWARD_RECEIVED_DAY, "2019-10-22"); // test
+//    BSM->sendArenaScore(60*4 + 35); // test
+//    UDSetStr(KEY_MONTHLY_EVENT_INFO, "-1/0_0_0_0_0_0_0_0_0_0_0_0"); // test
     
+//    UDSetInt(KEY_LAST_CLEAR_SupdateTrainLayerTAGE, -1); // test 
+//    GM->strSmartPassError = "sfsdfdsf"; // test
+    
+    // spine test
+    for (int i = UNIT_HERO_ORC; i <= UNIT_HERO_WATERMELON; i++) {
+        if(i > UNIT_HERO_UNDINE && i <= UNIT_HERO_CRAZY_LION){
+            continue;
+        }
+        spine::SkeletonAnimation* spChar = GM->getHeroSpine(i);
+        this->addChild(spChar);
+        spChar->setPosition(Vec2(100, -1000));
+    }
+    // spine test
+    
+    if(name.length() == 0 && id.compare("-1") == 0){
+        
+    }else{
+        showIndicator();
+        BSM->checkServer();
+    }
+    
+    
+//    showRegisterName(); // test 
     log("Title init done");
     
-//    showExitPopup(); // test
+//    showExitPopup(); // test 
     return true;
 }
+void Title::onExitClick(){
+    GM->exitGame();
+}
+void Title::onUpdateClick(){
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    Application::getInstance()->openURL("itms-apps://itunes.apple.com/app/id1389133177");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+    Application::getInstance()->openURL("https://play.google.com/store/apps/details?id=com.magmon.cartooncraft");
+#endif
+}
+void Title::checkMonthlyEventAttend(){
+    GM->checkIsNewMonthlyEvent();
+    if(isMonthlyEventAttendChecked) return;
+//    std::string strData = GM->getMonthlyEventInfoString();
+//    ValueVector list = GM->split(strData, "_");
+//    UDSetInt(KEY_MONTHLY_EVENT_ATTEND_DAY, -1); // test
+    int monthlyEventCheckedDay = UDGetInt(KEY_MONTHLY_EVENT_ATTEND_DAY, -1);
+    time_t now = BSM->getCurrentTimeT();
+    int today = Value(std::string(BSM->getStrFromTime(now)).substr(8, 2)).asInt();
+    if (today != monthlyEventCheckedDay){
+        GM->addMonthlyEventProgress(EVENT_MISSION_ATTEND, 1);
+        UDSetInt(KEY_MONTHLY_EVENT_ATTEND_DAY, BSM->getDay()); // test
+    }
+    
+    isMonthlyEventAttendChecked = true;
+}
+void Title::onEventClick(){
+    if(!BSM->timeEstablished || BSM->isOffline){
+        showInstanceMessage(LM->getText("network fail play offline"));
+        return;
+    }
+    checkMonthlyEventAttend();
+    int month = BSM->getMonth();
+    log("month: %d", month);
+    
+    showEventPopup();
+}
+void Title::onChatClick(){
+    ChatRoom* layer = ChatRoom::create();
+    this->addChild(layer, POPUP_ZORDER);
+    layer->setName("chatPopup");
+    setAsPopup(layer);
+}
+void Title::showEventPopup(){
+    EventPopup* layer = EventPopup::create();
+    this->addChild(layer, POPUP_ZORDER);
+    layer->setName("eventPopup");
+    setAsPopup(layer);
+}
 void Title::onFacebookClick(){
-    Application::getInstance()->openURL("https://www.facebook.com/StudioNAP/");
+//    Application::getInstance()->openURL("https://www.facebook.com/StudioNAP/");
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
+    Application::getInstance()->openURL("fb://profile/792734024259632");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+    Application::getInstance()->openURL("fb://facewebmodal/f?href=https://www.facebook.com/StudioNAP/?ref=bookmarks");
+#else
+    Application::getInstance()->openURL("https://www.facebook.com/StudioNAP");
+#endif
 }
 void Title::onCommunityClick(){
     if(LM->getLanguageType() == LanguageType::KOREAN){
         Application::getInstance()->openURL("https://cafe.naver.com/cartooncraft");
     }else{
-        Application::getInstance()->openURL("https://discordapp.com/channels/582944551614939269/582947227945664522");
+        showDiscordPopup();
     }
+}
+void Title::showDiscordPopup(){
+    Node* layer = CSLoader::createNode("DiscordPopup.csb");
+    this->addChild(layer, 4);
+    layer->setName("discordPopup");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    
+    Button* btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnInvitation");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onDiscordInvitationClick, this));
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "invitation");
+    
+    btn = (Button*)layer->getChildByName("btnOpen");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onDiscordOpenClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "open");
+}
+void Title::onDiscordInvitationClick(){
+    Application::getInstance()->openURL("https://discord.gg/ewyae8T");
+}
+void Title::onDiscordOpenClick(){
+    Application::getInstance()->openURL("https://discordapp.com/channels/582944551614939269/582944551648493607");
 }
 void Title::onSettingClick(){
     Node* layer = CSLoader::createNode("Setting.csb");
@@ -339,6 +569,10 @@ void Title::onSettingClick(){
     layer->setName("settingPopup");
     setAsPopup(layer);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    
+    Text* lbl = (Text*)layer->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "setting");
+    
     Button* btn = (Button*)layer->getChildByName("btnBlock");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
     btn = (Button*)layer->getChildByName("btnClose");
@@ -350,15 +584,23 @@ void Title::onSettingClick(){
     btn->addClickEventListener(CC_CALLBACK_0(Title::onSoundClick, this));
     btn = (Button*)layer->getChildByName("btnNetworkReset");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onNetworkResetClick, this));
-    Text* lbl = (Text*)btn->getChildByName("lbl");
+    lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "network reset");
     btn = (Button*)layer->getChildByName("btnRestore");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onRestoreClick, this));
+    if (GM->market == MARKET_SMARTPASS) {
+        btn->setVisible(false);
+    }
 //#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 //    btn->setVisible(false);
 //#endif
     lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "restore");
+    
+    btn = (Button*)layer->getChildByName("btnRename");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onRenameClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "rename");
     
     btn = (Button*)layer->getChildByName("btnCommunity");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onCommunityClick, this));
@@ -372,6 +614,7 @@ void Title::onSettingClick(){
     
     btn = (Button*)layer->getChildByName("btnFacebook");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onFacebookClick, this));
+    btn->setVisible(false);
 //    btn->setOpacity(0);
 //    btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
     
@@ -382,13 +625,32 @@ void Title::onSettingClick(){
     btn->addClickEventListener(CC_CALLBACK_0(Title::onLanguageClick, this));
     lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "language");
+    if (GM->market == MARKET_SMARTPASS) {
+        layer->getChildByName("lblGPSID")->setVisible(false);
+        btn->setVisible(false);
+        Button* btnPrivacy = (Button*)layer->getChildByName("btnPrivacy");
+        btnPrivacy->setPosition(btn->getPosition());
+        btnPrivacy->addClickEventListener(CC_CALLBACK_0(Title::onPrivacyPolicySmartPassClick, this));
+    }
     
     lbl = (Text*)layer->getChildByName("lblVersion");
     lbl->setString(strmake("Version: %s", GM->version));
     lbl = (Text*)layer->getChildByName("lblID");
     lbl->setString(strmake("Game ID: %s", UDGetStr(KEY_SAVED_ID,"-1").c_str()));
-    
+    lbl = (Text*)layer->getChildByName("lblName");
+    lbl->setString(strmake("Name: %s", UDGetStr(KEY_NAME, "unknown").c_str()));
     updateSettingPopup();
+}
+void Title::onRenameClick(){
+    if (GM->getGem() < 100) {
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    isRename = true;
+    showRegisterName();
+}
+void Title::onPrivacyPolicySmartPassClick(){
+    Application::getInstance()->openURL("https://img.au-market.com/mapi/policy/7718310000035");
 }
 void Title::onLanguageClick(){
     Node* layer = CSLoader::createNode("LanguagePopup.csb");
@@ -423,10 +685,13 @@ void Title::onLanguageClick(){
         imgCheck->setPosition(layer->getChildByName("btnSpanish")->getPosition());
     }
     if (selectedLanguage == (int)LanguageType::TURKISH) {
-        imgCheck->setPosition(layer->getChildByName("btnGerman")->getPosition());
+        imgCheck->setPosition(layer->getChildByName("btnTurkish")->getPosition());
     }
     if (selectedLanguage == (int)LanguageType::GERMAN) {
-        imgCheck->setPosition(layer->getChildByName("btnTurkish")->getPosition());
+        imgCheck->setPosition(layer->getChildByName("btnGerman")->getPosition());
+    }
+    if (selectedLanguage == (int)LanguageType::JAPANESE) {
+        imgCheck->setPosition(layer->getChildByName("btnJapanese")->getPosition());
     }
     UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::KOREAN);
     btn = (Button*)layer->getChildByName("btnKorean");
@@ -463,6 +728,13 @@ void Title::onLanguageClick(){
     btn->addClickEventListener(CC_CALLBACK_1(Title::onLanguageButtonClick, this));
     lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "german");
+    
+    UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::JAPANESE);
+    btn = (Button*)layer->getChildByName("btnJapanese");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onLanguageButtonClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "japanese");
+    
     UDSetInt(KEY_SELECTED_LANGUAGE, selectedLanguage);
 }
 void Title::onLanguageButtonClick(Ref* ref){
@@ -485,6 +757,8 @@ void Title::onLanguageButtonClick(Ref* ref){
         imgCheck->setPosition(layer->getChildByName("btnGerman")->getPosition());
     }else if(layer->getTag() == 6){
         imgCheck->setPosition(layer->getChildByName("btnTurkish")->getPosition());
+    }else if(layer->getTag() == 7){
+        imgCheck->setPosition(layer->getChildByName("btnJapanese")->getPosition());
     }else{
         imgCheck->setPosition(layer->getChildByName("btnEnglish")->getPosition());
     }
@@ -509,6 +783,8 @@ void Title::onLanguageOkClick(){
         UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::GERMAN);
     }else if(layer->getTag() == 6){
         UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::TURKISH);
+    }else if(layer->getTag() == 7){
+        UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::JAPANESE);
     }else{
         UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::ENGLISH);
     }
@@ -518,7 +794,11 @@ void Title::onRestoreClick(){
     isRestoreRequested = true;
     GameSharing::restoreIAP();
 //    GM->playerGPSID = "a_4835022602392990245"; // test
-    checkPlayerIDExist();
+//    checkPlayerIDExist();
+    UDSetBool(KEY_BATTLE_DATA_INVALIDATE, true);
+    isAllUserDataRequested = true;
+    BSM->getAllUserData();
+    showIndicator();
 }
 void Title::updateSettingPopup(){
     Node* layer = this->getChildByName("settingPopup");
@@ -561,16 +841,22 @@ void Title::onNetworkResetClick(){
 }
 void Title::onNetworkResetConfirmClick(){
     UDSetStr(KEY_SAVED_ID, "-1");
+    UDSetStr(KEY_NAME, "");
+    UDSetStr(KEY_RID, "_");
+    UDSetInt(KEY_PVP6_TROPHY, 1000);
+    UDSetInt(KEY_PVP12_TROPHY, 1000);
+
     UDSetBool(KEY_FIRST_LAUNCH, true);
     UDSetBool(KEY_FIRST_LAUNCH_AFTER_NEW_SERVER, true);
     UDSetBool(KEY_ID_EXIST_CHECK_DONE, false);
     restartTheGame();
 }
-void Title::onBattleClick(){
-    if(!BSM->timeEstablished){
+void Title::onBattleClick(Ref* ref){
+    if(!BSM->timeEstablished || BSM->isOffline){
         showInstanceMessage(LM->getText("network fail play offline"));
         return;
     }
+    
 //    log("sku cc_gem100 amount: %s", GameSharing::getPriceAmount("cc_gem100").c_str());
 //    showInstanceMessage(LM->getText("coming soon")); // test
 //    return; // test 
@@ -584,6 +870,7 @@ void Title::onBattleClick(){
         closePopup();
         showRegisterName();
     }else{
+        BTN_FROM_REF_AND_DISABLE
         GM->titleLayer = nullptr;
         GM->nextScene = STAGE_LOBBY;
         GM->isColosseum = false;
@@ -617,10 +904,13 @@ void Title::showExitPopup(){
     lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "yes");
     
-    EnemyBase* unit = EnemyBase::createEnemy(UNIT_TROLL, 0, 0, "trollStand0.png");
+//    EnemyBase* unit = EnemyBase::createEnemy(UNIT_TROLL, 0, 0, "trollStand0.png");
+    Sprite* unit = Sprite::createWithSpriteFrameName("trollStand0.png");
+    GM->runAnimation(unit, "trollAttack", true);
+    unit->setAnchorPoint(Vec2(0.5, 0));
+    unit->setScale(2);
     layer->addChild(unit);
-    unit->setPosition(Point(size.width/2, size.height/2 + 0));
-    unit->runAnimation("trollAttack", true, 0.3f);
+    unit->setPosition(Point(layer->getContentSize().width/2, layer->getContentSize().height/2 + 0));
     
     lbl = (Text*)layer->getChildByName("lblAsk");
     LM->setLocalizedString(lbl, "exit game");
@@ -661,7 +951,7 @@ void Title::onUserInfoFailed(){
     onGetTimeFailed();
 }
 void Title::onArenaClick(){
-    if(!BSM->timeEstablished){
+    if(!BSM->timeEstablished || BSM->isOffline){
         showInstanceMessage(LM->getText("network fail play offline"));
         return;
     }
@@ -691,7 +981,13 @@ void Title::onArenaClick(){
     }
     
 }
-
+void Title::onMultiplayClick(){
+    GM->playSoundEffect(SOUND_PAPER_FLIP);
+    MultiplayLobby* layer = MultiplayLobby::create();
+    this->addChild(layer);
+    layer->setName("multiplayLobby");
+    setAsPopup(layer);
+}
 void Title::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
 {
     if(keyCode == EventKeyboard::KeyCode::KEY_BACK){
@@ -709,12 +1005,6 @@ void Title::onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event)
             }
         }
     }
-}
-void Title::onExitClick(){
-    Director::getInstance()->end();
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
-    exit(0);
-#endif
 }
 void Title::onClickFull(){
     log("here!!");
@@ -795,12 +1085,12 @@ void Title::showChapterSelect(){
         LM->setLocalizedString(lbl, "hard mode");
     }
     lbl->setTextColor(isHardMode?Color4B::WHITE:Color4B(213, 0, 0, 255));
-    
     btn = (Button*)layer->getChildByName("btnHero");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroClick, this));
 //    btn->setVisible(false); // test
     lbl = (Text*)btn->getChildByName("lbl");
     LM->setLocalizedString(lbl, "hero");
+    
     
     int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
 //    bool isUnlocked = UDGetBool(KEY_CHAPTER_2_PURCHASED) || UDGetBool(KEY_CHAPTER_3_PURCHASED) || lastClearStage >= 11;
@@ -831,6 +1121,10 @@ void Title::showChapterSelect(){
     LM->setLocalizedStringNotKey(lbl, strmake("%s (%s)", LM->getText("chapter").c_str(), LM->getText(modeKey).c_str()));
     doLabelFadeInLater(replaceTextToPPLabel(lbl), 0.3f, 0.5f);
     
+    btn = (Button*)layer->getChildByName("btnCollection");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onCollectionClick, this));
+    btn->setVisible(false);
+    
     ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
     sv->setClippingEnabled(true);
 //    sv->setInnerContainerSize(sv->getContentSize());
@@ -847,7 +1141,7 @@ void Title::showChapterSelect(){
             int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
             bool isOpen = UDGetBool(KEY_CHAPTER_2_PURCHASED) || lastClearStage >= 10;
             if(isHardMode){
-                isOpen = UDGetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, 11).c_str(), false);
+                isOpen = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, 0) >= 11;
             }
             if (isOpen) {
                 LM->setLocalizedString(lbl, "orc");
@@ -862,10 +1156,18 @@ void Title::showChapterSelect(){
                 LM->setLocalizedString(lbl, "chapter unlock condition");
                 btn->addClickEventListener(CC_CALLBACK_1(Title::onPurchaseChapterClick, this));
                 lbl = (Text*)btn->getChildByName("lblTitle");
-                LM->setLocalizedString(lbl, "or");
-                lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER2));
+                LM->setLocalizedStringNotKey(lbl, GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER2));
                 lbl->setVisible(!isHardMode);
                 btn->getChildByName("lblOr")->setVisible(!isHardMode);
+                
+                if (GM->market == MARKET_SMARTPASS) {
+                    btn->getChildByName("lblOr")->setVisible(false);
+                    btn->getChildByName("lblTitle")->setVisible(false);
+                    btn->getChildByName("imgTitleBack")->setVisible(false);
+                }
+                if (isHardMode) {
+                    btn->setEnabled(false);
+                }
             }
         }else if(i == 2){
             Node* img = btn->getChildByName("img");
@@ -882,11 +1184,16 @@ void Title::showChapterSelect(){
             btn->getChildByName("lblOr")->setLocalZOrder(2);
             btn->getChildByName("imgConditionBack")->setLocalZOrder(1);
             
+            btn->getChildByName("imgChestBack")->setLocalZOrder(2);
+            btn->getChildByName("imgChest")->setLocalZOrder(3);
+            btn->getChildByName("lblChestTimeLeft")->setLocalZOrder(4);
+            btn->getChildByName("imgRedDot")->setLocalZOrder(5);
+            
             int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
             
             bool isOpen = UDGetBool(KEY_CHAPTER_3_PURCHASED) || lastClearStage >= 23;
             if(isHardMode){
-                isOpen = UDGetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, 23).c_str(), false);
+                isOpen = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, 0) >= 23;
             }
             if (isOpen) {
                 LM->setLocalizedString(lbl, "khalan");
@@ -901,10 +1208,17 @@ void Title::showChapterSelect(){
                 LM->setLocalizedString(lbl, "chapter unlock condition");
                 btn->addClickEventListener(CC_CALLBACK_1(Title::onPurchaseChapterClick, this));
                 lbl = (Text*)btn->getChildByName("lblTitle");
-                LM->setLocalizedString(lbl, "or");
-                lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER3));
+                LM->setLocalizedStringNotKey(lbl, GameSharing::getPriceLocale(IAP_DETAIL_CHAPTER3));
                 lbl->setVisible(!isHardMode);
                 btn->getChildByName("lblOr")->setVisible(!isHardMode);
+                if (isHardMode) {
+                    btn->setEnabled(false);
+                }
+            }
+            if (GM->market == MARKET_SMARTPASS) {
+                btn->getChildByName("lblOr")->setVisible(false);
+                btn->getChildByName("lblTitle")->setVisible(false);
+                btn->getChildByName("imgTitleBack")->setVisible(false);
             }
         }else if(i == 77){
             LM->setLocalizedString(lbl, "coming soon");
@@ -926,20 +1240,23 @@ void Title::showChapterSelect(){
             Sprite* sptShadow = Sprite::create("shadow.png");
             spChar->addChild(sptShadow, -1);
         }
-//        if(i > 0){
-//            lbl = (Text*)btn->getChildByName("lblComingSoon");
-//            LM->setLocalizedString(lbl, "coming soon");
-//            doLabelFadeInLater(replaceTextToPPLabel(lbl), 0.3f, 0.5f);
-//        }
+        int timeLeftForChest = GM->getTimeLeftForCampaignChest(i);
+        lbl = (Text*)btn->getChildByName("lblChestTimeLeft");
+        btn->getChildByName("imgRedDot")->setVisible(timeLeftForChest <= 0);
+        if (timeLeftForChest <= 0) {
+            lbl->setVisible(false);
+        }else{
+            lbl->setString(GM->getTimeLeftInString(timeLeftForChest));
+        }
     }
     
     rollOpenScroll((ImageView*)layer->getChildByName("imgBackground"));
 }
 void Title::onHeroClick(){
-    if(!BSM->timeEstablished){
-        showInstanceMessage(LM->getText("network fail play offline"));
-        return;
-    }
+//    if(!BSM->timeEstablished){
+//        showInstanceMessage(LM->getText("network fail play offline"));
+//        return;
+//    }
     std::string id = UDGetStr(KEY_SAVED_ID,"-1");
     BSM->requestedID = id;
     if(id.compare("-1") == 0){
@@ -948,10 +1265,13 @@ void Title::onHeroClick(){
         closePopup();
         showRegisterName();
     }else{
-        if(GM->isHeroLoaded){
-            showHeroPage(true);
-        }else{
+        bool isHeroInvalidated = UDGetBool(KEY_HERO_INVALIDATE, false);
+//        if(GM->isHeroLoaded){
+        if(isHeroInvalidated){
+            UDSetBool(KEY_HERO_INVALIDATE, false);
             getHeroInfoFromServer();
+        }else{
+            showHeroPage(true);
         }
     }
     
@@ -962,6 +1282,120 @@ void Title::onHeroClick(){
 //    }else{
 //        showInstanceMessage(LM->getText("worker condition 1")); // test
 //    }
+}
+void Title::onCollectionClick(){
+    Node* layer = CSLoader::createNode("Collection.csb");
+    this->addChild(layer, POPUP_ZORDER);
+    layer->setPosition(Vec2(size.width/2 - layer->getContentSize().width/2, size.height/2 - layer->getContentSize().height/2));
+    layer->setName("collection");
+    setAsPopup(layer);
+    
+    Button* btnBlock = (Button*)layer->getChildByName("btnBlock");
+    btnBlock->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    
+    Text* lbl = (Text*)layer->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "collection");
+    
+    ScrollView* scrollView = (ScrollView*)layer->getChildByName("scrollView");
+    scrollView->setClippingEnabled(true);
+    ImageView* stoneTemp = (ImageView*)scrollView->getChildByName("stoneTemp");
+    ImageView* goldTemp = (ImageView*)scrollView->getChildByName("goldTemp");
+    float startX = stoneTemp->getPositionX();
+    float xGap = (goldTemp->getPositionX() - stoneTemp->getPositionX())/4;
+    float yGap = xGap*280.0f/250;
+    float startY = 0;//stoneTemp->getPositionY();
+    float imgYOffset = -80;
+    int count = 0;
+    std::vector<ImageView*> cardList;
+    for (int i = 0; i < UNIT_HERO_WATERMELON; i++) {
+        if( UNIT_WORKER == i
+            || UNIT_SWORDMAN == i
+            || UNIT_ARCHER == i
+            || UNIT_CATAPULT == i
+            || UNIT_HELICOPTER == i
+            || UNIT_ORC_AXE == i
+            || UNIT_ORC_SPEAR == i
+            || UNIT_GOBLIN == i
+            || UNIT_GOBLIN_BOMB == i
+            || UNIT_TROLL == i
+            || UNIT_ZOMBIE_ORC_AXE == i
+            || UNIT_ZOMBIE_SWORDSMAN == i
+            || UNIT_WIZARD == i
+            || UNIT_GOBLIN_WORKER == i
+            || UNIT_HERO_ORC == i
+            || UNIT_HERO_GOBLIN == i
+            || UNIT_HERO_SPEARMAN == i
+            || UNIT_HERO_LIZARDMAN == i
+            || UNIT_HERO_ARCHER == i
+            || UNIT_HERO_WEREWOLF == i
+            || UNIT_HERO_MONK == i
+            || UNIT_HERO_FIGHTER == i
+            || UNIT_HERO_BEAR == i
+            || UNIT_HERO_HEALER == i
+            || UNIT_HERO_KNIGHT == i
+            || UNIT_HERO_ELF_SWORDMAN == i
+            || UNIT_HERO_ASSASSIN == i
+            || UNIT_HERO_LION == i
+            || UNIT_HERO_WIZARD == i
+            || UNIT_HERO_TANKER == i
+            || UNIT_HERO_SKELETON == i
+            || UNIT_HERO_REAPER == i
+            || UNIT_HERO_ENT == i
+            || UNIT_HERO_SALAMANDER == i
+            || UNIT_HERO_UNDINE == i
+            || UNIT_HERO_LADY_WEREWOLF == i
+            || UNIT_HERO_LADY_LION == i
+            || UNIT_HERO_LADY_BEAR == i
+            || UNIT_HERO_SANTA == i
+            || UNIT_HERO_RUDOLPH == i
+            || UNIT_HERO_SANTADOG == i
+            || UNIT_HERO_PENGUIN == i
+            || UNIT_HERO_CATINBOOTS == i
+            || UNIT_HERO_MOLE == i
+            || UNIT_HERO_TOYMOUSE == i
+           || UNIT_HERO_SAVAGEARCHER == i
+           || UNIT_HERO_BATMONSTER == i
+           || UNIT_HERO_MEMEAT == i
+           || UNIT_HERO_PARASITE == i
+           || UNIT_HERO_WATERMELON == i){
+            ImageView* card;
+            if(i >= UNIT_HERO_ORC){
+                card = (ImageView*)goldTemp->clone();
+            }else{
+                card = (ImageView*)stoneTemp->clone();
+            }
+            scrollView->addChild(card);
+            
+            EnemyBase* unit = EnemyBase::createEnemy(i, 1, 1, "workerAxeStand0.png");
+            unit->runAnimation(strmake("%sStand", GM->getUnitName(i).c_str()).c_str(), true);
+            unit->setScale(1.5f);
+            if(i >= UNIT_HERO_ORC && unit->spine){
+                card->addChild(unit->spine);
+                unit->spine->setPosition(card->getChildByName("img")->getPosition() + Vec2(0, imgYOffset));
+                unit->spine->setScale(1);
+            }
+            card->addChild(unit);
+            unit->setPosition(card->getChildByName("img")->getPosition() + Vec2(0, imgYOffset));
+            card->removeChildByName("img");
+            card->setPosition(Vec2(startX + xGap*(count%5), startY - yGap*(count/5)));
+            count++;
+            log("count: %d", count);
+            cardList.push_back(card);
+            
+            lbl = (Text*)card->getChildByName("lbl");
+            LM->setLocalizedString(lbl, GM->getUnitName(i));
+            
+        }
+        stoneTemp->removeFromParent();
+        goldTemp->removeFromParent();
+    }
+    for(auto card : cardList){
+        card->setPositionY(card->getPositionY() + (count/5)*yGap - 60);
+    }
+    cardList.clear();
+    scrollView->setInnerContainerSize(Size(scrollView->getInnerContainerSize().width, (count/5)*yGap + 140));
 }
 void Title::getHeroInfoFromServer(){
     showIndicator();
@@ -1023,6 +1457,7 @@ void Title::showStageSelect(int chapter){
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     Node* layer = CSLoader::createNode("StageSelect.csb");
     this->addChild(layer, 4);
+    layer->setTag(chapter);
     layer->setName("stageSelect");
     setAsPopup(layer);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
@@ -1037,27 +1472,44 @@ void Title::showStageSelect(int chapter){
     btn->addClickEventListener(CC_CALLBACK_0(Title::onLoadClick, this));
     addLabelToButton(btn, LM->getText("load"));
     
+    btn = (Button*)layer->getChildByName("btnCampaignChestShop");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onCampaignChestShopClick, this));
+    
     ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
     sv->setClippingEnabled(true);
     rollOpenScroll((ImageView*)layer->getChildByName("imgBackground"));
     
     float itemHeight = 234;
     int itemCount = 12;
-    sv->setInnerContainerSize(Size(sv->getContentSize().width, itemHeight*itemCount));
+    sv->setInnerContainerSize(cocos2d::Size(sv->getContentSize().width, itemHeight*itemCount));
+    int chestIndex = UDGetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), 0);
+    bool shouldSaveChestIndex = false;
+    if(chestIndex >= 12){
+        chestIndex = 0;
+        shouldSaveChestIndex = true;
+    }
+    if(chapter == 0 && chestIndex == 0){
+        chestIndex = 1;
+        shouldSaveChestIndex = true;
+    }
+    if (shouldSaveChestIndex) {
+        UDSetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), chestIndex);
+    }
     for (int i = 0; i < itemCount; i++) {
         bool isHidden = UDGetInt(KEY_LAST_CLEAR_STAGE, -1) + 1 - chapter*12 < i; // test
         if(isHardMode){
-            isHidden = !UDGetBool(strmake(KEY_HARD_MODE_CLEAR_FORMAT, i + chapter*12 - 1).c_str(), false);
+            isHidden = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, 0) < i + chapter*12 - 1;
         }
         if(i == 0){
             isHidden = false;
         }
         btn = Button::create(isHidden?"btnHorizontalScrollItemHidden.png":"btnHorizontalScrollItem.png");
+        btn->setName(strmake("btn%d", i));
         sv->addChild(btn);
         btn->setScale9Enabled(true);
-        btn->setContentSize(Size(1300-30*2, itemHeight-10));
-        btn->setPosition(Point(30, (itemCount - (i))*itemHeight));
-        btn->setAnchorPoint(Point(0, 1));
+        btn->setContentSize(cocos2d::Size(1300-30*2, itemHeight-10));
+        btn->setPosition(Vec2(30, (itemCount - (i))*itemHeight));
+        btn->setAnchorPoint(Vec2(0, 1));
         btn->addClickEventListener(CC_CALLBACK_1(Title::onStageClick, this));
         btn->setPressedActionEnabled(false);
         btn->setZoomScale(0.01f);
@@ -1065,6 +1517,51 @@ void Title::showStageSelect(int chapter){
         btn->setOpacity(0);
         btn->runAction(Sequence::create(DelayTime::create(0.3), FadeIn::create(0.5f), NULL));
         
+        Button* btnYoutube = nullptr;
+        if ((chapter == 0 && i == 0) ||
+            (chapter == 0 && i == 1) ||
+            (chapter == 0 && i == 2) ||
+            (chapter == 0 && i == 3) ||
+            (chapter == 0 && i == 4) ||
+            (chapter == 0 && i == 5) ||
+            (chapter == 0 && i == 6) ||
+            (chapter == 0 && i == 7) ||
+            (chapter == 0 && i == 8) ||
+            (chapter == 0 && i == 9) ||
+            (chapter == 1 && i == 4) ||
+            (chapter == 1 && i == 11) ||
+            (chapter == 2 && i == 0) ||
+            (chapter == 2 && i == 1) ) {
+            btnYoutube = Button::create("btnYoutube.png");
+            btnYoutube->setTag(chapter*12 + i);
+            btnYoutube->addClickEventListener(CC_CALLBACK_1(Title::onYoutubeClick, this));
+            btnYoutube->setScale9Enabled(true);
+            btnYoutube->setContentSize(cocos2d::Size(btnYoutube->getContentSize().width, itemHeight-10));
+            btnYoutube->setPosition(Vec2(btn->getContentSize().width, btn->getContentSize().height));
+            btnYoutube->setAnchorPoint(Point(1, 1));
+            btn->addChild(btnYoutube);
+        }
+        
+        if (chestIndex == i) {
+            float extraX = 0;
+            if(btnYoutube != nullptr){
+                extraX = -160;
+            }
+            Sprite* spt = Sprite::create("campaignChest.png");
+            spt->setContentSize(cocos2d::Size(116.52f, 99.65f));
+            spt->setPosition(Vec2(1100 + extraX, 120));
+            btn->addChild(spt);
+            Text* lblTimeLeft = Text::create("::", "BMDOHYEON.ttf", 30);
+            lblTimeLeft->setName("lblTimeLeft");
+            lblTimeLeft->enableOutline(Color4B::BLACK, 3);
+            lblTimeLeft->setPosition(Vec2(spt->getPositionX(), spt->getPositionY()-50));
+            btn->addChild(lblTimeLeft);
+            int timeLeft = GM->getTimeLeftForCampaignChest(chapter);
+            lblTimeLeft->setVisible(timeLeft > 0);
+            if (timeLeft > 0) {
+                lblTimeLeft->setString(GM->getTimeLeftInString(timeLeft));
+            }
+        }
         
         std::string title = LM->getText(strmake("stage title %d_%d", chapter, i).c_str());
         if (isHidden) { // test
@@ -1074,12 +1571,201 @@ void Title::showStageSelect(int chapter){
             btn->setColor(isHardMode?Color3B::RED:Color3B::WHITE);
         }
 
-        PPLabel* lbl = PPLabel::create(title, 50, isHidden?Color3B(74, 72, 68):Color3B(29, 28, 26), true, false, TextHAlignment::LEFT, false);
+        PPLabel* lbl = PPLabel::create(strmake("%d.%s", i+1,title.c_str()), 50, isHidden?Color3B(74, 72, 68):Color3B(29, 28, 26), true, false, TextHAlignment::LEFT, false);
         btn->addChild(lbl);
         lbl->setPosition(30, btn->getContentSize().height/2);
         doLabelFadeInLater(lbl, 0.3f, 0.5f);
     }
+}
+void Title::onCampaignChestShopClick(){
+    Node* layer = CSLoader::createNode("CampaignChestShop.csb");
+    this->addChild(layer, POPUP_ZORDER);
+    layer->setPosition(Vec2(size.width/2 - layer->getContentSize().width/2, size.height/2 - layer->getContentSize().height/2));
+    layer->setName("campaignChestShop");
+    setAsPopup(layer);
     
+    TopBar* topBar = TopBar::create();
+    layer->addChild(topBar);
+    topBar->setPosition(Vec2(layer->getContentSize().width - 100, layer->getContentSize().height - 100));
+    Node* stageSelectLayer = this->getChildByName("stageSelect");
+    int chapter = stageSelectLayer->getTag();
+    Text* lblStage = (Text*)layer->getChildByName("lblStage");
+    int startStageIndex = 0;
+    if(chapter == 0){
+        startStageIndex = 1;
+    }
+    LM->setLocalizedStringNotKey(lblStage, strmake("%d.%s", startStageIndex + 1, LM->getText(strmake("stage title %d_%d", chapter, startStageIndex)).c_str()));
+    Button* btn = (Button*)layer->getChildByName("btnAccept");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onForceOpenCampaignChestClick, this));
+    btn = (Button*)layer->getChildByName("btnAccept_0");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onResetCampaignChestClick, this));
+    btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    
+    
+}
+void Title::onResetCampaignChestClick(){
+    int gemPrice = 5;
+    if(gemPrice > GM->getGem()){
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    GM->addGem(-gemPrice);
+    Node* layer = this->getChildByName("stageSelect");
+    int chapter = layer->getTag();
+    if(chapter == 0){
+        UDSetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), 1);
+    }else{
+        UDSetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, chapter).c_str(), 0);
+    }
+    
+    closePopup();
+    closePopup();
+    showStageSelect(chapter);
+}
+void Title::onForceOpenCampaignChestClick(){
+    int gemPrice = 10;
+    if(gemPrice > GM->getGem()){
+        showInstanceMessage(LM->getText("not enough gems"));
+        return;
+    }
+    GM->addGem(-gemPrice);
+    openCampaignChest();
+}
+void Title::openCampaignChest(){
+    Node* layer = CSLoader::createNode("CampaignChest.csb");
+    this->addChild(layer, POPUP_ZORDER);
+    layer->setPosition(Vec2(size.width/2 - layer->getContentSize().width/2, size.height/2 - layer->getContentSize().height/2));
+    layer->setName("campaignChest");
+    setAsPopup(layer);
+    Button* btn = (Button*)layer->getChildByName("btnOpen");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onOpenCampaignChestClick, this));
+    btn->setOpacity(0);
+    Node* imgChest = layer->getChildByName("imgChest");
+    GM->makeItScaleUpAndDown(imgChest);
+    GM->addGlowBack(imgChest);
+    GM->shakeIt(imgChest, 10, 5);
+    for (int i = 0; i < 3; i++) {
+        layer->getChildByName(strmake("imgPos%d", i))->setOpacity(0);
+    }
+    btn = (Button*)layer->getChildByName("btnOk");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+}
+
+void Title::onOpenCampaignChestClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    Node* layer = this->getChildByName("campaignChest");
+    Node* imgChest = layer->getChildByName("imgChest");
+    imgChest->stopAllActions();
+    imgChest->runAction(Sequence::create(EaseOut::create(MoveBy::create(1.0f, Vec2(0, 100)), 2), JumpBy::create(0.4f, Vec2(0, -100), 200, 1), CallFunc::create(CC_CALLBACK_0(Title::onOpenCampaignChest, this)),NULL));
+}
+void Title::onOpenCampaignChest(){
+    Node* layer = this->getChildByName("campaignChest");
+    ImageView* imgChest = (ImageView*)layer->getChildByName("imgChest");
+    imgChest->loadTexture("chestWoodOpen.png");
+    ImageView* img; ImageView* imgTemp;
+    bool saveGem = false;
+    for (int i = 0; i < 3; i++) {
+        int reward = rand()%100;
+        if (reward < 20) {
+            imgTemp = (ImageView*)layer->getChildByName("imgGold");
+            GM->addCoin(150);
+        }else if (reward < 50) {
+            imgTemp = (ImageView*)layer->getChildByName("imgLumber");
+            GM->addTree(100);
+        }else if (reward < 90) {
+            imgTemp = (ImageView*)layer->getChildByName("imgEventItem");
+            ImageView* imgIcon = (ImageView*)imgTemp->getChildByName("imgIcon");
+            int month = BSM->getMonth();
+            imgIcon->loadTexture(strmake("eventItem%d.png", month));
+            if(month == 12){
+                imgIcon->setContentSize(cocos2d::Size(73, 88));
+            }else if(month == 1){
+                imgIcon->setContentSize(cocos2d::Size(85, 60));
+            }else if(month == 2){
+                imgIcon->setContentSize(cocos2d::Size(88, 88));
+            }else if(month == 3){
+                imgIcon->setContentSize(cocos2d::Size(75, 76));
+            }
+            GM->addMonthlyEventProgress(EVENT_MISSION_COLLECT_EVENT_HERO_PART, 1);
+        }else{
+            imgTemp = (ImageView*)layer->getChildByName("imgGem");
+            GM->addGem(10);
+            saveGem = true;
+        }
+            
+        img = (ImageView*)imgTemp->clone();
+        layer->addChild(img);
+        img->setPosition(layer->getChildByName(strmake("imgPos%d", i))->getPosition());
+        img->setOpacity(0);
+        img->runAction(Sequence::create(DelayTime::create(0.5f*i), FadeIn::create(0), JumpBy::create(0.3f, Vec2(0, 0), 50, 1), NULL));
+    }
+    std::vector<int> datas;
+    datas.push_back(DATA_TYPE_GEM);
+    BSM->saveUserData(datas);
+    
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    btn->runAction(Sequence::create(DelayTime::create(1.2f), JumpBy::create(0.5f, Vec2(0, 650), 100, 1), NULL));
+}
+void Title::onYoutubeChannelClick(){
+    Application::getInstance()->openURL("https://www.youtube.com/channel/UCTTv1RLxLGz44WtvtDEJ_EQ");
+}
+void Title::onYoutubeClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
+    int stageIndex = btn->getTag();
+    Node* layer = CSLoader::createNode("MessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("messageBox");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    
+    btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnNo");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    Vec2 posLeft = btn->getPosition();
+    Button* btnYES = (Button*)layer->getChildByName("btnYes");
+    btnYES->setTag(stageIndex);
+    btnYES->addClickEventListener(CC_CALLBACK_1(Title::onYoutubeConfirm, this));
+    btn->setPosition(btnYES->getPosition());
+    btnYES->setPosition(posLeft);
+    
+    Text* lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedString(lbl, "video warning");
+}
+void Title::onYoutubeConfirm(Ref* ref){
+    BTN_FROM_REF
+    if (btn->getTag() == 0) {
+        Application::getInstance()->openURL("https://youtu.be/cFnBiY3sRzU");
+    }else if (btn->getTag() == 1) {
+        Application::getInstance()->openURL("https://youtu.be/V1Sm1BqZOs4");
+    }else if (btn->getTag() == 2) {
+        Application::getInstance()->openURL("https://youtu.be/30HoVekOL4s");
+    }else if (btn->getTag() == 3) {
+        Application::getInstance()->openURL("https://youtu.be/dMTFeLVodsU");
+    }else if (btn->getTag() == 4) {
+        Application::getInstance()->openURL("https://youtu.be/Punq4_LTRHQ");
+    }else if (btn->getTag() == 5) {
+        Application::getInstance()->openURL("https://youtu.be/5EjQg-dR_g8");
+    }else if (btn->getTag() == 6) {
+        Application::getInstance()->openURL("https://youtu.be/l1a-W5YTLL8");
+    }else if (btn->getTag() == 7) {
+        Application::getInstance()->openURL("https://youtu.be/AeYBwvAuje4");
+    }else if (btn->getTag() == 8) {
+        Application::getInstance()->openURL("https://youtu.be/vWe8qFjeX0Y");
+    }else if (btn->getTag() == 9) {
+        Application::getInstance()->openURL("https://youtu.be/SiDFdHuF5rQ");
+    }else if (btn->getTag() == 12 + 4) {
+        Application::getInstance()->openURL("https://youtu.be/VSNI-OqQz7Q");
+    }else if (btn->getTag() == 12 + 11) {
+        Application::getInstance()->openURL("https://youtu.be/cLCGxHYQjXE");
+    }else if (btn->getTag() == 24) {
+        Application::getInstance()->openURL("https://youtu.be/lHMzZBIk6gU");
+    }else if (btn->getTag() == 25) {
+        Application::getInstance()->openURL("https://youtu.be/fEI_Jj9RG1o");
+    }
 }
 
 void Title::onOkFromLoadData(){
@@ -1161,7 +1847,7 @@ void Title::onLoadClick(){
         btn = Button::create("uiBoxSmall.png");
         btn->setScale9Enabled(true);
         layer->addChild(btn);
-        btn->setContentSize(Size(500, 200));
+        btn->setContentSize(cocos2d::Size(500, 200));
         btn->addClickEventListener(CC_CALLBACK_1(Title::onLoadSlotClick, this));
         btn->setTag(i);
         //        ValueVector datas = GameManager::getInstance()->split(UDGetStr(strmake("savedData%d", i).c_str()), ",");
@@ -1254,7 +1940,7 @@ void Title::onLoadSlotClick(Ref* ref){
     btn->setScale9Enabled(true);
     layer->addChild(btn);
     btn->setPosition(Point(size.width/2 - 300, size.height/2 - 200));
-    btn->setContentSize(Size(500, 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(Title::onOkFromLoadData, this));
     
     lbl = PPLabel::create(LM->getText("ok"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1266,7 +1952,7 @@ void Title::onLoadSlotClick(Ref* ref){
     btn->setScale9Enabled(true);
     layer->addChild(btn);
     btn->setPosition(Point(size.width/2 + 300, size.height/2 - 200));
-    btn->setContentSize(Size(500, 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
     
     lbl = PPLabel::create(LM->getText("cancel"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1302,7 +1988,7 @@ void Title::onOptionClick(){
     btn->setScale9Enabled(true);
     layer->addChild(btn);
     btn->setPosition(Point(size.width/2 - 300, size.height/2 - 100));
-    btn->setContentSize(Size(500, 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(Title::onEffectClick, this));
     
     lbl = PPLabel::create(LM->getText(GM->getSoundVolumn()==0?"effect off":"effect on"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1314,7 +2000,7 @@ void Title::onOptionClick(){
     btn->setScale9Enabled(true);
     layer->addChild(btn);
     btn->setPosition(Point(size.width/2 + 300, size.height/2 - 100));
-    btn->setContentSize(Size(500, 200));
+    btn->setContentSize(cocos2d::Size(500, 200));
     btn->addClickEventListener(CC_CALLBACK_0(Title::onMusicClick, this));
     
     lbl = PPLabel::create(LM->getText(GM->getMusicVolumn()==0?"music off":"music on"), 60, DARK_GRAY_3B, true, false, TextHAlignment::CENTER, false);
@@ -1412,7 +2098,7 @@ void Title::showStageReady(int stage){
     Button* btn = Button::create("uiBox.png");
     layer->addChild(btn);
     btn->setScale9Enabled(true);
-    btn->setContentSize(Size(550, 234));
+    btn->setContentSize(cocos2d::Size(550, 234));
     btn->setPosition(Point(size.width - 400, 180));
     btn->setTag(stage);
     btn->addClickEventListener(CC_CALLBACK_1(Title::goToStage, this));
@@ -1424,7 +2110,7 @@ void Title::showStageReady(int stage){
     ImageView* objectBack = ImageView::create("missionBoard.png");
     layer->addChild(objectBack);
     objectBack->setScale9Enabled(true);
-    objectBack->setContentSize(Size(700, 600));
+    objectBack->setContentSize(cocos2d::Size(700, 600));
     objectBack->setPosition(Point(size.width - 100, size.height - 100));
     objectBack->setAnchorPoint(Point(1, 1));
     objectBack->setOpacity(0);
@@ -1485,14 +2171,14 @@ void Title::showStageReady(int stage){
     ImageView* storyBack = ImageView::create("verticalScrollBackground.png");
     layer->addChild(storyBack);
     storyBack->setScale9Enabled(true);
-    storyBack->setContentSize(Size(1400, 1030));
+    storyBack->setContentSize(cocos2d::Size(1400, 1030));
     storyBack->setPosition(Point(100, size.height - 100));
     storyBack->setAnchorPoint(Point(0, 1));
     storyBack->setOpacity(0);
     storyBack->runAction(Sequence::create(DelayTime::create(showUIDelay), FadeTo::create(2, 255), NULL));
     
     ScrollView* sv = ScrollView::create();
-    sv->setContentSize(Size(1350, 855));
+    sv->setContentSize(cocos2d::Size(1350, 855));
     sv->setPosition(Point(150, size.height - 190));
     sv->setAnchorPoint(Point(0, 1));
     sv->setScrollBarEnabled(false);
@@ -1555,6 +2241,49 @@ void Title::titleUpdate(float dt){
         return;
     }
     
+    if (GM->market != MARKET_SMARTPASS) {
+        if (GM->versionCode < GM->receivedVersionCode && !this->getChildByName("forceUpdate")) {
+            Node* layer = CSLoader::createNode("UnderConstruction.csb");
+            layer->setName("forceUpdate");
+            this->addChild(layer, POPUP_ZORDER);
+            layer->setGlobalZOrder(100);
+            layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+            Text* lbl = (Text*)layer->getChildByName("lblDescription");
+            LM->setLocalizedString(lbl, "update required");
+            Button* btn = (Button*)layer->getChildByName("btnOk");
+            btn->addClickEventListener(CC_CALLBACK_0(Title::onUpdateClick, this));
+            ImageView* img = (ImageView*)layer->getChildByName("imgWorker");
+            Sprite* spt = Sprite::createWithSpriteFrameName("workerAxeAttack0.png");
+            layer->addChild(spt);
+            spt->setScale(2);
+            spt->setPosition(img->getPosition());
+            img->setVisible(false);
+        }
+        if (GM->serverMaintenance > 0 && !this->getChildByName("underMaintenance")) { // test 
+            Node* layer = CSLoader::createNode("UnderConstruction.csb");
+            this->addChild(layer, POPUP_ZORDER);
+            layer->setName("underMaintenance");
+            layer->setGlobalZOrder(100);
+            layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+            Text* lbl = (Text*)layer->getChildByName("lblDescription");
+            std::string str = strmake(LM->getText("server maintenance description format").c_str(), GM->serverMaintenance);
+            LM->setLocalizedStringNotKey(lbl, str);
+            Button* btn = (Button*)layer->getChildByName("btnOk");
+            btn->addClickEventListener(CC_CALLBACK_0(Title::onExitClick, this));
+            ImageView* img = (ImageView*)layer->getChildByName("imgWorker");
+            Sprite* spt = Sprite::createWithSpriteFrameName("workerAxeAttack0.png");
+            spt->setScale(2);
+            layer->addChild(spt);
+            spt->setPosition(img->getPosition());
+            img->setVisible(false);
+        }
+    }
+    
+    if (GM->rewardCode > 0 || BSM->postBoxConent.length() > 1) {
+        int lastRewardCode = GM->rewardedCode;
+        Node* ndRedDot = this->getChildByName("titleLayer")->getChildByName("btnNotice")->getChildByName("imgRedDot");
+        ndRedDot->setVisible(lastRewardCode != GM->rewardCode || BSM->postBoxConent.length() > 1);
+    }
     
     time_t now = BSM->getCurrentTimeT();
     std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
@@ -1569,6 +2298,31 @@ void Title::titleUpdate(float dt){
     Node* ndChapterSelect = this->getChildByName("chapterSelect");
     if(ndChapterSelect && ndChapterSelect != nullptr){
         ndChapterSelect->getChildByName("btnHero")->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
+        ScrollView* sv = (ScrollView*)ndChapterSelect->getChildByName("sv");
+        Button* btn;Text* lbl;
+        for (int i = 0; i < 3; i++) {
+            btn = (Button*)sv->getChildByName(strmake("btnChapter%d", i));
+            int timeLeftForChest = GM->getTimeLeftForCampaignChest(i);
+            lbl = (Text*)btn->getChildByName("lblChestTimeLeft");
+            btn->getChildByName("imgRedDot")->setVisible(timeLeftForChest <= 0);
+            if (timeLeftForChest <= 0) {
+                lbl->setVisible(false);
+            }else{
+                lbl->setString(GM->getTimeLeftInString(timeLeftForChest));
+            }
+        }
+    }
+    Node* layer = this->getChildByName("stageSelect");
+    if (layer && layer != nullptr) {
+        int chestIndex = UDGetInt(strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, layer->getTag()).c_str(), 0);
+        ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
+        Button* btn = (Button*)sv->getChildByName(strmake("btn%d", chestIndex));
+        Text* lblTimeLeft = (Text*)btn->getChildByName("lblTimeLeft");
+        int timeLeft = GM->getTimeLeftForCampaignChest(layer->getTag());
+        lblTimeLeft->setVisible(timeLeft > 0);
+        if (timeLeft > 0) {
+            lblTimeLeft->setString(GM->getTimeLeftInString(timeLeft));
+        }
     }
     
     if (isGameInfoRecieved) {
@@ -1640,7 +2394,14 @@ void Title::titleUpdate(float dt){
                 std::string gpsID = "";
                 gpsID += GM->playerIDWithGPSID;
                 UDSetStr(KEY_SAVED_ID, gpsID);
-                this->runAction(Sequence::create(DelayTime::create(2), CallFunc::create(CC_CALLBACK_0(Title::restartTheGame, this)), NULL));
+                UDSetBool(KEY_HERO_INVALIDATE, true);
+                UDSetBool(KEY_BATTLE_DATA_INVALIDATE, true);
+                UDSetBool(KEY_MONTHLY_EVENT_INFO_INVALIDATE, true);
+                BSM->requestedID = gpsID;
+//                BSM->getUserData("hdck=1&hivt=1&tree=1&gold=1&gem=1");
+                BSM->getAllUserData();
+                showIndicator();
+                this->runAction(Sequence::create(DelayTime::create(4), CallFunc::create(CC_CALLBACK_0(Title::restartTheGame, this)), NULL));
                 settingLog("Restore code: 3");
                 return;
             }else{
@@ -1648,7 +2409,7 @@ void Title::titleUpdate(float dt){
             }
         }
     }
-    
+//    log("gps: %s, %d, %d", GM->playerGPSID.c_str(), (int)UDGetBool(KEY_ID_EXIST_CHECK_DONE, false), (int)isUserIDExistCheckRequested);
     if (GM->playerGPSID.size() > 0 && !UDGetBool(KEY_ID_EXIST_CHECK_DONE, false) && !isUserIDExistCheckRequested) {
         checkPlayerIDExist(); // test
     }
@@ -1659,7 +2420,15 @@ void Title::titleUpdate(float dt){
         }
         lblID->setString(strmake("ErrorCode: %d|%s", BSM->errorCode, BSM->errorDetail.c_str()));
         hideIndicator();
+//        BSM->checkServer();
         return;
+    }
+    if(BSM->isCheckServerComplete){
+        BSM->isCheckServerComplete = false;
+        
+        BSM->isInitUserDataRequested = true;
+        firstIndicatorDisposed = false;
+        BSM->getUserData("gem=1&trophy=1&post=1&ban=1&name=1&rewarded_index=1&defence_record=1");
     }
     if(isRestoreRequested && GM->iapFlag == IAP_FLAG_RESTORED){
         isRestoreRequested = false;
@@ -1669,8 +2438,13 @@ void Title::titleUpdate(float dt){
     if (isHeroInfoArrived) {
         hideIndicator();
         isHeroInfoArrived = false;
-        GM->isHeroLoaded = true;
+//        GM->isHeroLoaded = true;
         showHeroPage();
+    }
+    if(isAllUserDataArrived){
+        isAllUserDataArrived = false;
+        hideIndicator();
+        showInstanceMessage(LM->getText("restore complete"));
     }
     if(nameHandleState == NETWORK_HANDLE_STATE_NOT_READY){
         lblLoading->setString("Checking id...");
@@ -1692,9 +2466,9 @@ void Title::titleUpdate(float dt){
     if(nameHandleState == NETWORK_HANDLE_STATE_ARRIVED){
         hideIndicator();
         if(isSendingPassword){
+            isSendingPassword = false;
             nameHandleState = NETWORK_HANDLE_STATE_HANDLED;
         }else{
-            
             if(BSM->resultMessage.compare("same name exist") == 0){
                 showInstanceMessage(LM->getText("same name exist"));
                 nameHandleState = NETWORK_HANDLE_STATE_NOT_READY;
@@ -1705,12 +2479,20 @@ void Title::titleUpdate(float dt){
                 showInstanceMessage(LM->getText("network retry"));
                 nameHandleState = NETWORK_HANDLE_STATE_NOT_READY;
             }else{
-                isSendingPassword = true;
+                if (isRename) {
+                    isRename = false;
+                    isNameRequested = false;
+                    GM->addGem(-100);
+                }else{
+                    isSendingPassword = true;
+                }
+                int gem = GM->getGem();
+                
                 nameHandleState = NETWORK_HANDLE_STATE_REQUESTED;
                 showIndicator();
                 TextField* tfPassword = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfPassword");
                 isNameRequested = true;
-                BSM->saveUserData(strmake("password=%s", tfPassword->getString().c_str()));
+                BSM->saveUserData(strmake("password=%s&gem=%d", tfPassword->getString().c_str(), gem));
                 UDSetBool(KEY_ID_EXIST_CHECK_DONE, false); // test
             }
         }
@@ -1733,20 +2515,45 @@ void Title::titleUpdate(float dt){
         closePopup();
         closePopup();
     }
-    
-    if(isFreeAppResultArrived){
-        isFreeAppResultArrived = false;
-        hideIndicator();
-        if(isFreeApp){
-            UDSetBool(KEY_IS_FREE_USER, true);
-            UD->flush();
-            showFreeAppAlert();
+    if(renameHandleState == NETWORK_HANDLE_STATE_ARRIVED){
+        renameHandleState = NETWORK_HANDLE_STATE_HANDLED;
+        if(BSM->resultMessage.compare("same name exist") == 0){
+            showInstanceMessage(LM->getText("same name exist"));
+            nameHandleState = NETWORK_HANDLE_STATE_NOT_READY;
+            hideIndicator();
+        }else if(BSM->resultMessage.compare("save failed") == 0){
+            showInstanceMessage(LM->getText("network retry"));
+            nameHandleState = NETWORK_HANDLE_STATE_NOT_READY;
+            hideIndicator();
+        }else if(BSM->resultMessage.compare("database failure") == 0){
+            showInstanceMessage(LM->getText("network retry"));
+            nameHandleState = NETWORK_HANDLE_STATE_NOT_READY;
+            hideIndicator();
+        }else{
+            closePopup();
+            closePopup();
+            isNameRequested = false;
+            GM->addGem(-100);
+//            renameHandleState = NETWORK_HANDLE_STATE_REQUESTED;
+            showIndicator();
+//            BSM->saveUserData(strmake("password=%s&gem=%d", tfPassword->getString().c_str(), gem));
+//            UDSetBool(KEY_ID_EXIST_CHECK_DONE, false); // test
+            BSM->saveUserData("gem=" + Value(GM->getGem()).asString());
         }
     }
     
+//    if(isFreeAppResultArrived){
+//        isFreeAppResultArrived = false;
+//        hideIndicator();
+//        if(isFreeApp){
+//            UDSetBool(KEY_IS_FREE_USER, true);
+//            UD->flush();
+//            showFreeAppAlert();
+//        }
+//    }
+    
     if(isVideoDone){
         isVideoDone = false;
-        
         showInstanceMessage(LM->getText("ticket received"));
     }
     if (getChildByName("shopLayer") == nullptr && getChildByName("heroPage") == nullptr){
@@ -1781,6 +2588,412 @@ void Title::titleUpdate(float dt){
         onMessageBoxReceived();
         strMessageBox = "";
     }
+    
+    if (BSM->isInitUserDataReceived) {
+        checkMonthlyEventAttend();
+        if (!firstIndicatorDisposed) {
+            firstIndicatorDisposed = true;
+            hideIndicator();
+        }
+        
+        if (BSM->isBannedUser) {
+            Node* layer = CSLoader::createNode("MessageBox.csb");
+            this->addChild(layer, 4);
+            setAsPopup(layer);
+            layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+            layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+            
+            Button* btn = (Button*)layer->getChildByName("btnNo");
+            btn->removeFromParent();
+            btn = (Button*)layer->getChildByName("btnYes");
+            btn->setVisible(false);
+            Text* lbl = (Text*)btn->getChildByName("lbl");
+            LM->setLocalizedString(lbl, "ok");
+            
+            lbl = (Text*)layer->getChildByName("lblDescription");
+            LM->setLocalizedString(lbl, "banned description");
+            
+            lbl->setString(strmake("%s\nID:%s", lbl->getString().c_str(), UDGetStr(KEY_SAVED_ID).c_str()));
+        }
+    }
+//    if (GM->market == MARKET_SMARTPASS) {
+//        if (GM->strSmartPassError.length() > 0) {
+//            showSmartPassError(GM->strSmartPassError);
+//            GM->strSmartPassError = "";
+//        }
+//    }
+    // titleupdate done
+}
+void Title::showPostPopup(){
+    this->getChildByName("titleLayer")->getChildByName("btnNotice")->getChildByName("imgRedDot")->setVisible(false);
+    Node* layer = CSLoader::createNode("NoticePopup.csb");
+    this->addChild(layer, 4);
+    layer->setName("noticePopup");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(PageBase::closePopup, this));
+    ImageView* img = (ImageView*)layer->getChildByName("imgBack");
+    img->addClickEventListener(CC_CALLBACK_0(EventPopup::closePopup, this));
+    Text* lbl = (Text*)layer->getChildByName("lblNoNotice");
+    LM->setLocalizedString(lbl, "no notice");
+    lbl = (Text*)layer->getChildByName("imgTitle")->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "postbox");
+    
+    Button *btnTemp;
+    
+    ScrollView* sv =(ScrollView*)layer->getChildByName("sv");
+    float y = 0;
+    float x = 922;
+    int gapY = 360;
+    // notice
+    int lastRewardCode = GM->rewardedCode;
+    if (GM->rewardCode != lastRewardCode && GM->rewardCode > 0) {
+        btnTemp = (Button*)layer->getChildByName("btnGemTemp");
+        btn = (Button*)btnTemp->clone();
+        sv->addChild(btn);
+        btn->setPosition(Vec2(x, y));
+        btn->addClickEventListener(CC_CALLBACK_0(Title::onRewardNoticeClick, this));
+        lbl = (Text*)btn->getChildByName("lblTitle");
+        ValueVector list = GM->split(GM->rewardMsg, "|");
+        std::string title = "";
+        if(list.size() > 0){
+            title = list.at(0).asString();
+            LM->setLocalizedStringNotKey(lbl, title);
+        }
+        
+        y -= gapY;
+    }
+    
+//    UDSetStr(KEY_POST_MESSAGE, "unit-_54/101_55/101-Reward is good|gem-22-Reward is also good"); // test 
+//    BSM->postBoxConent = UDGetStr(KEY_POST_MESSAGE, "");
+    // post box
+    if(BSM->postBoxConent.length() > 0){
+        std::string postBox = BSM->postBoxConent.c_str();
+        UDSetStr(KEY_POST_MESSAGE, postBox);
+        BSM->saveUserData("post=|");
+        
+        ValueVector list = GM->split(postBox, "|");
+        for (int i = 0; i < list.size(); i++) {
+            std::string strContent = list.at(i).asString();
+            if(strContent.length() < 1){
+                continue;
+            }
+            ValueVector contentList = GM->split(strContent, "-");
+            if (contentList.size() == 3) {
+                if (contentList.at(0).asString().compare("gem") == 0) {
+                    int gemCount = contentList.at(1).asInt();
+                    
+                    btnTemp = (Button*)layer->getChildByName("btnGemTemp");
+                    btn = (Button*)btnTemp->clone();
+                    sv->addChild(btn);
+                    btn->setPosition(Vec2(x, y));
+                    btn->setName(strContent);
+                    btn->setTag(gemCount);
+                    btn->addClickEventListener(CC_CALLBACK_1(Title::onPostItemGemClick, this));
+                    lbl = (Text*)btn->getChildByName("lblTitle");
+                    std::string title = contentList.at(2).asString();
+                    LM->setLocalizedStringNotKey(lbl, title);
+                }else if (contentList.at(0).asString().compare("unit") == 0) {
+                    btnTemp = (Button*)layer->getChildByName("btnUnitTemp");
+                    btn = (Button*)btnTemp->clone();
+                    sv->addChild(btn);
+                    btn->setPosition(Vec2(x, y));
+                    btn->setName(strContent);
+                    btn->addClickEventListener(CC_CALLBACK_1(Title::onPostItemUnitClick, this));
+                    lbl = (Text*)btn->getChildByName("lblTitle");
+                    std::string title = contentList.at(2).asString();
+                    LM->setLocalizedStringNotKey(lbl, title);
+                }
+                
+                y -= gapY;
+            }
+        }
+    }
+    
+    
+    int scrollHeight = sv->getContentSize().height;
+    if (scrollHeight < -y) {
+        scrollHeight = -y;
+    }
+    sv->setInnerContainerSize(cocos2d::Size(sv->getContentSize().width, scrollHeight));
+    for(auto btn: sv->getChildren()){
+        btn->setPositionY(btn->getPositionY() + scrollHeight - gapY/2);
+    }
+    
+    lbl = (Text*)layer->getChildByName("lblNoNotice");
+    lbl->setVisible(sv->getChildren().size() <= 0);
+}
+void Title::onPostItemUnitClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    ValueVector contentList = GM->split(btn->getName(), "-");
+    selectedPostItem = btn->getName() + "";
+    Button* btnOk = showUnitRewardPopup(contentList.at(1).asString(), contentList.at(2).asString().c_str());
+    btnOk->addClickEventListener(CC_CALLBACK_0(Title::onPostItemUnitOkClick, this));
+}
+Button* Title::showUnitRewardPopup(std::string units, const char* msg){
+    Node* layer = CSLoader::createNode("UnitRewardMessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("unitRewardMessageBox");
+    setAsPopup(layer);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
+    GM->rollOpenScroll(imgBack);
+    
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "ok");
+    
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedStringNotKey(lbl, msg);
+    
+    ScrollView* sv = (ScrollView*)layer->getChildByName("sv");
+    
+    ValueVector unitList = GM->split(units, "_");
+    int x = 192;
+    int xGap = 281;
+    for (int i = 0; i < unitList.size(); i++) {
+        ValueVector dataList = GM->split(unitList.at(i).asString(), "/");
+        if(dataList.size() > 1){
+            ImageView* img = (ImageView*)((ImageView*)sv->getChildByName("imgTemp"))->clone();
+            sv->addChild(img);
+            img->setPosition(Vec2(x, sv->getContentSize().height/2 - 10));
+            UnitInfo* info = new UnitInfo();
+            Vec2 pos = img->getPosition();
+            info->unitType = dataList.at(0).asInt();
+            info->level = dataList.at(1).asInt()%100;
+            info->rank = dataList.at(1).asInt()/100;
+            lbl = (Text*)img->getChildByName("lblLevel");
+            lbl->setString(strmake("LV.%d", info->level + 1));
+            spine::SkeletonAnimation* spChar = GM->getHeroSpine(info->unitType);
+            sv->addChild(spChar);
+            spChar->setAnimation(0, "idle", true);
+            Sprite* sptShadow = Sprite::create("shadow.png");
+            spChar->addChild(sptShadow, -1);
+            sptShadow->setOpacity(0);
+            spChar->setPosition(img->getPosition() + Vec2(0, -45));
+            img->setColor(GM->getRankColor(info->rank));
+            
+            x += xGap;
+        }
+    }
+    sv->getChildByName("imgTemp")->setVisible(false);
+    x -= xGap;
+    if (x < sv->getContentSize().width) {
+        int offsetX = (sv->getContentSize().width - x)/2 - 110;
+        for(auto child : sv->getInnerContainer()->getChildren()){
+            child->setPositionX(child->getPositionX() + offsetX);
+        }
+    }else{
+        sv->setInnerContainerSize(cocos2d::Size(x + xGap/2, 287));
+    }
+    
+    return btn;
+}
+void Title::onPostItemUnitOkClick(){
+    std::string post = UDGetStr(KEY_POST_MESSAGE, "");
+    log("post %s: ", post.c_str());
+    post = post.erase(post.find(selectedPostItem), selectedPostItem.length());
+    log("after post %s: ", post.c_str());
+    UDSetStr(KEY_POST_MESSAGE, post.c_str());
+    log("saved post %s: ", UDGetStr(KEY_POST_MESSAGE, "_").c_str());
+    BSM->postBoxConent = post + "";
+    
+    
+    std::vector<UnitInfo*> unitInfoListHeroInventory = GM->getHeroInventory();
+    
+    ValueVector list = GM->split(selectedPostItem, "-");
+    if(list.size() > 1){
+        std::string strUnits = list.at(1).asString();
+        ValueVector unitList = GM->split(strUnits, "_");
+        for (int i = 0; i < unitList.size(); i++) {
+            ValueVector dataList = GM->split(unitList.at(i).asString(), "/");
+            if(dataList.size() > 1){
+//                strInventory += "_" + unitList.at(i).asString();
+                UnitInfo* info = new UnitInfo();
+                info->unitType = dataList.at(0).asInt();
+                info->level = dataList.at(1).asInt()%100;
+                info->rank = dataList.at(1).asInt()/100;
+                
+                unitInfoListHeroInventory.push_back(info);
+            }
+        }
+    }
+    GM->saveHeroInventory(unitInfoListHeroInventory);
+    
+    std::string strInventory2 = UDGetStr(KEY_UNITS_HERO_INVENTORY);
+    log("strInventory: %s", strInventory2.c_str());
+    closePopup();
+    closePopup();
+}
+void Title::onPostItemGemClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE
+    ValueVector contentList = GM->split(btn->getName(), "-");
+    selectedPostItem = btn->getName() + "";
+    Button* btnOk = showGemRewardPopup(btn->getTag(), contentList.at(2).asString().c_str());
+    btnOk->addClickEventListener(CC_CALLBACK_0(Title::onPostItemGemOkClick, this));
+}
+void Title::onPostItemGemOkClick(){
+    std::string post = UDGetStr(KEY_POST_MESSAGE, "");
+    log("post %s: ", post.c_str());
+    post = post.erase(post.find(selectedPostItem), selectedPostItem.length());
+    log("after post %s: ", post.c_str());
+    UDSetStr(KEY_POST_MESSAGE, post.c_str());
+    log("saved post %s: ", UDGetStr(KEY_POST_MESSAGE, "_").c_str());
+    BSM->postBoxConent = post + "";
+    closeGemRewardPopup();
+}
+void Title::onRewardNoticeClick(){
+    ValueVector list = GM->split(GM->rewardMsg, "|");
+    std::string content = "Thank you for playing Cartoon Craft";
+    if(list.size() > 0){
+        content = list.at(1).asString();
+    }
+    
+    Button* btn = showGemRewardPopup(GM->rewardGemCount, content.c_str());
+    btn->addClickEventListener(CC_CALLBACK_0(Title::onRewardNoticeOkClick, this));
+}
+Button* Title::showGemRewardPopup(int gemCount, const char* msg){
+    Node* layer = CSLoader::createNode("GemRewardMessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("gemRewardMessageBox");
+    setAsPopup(layer);
+    layer->setTag(gemCount);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    ImageView* imgBack = (ImageView*)layer->getChildByName("imgBackground");
+    GM->rollOpenScroll(imgBack);
+    
+    Button* btn = (Button*)layer->getChildByName("btnOk");
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "ok");
+    
+    lbl = (Text*)layer->getChildByName("lblGemCount");
+    lbl->setString(Value(gemCount).asString());
+    
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedStringNotKey(lbl, msg);
+    
+    layer->getChildByName("imgGem")->setPosition(layer->getChildByName("imgGold")->getPosition());
+    layer->getChildByName("lblGemCount")->setPosition(layer->getChildByName("lblGold")->getPosition());
+    ImageView* img = (ImageView*)layer->getChildByName("imgGold");
+    img->setVisible(false);
+    img = (ImageView*)layer->getChildByName("imgTree");
+    img->setVisible(false);
+    lbl = (Text*)layer->getChildByName("lblGold");
+    lbl->setVisible(false);
+    lbl = (Text*)layer->getChildByName("lblTree");
+    lbl->setVisible(false);
+    
+    return btn;
+}
+void Title::onRewardNoticeOkClick(){
+    GM->rewardedCode = GM->rewardCode; // test
+    log("GM->rewardedCode %d", GM->rewardedCode);
+    BSM->saveUserData(strmake("rewarded_index=%d", GM->rewardedCode));
+    closeGemRewardPopup();
+}
+void Title::closeGemRewardPopup(){
+    int gemGiven = 0;
+    
+    Node* layer = this->getChildByName("gemRewardMessageBox");
+    Vec2 gemPos = layer->getPosition() + layer->getChildByName("imgGem")->getPosition();
+    
+    TopBar* ndTopBar = TopBar::create();
+    ndTopBar->setName("ndTopBar");
+    titleLayer->addChild(ndTopBar, 200 + (int)popupArray.size()+1);
+    ndTopBar->setPosition(titleLayer->getChildByName("btnNotice")->getPosition() + Vec2(-98, 3));
+    float yMove = 500;
+    ndTopBar->setPositionY(ndTopBar->getPositionY() + yMove);
+    ndTopBar->runAction(EaseInOut::create(MoveBy::create(1, Vec2(0, -yMove)), 3));
+    
+    Vec2 gemTargetPos = layer->getPosition() + ndTopBar->getPosition() + ndTopBar->ndTopBar->getChildByName("imgGemIcon")->getPosition() + Vec2(0, -yMove);
+    float gemDelay = 0;
+    float goldDelay = 0;
+    float treeDelay = 0;
+    int moveDistance = 160;
+    int gemSptCount = 10;
+    
+    Vec2 goldPos = layer->getPosition() + layer->getChildByName("imgGold")->getPosition();
+    Vec2 goldTargetPos = ndTopBar->getPosition() + ndTopBar->ndTopBar->getChildByName("imgGoldIcon")->getPosition() + Vec2(0, -yMove);
+    int goldGiven = 0;
+    int goldSptCount = 10;
+    
+    Vec2 treePos = layer->getPosition() + layer->getChildByName("imgTree")->getPosition();
+    Vec2 treeTargetPos = ndTopBar->getPosition() + ndTopBar->ndTopBar->getChildByName("imgTreeIcon")->getPosition() + Vec2(0, -yMove);
+    int treeGiven = 0;
+    int treeSptCount = 10;
+    
+    Sprite* sptGem;
+    Sprite* sptGold;
+    Sprite* sptTree;
+    
+    gemRewardCount = layer->getTag();
+    
+    for (int i = 0; i < gemSptCount; i++) {
+        sptGem = Sprite::create("gem.png");
+        this->addChild(sptGem, 300);
+        sptGem->setPosition(gemPos);
+        sptGem->runAction(Sequence::create(DelayTime::create(gemDelay), EaseInOut::create(MoveBy::create(0.3f, Vec2(rand()%moveDistance - moveDistance/2, rand()%moveDistance - moveDistance/2)), 2), DelayTime::create(0.5f), EaseInOut::create(MoveTo::create(0.6f, gemTargetPos), 2), CallFuncN::create(CC_CALLBACK_1(Title::gemMoveToTopBarDone, this)),NULL));
+        gemDelay += 0.07f;
+        sptGem->setTag(gemRewardCount/gemSptCount);
+        gemGiven += sptGem->getTag();
+    }
+    sptGem->setTag(sptGem->getTag() + (gemRewardCount - gemGiven));
+    
+    if(goldRewardCount > 0){
+        for (int i = 0; i < goldSptCount; i++) {
+            sptGold = Sprite::create("goldIcon.png");
+            this->addChild(sptGold, 300);
+            sptGold->setPosition(goldPos);
+            sptGold->runAction(Sequence::create(DelayTime::create(goldDelay), EaseInOut::create(MoveBy::create(0.3f, Vec2(rand()%moveDistance - moveDistance/2, rand()%moveDistance - moveDistance/2)), 2), DelayTime::create(0.5f), EaseInOut::create(MoveTo::create(0.6f, goldTargetPos), 2), CallFuncN::create(CC_CALLBACK_1(Title::goldMoveToTopBarDone, this)),NULL));
+            goldDelay += 0.07f;
+            sptGold->setTag(goldRewardCount/goldSptCount);
+            goldGiven += sptGold->getTag();
+        }
+        sptGold->setTag(sptGold->getTag() + (goldRewardCount - goldGiven));
+    }
+    if(treeRewardCount > 0){
+        for (int i = 0; i < treeSptCount; i++) {
+            sptTree = Sprite::create("lumberIcon.png");
+            this->addChild(sptTree, 300);
+            sptTree->setPosition(treePos);
+            sptTree->runAction(Sequence::create(DelayTime::create(treeDelay), EaseInOut::create(MoveBy::create(0.3f, Vec2(rand()%moveDistance - moveDistance/2, rand()%moveDistance - moveDistance/2)), 2), DelayTime::create(0.5f), EaseInOut::create(MoveTo::create(0.6f, treeTargetPos), 2), CallFuncN::create(CC_CALLBACK_1(Title::treeMoveToTopBarDone, this)),NULL));
+            treeDelay += 0.07f;
+            sptTree->setTag(treeRewardCount/treeSptCount);
+            treeGiven += sptTree->getTag();
+        }
+        sptTree->setTag(sptTree->getTag() + (treeRewardCount - treeGiven));
+    }
+    
+    closePopup();
+    closePopup();
+}
+void Title::gemMoveToTopBarDone(Ref* ref){
+    Sprite* spt = (Sprite*) ref;
+    GM->addGem(spt->getTag());
+    gemRewardCount -= spt->getTag();
+    if(gemRewardCount <= 0){
+        BSM->saveUserData(strmake("gem=%d&gold=%d&tree=%d", GM->getGem(), GM->getCoin(), GM->getTree()));
+        Node* ndTopBar = titleLayer->getChildByName("ndTopBar");
+        float yMove = 500;
+        ndTopBar->runAction(Sequence::create(EaseInOut::create(MoveBy::create(1, Vec2(0, yMove)), 3), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, ndTopBar)), NULL));
+    }
+    spt->removeFromParent();
+}
+void Title::goldMoveToTopBarDone(Ref* ref){
+    Sprite* spt = (Sprite*) ref;
+    GM->addCoin(spt->getTag());
+    goldRewardCount -= spt->getTag();
+    spt->removeFromParent();
+}
+void Title::treeMoveToTopBarDone(Ref* ref){
+    Sprite* spt = (Sprite*) ref;
+    GM->addTree(spt->getTag());
+    treeRewardCount -= spt->getTag();
+    spt->removeFromParent();
 }
 void Title::settingLog(std::string str){
     Node* layer = this->getChildByName("settingPopup");
@@ -1793,7 +3006,7 @@ void Title::setTitle(Node* titleBack, std::string menuKey){
     Text* lbl = (Text*)titleBack->getChildByName("lblTitle");
     LM->setLocalizedString(lbl, menuKey);
     ImageView* img = (ImageView*)titleBack;
-    img->setContentSize(Size(lbl->getContentSize().width*lbl->getScaleX() + 100, 104.39f));
+    img->setContentSize(cocos2d::Size(lbl->getContentSize().width*lbl->getScaleX() + 100, 104.39f));
     img->setScale9Enabled(true);
     lbl->setPositionX(titleBack->getContentSize().width/2);
 }
@@ -1809,6 +3022,7 @@ void Title::showRegisterName(){
     
     btn = (Button*)layer->getChildByName("btnClose");
     btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn->setVisible(isRename);
     
     setTitle(layer->getChildByName("titleBack"), "name");
     lbl = (Text*)background->getChildByName("lblDescription");
@@ -1832,12 +3046,45 @@ void Title::showRegisterName(){
     
     btn = (Button*)background->getChildByName("btnOk");
     btn->addClickEventListener(CC_CALLBACK_1(Title::onOkNameClick, this));
+    btn = (Button*)background->getChildByName("btnRandom");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onRandomNameClick, this));
+    btn = (Button*)background->getChildByName("btnApple");
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onSignInWithAppleID, this));
+}
+void Title::onRandomNameClick(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
+    showIndicator();
+    
+    std::string strName = "";
+    srand(time(0));
+    for (int i = 0; i < 15; i++) {
+        int index = rand()%3;
+        if (index == 0) {
+            strName += (char)(rand()%26 + (int)'A');
+        }else if (index == 1) {
+            strName += (char)(rand()%26 + (int)'a');
+        }else if (index == 2) {
+            strName += (char)(rand()%10 + (int)'0');
+        }
+    }
+//    log("std: %s", strName.c_str());
+    requestRegisterName(strName);
+}
+void Title::onSignInWithAppleID(Ref* ref){
+    BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
+    
+    if(GM->playerGPSID.length() > 0){
+        showIndicator();
+        requestRegisterName(GM->playerGPSID);
+    }else{
+        showInstanceMessage("Log-in Game Center, first.");
+    }
 }
 void Title::onOkNameClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
     TextField* tf = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfName");
-    TextField* tfPassword = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfPassword");
-    TextField* tfConfirm = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfConfirm");
+//    TextField* tfPassword = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfPassword");
+//    TextField* tfConfirm = (TextField*)this->getChildByName("namePopup")->getChildByName("imgBackground")->getChildByName("tfConfirm");
     if(tf->getString().size() <= 0){
         showInstanceMessage(LM->getText("input name"));
     }
@@ -1851,11 +3098,20 @@ void Title::onOkNameClick(Ref* ref){
 //        showInstanceMessage(LM->getText("password not match"));
 //    }
     else{
-        nameToRegister = tf->getString();
+        
+        showIndicator();
+        requestRegisterName(tf->getString());
+    }
+}
+void Title::requestRegisterName(std::string strName){
+    if(isRename){
+        renameHandleState = NETWORK_HANDLE_STATE_REQUESTED;
+        BSM->rename(strName);
+    }else{
+        nameToRegister = strName;
         nameHandleState = NETWORK_HANDLE_STATE_REQUESTED;
         isNameRequested = true;
-        showIndicator();
-        BSM->registerName(tf->getString());
+        BSM->registerName(strName);
     }
 }
 void Title::showUserSelect(){
@@ -2030,7 +3286,7 @@ void Title::showColosseum(){
     scView->getChildByName("imgTemplate")->setVisible(false);
     
     Button* btn = (Button*)layer->getChildByName("btnPlay");
-    btn->addClickEventListener(CC_CALLBACK_0(Title::onPlayColosseum, this));
+    btn->addClickEventListener(CC_CALLBACK_1(Title::onPlayColosseum, this));
     lbl = (Text*)btn->getChildByName("lblPlay");
     LM->setLocalizedString(lbl, "play");
     
@@ -2053,7 +3309,6 @@ void Title::showColosseum(){
     btn = (Button*)layer->getChildByName("btnVideo");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onVideoForTicketClick, this));
     layer->getChildByName("lblTimerForVideo")->setVisible(false);
-    
     showIndicator();
     isColosseumRankInfoReceived = false;
     
@@ -2069,9 +3324,10 @@ void Title::onVideoForTicketClick(){
     if(GameSharing::isVideoAvailable()){
         log("on vido click");
         GM->showVideo(VIDEO_TICKET);
-        std::string value = "";
-        value += BSM->getStrFromTime(BSM->getCurrentTimeT());
-        UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
+//        std::string value = "";
+//        value += BSM->getStrFromTime(BSM->getCurrentTimeT());
+//        UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
+        GM->saveTime(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, BSM->getCurrentTimeT());
     }else{
         log("on vido click");
         showInstanceMessage(LM->getText("video not available"));
@@ -2159,6 +3415,7 @@ void Title::updateColosseumPopup(float dt){
         if(arenaRecord.size() > 0 && arenaRecord.compare("0") != 0 && list.size() == 2 && list[1].asInt() > 0){
             showLeagueResult();
         }
+        list.clear();
     }
     
     colosseumUITimer += dt;
@@ -2230,11 +3487,15 @@ void Title::updateColosseumPopup(float dt){
                 img->setPosition(Point(imgTemp->getPositionX(), y));
             }
             img->setVisible(true);
+            info.clear();
         }
-        scView->setInnerContainerSize(Size(scView->getContentSize().width, names.size()*gap));
+        scView->setInnerContainerSize(cocos2d::Size(scView->getContentSize().width, names.size()*gap));
         
         int myScore = UDGetInt(KEY_COLOSSEUM_SCORE, 0);
-        
+        if(colosseumMe < 0){
+            UDSetInt(KEY_COLOSSEUM_SCORE, 0);
+            myScore = 0;
+        }
         ImageView* imgMe = (ImageView*)(ImageView*)layer->getChildByName("imgYou");
         Text* lbl = (Text*)imgMe->getChildByName("lblName");
         lbl->setString("sdf)");
@@ -2247,9 +3508,10 @@ void Title::updateColosseumPopup(float dt){
         if(myScore == 0){
             lbl = (Text*)imgMe->getChildByName("lblName");
             lbl->setString(LM->getText("play colosseum"));
-            lbl->setContentSize(Size(400, 79));
+            lbl->setContentSize(cocos2d::Size(400, 79));
             imgMe->getChildByName("lblRecord")->setVisible(false);
         }
+        names.clear();
     }
     if(getChildByName("colosseum")){
 //        int timeInSec = (int)(BSM->getCurrentTime());
@@ -2259,13 +3521,15 @@ void Title::updateColosseumPopup(float dt){
         Text* lbl = (Text*)layer->getChildByName("lblLeagueTimeLeft");
         lbl->setString(GM->getTimeLeftInString(timeLeft));
         
-        std::string strLastPlayTime = UDGetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, "");
-        time_t lastPlayTimeT = BSM->getTimeTFromStr(strLastPlayTime);
+//        std::string strLastPlayTime = UDGetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, "");
+        
+        time_t lastPlayTimeT = GM->getSavedTime(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME);//BSM->getTimeTFromStr(strLastPlayTime);
         time_t now = BSM->getCurrentTimeT();
         if(difftime(now, lastPlayTimeT) < 0){
-            std::string value = "";
-            value += BSM->getStrFromTime(now);
-            UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
+//            std::string value = "";
+//            value += BSM->getStrFromTime(now);
+//            UDSetStr(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, value);
+            GM->saveTime(KEY_LAST_VIDEO_FOR_TICKET_WATCHED_TIME, now);
             lastPlayTimeT = now;
         }
         int cooltime = 60*60;
@@ -2281,6 +3545,10 @@ void Title::updateColosseumPopup(float dt){
             lbl->setVisible(false);
             btn->setEnabled(true);
             btn->setOpacity(255);
+        }
+        if (GM->market == MARKET_SMARTPASS) {
+            lbl->setVisible(false);
+            btn->setVisible(false);
         }
     }
 }
@@ -2320,7 +3588,8 @@ void Title::onTicketOfferButtonClick(Ref* ref){
         closePopup();
     }
 }
-void Title::onPlayColosseum(){
+void Title::onPlayColosseum(Ref* ref){
+    
     int freeTicketUsedDay = UDGetInt(KEY_GOLDEN_TICKET_FREE_USED_DAY, 0);
     if(freeTicketUsedDay != BSM->getDay()){
         UDSetInt(KEY_GOLDEN_TICKET_FREE_USED_DAY, BSM->getDay());
@@ -2334,7 +3603,7 @@ void Title::onPlayColosseum(){
         ticketCount--;
         UDSetInt(KEY_GOLDEN_TICKET, ticketCount);
     }
-    
+    BTN_FROM_REF_AND_DISABLE
     UDSetBool(KEY_GOLDEN_TICKET_FREE, false);
 //    UDSetInt(KEY_LAST_TICKET_USED_TIME, BSM->getCurrentTime());
 //    BSM->forceResultLeague();
@@ -2387,8 +3656,8 @@ std::string Title::GetLeagueText(int rank){
 }
 void Title::rollOpenScroll(ImageView* imgBack){
     float originalWidth = imgBack->getContentSize().width;
-    imgBack->setContentSize(Size(308, imgBack->getContentSize().height));
-    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, Size(originalWidth, imgBack->getContentSize().height)), 2));
+    imgBack->setContentSize(cocos2d::Size(308, imgBack->getContentSize().height));
+    imgBack->runAction(EaseInOut::create(ResizeTo::create(0.3, cocos2d::Size(originalWidth, imgBack->getContentSize().height)), 2));
     
     for(auto child : imgBack->getParent()->getChildren()){
         if(child == imgBack || child->getName().compare("btnBlock") == 0) continue;
@@ -2433,7 +3702,7 @@ void Title::showLeagueResult(){
     ValueVector data = GM->split(arenaRecord, "_");
     int rank = data[0].asInt();
     int total = data[1].asInt();
-    int percent = rank*100/total;
+    int percent = rank*100.0f/total;
     
     lbl = (Text*)layer->getChildByName("lblDescription");
     int ticketCount = 0;
@@ -2477,6 +3746,7 @@ void Title::showLeagueResult(){
     int clearCount = UDGetInt(KEY_ARENA_CLEAR_COUNT, 0);
     BSM->saveUserData("gem=" + Value(GM->getGem()).asString() + "&arena_reward=0&golden_ticket=" + Value(ticket).asString() + "&arena_clr_cnt=" + Value(clearCount).asString());
     UDSetStr(KEY_ARENA_RID, "");
+    data.clear();
 }
 
 void Title::onCloseColosseumResult(){
@@ -2556,4 +3826,36 @@ void Title::checkPlayerIDExist(){
     isUserIDExistCheckRequested = true;
     
     BSM->checkPlayID(GM->playerGPSID);
+}
+void Title::showSmartPassError(std::string msg){
+    Node* layer = CSLoader::createNode("MessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("messageBox");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    
+    Button* btn = (Button*)layer->getChildByName("btnBlock");
+    btn = (Button*)layer->getChildByName("btnNo");
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    lbl->setString("Clear Cache");
+    lbl->setFontSize(30);
+    btn->addClickEventListener(CC_CALLBACK_0(Title::clearCacheForSmartPass, this));
+    log("smart pass clear cache");
+    
+//    Vec2 posLeft = btn->getPosition();
+    Button* btnYES = (Button*)layer->getChildByName("btnYes");
+    btnYES->addClickEventListener(CC_CALLBACK_0(Title::onStartPassErrorOk, this));
+//    btn->setPosition(btnYES->getPosition());
+//    btnYES->setPosition(posLeft);
+    lbl = (Text*)btnYES->getChildByName("lbl");
+    LM->setLocalizedStringNotKey(lbl, "Exit");
+    
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedStringNotKey(lbl, msg);
+}
+void Title::clearCacheForSmartPass(){
+    GameSharing::clearCacheForSmartPass();
+}
+void Title::onStartPassErrorOk(){
+    GM->exitGame();
 }

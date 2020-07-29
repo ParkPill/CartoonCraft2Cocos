@@ -16,21 +16,21 @@
 #include "GameSharing.h"
 #include "TopBar.h"
 #include "PageBase.h"
+#include "NetworkWebSocket.h"
+
 #define DEFAULT_LEAGUE_INDEX 3
 using namespace cocos2d;
 using namespace cocos2d::ui;
 class Title : public PageBase
 {
 private:
-    Size size;
+    cocos2d::Size size;
 public:
     Sprite* sptBackground;
     Sprite* sptTitle;
     
     virtual bool init();
     CREATE_FUNC(Title);
-    
-    
     
     void onHeroClick();
     void showHeroPage(bool showAlert = false);
@@ -42,13 +42,18 @@ public:
     void onOkFromLoadData();
     void goToLoadedStage();
     void onArenaClick();
+    void onMultiplayClick();
     
     int selectedSaveSlot;
     
     bool isGameCenterLoginRequestedFromShowColosseum = false;
 
-    
-    
+    void onCampaignChestShopClick();
+    void onResetCampaignChestClick();
+    void onForceOpenCampaignChestClick();
+    void onOpenCampaignChestClick(Ref* ref);
+    void onOpenCampaignChest();
+    void openCampaignChest();
     void showStageSelect(int chapter);
     void onStageClick(Ref* ref);
     
@@ -67,6 +72,23 @@ public:
     Node* fullPackagePopup = nullptr;
     
     void titleUpdate(float dt);
+    void showPostPopup();
+    void onRewardNoticeClick();
+    void onRewardNoticeOkClick();
+    void onPostItemGemClick(Ref* ref);
+    void onPostItemGemOkClick();
+    void onPostItemUnitClick(Ref* ref);
+    void onPostItemUnitOkClick();
+    std::string selectedPostItem = "";
+    void closeGemRewardPopup();
+    Button* showGemRewardPopup(int gemCount, const char* msg);
+    Button* showUnitRewardPopup(std::string units, const char* msg);
+    void gemMoveToTopBarDone(Ref* ref);
+    void goldMoveToTopBarDone(Ref* ref);
+    void treeMoveToTopBarDone(Ref* ref);
+    int gemRewardCount = 0;
+    int goldRewardCount = 0;
+    int treeRewardCount = 0;
     int stageRequested = -1;
     
     void doLabelFadeInLater(PPLabel* lbl, float delay, float fadeInDur);
@@ -85,7 +107,7 @@ public:
     std::vector<int> colosseumRankInfoWeapon;
     std::string GetCurrentLeagueText();
     std::string GetLeagueText(int league);
-    void onPlayColosseum();
+    void onPlayColosseum(Ref* ref);
     bool isWaitingForRankInfo = false;
     bool isRankInfoReceviedSuccessfully = false;
     void onGetTimeFailed();
@@ -93,6 +115,10 @@ public:
     bool isGetRankFailed = false;
     bool isLeagueNotFound = false;
     std::string strMessageBox = "";
+    void onEventClick();
+    void onChatClick();
+    
+    void showEventPopup();
     
     void showTicketOffer();
     void onTicketOfferButtonClick(Ref* ref);
@@ -121,6 +147,7 @@ public:
     void onCreateUserCreated();
     
     bool isTitleEnd = false;
+    Node* titleLayer = nullptr;
     
     void closeColosseumPopup();
     void clearAssets();
@@ -135,9 +162,12 @@ public:
     bool showInterstitialRequested = false;
     bool isHeroInfoRequested = false;
     bool isHeroInfoArrived = false;
+    bool isAllUserDataRequested = false;
+    bool isAllUserDataArrived = false;
     void getHeroInfoFromServer();
-    void onBattleClick();
+    void onBattleClick(Ref* ref);
     int nameHandleState = 0;
+    int renameHandleState = 0;
     bool isNameRequested = false;
     int networkStateGetData = 0;
     std::string nameToRegister;
@@ -146,11 +176,15 @@ public:
     void restartTheGame();
     bool isSendingPassword = false;
     Label* lblID;
+    Label* lblName;
     Label* lblLoading;
     
     void setTitle(Node* titleBack, std::string menuKey);
     void showRegisterName();
     void onOkNameClick(Ref* ref);
+    void onRandomNameClick(Ref* ref);
+    void onSignInWithAppleID(Ref* ref);
+    void requestRegisterName(std::string strName);
     void showUserSelect();
     void onNewUserSelect(Ref* ref);
     void onOldUserSelect(Ref* ref);
@@ -192,5 +226,24 @@ public:
     const char* rewardInfo = "";
     bool isRewardInfoReceived = false;
     bool isHardMode = false;
+    void checkMonthlyEventAttend();
+    bool isMonthlyEventAttendChecked = false;
+    bool firstIndicatorDisposed = false;
+    void onPrivacyPolicySmartPassClick();
+    void showSmartPassError(std::string msg);
+    void onStartPassErrorOk();
+    void clearCacheForSmartPass();
+    void onUpdateClick();
+    void onRenameClick();
+    bool isRename = false;
+    
+    void onYoutubeChannelClick();
+    void onYoutubeClick(Ref* ref);
+    void onYoutubeConfirm(Ref* ref);
+    void showDiscordPopup();
+    void onDiscordInvitationClick();
+    void onDiscordOpenClick();
+    
+    void onCollectionClick();
 };
 #endif /* Title_hpp */

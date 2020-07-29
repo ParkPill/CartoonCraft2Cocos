@@ -6,7 +6,7 @@
       <ObjectData Name="Scene" Tag="3296" ctype="GameNodeObjectData">
         <Size X="2368.0000" Y="1334.0000" />
         <Children>
-          <AbstractNodeData Name="btnBlock" ActionTag="1340257150" Alpha="221" Tag="627" IconVisible="False" LeftMargin="-504.3992" RightMargin="-498.3130" TopMargin="-204.2805" BottomMargin="-482.8282" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnBlock" ActionTag="1340257150" Alpha="221" Tag="627" IconVisible="False" LeftMargin="-504.3992" RightMargin="-498.3130" TopMargin="-204.2805" BottomMargin="-482.8283" TouchEnable="True" FontSize="14" ButtonText="Button" Scale9Enable="True" LeftEage="15" RightEage="15" TopEage="11" BottomEage="11" Scale9OriginX="15" Scale9OriginY="11" Scale9Width="16" Scale9Height="14" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="3370.7122" Y="2021.1088" />
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
             <Position X="1180.9569" Y="527.7261" />
@@ -34,7 +34,7 @@
                 <PreSize X="0.3721" Y="0.1436" />
                 <FileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="imgTextFieldBack_0" ActionTag="94268334" Tag="628" IconVisible="False" LeftMargin="509.9630" RightMargin="180.5806" TopMargin="1273.7289" BottomMargin="-695.2336" Scale9Enable="True" LeftEage="19" RightEage="17" TopEage="4" BottomEage="4" Scale9OriginX="19" Scale9OriginY="4" Scale9Width="61" Scale9Height="89" ctype="ImageViewObjectData">
+              <AbstractNodeData Name="imgTextFieldBack_0" ActionTag="94268334" Tag="628" IconVisible="False" LeftMargin="509.9630" RightMargin="180.5806" TopMargin="1273.7288" BottomMargin="-695.2335" Scale9Enable="True" LeftEage="19" RightEage="17" TopEage="4" BottomEage="4" Scale9OriginX="19" Scale9OriginY="4" Scale9Width="61" Scale9Height="89" ctype="ImageViewObjectData">
                 <Size X="403.1273" Y="96.9999" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="509.9630" Y="-646.7336" />
@@ -44,7 +44,7 @@
                 <PreSize X="0.3686" Y="0.1436" />
                 <FileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="tfPassword" ActionTag="1847735359" Tag="626" IconVisible="False" LeftMargin="527.8428" RightMargin="196.9650" TopMargin="1293.4143" BottomMargin="-670.8144" TouchEnable="True" FontSize="50" IsCustomSize="True" LabelText="" PlaceHolderText="Password" MaxLengthText="10" PasswordEnable="True" ctype="TextFieldObjectData">
+              <AbstractNodeData Name="tfPassword" ActionTag="1847735359" Tag="626" IconVisible="False" LeftMargin="527.8428" RightMargin="196.9650" TopMargin="1293.4143" BottomMargin="-670.8145" TouchEnable="True" FontSize="50" IsCustomSize="True" LabelText="" PlaceHolderText="Password" MaxLengthText="10" PasswordEnable="True" ctype="TextFieldObjectData">
                 <Size X="368.8631" Y="52.8953" />
                 <AnchorPoint ScaleY="0.5393" />
                 <Position X="527.8428" Y="-642.2880" />
@@ -87,15 +87,14 @@
               <AbstractNodeData Name="btnOk" ActionTag="-1400431445" Tag="624" IconVisible="False" LeftMargin="774.7762" RightMargin="74.5464" TopMargin="684.1169" BottomMargin="-125.1593" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="5" RightEage="5" TopEage="5" BottomEage="5" Scale9OriginX="5" Scale9OriginY="5" Scale9Width="774" Scale9Height="240" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
                 <Size X="244.3483" Y="116.5376" />
                 <Children>
-                  <AbstractNodeData Name="lbl" ActionTag="15410380" Tag="625" IconVisible="False" LeftMargin="80.9614" RightMargin="87.3869" TopMargin="22.9468" BottomMargin="33.5908" FontSize="60" LabelText="OK" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
-                    <Size X="76.0000" Y="60.0000" />
+                  <AbstractNodeData Name="lbl" ActionTag="15410380" Tag="625" IconVisible="False" LeftMargin="75.4614" RightMargin="81.8869" TopMargin="18.9468" BottomMargin="29.5908" FontSize="60" LabelText="OK" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="TextObjectData">
+                    <Size X="87.0000" Y="68.0000" />
                     <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
                     <Position X="118.9614" Y="63.5908" />
                     <Scale ScaleX="1.0000" ScaleY="1.0000" />
                     <CColor A="255" R="0" G="0" B="0" />
                     <PrePosition X="0.4869" Y="0.5457" />
-                    <PreSize X="0.3110" Y="0.5149" />
-                    <FontResource Type="Normal" Path="" Plist="" />
+                    <PreSize X="0.3560" Y="0.5835" />
                     <OutlineColor A="255" R="255" G="0" B="0" />
                     <ShadowColor A="255" R="110" G="110" B="110" />
                   </AbstractNodeData>
@@ -112,7 +111,7 @@
                 <OutlineColor A="255" R="255" G="0" B="0" />
                 <ShadowColor A="255" R="110" G="110" B="110" />
               </AbstractNodeData>
-              <AbstractNodeData Name="imgTextFieldBack_0_1" ActionTag="1650874609" Tag="632" IconVisible="False" LeftMargin="508.8826" RightMargin="178.0066" TopMargin="1397.3025" BottomMargin="-818.8072" Scale9Enable="True" LeftEage="19" RightEage="17" TopEage="4" BottomEage="4" Scale9OriginX="19" Scale9OriginY="4" Scale9Width="61" Scale9Height="89" ctype="ImageViewObjectData">
+              <AbstractNodeData Name="imgTextFieldBack_0_1" ActionTag="1650874609" Tag="632" IconVisible="False" LeftMargin="508.8826" RightMargin="178.0066" TopMargin="1397.3025" BottomMargin="-818.8073" Scale9Enable="True" LeftEage="19" RightEage="17" TopEage="4" BottomEage="4" Scale9OriginX="19" Scale9OriginY="4" Scale9Width="61" Scale9Height="89" ctype="ImageViewObjectData">
                 <Size X="406.7817" Y="96.9999" />
                 <AnchorPoint ScaleY="0.5000" />
                 <Position X="508.8826" Y="-770.3073" />
@@ -122,7 +121,7 @@
                 <PreSize X="0.3719" Y="0.1436" />
                 <FileData Type="Normal" Path="uiBoxSmall.png" Plist="" />
               </AbstractNodeData>
-              <AbstractNodeData Name="tfConfirm" ActionTag="209982235" Tag="633" IconVisible="False" LeftMargin="526.7626" RightMargin="200.7860" TopMargin="1416.9884" BottomMargin="-794.3885" TouchEnable="True" FontSize="50" IsCustomSize="True" LabelText="" PlaceHolderText="Confirm" MaxLengthText="10" PasswordEnable="True" ctype="TextFieldObjectData">
+              <AbstractNodeData Name="tfConfirm" ActionTag="209982235" Tag="633" IconVisible="False" LeftMargin="526.7626" RightMargin="200.7860" TopMargin="1416.9885" BottomMargin="-794.3885" TouchEnable="True" FontSize="50" IsCustomSize="True" LabelText="" PlaceHolderText="Confirm" MaxLengthText="10" PasswordEnable="True" ctype="TextFieldObjectData">
                 <Size X="366.1223" Y="52.8953" />
                 <AnchorPoint ScaleY="0.5393" />
                 <Position X="526.7626" Y="-765.8621" />
@@ -173,7 +172,7 @@
             <OutlineColor A="255" R="255" G="0" B="0" />
             <ShadowColor A="255" R="110" G="110" B="110" />
           </AbstractNodeData>
-          <AbstractNodeData Name="btnClose" ActionTag="237057295" Tag="620" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1864.3146" RightMargin="375.6031" TopMargin="1512.6505" BottomMargin="-291.2407" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="5" RightEage="5" TopEage="5" BottomEage="5" Scale9OriginX="5" Scale9OriginY="5" Scale9Width="251" Scale9Height="224" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
+          <AbstractNodeData Name="btnClose" ActionTag="237057295" Tag="620" IconVisible="False" HorizontalEdge="BothEdge" LeftMargin="1726.2611" RightMargin="513.6566" TopMargin="348.1930" BottomMargin="873.2168" TouchEnable="True" FontSize="14" Scale9Enable="True" LeftEage="5" RightEage="5" TopEage="5" BottomEage="5" Scale9OriginX="5" Scale9OriginY="5" Scale9Width="251" Scale9Height="224" ShadowOffsetX="2.0000" ShadowOffsetY="-2.0000" ctype="ButtonObjectData">
             <Size X="128.0822" Y="112.5902" />
             <Children>
               <AbstractNodeData Name="Image_1" ActionTag="-2119169213" Tag="621" IconVisible="False" LeftMargin="2.5000" RightMargin="116.5822" TopMargin="102.0902" BottomMargin="1.5000" LeftEage="4" RightEage="4" TopEage="2" BottomEage="2" Scale9OriginX="4" Scale9OriginY="2" Scale9Width="38" Scale9Height="42" ctype="ImageViewObjectData">
@@ -188,10 +187,10 @@
               </AbstractNodeData>
             </Children>
             <AnchorPoint ScaleX="0.5000" ScaleY="0.5000" />
-            <Position X="1928.3557" Y="-234.9456" />
+            <Position X="1790.3022" Y="929.5119" />
             <Scale ScaleX="1.0000" ScaleY="1.0000" />
             <CColor A="255" R="255" G="255" B="255" />
-            <PrePosition X="0.8143" Y="-0.1761" />
+            <PrePosition X="0.7560" Y="0.6968" />
             <PreSize X="0.0541" Y="0.0844" />
             <TextColor A="255" R="65" G="65" B="70" />
             <PressedFileData Type="Normal" Path="btnStop.png" Plist="" />
