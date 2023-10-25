@@ -34,12 +34,13 @@
 #include "ui/UILoadingBar.h"
 #include "editor-support/cocostudio/CocoStudio.h"
 #include "AwesomeDialogBox.h"
+#include "PageBase.h"
 
 using namespace cocos2d;
 
 using namespace cocos2d::ui;
 using namespace cocostudio;
-class Intro : public LayerColor
+class Intro : public PageBase
 {
 private:
     
@@ -54,6 +55,13 @@ public:
     void setViewPointCenter(Vec2 position);
     void goToNextScene();
     void startAnimation();
+    void startAnimationAndUserSelect();
+    void showUserSelect();
+    void onNewUserSelect(Ref* ref);
+    void onOldUserSelect(Ref* ref);
+    void showServerSelect(bool isNewUser);
+    void onServerSelected(Ref* ref);
+    void setTitle(Node* titleBack, std::string menuKey);
 };
 
 

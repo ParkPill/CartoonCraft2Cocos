@@ -12,7 +12,7 @@
 #include "EditorWorld.h"
 #include "SneakyJoystickSkinnedBase.h"
 #include "SneakyJoystick.h"
-
+#include "PageBase.h"
 #include "ui/UIWidget.h"
 #include "ui/UISlider.h"
 #include "ui/UIScrollView.h"
@@ -88,6 +88,11 @@
 #define BTN_TYPE_CANCEL 31
 #define SELECT_DIALOG_GO_TO_NPC 0
 
+#define MENU_MODE_SAVE 0
+#define MENU_MODE_LOAD 1
+#define MENU_MODE_PLAY 2
+#define MENU_MODE_UPLOAD 3
+
 #define MODE_PENCIL 0
 #define MODE_ERASER 1
 #define MODE_SELECT 2
@@ -110,20 +115,26 @@
 #define BRUSH_ORC_AXE 15
 #define BRUSH_ORC_SPEAR 16
 #define BRUSH_TROLL 17
-#define BRUSH_GOLBIN 18
-#define BRUSH_GOLBIN_BOMB 19
-#define BRUSH_BUNKER 20
-#define BRUSH_HQ 21
-#define BRUSH_ZOMBIE_SWORDSMAN 22
-#define BRUSH_ZOMBIE_ORC_AXE 23
-#define BRUSH_START_POINT 24
-#define BRUSH_EVENT_POINT 25
+#define BRUSH_WIZARD 18
+#define BRUSH_GOLBIN 19
+#define BRUSH_GOLBIN_BOMB 20
+#define BRUSH_BUNKER 21
+#define BRUSH_ORC_BARRACKS 22
+#define BRUSH_BARBEQUE 23
+#define BRUSH_TROLL_HOUSE 24
+#define BRUSH_TEMPLE 25
+#define BRUSH_HQ 26
+#define BRUSH_GOBLIN_WORKER 27
+#define BRUSH_ZOMBIE_SWORDSMAN 28
+#define BRUSH_ZOMBIE_ORC_AXE 29
+#define BRUSH_START_POINT 30
+#define BRUSH_EVENT_POINT 31
 
 using namespace cocos2d;
 
 using namespace cocos2d::ui;
 using namespace cocostudio;
-class EditorHud : public Layer
+class EditorHud : public PageBase
 {
 private:
     
@@ -367,19 +378,17 @@ public:
     void hideBtns();
     void showBtns();
     bool isThisEventQuest = false;
-    void showEvent(int index, bool isQuest);
-    void onEvent(float dt);
+    
+    
     void showSingleNPCMessage(std::string msg);
     void onDisposableMessageEvent(float dt);
-    void showQuestComplete(int index);
-    void onQuestCompleteEvent(float dt);
+    
     int questIndex = 0;
     Sprite* blackBottom;
     Sprite* blackTop;
     void showBlackTopAndBottom();
     void hideBlackTopAndBottom();
     Sprite* sptTalkBox;
-    void updateTalkBoxRope(float dt);
     void onTalkBoxResizeDone();
     int eventIndex=-1;
     bool isReadyToShowNextTalk = false;
@@ -396,8 +405,6 @@ public:
     void onRightRelease();
     void onUpRelease();
     void onDownRelease();
-    void showOptions(std::string option0, std::string option1);
-    void readyToShowNextTalk();
     void endEvent();
     
     
@@ -415,7 +422,6 @@ public:
     Node* selectedInventorySlot = nullptr;
     Node* abcLayer = nullptr;
     Node* selectedAbcOption = nullptr;
-    PPLabel* showInstanceMessage(std::string msg);
     void showInventory();
     void updateInventory();
     void showABDialog(std::string msg, std::string option0, std::string option1, int dialogType);
@@ -433,7 +439,7 @@ public:
     void showBIAndReplaceScene();
     void letsReplaceScene();
     void updateQuestInfo();
-    void showMenus();
+    
     Node* selectedMenu = nullptr;
     void selectMenu(Node* selectedItem);
     Node* menuLayer = nullptr;
@@ -497,7 +503,7 @@ public:
     
     bool isSceneChanging = false;
     void showWinPopup(bool win);
-    void onSkipClick();
+    
     float resultTime = 0;
     Node* resultPopup = nullptr;
     int resultUsedGold = 0;
@@ -551,7 +557,7 @@ public:
     int menuWidth = 200;
     void onBrushClick(Ref* menu);
     Vector<Button*> brushMenuArray;
-    int brushCount = 25;
+    int brushCount = 29;
     int selectedBrush = BRUSH_TREE;
     int selectedMode = MODE_PENCIL;
     void doBrush(cocos2d::Vec2 pos);
@@ -565,6 +571,32 @@ public:
     void onOkOnDetailPopup();
     
     void onIfSubjectClick(Ref* ref);
+    
+    void showEditDetail();
+    void onDetailSideClick(Ref* ref);
+    void onDetailEnemyActionClick(Ref* ref);
+    void onDetailEnemyActionTimeClick(Ref* ref);
+    Movable* selectedUnitForEditDetail = nullptr;
+    Vector<Movable*> selectedUnitGroup;
+    Vector<Sprite*> circleListForSelectedGroup;
+    void changeAlliSide(EnemyBase* unit, int to);
+    void showOptions(Vec2 pos, bool group);
+    void hideOptions();
+    void onDuplicateClick();
+    void showSelectedCircle(bool show);
+    
+    
+    void onMenuModeClick(Ref* ref);
+    int selectedMenuMode = 0;
+    int selectedMenuSlot = 0;
+    void showMenuConfirm(Ref* ref);
+    void onMenuConfirmClick();
+    void loadMap();
+    void playMap();
+    void showUpload();
+    void onUploadMapClick();
+    int uploadHandleState = 0;
+    bool isUploadRequested = false;
 };
 #endif
 

@@ -18,7 +18,7 @@ package org.cocos2dx.cpp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -133,7 +133,13 @@ public abstract class BaseGameActivity extends Cocos2dxActivity implements
     }
 
     protected void beginUserInitiatedSignIn() {
-        mHelper.beginUserInitiatedSignIn();
+//        Log.e("com.magmon.cartooncraft", "let's sign in ");
+
+        try {
+            mHelper.beginUserInitiatedSignIn();
+        }catch(Exception e){
+            Log.e("com.magmon.cartooncraft", "sign in failed: " + e);
+        }
     }
 
     protected void signOut() {
@@ -162,9 +168,9 @@ public abstract class BaseGameActivity extends Cocos2dxActivity implements
         enableDebugLog(enabled);
     }
 
-    protected String getInvitationId() {
-        return mHelper.getInvitationId();
-    }
+//    protected String getInvitationId() {
+//        return mHelper.getInvitationId();
+//    }
 
     protected void reconnectClient() {
         mHelper.reconnectClient();
@@ -175,6 +181,9 @@ public abstract class BaseGameActivity extends Cocos2dxActivity implements
     }
 
     protected GameHelper.SignInFailureReason getSignInError() {
+
+        Log.e(TAG, "test sign in failed");
         return mHelper.getSignInError();
+
     }
 }

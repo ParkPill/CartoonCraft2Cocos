@@ -29,8 +29,7 @@
 #import "platform/ios/CCEAGLView-ios.h"
 #import "GameManager.h"
 #import "Ios_BillingManager.h"
-#import <FBSDKCoreKit/FBSDKCoreKit.h>
-
+//#import <FBSDKCoreKit/FBSDKCoreKit.h>
 
 @implementation RootViewController
 
@@ -69,26 +68,29 @@
 //    [UnityAds initialize:@"2751873" delegate:self];
     [Ios_BillingManager sharedManager].viewController = self;
     
+    NSLog(@"admob init");
+    
     // admob
     [[GADMobileAds sharedInstance] startWithCompletionHandler:nil];
     
-    self.interstitial = [self createAndLoadInterstitial];
+    
     // Initialize Google Mobile Ads SDK
-    [[GADMobileAds sharedInstance]
-     startWithCompletionHandler:^(GADInitializationStatus *_Nonnull status) {
-//         GADAdapterInitializationState adapterState =
-//         status.adapterStatusesByClassName[@"SampleAdapter"].state;
-//         
-//         if (adapterState == GADAdapterInitializationStateReady) {
-//             // Sample adapter was successfully initialized.
-//         } else {
-//             // Sample adapter is not ready.
-//         }
-     }];
+//    [[GADMobileAds sharedInstance]
+//     startWithCompletionHandler:^(GADInitializationStatus *_Nonnull status) {
+////         GADAdapterInitializationState adapterState =
+////         status.adapterStatusesByClassName[@"SampleAdapter"].state;
+////
+////         if (adapterState == GADAdapterInitializationStateReady) {
+////             // Sample adapter was successfully initialized.
+////         } else {
+////             // Sample adapter is not ready.
+////         }
+//     }];
+    self.interstitial = [self createAndLoadInterstitial];
     self.rewardedAd = [self createAndLoadRewardedAd];
 //    [FBSDKAppEvents logEvent:@"iOS launch"];
+    
 }
-
 - (GADRewardedAd *)createAndLoadRewardedAd {
     GADRewardedAd *rewardedAd = [[GADRewardedAd alloc]
                                  initWithAdUnitID:@"ca-app-pub-7893694248975700/5182384895"];

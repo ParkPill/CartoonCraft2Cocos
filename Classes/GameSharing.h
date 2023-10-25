@@ -75,6 +75,7 @@ public:
     static void addNonConsumableSkuItemForStore(std::string skuID);
     static void buyItem(std::string item);
     static void setupIAB();
+    static void signIn();
     
     static void consumePurchased();
     static void init();

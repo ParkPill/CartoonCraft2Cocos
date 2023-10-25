@@ -6,7 +6,6 @@
 #include "PPLabel.h"
 #include "Enemies.h"
 #include "AwesomeDialogBox.h"
-#include "Fog.h"
 #include "Laser.h"
 #include "../cocos2d/cocos/editor-support/cocostudio/CocoStudio.h"
 #include "../cocos2d/cocos/ui/UILayout.h"
@@ -316,8 +315,8 @@ public:
     cocos2d::Size mapSize;
     // there's no 'id' in cpp, so we recommend to return the class instance cocos2d::Vec2er
     static cocos2d::Scene* scene(int stage, bool boss);
-    SpriteBatchNode* spriteBatch;
-    SpriteBatchNode* spriteBatchEffect;
+    Node* spriteBatch;
+    Node* spriteBatchEffect;
     void setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy);
     void setOccupy(cocos2d::Vec2 pos, int width, int height, bool occupy, EnemyBase* building);
     NodeGrid* nodeGrid;
@@ -699,8 +698,8 @@ public:
     Vector<Sprite*> blockerArray;
     Vector<Sprite*> triggerArray;
     Vector<Sprite*> stoneArray;
-    Vector<Fog*> fogArray;
     Sprite* encounteredTrigger = nullptr;
+    
     int getUnitStat(std::string unitName, std::string stat);
     std::string getUnitDropItem(std::string unitName, int dropIndex);
     int getWeaponStat(std::string name, std::string stat);
@@ -798,14 +797,9 @@ public:
     void selectUnit(EnemyBase* unit);
     void splashDamage(cocos2d::Vec2 pos, int radius, int damage, bool isFromEnemy, Movable* attacker);
     void removeDeadUnit(EnemyBase* unit);
-    void updateFog();
     EnemyBase* getNearestCastle(cocos2d::Vec2 pos);
     EnemyBase* getNearestLumberTank(cocos2d::Vec2 pos);
     EnemyBase* getNearestTree(cocos2d::Vec2 pos);
-    float fogUpdateTimer = 0.3f;
-    int fogWidth = 0;
-    int fogHeight = 0;
-    cocos2d::Size fogMapSize;
     int mapWidth = 0;
     int mapHeight = 0;
     int gold = 0;
@@ -847,12 +841,18 @@ public:
     int mapSizeWidth = 70;
     int mapSizeHeight = 70;
     int placedArray[70][70];
-    void brushTile(int brush, cocos2d::Vec2 coordinate);
+    EnemyBase* brushTile(int brush, cocos2d::Vec2 coordinate);
     void eraseTile(cocos2d::Vec2 coordinate);
     void createTree(cocos2d::Vec2 pos);
     std::string getMapData();
     void loadMapData();
     void setMapData(std::string data);
+    bool isBrushBuilding(int brush);
+    int getUnitIndexForBrush(int brush);
+    bool isSelectedUnitSelected = false;
+    int selectedUnitsBrush = 0;
+    Vec2 selectedArrayPlacedPosition;
+    Vec2 lastBrushedCoordinate;
 };
 
 #endif // __editor_scene

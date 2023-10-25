@@ -84,6 +84,12 @@ void EventPopup::addMonthlyEvent(){
         }else if(month == 8){
             ImageView* img = (ImageView*)btn->getChildByName("imgIcon");
             img->loadTexture("eventBannerWatermelon.png");
+        }else if(month == 9){
+            ImageView* img = (ImageView*)btn->getChildByName("imgIcon");
+            img->loadTexture("eventBannerMino.png");
+        }else if(month == 10){
+            ImageView* img = (ImageView*)btn->getChildByName("imgIcon");
+            img->loadTexture("eventBannerLamia.png");
         }
         
         btn->setName("btnMonthly");
@@ -158,6 +164,14 @@ void EventPopup::addMonthlyEvent(){
             strFileName = "batMonsterSprite.png";
         }else if(heroType == UNIT_HERO_PARASITE){
             strFileName = "parasiteSprite.png";
+        }else if(heroType == UNIT_HERO_BABYMINO){
+            strFileName = "babyminoSprite.png";
+        }else if(heroType == UNIT_HERO_KERBEROS){
+            strFileName = "kerberosSprite.png";
+        }else if(heroType == UNIT_HERO_CHUNJA){
+            strFileName = "chunjaSprite.png";
+        }else if(heroType == UNIT_HERO_GOLEM){
+            strFileName = "golemSprite.png";
         }
         Sprite* sptBigHero = Sprite::create(strFileName);
         btn->addChild(sptBigHero);

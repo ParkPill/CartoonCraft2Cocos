@@ -22,7 +22,7 @@ bool EditorHud::init()
 {
     //////////////////////////////
     // 1. super init first
-    if ( !Layer::init() )
+    if ( !PageBase::init())
     {
         return false;
     }
@@ -55,9 +55,6 @@ bool EditorHud::init()
     pauseLayer = NULL;
     gameClearLayer = NULL;
     
-    float gap = 5;
-    bool isRankingEnabled = false;
-    
     
     GameManager::getInstance()->page = PAGE_STAGE;
     
@@ -78,8 +75,6 @@ bool EditorHud::init()
     //    joystickAim->setPositionY(-2000);
     hideBtns();
 #endif
-    
-    bool lastJewelCollected = UserDefault::getInstance()->getBoolForKey(__String::createWithFormat(KEY_JEWEL_COLLECTED_FORMAT, 3)->getCString());
     
     lblInfo = LM->getLocalizedLabel("", Color4B::BLACK);
     lblInfo->setScale(0.4);
@@ -189,6 +184,8 @@ bool EditorHud::init()
             spt = world->getSpriteForIcon(UNIT_ORC_SPEAR);
         }else if(i == BRUSH_TROLL ){
             spt = world->getSpriteForIcon(UNIT_TROLL);
+        }else if(i == BRUSH_GOBLIN_WORKER ){
+            spt = world->getSpriteForIcon(UNIT_GOBLIN_WORKER);
         }else if(i == BRUSH_GOLBIN ){
             spt = world->getSpriteForIcon(UNIT_GOBLIN);
         }else if(i == BRUSH_GOLBIN_BOMB ){
@@ -201,6 +198,16 @@ bool EditorHud::init()
             spt = world->getSpriteForIcon(UNIT_ZOMBIE_SWORDSMAN);
         }else if(i == BRUSH_ZOMBIE_ORC_AXE ){
             spt = world->getSpriteForIcon(UNIT_ZOMBIE_ORC_AXE);
+        }else if(i == BRUSH_WIZARD ){
+            spt = world->getSpriteForIcon(UNIT_WIZARD);
+        }else if(i == BRUSH_BARBEQUE ){
+            spt = world->getSpriteForIcon(UNIT_BARBECUE);
+        }else if(i == BRUSH_TROLL_HOUSE ){
+            spt = world->getSpriteForIcon(UNIT_ORC_TROLL_HOUSE);
+        }else if(i == BRUSH_TEMPLE ){
+            spt = world->getSpriteForIcon(UNIT_TEMPLE);
+        }else if(i == BRUSH_ORC_BARRACKS ){
+            spt = world->getSpriteForIcon(UNIT_ORC_BARRACKS);
         }else if(i == BRUSH_START_POINT ){
             spt = Sprite::create("startPoint.png");
         }else if(i == BRUSH_EVENT_POINT ){
@@ -239,12 +246,14 @@ bool EditorHud::init()
     
     onLoadClick(0);
     
+    
     log("init done");
     // init done
     return true;
 }
 void EditorHud::onLeftMenuClick(Ref* ref){
-    BTN_FROM_REF_AND_DISABLE
+    BTN_FROM_REF
+    
     for (auto button: menuArray) {
         if(button == btn){
             button->setColor(Color3B::GREEN);
@@ -283,56 +292,261 @@ void EditorHud::onBrushClick(Ref* ref){
 void EditorHud::onMenuClick(){
     //    GM->playSoundEffect(SOUND_PAPER_FLIP);
     GM->playSoundEffect(SOUND_WOOD_HIT);
-    world->pauseLayer();
-    Layer* layer = Layer::create();
+//    world->pauseLayer();
+    
+    Node* layer = CSLoader::createNode("EditMenu.csb");
+    this->addChild(layer, 111);
+    layer->setName("editMenu");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
     setAsPopup(layer);
-    this->addChild(layer, 200);
+    ddiyong(layer);
     
-    Button* btnBlock = Button::create("uiBox.png");
-    btnBlock->setPosition(Vec2(size.width/2, size.height/2 + 100));
-    layer->addChild(btnBlock);
-    btnBlock->setScale(20);
-    btnBlock->setOpacity(100);
-    btnBlock->setColor(Color3B::BLACK);
-    btnBlock->setPressedActionEnabled(false);
-    btnBlock->addClickEventListener(CC_CALLBACK_0(EditorHud::onResumeClick, this));
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
     
-    ImageView* img = ImageView::create("uiBox.png");
-    layer->addChild(img, 99);
-    img->setContentSize(cocos2d::Size(700, 500));
-    img->setScale9Enabled(true);
-    img->setPosition(size/2);
+    Text* lbl = (Text*)layer->getChildByName("lblTitle");
+    LM->setLocalizedString(lbl, "save");
     
-    Button* btn = Button::create("uiBoxSmall.png");
-    layer->addChild(btn, 99);
-    btn->setContentSize(cocos2d::Size(520, 150));
-    btn->setScale9Enabled(true);
-    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onSaveClick, this));
-    btn->setPosition(Vec2(size.width/2, size.height/2 + 240));
-    addLabelToButton("RESUME", btn, false, DARK_GRAY_3B);
+    btn = (Button*)layer->getChildByName("btnSave");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onMenuModeClick, this));
+    btn->setTag(MENU_MODE_SAVE);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "save");
+    btn = (Button*)layer->getChildByName("btnLoad");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onMenuModeClick, this));
+    btn->setTag(MENU_MODE_LOAD);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "load");
+    btn = (Button*)layer->getChildByName("btnPlay");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onMenuModeClick, this));
+    btn->setTag(MENU_MODE_PLAY);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "play");
+    btn = (Button*)layer->getChildByName("btnUpload");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onMenuModeClick, this));
+    btn->setTag(MENU_MODE_UPLOAD);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "upload");
     
-    tfMapName = TextField::create("Enter Map Name Here", "Arial", 44);
-    layer->addChild(tfMapName);
-    tfMapName->setPosition(Vec2(size.width/2 - 500, size.height/2 + 240));
-    
-    btn = Button::create("uiBoxSmall.png");
-    layer->addChild(btn, 99);
-    btn->setContentSize(cocos2d::Size(520, 150));
-    btn->setScale9Enabled(true);
-    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onResumeClick, this));
-    btn->setPosition(Vec2(size.width/2, size.height/2 + 80));
-    addLabelToButton("RESUME", btn, false, DARK_GRAY_3B);
-    
-    btn = Button::create("uiBoxSmall.png");
-    layer->addChild(btn, 99);
-    btn->setTitleColor(Color3B::BLACK);
-    btn->setContentSize(cocos2d::Size(520, 150));
-    btn->setScale9Enabled(true);
+    btn = (Button*)layer->getChildByName("btnQuit");
     btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onExitClick, this));
-    btn->setPosition(Vec2(size.width/2, size.height/2 - 80));
-    addLabelToButton("EXIT", btn, false, DARK_GRAY_3B);
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "exit");
+    for (int i = 0; i < 6; i++) {
+        btn = (Button*)layer->getChildByName(strmake("btnSlot%d", i));
+        btn->addClickEventListener(CC_CALLBACK_1(EditorHud::showMenuConfirm, this));
+        btn->setTag(i);
+        lbl = (Text*)btn->getChildByName("lbl");
+        lbl->setString(UDGetStr(strmake(KEY_MAP_SAVE_NAME_FORMAT, i).c_str(), "EMPTY"));
+    }
     
+    layer->getChildByName("btnSave")->setColor(selectedMenuMode == MENU_MODE_SAVE?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnLoad")->setColor(selectedMenuMode == MENU_MODE_LOAD?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnPlay")->setColor(selectedMenuMode == MENU_MODE_PLAY?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnUpload")->setColor(selectedMenuMode == MENU_MODE_UPLOAD?Color3B::GREEN:Color3B::WHITE);
 }
+void EditorHud::showMenuConfirm(Ref* ref){
+    BTN_FROM_REF
+    selectedMenuSlot = btn->getTag();
+    Node* layer = CSLoader::createNode("MessageBox.csb");
+    this->addChild(layer, 112);
+    layer->setName("messageBox");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    
+    btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnNo");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
+    Vec2 posLeft = btn->getPosition();
+    Button* btnYES = (Button*)layer->getChildByName("btnYes");
+    btnYES->addClickEventListener(CC_CALLBACK_0(EditorHud::onMenuConfirmClick, this));
+    btn->setPosition(btnYES->getPosition());
+    btnYES->setPosition(posLeft);
+    
+    Text* lbl = (Text*)layer->getChildByName("lblDescription");
+    if (selectedMenuMode == MENU_MODE_SAVE) {
+        lbl->setString(LM->getText("save") + "?");
+    }else if (selectedMenuMode == MENU_MODE_LOAD) {
+        lbl->setString(LM->getText("load") + "?");
+    }else if (selectedMenuMode == MENU_MODE_PLAY) {
+        lbl->setString(LM->getText("play") + "?");
+    }else if (selectedMenuMode == MENU_MODE_UPLOAD) {
+        lbl->setString(LM->getText("upload") + "?");
+    }
+}
+void EditorHud::onMenuConfirmClick(){
+    closePopup();
+    Node* layer = this->getChildByName("editMenu");
+    if (selectedMenuMode == MENU_MODE_SAVE) {
+        std::string str = strmake("%d/%d_", world->mapSizeWidth, world->mapSizeHeight);
+        int previousGID = 0;
+        int counter = 0;
+        int gid = 0;
+        for (int i = 0; i < world->mapSizeWidth; i++) {
+            for (int j = 0; j < world->mapSizeHeight; j++) {
+                gid = world->decoLayer->getTileGIDAt(Vec2(i, j));
+                if (gid == previousGID) {
+                    counter++;
+                }else{
+                    str += strmake("%d/%d|", previousGID, counter);
+                    previousGID = gid;
+                    counter = 1;
+                }
+            }
+        }
+        str += strmake("%d/%d_", previousGID, counter);
+        string unitData = "";
+        Vec2 coordinate;
+        for (auto unit : world->heroArray){
+            if (unit->isBuilding) {
+                coordinate = unit->buildingStartCoordinate;
+            }else{
+                coordinate = world->getCoordinateFromPosition(unit->getPosition());
+            }
+            
+            unitData += strmake("%d/%d/%d|", unit->unitType, (int)coordinate.x, (int)coordinate.y);
+        }
+        str = strmake("%s%s_", str.c_str(), unitData.c_str());
+        unitData = "";
+        for (auto unit : world->readyHeroArray){
+            if (unit->isBuilding) {
+                coordinate = unit->buildingStartCoordinate;
+            }else{
+                coordinate = world->getCoordinateFromPosition(unit->getPosition());
+            }
+            unitData += strmake("%d/%d/%d|", unit->unitType, (int)coordinate.x, (int)coordinate.y);
+        }
+        str = strmake("%s%s_", str.c_str(), unitData.c_str());
+        unitData = "";
+        for (auto unit : world->enemyArray){
+            if (unit->isBuilding) {
+                coordinate = unit->buildingStartCoordinate;
+            }else{
+                coordinate = world->getCoordinateFromPosition(unit->getPosition());
+            }
+            unitData += strmake("%d/%d/%d/%d/%d|", unit->unitType, unit->unitAct, unit->scheduledAttackTime, (int)coordinate.x, (int)coordinate.y);
+        }
+        str = strmake("%s%s_", str.c_str(), unitData.c_str());
+        unitData = "";
+        for (auto unit : world->mutualArray){
+            if (unit->isBuilding) {
+                coordinate = unit->buildingStartCoordinate;
+            }else{
+                coordinate = world->getCoordinateFromPosition(unit->getPosition());
+            }
+            if (unit->unitType != UNIT_TREE) {
+                unitData += strmake("%d/%d/%d|", unit->unitType, (int)coordinate.x, (int)coordinate.y);
+            }
+        }
+        str = strmake("%s%s", str.c_str(), unitData.c_str());
+        UDSetStr(strmake(KEY_MAP_SAVE_NAME_FORMAT, selectedMenuSlot).c_str(), strmake("%d/%2d/%2d", BSM->getYear(), BSM->getMonth(), BSM->getDay()));
+        
+        Text* lbl;
+        Button* btn;
+        for (int i = 0; i < 6; i++) {
+            btn = (Button*)layer->getChildByName(strmake("btnSlot%d", i));
+            lbl = (Text*)btn->getChildByName("lbl");
+            lbl->setString(UDGetStr(strmake(KEY_MAP_SAVE_NAME_FORMAT, i).c_str(), "EMPTY"));
+        }
+        
+        tm receivedWebTimeT = *localtime(&BSM->receivedWebTimeT);
+        UDSetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), str);
+    }else if (selectedMenuMode == MENU_MODE_LOAD) {
+        loadMap();
+    }else if (selectedMenuMode == MENU_MODE_PLAY) {
+        playMap();
+    }else if (selectedMenuMode == MENU_MODE_UPLOAD) {
+        showUpload();        
+    }
+}
+void EditorHud::showUpload(){
+    Node* layer = CSLoader::createNode("UploadMap.csb");
+    this->addChild(layer, 113);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    setAsPopup(layer);
+    layer->setName("UploadMap");
+    ddiyong(layer);
+    
+    Text* lbl = (Text*)layer->getChildByName("lblName");
+    LM->setLocalizedString(lbl, "name");
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedString(lbl, "map desc");
+    
+    Button* btn = (Button*)layer->getChildByName("btnUpload");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onUploadMapClick, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "upload");
+    
+    btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
+}
+void EditorHud::onUploadMapClick(){
+    Node* layer = this->getChildByName("UploadMap");
+    TextField* tf = (TextField*)layer->getChildByName("tfName");
+    
+    if(tf->getString().size() <= 0){
+        showInstanceMessage(LM->getText("input name"));
+        return;
+    }
+    else if(world->enemyArray.size() <= 0){
+        showInstanceMessage(LM->getText("no enemy exist"));
+        return;
+    }
+    else if(tf->getString().find(',') != std::string::npos ||
+            tf->getString().find('_') != std::string::npos ||
+            tf->getString().find('/') != std::string::npos){
+        showInstanceMessage(strmake("%s ( _ , / )", LM->getText("do not use special character").c_str()));
+        return;
+    }
+    showIndicator();
+    
+    uploadHandleState = NETWORK_HANDLE_STATE_REQUESTED;
+    isUploadRequested = true;
+    
+    GM->loadMapData = UDGetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), "");
+    BSM->uploadMap(tf->getString(), GM->loadMapData.c_str());
+}
+void EditorHud::playMap(){
+    GM->loadMapData = UDGetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), "");
+    this->removeListener();
+    GM->nextScene = STAGE_FIELD;
+    auto scene = HelloWorld::scene(STAGE_CUSTOM, false);
+    Director::getInstance()->replaceScene(scene);
+}
+void EditorHud::loadMap(){
+    GM->loadMapData = UDGetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), "");
+    this->removeListener();
+    auto scene = EditorWorld::scene(0, false);
+    Director::getInstance()->replaceScene(scene);
+}
+void EditorHud::onMenuModeClick(Ref* ref){
+    BTN_FROM_REF
+    
+    Node* layer = this->getChildByName("editMenu");
+    selectedMenuMode = btn->getTag();
+    
+    layer->getChildByName("btnSave")->setColor(selectedMenuMode == MENU_MODE_SAVE?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnLoad")->setColor(selectedMenuMode == MENU_MODE_LOAD?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnPlay")->setColor(selectedMenuMode == MENU_MODE_PLAY?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnUpload")->setColor(selectedMenuMode == MENU_MODE_UPLOAD?Color3B::GREEN:Color3B::WHITE);
+    
+    layer->getChildByName("imgSlotBackground")->runAction(Sequence::create(EaseOut::create(RotateBy::create(0.1f, 10), 2), RotateBy::create(0.1f, -20), EaseOut::create(RotateBy::create(0.1f, 10), 2), NULL));
+    Text* lbl = (Text*)layer->getChildByName("lblTitle");
+    if (selectedMenuMode == MENU_MODE_SAVE) {
+        LM->setLocalizedString(lbl, "save");
+    }else if (selectedMenuMode == MENU_MODE_LOAD) {
+        LM->setLocalizedString(lbl, "load");
+    }else if (selectedMenuMode == MENU_MODE_PLAY) {
+        LM->setLocalizedString(lbl, "play");
+    }else if (selectedMenuMode == MENU_MODE_UPLOAD) {
+        LM->setLocalizedString(lbl, "upload");
+    }
+}
+
 void EditorHud::onSaveClick(){
     std::string str = tfMapName->getString();
     log("map name: %s", str.c_str());
@@ -713,9 +927,6 @@ void EditorHud::onSelectClick(){
         
     }
 }
-void EditorHud::showMenus(){
-    
-}
 void EditorHud::onResetClick(){
     showABDialog(LM->getText("reset ask"), LM->getText("yes"), LM->getText("no"), DIALOG_TYPE_AB_RESET);
     
@@ -901,9 +1112,6 @@ void EditorHud::onStartClick(){
     }
     if(mapLayer != nullptr){
         return;
-    }
-    if(firstPopup == nullptr && !inputShouldWait && menuLayer == nullptr && GM->currentStageIndex == STAGE_FIELD && firstPopup == nullptr){
-        showMenus();
     }
 }
 
@@ -1695,7 +1903,7 @@ void EditorHud::showShopLayer(std::string shopName)
     world->isInEvent = false;
     world->pauseLayer();
     Node* layer = CSLoader::createNode("SmithShop.csb");
-    this->addChild(layer, 5);
+    this->addChild(layer, 5555);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setTag(SELECT_DIALOG_GO_TO_NPC);
     setAsPopup(layer);
@@ -1840,7 +2048,7 @@ void EditorHud::selectShopItem(Ref* ref){
 }
 void EditorHud::showBuyLayer(Button* btn, std::string itemName){
     Node* layer = CSLoader::createNode("ItemBuyPopup.csb");
-    this->addChild(layer, 5);
+    this->addChild(layer, 5555);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setTag(SELECT_DIALOG_GO_TO_NPC);
     setAsPopup(layer);
@@ -2501,106 +2709,6 @@ void EditorHud::onDisposableMessageEvent(float dt){
     isReadyToShowNextTalk = false;
     endEvent();
 }
-void EditorHud::showEvent(int index, bool isQuest){
-    eventIndex = index;
-    isThisEventQuest = isQuest;
-    isReadyToShowNextTalk = true;
-    talkIndex = 0;// test
-    
-    talkState = TALK_STATE_ASKING;
-    this->schedule(schedule_selector(EditorHud::onEvent));
-    
-    showBlackTopAndBottom();
-}
-void EditorHud::onEvent(float dt){
-    if(!isReadyToShowNextTalk){
-        return;
-    }
-    if(sptTalkBox != nullptr){
-        sptTalkBox->removeFromParent();
-        sptTalkBox = nullptr;
-    }
-    isReadyToShowNextTalk = false;
-    //    EditorWorld* stage = world;
-    std::string text;
-    std::string key;
-    if(talkState == TALK_STATE_ASKING){
-        key = StringUtils::format("event%d_%d", eventIndex,talkIndex);
-        text = LanguageManager::getInstance()->getText(key.c_str());
-        if(text.size() == 0 || text.compare(key) == 0){
-            std::string key = StringUtils::format("event%d_option_0", eventIndex);
-            std::string text = LanguageManager::getInstance()->getText(key.c_str());
-            if(text.size() == 0 || true){
-                endEvent();
-            }else{
-                talkState = TALK_STATE_QUESTIONING;
-                isReadyToShowNextTalk = true;
-                onEvent(dt);
-            }
-            
-        }else if(text.find("adin>") != std::string::npos){
-            world->showTalkText(text.substr(5), WHOSE_TALK_HERO);
-        }else if(text.find(">") != std::string::npos){
-            world->showTalkText(text.substr((int)text.find(">") + 1), WHOSE_TALK_NPC, text.substr(0, (int)text.find(">")));
-        }
-        //        else if(text.find("fairy>") != std::string::npos){
-        //            world->showTalkText(text.substr(6), WHOSE_TALK_NPC);
-        //        }else if(text.find("fairy>") != std::string::npos){
-        //            world->showTalkText(text.substr(5), WHOSE_TALK_HERO);
-        //        }
-    }else if(talkState == TALK_STATE_QUESTIONING){
-        talkIndex = 0;
-        showOptions(LanguageManager::getInstance()->getText(StringUtils::format("event%d_option_0", eventIndex).c_str()),  LanguageManager::getInstance()->getText(StringUtils::format("event%d_option_1", eventIndex).c_str()));
-    }else if(talkState == TALK_STATE_CHOOSED){
-        std::string key = StringUtils::format("event%d_choose_%d_%d", eventIndex, answer,talkIndex);
-        text = LanguageManager::getInstance()->getText(key.c_str());
-        if(text.size() == 0){
-            endEvent();
-        }else if(text.find("system>") != std::string::npos){
-            text = text.substr(6);
-            if(text.find("ending") != std::string::npos){
-                int endingNumber = Value(text.substr(6)).asInt();
-                showEnding(endingNumber);
-            }
-        }else if(text.find("adin>") != std::string::npos){
-            world->showTalkText(text.substr(5), WHOSE_TALK_HERO);
-        }else if(text.find(">") != std::string::npos){
-            world->showTalkText(text.substr((int)text.find(">") + 1), WHOSE_TALK_NPC);
-        }
-    }
-    talkIndex++;
-}
-void EditorHud::showQuestComplete(int index){
-    questIndex = index;
-    isReadyToShowNextTalk = true;
-    talkIndex = 0;
-    world->isInEvent = true;
-    world->claimQuestReward();
-    world->onQuestComplete();
-    this->schedule(schedule_selector(EditorHud::onQuestCompleteEvent));
-    showBlackTopAndBottom();
-}
-void EditorHud::onQuestCompleteEvent(float dt){
-    if(!isReadyToShowNextTalk){
-        return;
-    }
-    if(sptTalkBox != nullptr){
-        sptTalkBox->removeFromParent();
-        sptTalkBox = nullptr;
-    }
-    isReadyToShowNextTalk = false;
-    std::string text;
-    std::string key = StringUtils::format("event%d_after_%d", questIndex, talkIndex);
-    text = LanguageManager::getInstance()->getText(key.c_str());
-    if(text.size() == 0){
-        endEvent();
-    }else if(text.find("adin>") != std::string::npos){
-        world->showTalkText(text.substr(5), WHOSE_TALK_HERO);
-    }else if(text.find(">") != std::string::npos){
-        world->showTalkText(text.substr((int)text.find(">") + 1), WHOSE_TALK_NPC);
-    }
-    talkIndex++;
-}
 void EditorHud::showBlackTopAndBottom(){
     int frameWidth = size.width+20;
     int barHeight = 200;
@@ -2630,7 +2738,7 @@ void EditorHud::showBlackTopAndBottom(){
         //        lblSkip->enableShadow();
         blackBottom->addChild(lblSkip);
         lblSkip->setPosition(Vec2(blackBottom->getContentSize().width - lblSkip->getContentSize().width*lblSkip->getScale()/2 - 60,blackBottom->getContentSize().height/2 + lblSkip->getContentSize().height*lblSkip->getScale()/2 - 50));
-        lblSkip->addClickEventListener(CC_CALLBACK_0(EditorHud::onSkipClick, this));
+        
         lblSkip->setTouchEnabled(true);
         lblSkip->setOpacity(0);
         PPLabel* lbl = PPLabel::create("SKIP", 80);
@@ -2640,119 +2748,12 @@ void EditorHud::showBlackTopAndBottom(){
     
     hideBtns();
 }
-void EditorHud::onSkipClick(){
-    if(isSceneChanging)return;
-    isSceneChanging = true;
-    
-    GM->nextScene = STAGE_FIELD;
-    auto scene = Scene::create();
-    Title* title = Title::create();
-    scene->addChild(title);
-    int stage = world->stageIndex;
-    Node* temp = Node::create();
-    temp->setTag(stage);
-    title->showStageReady(stage);
-    this->removeListener();
-    Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
-}
 void EditorHud::hideBlackTopAndBottom(){
     if(blackTop == nullptr) return;
     blackTop->runAction(Sequence::create(MoveBy::create(1, Vec2(0, 80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackTop)), nullptr));
     blackBottom->runAction(Sequence::create(MoveBy::create(1, Vec2(0, -80)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, blackBottom)), nullptr));
     showBtns();
 }
-void EditorHud::updateTalkBoxRope(float dt){
-    if(sptTalkBox->getContentSize().height < 257){
-        return;
-    }
-    // rope 6, 5
-    int ropeWidth = 5*4;
-    int ropeheight = 4*4;
-    int x = 0;
-    int y = 0;
-    // horizontal
-    for(int i = 0; i < sptTalkBox->getContentSize().width + ropeWidth;i+=ropeWidth){
-        bool topExist = false;
-        bool bottomExist = false;
-        x = i;
-        Vec2 topPos = Vec2(x, sptTalkBox->getContentSize().height);
-        Vec2 bottomPos = Vec2(x, 0);
-        for (auto rope : sptTalkBox->getChildren()) {
-            if(rope->getTag() != 7){
-                continue;
-            }
-            if(rope->getBoundingBox().containsPoint(topPos)){
-                topExist = true;
-            }else if(rope->getBoundingBox().containsPoint(bottomPos)){
-                bottomExist = true;
-            }
-        }
-        if(!topExist){
-            Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
-            sptTalkBox->addChild(sptRope);
-            sptRope->setPosition(topPos);
-            sptRope->setScale(4);
-            sptRope->setTag(7);
-        }
-        if(!bottomExist){
-            Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
-            sptTalkBox->addChild(sptRope);
-            sptRope->setPosition(bottomPos);
-            sptRope->setScale(4);
-            sptRope->setTag(7);
-        }
-    }
-    // vertical
-    //    for(int i = 0; i < sptTalkBox->getContentSize().height;i+=ropeheight){
-    //        bool leftExist = false;
-    //        bool rightExist = false;
-    //        y = i;
-    //        Vec2 leftPos = Vec2(0, y);
-    //        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
-    //        for (auto rope : sptTalkBox->getChildren()) {
-    //            if(rope->getBoundingBox().containsPoint(leftPos)){
-    //                leftExist = true;
-    //            }
-    //            if(rope->getBoundingBox().containsPoint(rightPos)){
-    //                rightExist = true;
-    //            }
-    //        }
-    //        if(!leftExist){
-    //            Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
-    //            sptTalkBox->addChild(sptRope);
-    //            sptRope->setPosition(leftPos);
-    //            sptRope->setScale(4);
-    //        }
-    //        if(!rightExist){
-    //            Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
-    //            sptTalkBox->addChild(sptRope);
-    //            sptRope->setPosition(rightPos);
-    //            sptRope->setScale(4);
-    //        }
-    //    }
-}
-void EditorHud::onTalkBoxResizeDone(){
-    this->unschedule(schedule_selector(EditorHud::updateTalkBoxRope));
-    log("onTalkBoxResizeDone");
-    sptTalkBox->getChildByTag(0)->setVisible(true);
-    sptTalkBox->getChildByTag(1)->setVisible(true);
-    inputShouldWait = false;
-    //    // vertical
-    //    for(int i = 0; i < sptTalkBox->getContentSize().height;i+=ropeheight){
-    //        int y = i;
-    //        Vec2 leftPos = Vec2(0, y);
-    //        Vec2 rightPos = Vec2(sptTalkBox->getContentSize().width, y);
-    //        Sprite* sptRope = Sprite::createWithSpriteFrameName("ropeParticle.png");
-    //        sptTalkBox->addChild(sptRope);
-    //        sptRope->setPosition(rightPos);
-    //        sptRope->setScale(4);
-    //    }
-}
-
-void EditorHud::readyToShowNextTalk(){
-    isReadyToShowNextTalk = true;
-}
-
 void EditorHud::onLeftRelease(){
     isCursorReadyToMove = true;
 }
@@ -2990,7 +2991,7 @@ void EditorHud::ddiyong(Node* node){
 void EditorHud::showQuestDoneAlert(){
     world->pauseLayer();
     Node* layer = CSLoader::createNode("SelectDialog.csb");
-    this->addChild(layer, 5);
+    this->addChild(layer, 11);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     layer->setTag(SELECT_DIALOG_GO_TO_NPC);
     setAsPopup(layer);
@@ -3023,7 +3024,7 @@ void EditorHud::onAClick(){
             answer = 0;
             talkState = TALK_STATE_CHOOSED;
             talkIndex = 0;
-            sptTalkBox->getChildByTag(0)->runAction(Sequence::create(Blink::create(0.8, 4), DelayTime::create(1),CallFunc::create(CC_CALLBACK_0(EditorHud::readyToShowNextTalk, this)), NULL));
+            
             world->setQuest();
         }else{
             if(stage->imgTalkBox != nullptr && stage->imgTalkBox->getChildByName("TOUCH") == nullptr){
@@ -3132,7 +3133,7 @@ int EditorHud::getInventoryTypeForItemType(int itemType){
 }
 void EditorHud::showGoToNPC(){
     Node* layer = CSLoader::createNode("MoveToNPC.csb");
-    this->addChild(layer, 5);
+    this->addChild(layer, 11);
     layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
     setAsPopup(layer);
     ddiyong(layer);
@@ -3181,9 +3182,9 @@ void EditorHud::selectSelectDialog(float dt){
     }
 }
 void EditorHud::endEvent(){
-    this->unschedule(schedule_selector(EditorHud::onEvent));
+    
     this->unschedule(schedule_selector(EditorHud::onDisposableMessageEvent));
-    this->unschedule(schedule_selector(EditorHud::onQuestCompleteEvent));
+    
     hideBlackTopAndBottom();
     world->endEvent();
     if(isThisEventQuest){
@@ -3195,7 +3196,7 @@ void EditorHud::endEvent(){
         sptTalkBox = nullptr;
     }
     
-    onSkipClick();
+    
 }
 void EditorHud::onBClick(){
     //    world->addHeroExp(0, 100); // test
@@ -3216,13 +3217,13 @@ void EditorHud::onBClick(){
             }else{
                 talkState = TALK_STATE_QUESTIONING;
                 isReadyToShowNextTalk = true;
-                onEvent(0);
+                
             }
         }else if(talkState == TALK_STATE_QUESTIONING){
             answer = 1;
             talkState = TALK_STATE_CHOOSED;
             talkIndex = 0;
-            sptTalkBox->getChildByTag(1)->runAction(Sequence::create(Blink::create(0.8, 4), DelayTime::create(1),CallFunc::create(CC_CALLBACK_0(EditorHud::readyToShowNextTalk, this)), NULL));
+            
         }else{//} if(talkState == TALK_STATE_CHOOSED){
             endEvent();
         }
@@ -3271,42 +3272,6 @@ void EditorHud::onBClick(){
     }
 }
 
-void EditorHud::showOptions(std::string option0, std::string option1){
-    sptTalkBox = Sprite::createWithSpriteFrameName("whiteRect.png");
-    this->addChild(sptTalkBox, 6);
-    sptTalkBox->setPosition(Vec2(size.width/2, size.height/2 + 100));
-    //    sptTalkBox->setScale(1);
-    //    sptTalkBox->setContentSize(cocos2d::Size(640, 257));
-    sptTalkBox->setContentSize(cocos2d::Size(10, 10));
-    int ropeWidth = 5*4;
-    int ropeheight = 4*4;
-    int x = 0;
-    int y = 0;
-    
-    float height = 257;
-    float scale = 0.3f;
-    Label* lblOption0 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("A. %s", option0.c_str()).c_str(), Color4B(78, 78, 78, 255));
-    sptTalkBox->addChild(lblOption0);
-    lblOption0->setPosition(Vec2(320, height*4/5));
-    lblOption0->setScale(scale);
-    lblOption0->setTag(0);
-    lblOption0->setVisible(false);
-    lblOption0->setWidth(600/scale);
-    
-    Label* lblOption1 = LanguageManager::getInstance()->getLocalizedLabel(StringUtils::format("B. %s", option1.c_str()).c_str(), Color4B(78, 78, 78, 255));
-    sptTalkBox->addChild(lblOption1);
-    lblOption1->setPosition(Vec2(320, height*2/5));
-    lblOption1->setVisible(false);
-    lblOption1->setTag(1);
-    lblOption1->setScale(scale);
-    lblOption1->setWidth(600/scale);
-    
-    sptTalkBox->runAction(Sequence::create(ResizeTo::create(0.2f, cocos2d::Size(8, 257)), ResizeTo::create(0.5f, cocos2d::Size(640, height)), CallFunc::create(CC_CALLBACK_0(EditorHud::onTalkBoxResizeDone, this)), nullptr));
-    inputShouldWait = true;
-    //    sptTalkBox->runAction(Sequence::create(ScaleTo::create(0.2f, 0.1f, 1),ScaleTo::create(0.5f, 1), CallFunc::create(CC_CALLBACK_0(EditorHud::onTalkBoxResizeDone, this)), nullptr));
-    
-    this->schedule(schedule_selector(EditorHud::updateTalkBoxRope));
-}
 
 void EditorHud::showEnding(int index){
     blackTop->setVisible(false);
@@ -3443,17 +3408,6 @@ void EditorHud::updateEnding(float dt){
             nextY += childHeight + padding;
         }
     }
-}
-PPLabel* EditorHud::showInstanceMessage(std::string msg){
-    this->removeChildByTag(77);
-    PPLabel* lbl = PPLabel::create(msg, 60, Color3B::WHITE, false, false, TextHAlignment::CENTER, true);
-    this->addChild(lbl, 200);
-    lbl->setTag(77);
-    lbl->setPosition(Vec2(size.width/2, -TILE_SIZE/2));
-    float dur = 0.3f;
-    float distanceToMove = 360;
-    lbl->runAction(Sequence::create(MoveBy::create(dur, Vec2(0, distanceToMove)), DelayTime::create(2), MoveBy::create(dur, Vec2(0, -distanceToMove)), CallFunc::create(CC_CALLBACK_0(PPLabel::removeFromParent, lbl)), nullptr));
-    return lbl;
 }
 //bool EditorHud::addItemToInventory(std::string name){
 //    int count = getItemCountInInventory();
@@ -4710,9 +4664,22 @@ void EditorHud::showPVP(){
     
 }
 void EditorHud::oneSecUpdate(float dt){
-    
+//    playMap(); // test
+    if(uploadHandleState == NETWORK_HANDLE_STATE_REQUESTED){
+        if (BSM->uploadState >= 0) {
+            hideIndicator();
+            if (BSM->uploadState == 2) { // success
+                closePopup();
+                showInstanceMessage(LM->getText("success"));
+            }else if (BSM->uploadState == 3) { // exist
+                showInstanceMessage(LM->getText("same name exist"));
+            }else{ // fail
+                
+            }
+            BSM->uploadState = -1; // reset state
+        }
+    }
 }
-
 
 void EditorHud::onPotSoulMoveDone(){
     Node* counter = this->getChildByName("potCounter");
@@ -5014,29 +4981,29 @@ void EditorHud::updateResultPopup(float dt){
 
 void EditorHud::onOkFromWinPopup(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
-    btn->setEnabled(false);
-    
-    GM->playSoundEffect(SOUND_PAPER_FLIP);
-    auto scene = Scene::create();
-    Title* title = Title::create();
-    scene->addChild(title);
-    if (!world->isGameOver) {
-        int stage = world->stageIndex;
-        int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-        if(clearStage < stage){
-            UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
-        }
-        stage++;
-        if (stage < 13) { // test  5 for google indie festival 13(12 + bonus) for launch
-            Node* temp = Node::create();
-            temp->setTag(stage);
-            title->onStageClick(temp);
-        }else{
-            // show ending
-        }
-    }
-    this->removeListener();
-    Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
+//    btn->setEnabled(false);
+//
+//    GM->playSoundEffect(SOUND_PAPER_FLIP);
+//    auto scene = Scene::create();
+//    Title* title = Title::create();
+//    scene->addChild(title);
+//    if (!world->isGameOver) {
+//        int stage = world->stageIndex;
+//        int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
+//        if(clearStage < stage){
+//            UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+//        }
+//        stage++;
+//        if (stage < 13) { // test  5 for google indie festival 13(12 + bonus) for launch
+//            Node* temp = Node::create();
+//            temp->setTag(stage);
+//            title->onStageClick(temp);
+//        }else{
+//            // show ending
+//        }
+//    }
+//    this->removeListener();
+//    Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
 }
 void EditorHud::arrangeMenu(cocos2d::Vec2 pos){
     for (int i = 0; i < 6; i++) {
@@ -5051,6 +5018,165 @@ void EditorHud::arrangeMenu(cocos2d::Vec2 pos){
     }
     
 }
+void EditorHud::showEditDetail(){
+    
+    Node* layer = CSLoader::createNode("EditDetail.csb");
+    this->addChild(layer, 5);
+    layer->setName("editDetail");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    setAsPopup(layer);
+    ddiyong(layer);
+    Sprite* spt = world->getSpriteForIcon(selectedUnitForEditDetail->unitType);
+    layer->addChild(spt);
+    spt->setPosition(layer->getChildByName("imgIcon")->getPosition());
+    Button* btn = (Button*)layer->getChildByName("btnClose");
+    btn->addClickEventListener(CC_CALLBACK_0(EditorHud::closePopup, this));
+    
+    Text* lbl = (Text*)layer->getChildByName("lblName");
+    lbl->setString(LM->getText(world->getUnitName(selectedUnitForEditDetail->unitType)));
+    if (selectedUnitGroup.size() > 0) {
+        lbl->setString(strmake("%s(%d)", lbl->getString().c_str(), (int)selectedUnitGroup.size()));
+    }
+    btn = (Button*)layer->getChildByName("btnHero");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailSideClick, this));
+    btn->setTag(0);
+//        LM->setLocalizedString((Text*)btn->getChildByName("lblk"), "hero");
+    btn = (Button*)layer->getChildByName("btnAlly");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailSideClick, this));
+    btn->setTag(1);
+    btn = (Button*)layer->getChildByName("btnEnemy");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailSideClick, this));
+    btn->setTag(2);
+    
+    Node* pnlUnit = layer->getChildByName("pnlUnit");
+    btn = (Button*)pnlUnit->getChildByName("btnStay");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailEnemyActionClick, this));
+    btn->setTag(0);
+    btn = (Button*)pnlUnit->getChildByName("btnAttack");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailEnemyActionClick, this));
+    btn->setTag(1);
+    
+    Node* pnlAttack = pnlUnit->getChildByName("pnlAttack");
+    btn = (Button*)pnlAttack->getChildByName("btnDown");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailEnemyActionTimeClick, this));
+    btn->setTag(0);
+    btn = (Button*)pnlAttack->getChildByName("btnUp");
+    btn->addClickEventListener(CC_CALLBACK_1(EditorHud::onDetailEnemyActionTimeClick, this));
+    btn->setTag(1);
+    
+    layer->getChildByName("btnHero")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_HERO?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnAlly")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_READY_HERO?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnEnemy")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_ENEMY?Color3B::GREEN:Color3B::WHITE);
+    if(selectedUnitForEditDetail->alliSide == WHICH_SIDE_ENEMY){
+        onDetailSideClick(layer->getChildByName("btnEnemy"));
+        
+        
+        Text* lbl = (Text*)layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->getChildByName("lblMin");
+        int min = selectedUnitForEditDetail->scheduledAttackTime;
+        lbl->setString(Value(min).asString());
+        
+    }
+}
+void EditorHud::onDetailSideClick(Ref* ref){
+    BTN_FROM_REF
+    Node* layer = this->getChildByName("editDetail");
+    int side = -1;
+    if (btn->getTag() == 0) {
+        side = WHICH_SIDE_HERO;
+    }else if (btn->getTag() == 1) {
+        side = WHICH_SIDE_READY_HERO;
+    }else if (btn->getTag() == 2) {
+        side = WHICH_SIDE_ENEMY;
+    }
+    changeAlliSide( (EnemyBase*)selectedUnitForEditDetail, side);
+    for(auto unit : selectedUnitGroup){
+        changeAlliSide( (EnemyBase*)unit, side);
+    }
+    
+    layer->getChildByName("btnHero")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_HERO?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnAlly")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_READY_HERO?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("btnEnemy")->setColor(selectedUnitForEditDetail->alliSide == WHICH_SIDE_ENEMY?Color3B::GREEN:Color3B::WHITE);
+    world->updateMiniMapForMoving();
+    world->updateMiniMapForNonMoving();
+}
+void EditorHud::changeAlliSide(EnemyBase* unit, int to){
+    if (unit->alliSide == WHICH_SIDE_HERO) {
+        world->heroArray.eraseObject(unit);
+    }else if (unit->alliSide == WHICH_SIDE_READY_HERO) {
+        world->readyHeroArray.eraseObject(unit);
+    }else if (unit->alliSide == WHICH_SIDE_ENEMY) {
+        world->enemyArray.eraseObject(unit);
+    }
+    Node* layer = this->getChildByName("editDetail");
+    if (to == WHICH_SIDE_HERO) {
+        world->heroArray.pushBack(unit);
+        if(layer){
+            layer->getChildByName("pnlUnit")->setVisible(false);
+        }
+    }else if (to == WHICH_SIDE_READY_HERO) {
+        world->readyHeroArray.pushBack(unit);
+        if (layer) {
+            layer->getChildByName("pnlUnit")->setVisible(false);
+        }
+    }else if (to == WHICH_SIDE_ENEMY) {
+        world->enemyArray.pushBack(unit);
+        if (layer) {
+            layer->getChildByName("pnlUnit")->setVisible(true);
+            layer->getChildByName("pnlUnit")->getChildByName("btnStay")->setColor(unit->unitAct == UNIT_ACT_ATTACK?Color3B::WHITE:Color3B::GREEN);
+            layer->getChildByName("pnlUnit")->getChildByName("btnAttack")->setColor(unit->unitAct == UNIT_ACT_ATTACK?Color3B::GREEN:Color3B::WHITE);
+            layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->setVisible(unit->unitAct == UNIT_ACT_ATTACK);
+        }
+    }
+    unit->alliSide = to;
+}
+void EditorHud::onDetailEnemyActionClick(Ref* ref){
+    BTN_FROM_REF
+    Node* layer = this->getChildByName("editDetail");
+    int unitAct = -1;
+    if(btn->getTag() == 0){
+        unitAct = UNIT_ACT_NONE;
+        layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->setVisible(false);
+    }else if(btn->getTag() == 1){
+        unitAct = UNIT_ACT_ATTACK;
+        layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->setVisible(true);
+        if(selectedUnitForEditDetail->scheduledAttackTime < 0){
+            selectedUnitForEditDetail->scheduledAttackTime = 1;
+        }
+        for(auto unit : selectedUnitGroup){
+            if(unit->scheduledAttackTime < 0){
+                unit->scheduledAttackTime = 1;
+            }
+        }
+    }
+    selectedUnitForEditDetail->unitAct = unitAct;
+    for(auto unit : selectedUnitGroup){
+        unit->unitAct = UNIT_ACT_ATTACK;
+    }
+    
+    layer->getChildByName("pnlUnit")->getChildByName("btnStay")->setColor(selectedUnitForEditDetail->unitAct == UNIT_ACT_ATTACK?Color3B::WHITE:Color3B::GREEN);
+    layer->getChildByName("pnlUnit")->getChildByName("btnAttack")->setColor(selectedUnitForEditDetail->unitAct == UNIT_ACT_ATTACK?Color3B::GREEN:Color3B::WHITE);
+    layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->setVisible(selectedUnitForEditDetail->unitAct == UNIT_ACT_ATTACK);
+}
+void EditorHud::onDetailEnemyActionTimeClick(Ref* ref){
+    BTN_FROM_REF
+    Node* layer = this->getChildByName("editDetail");
+    Text* lbl = (Text*)layer->getChildByName("pnlUnit")->getChildByName("pnlAttack")->getChildByName("lblMin");
+    int min = Value(lbl->getString()).asInt();
+    if(btn->getTag() == 0){
+        min--;
+    }else if(btn->getTag() == 1){
+        min++;
+    }
+    if (min <= 0) {
+        min = 0;
+    }
+    selectedUnitForEditDetail->scheduledAttackTime = min;
+    for(auto unit : selectedUnitGroup){
+        unit->scheduledAttackTime = min;
+    }
+    lbl->setString(Value(min).asString());
+}
 void EditorHud::showDetailPopup(cocos2d::Vec2 pos){
     Vec2 coordinate = world->getCoordinateFromPosition(pos);
     cocos2d::Rect rect;
@@ -5061,7 +5187,7 @@ void EditorHud::showDetailPopup(cocos2d::Vec2 pos){
         }
     }
     
-    int clickedBrushType = world->placedArray[(int)coordinate.x][(int)coordinate.y];
+    int clickedBrushType = world->placedArray[(int)coordinate.y][(int)coordinate.x];
     if (clickedBrushType == BRUSH_TREE || clickedBrushType == BRUSH_MINE) {
         return;
     }
@@ -5218,6 +5344,10 @@ void EditorHud::doBrush(cocos2d::Vec2 pos){
         for(auto spt: world->spriteBatch->getChildren()){
             rect = spt->getBoundingBox();
             if(rect.containsPoint(pos)){
+//                int tag = spt->getTag();
+//                int y = tag/world->mapSizeWidth;
+//                int x = tag%world->mapSizeWidth;
+                
                 somethingClicked = true;
                 coordinate = Vec2(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
                 world->eraseTile(coordinate);
@@ -5227,6 +5357,214 @@ void EditorHud::doBrush(cocos2d::Vec2 pos){
             world->eraseTile(coordinate);
         }
     }
+}
+void EditorHud::showOptions(Vec2 pos, bool group){
+    Vec2 coordinate = world->getCoordinateFromPosition(pos);
+    cocos2d::Rect rect;
+    for(auto spt: world->spriteBatch->getChildren()){
+        rect = spt->getBoundingBox();
+        if(rect.containsPoint(pos)){
+            coordinate = Vec2(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
+            break;
+        }
+    }
+    
+    int clickedBrushType = world->placedArray[(int)coordinate.y][(int)coordinate.x];
+    
+    Movable* selectedUnit = nullptr;
+    for(auto unit: world->spriteBatch->getChildren()){
+        rect = unit->getBoundingBox();
+        if(rect.containsPoint(pos)){
+//            coordinate = Vec2(spt->getTag()%world->mapSizeWidth, spt->getTag()/world->mapSizeWidth);
+            selectedUnit = (Movable*)unit;
+                        break;
+        }
+//        if(unit->getTag() == coordinate.x + coordinate.y*world->mapSizeWidth){
+//            selectedUnit = (Movable*)unit;
+//            break;
+//        }
+    }
+    
+    if (selectedUnit == nullptr) {
+        hideOptions();
+        if (selectedUnitForEditDetail != nullptr) {
+            showSelectedCircle(false);
+        }
+        selectedUnitForEditDetail = nullptr;
+        return;
+    }
+    
+    selectedUnitForEditDetail = selectedUnit;
+    selectedUnitGroup.clear();
+    if (group) {
+        if (selectedUnit->alliSide == WHICH_SIDE_HERO) {
+            for (auto unit : world->heroArray) {
+                if (unit->unitType == selectedUnit->unitType) {
+                    selectedUnitGroup.pushBack(unit);
+                }
+            }
+        }else if (selectedUnit->alliSide == WHICH_SIDE_ENEMY) {
+            for (auto unit : world->enemyArray) {
+                if (unit->unitType == selectedUnit->unitType) {
+                    selectedUnitGroup.pushBack(unit);
+                }
+            }
+        }
+    }
+    showSelectedCircle(true);
+    if (clickedBrushType == BRUSH_TREE || clickedBrushType == BRUSH_MINE) {
+        return;
+    }
+    if (selectedUnit->alliSide == WHICH_SIDE_MUTUAL) {
+        hideOptions();
+        showSelectedCircle(true);
+        return;
+    }
+    Button* btn = (Button*)this->getChildByName("btnDetail");
+    if(btn == nullptr){
+        btn = Button::create("btnInfo.png");
+        btn->setName("btnDetail");
+        btn->addClickEventListener(CC_CALLBACK_0(EditorHud::showEditDetail, this));
+        this->addChild(btn);
+    }
+    btn->stopAllActions();
+    btn->setPosition(Vec2(size.width/2, -btn->getContentSize().height));
+    float gap = 40;
+    btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2 - btn->getContentSize().width/2 - gap/2, btn->getContentSize().height/2 + gap/2)));
+    
+    btn = (Button*)this->getChildByName("btnDuplicate");
+    if(btn == nullptr){
+        btn = Button::create("btnBlack.png");
+        btn->setName("btnDuplicate");
+        Sprite* spt = Sprite::create("manIcon.png");
+        btn->addChild(spt);
+        spt->setPosition(Vec2(143, 128));
+        spt = Sprite::create("manIcon.png");
+        btn->addChild(spt);
+        spt->setPosition(Vec2(123, 128));
+        btn->addClickEventListener(CC_CALLBACK_0(EditorHud::onDuplicateClick, this));
+        this->addChild(btn);
+    }
+    btn->stopAllActions();
+    btn->setPosition(Vec2(size.width/2, -btn->getContentSize().height));
+    
+    if (selectedUnit->isBuilding) {
+        return;
+    }
+    if (!group) {
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2 + btn->getContentSize().width/2 + gap/2, btn->getContentSize().height/2 + gap/2)));
+    }
+}
+void EditorHud::showSelectedCircle(bool show){
+    Sprite* sptSelectedCircle;
+    world->removeChildByName("sptSelectedCircle");
+    if(GM->isThisBuilding(selectedUnitForEditDetail->unitType)){
+        sptSelectedCircle = Sprite::createWithSpriteFrameName("selectedCircleBuilding.png");
+        sptSelectedCircle->setScale(2);
+    }else{
+        sptSelectedCircle = Sprite::createWithSpriteFrameName("selectedCircle.png");
+    }
+    world->addChild(sptSelectedCircle);
+    sptSelectedCircle->setPosition(selectedUnitForEditDetail->getPosition());
+    sptSelectedCircle->setName("sptSelectedCircle");
+    
+    // group
+    for(auto circle: circleListForSelectedGroup){
+        world->removeChild(circle);
+    }
+    circleListForSelectedGroup.clear();
+    for (auto unit : selectedUnitGroup) {
+        if(GM->isThisBuilding(unit->unitType)){
+            sptSelectedCircle = Sprite::createWithSpriteFrameName("selectedCircleBuilding.png");
+            sptSelectedCircle->setScale(2);
+        }else{
+            sptSelectedCircle = Sprite::createWithSpriteFrameName("selectedCircle.png");
+        }
+        world->addChild(sptSelectedCircle);
+        sptSelectedCircle->setPosition(unit->getPosition());
+        circleListForSelectedGroup.pushBack(sptSelectedCircle);
+    }
+}
+void EditorHud::hideOptions(){
+    world->removeChildByName("sptSelectedCircle");
+    Button* btn = (Button*)this->getChildByName("btnDetail");
+    if(btn != nullptr){
+        btn->stopAllActions();
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, -btn->getContentSize().height)));
+    }
+    btn = (Button*)this->getChildByName("btnDuplicate");
+    if(btn != nullptr){
+        btn->stopAllActions();
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, -btn->getContentSize().height)));
+    }
+}
+void EditorHud::onDuplicateClick(){
+    Vec2 originalCoordinate = world->getCoordinateFromPosition(selectedUnitForEditDetail->getPosition());
+    int startX = 0;
+    int max=0;
+    int x=startX;
+    int y=max;
+    int direction = -1;//0:E 1:S 2:W 3:N
+    bool changeDirection = false;
+    Vec2 coordinate;
+    do{
+        if (direction < 0 || (x == 0 && y == max)) {
+            y++;
+            x++;
+            max++;
+            if(direction < 0){
+                direction = 0;
+            }
+        }else if(direction == 0){
+            x++;
+            if(x > max){
+                changeDirection = true;
+            }
+        }else if(direction == 1){
+            y--;
+            if(y < -max){
+                changeDirection = true;
+            }
+        }else if(direction == 2){
+            x--;
+            if(x < -max){
+                changeDirection = true;
+            }
+        }else if(direction == 3){
+            y++;
+            if(y > max){
+                changeDirection = true;
+            }
+        }
+        if(changeDirection){
+            changeDirection = false;
+            if(direction == 0){
+                x--;
+                y--;
+            }else if(direction == 1){
+                x--;
+                y++;
+            }else if(direction == 2){
+                x++;
+                y++;
+            }else if(direction == 3){
+                x++;
+                y--;
+            }
+            direction++;
+            if(direction>3){
+                direction = 0;
+            }
+        }
+        coordinate = originalCoordinate + Vec2(x, y);
+    }while(world->placedArray[(int)coordinate.y][(int)coordinate.x] > 0);
+    
+//    Vec2 pos = world->getPositionFromTileCoordinate(coordinate.x, coordinate.y);
+//    world->createUnit(selectedUnitForEditDetail->unitType, selectedUnitForEditDetail->alliSide, selectedUnitForEditDetail->isBuilding?ITS_BUILDING:ITS_NOT_BUILDING, pos, selectedUnitForEditDetail->getName());
+    EnemyBase* unit = world->brushTile(world->placedArray[(int)originalCoordinate.y][(int)originalCoordinate.x], coordinate);
+    unit->unitAct = selectedUnitForEditDetail->unitAct;
+    unit->scheduledAttackTime = selectedUnitForEditDetail->scheduledAttackTime;
+    changeAlliSide(unit, selectedUnitForEditDetail->alliSide);
 }
 /*
  

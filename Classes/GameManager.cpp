@@ -1,10 +1,15 @@
 
 #include "GameManager.h"
 #include "LanguageManager.h"
-#include "SimpleAudioEngine.h"
+//#include "SimpleAudioEngine.h"
+#include "AudioEngine.h"
 #include "Location_Node_Class.h"
 #include "Node_Class.h"
 #include "BuggyServerManager.h"
+
+#include <algorithm>
+#include <cctype>
+#include <locale>
 //#include "StageClearLayer.h"
 //#include "StageSelectScene.h"
 //#include "ThemeSelectScene.h"
@@ -19,7 +24,8 @@
 
 //#include "NativeInterface.h"
 using namespace cocos2d;
-using namespace CocosDenshion;
+using namespace experimental;
+//using namespace CocosDenshion;
 
 GameManager* GameManager::m_mySingleton = NULL;
 
@@ -895,13 +901,14 @@ void GameManager::setMusicVolumn(float vol)
         value = percent/300.0f;
     }
     
-    CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(vol);
+//    CocosDenshion::SimpleAudioEngine::getInstance()->setBackgroundMusicVolume(vol);
     UserDefault::getInstance()->setFloatForKey(KEY_MUSIC_VOLUMN, vol);
+    AudioEngine::setVolume(currentBGM, vol);
 //    GameManager::getInstance()->saveCoin();
 }
 void GameManager::setSoundVolumn(float vol)
 {
-    CocosDenshion::SimpleAudioEngine::getInstance()->setEffectsVolume(vol);
+//    CocosDenshion::SimpleAudioEngine::getInstance()->setEffectsVolume(vol);
     UserDefault::getInstance()->setFloatForKey(KEY_SOUND_VOLUMN, vol);
 //    GameManager::getInstance()->saveCoin();
 }
@@ -928,32 +935,46 @@ float GameManager::getButtonSize()
 }
 float GameManager::getMusicVolumn()
 {
-    float value = 0;
-    float percent = SimpleAudioEngine::getInstance()->getBackgroundMusicVolume() * 100;
-    if(percent > 30){
-        value += 0.1;
-        value += (percent - 30)*0.9f/70;
-    }else{
-        value = percent/300.0f;
-    }
-    
-    return value;
+    float volume = UserDefault::getInstance()->getFloatForKey(KEY_MUSIC_VOLUMN, 1);
+    return volume;
+//    float value = 0;
+//    float percent = SimpleAudioEngine::getInstance()->getBackgroundMusicVolume() * 100;
+//    if(percent > 30){
+//        value += 0.1;
+//        value += (percent - 30)*0.9f/70;
+//    }else{
+//        value = percent/300.0f;
+//    }
+//
+//    return value;
 }
 float GameManager::getSoundVolumn(){
-    return SimpleAudioEngine::getInstance()->getEffectsVolume();
+//    return SimpleAudioEngine::getInstance()->getEffectsVolume();
+    return UserDefault::getInstance()->getFloatForKey(KEY_SOUND_VOLUMN, 1);;
 }
 bool GameManager::getNotificationOn(){
     return UserDefault::getInstance()->getBoolForKey(KEY_NOTIFICATION_ON, true);
 }
 void GameManager::preLoadAllSoundEffect(){
-    CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("att-sound1-2.wav");
-    CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("att-sound1-2.wav");
-    CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("att-sound1-3.wav");
-    CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("woodHitSmall.wav");
-    CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("woodHit.wav");
+    experimental::AudioEngine::preload("att-sound1-2.wav");
+    experimental::AudioEngine::preload("att-sound1-3.wav");
+    experimental::AudioEngine::preload("att-sound1-4.wav");
+    experimental::AudioEngine::preload("woodHitSmall.wav");
+    experimental::AudioEngine::preload("woodHit.wav");
+    experimental::AudioEngine::preload("DdalKack.wav");
+    experimental::AudioEngine::preload("cartoonyNagative.wav");
+    experimental::AudioEngine::preload("pencilShort.wav");
+    experimental::AudioEngine::preload("helicopter.mp3");
+    experimental::AudioEngine::preload("page-flip-1.wav");
+    experimental::AudioEngine::preload("explosionDoong.wav");
+    experimental::AudioEngine::preload("arrowShoot.mp3");
+    experimental::AudioEngine::preload("bensound-epic.mp3");
+    experimental::AudioEngine::preload("mayday.mp3");
 }
 void GameManager::stopSoundEffect(int sound){
-    CocosDenshion::SimpleAudioEngine::getInstance()->stopEffect(sustainSoundTag);
+
+    experimental::AudioEngine::stop(sustainSoundTag);
+//    CocosDenshion::SimpleAudioEngine::getInstance()->stopEffect(sustainSoundTag);
     /*switch(sound)
     {
         case SOUND_LASER_BUZZ:
@@ -983,7 +1004,10 @@ float GameManager::getSoundVolumnByDistance(Node* target, Node* source){
     return volumn;
 }
 float GameManager::getDistance(Node* target, Node* source){
-    return sqrtf(powf(target->getPositionX() - getPositionX(), 2) + powf(target->getPositionY() - getPositionY(), 2));
+    return getDistance(target->getPosition(), source->getPosition());
+}
+float GameManager::getDistance(Vec2 target, Vec2 source){
+    return sqrtf(powf(target.x - source.x, 2) + powf(target.y - source.y, 2));
 }
 void GameManager::playSoundEffect(int sound, float gain, float pan){
     if (sound == SOUND_BGM_DUAL || sound == SOUND_BGM_MAYDAY) {
@@ -1000,44 +1024,48 @@ void GameManager::playSoundEffect(int sound, float gain, float pan){
     switch(sound)
     {
         case SOUND_HIT:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect(strmake("att-sound1-%d.wav", rand()%3 + 2).c_str(), false, 1, 0, gain);
+            experimental::AudioEngine::play2d(strmake("att-sound1-%d.wav", rand()%3 + 2).c_str(), false);
             break;
         case SOUND_WOOD_HIT:
             if(rand()%2==0){
-                CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("woodHitSmall.wav", false, 1, 0, gain);
+                experimental::AudioEngine::play2d("woodHitSmall.wav", false);
             }else{
-                CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("woodHit.wav", false, 1, 0, gain);
+                experimental::AudioEngine::play2d("woodHit.wav", false);
             }
             
             break;
         case SOUND_DDALKACK:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("DdalKack.wav", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("DdalKack.wav", false);
             break;
         case SOUND_NAGATIVE:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("cartoonyNagative.wav", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("cartoonyNagative.wav", false);
             break;
         case SOUND_PENCIL_SHORT:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("pencilShort.wav", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("pencilShort.wav", false);
             break;
         case SOUND_HELICOPTER:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("helicopter.mp3", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("helicopter.mp3", false);
             break;
         case SOUND_PAPER_FLIP:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("page-flip-1.wav", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("page-flip-1.wav", false);
             break;
         case SOUND_EXPLOSION_MIDDLE:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("explosionDoong.wav", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("explosionDoong.wav", false);
             break;
         case SOUND_ARROW:
-            CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("arrowShoot.mp3", false, 1, 0, gain);
+            experimental::AudioEngine::play2d("arrowShoot.mp3", false);
             break;
         case SOUND_BGM_DUAL:
-            CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
-            CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("bensound-epic.mp3", true);
+            experimental::AudioEngine::stop(currentBGM);
+//            currentBGM = CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+            currentBGM = experimental::AudioEngine::play2d("bensound-epic.mp3", true);
+            AudioEngine::setVolume(currentBGM, getMusicVolumn());
             break;
         case SOUND_BGM_MAYDAY:
-            CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
-            CocosDenshion::SimpleAudioEngine::getInstance()->playBackgroundMusic("mayday.mp3", true);
+        experimental::AudioEngine::stop(currentBGM);
+//            CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+            currentBGM = experimental::AudioEngine::play2d("mayday.mp3", true);
+            AudioEngine::setVolume(currentBGM, getMusicVolumn());
             break;
 	}
 }
@@ -1557,7 +1585,8 @@ void GameManager::showInterstitialAds(){
     UserDefault::getInstance()->setIntegerForKey(KEY_ADS_COUNTER, count);
 }
 void GameManager::showVideo(int whichVideo){
-    CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+//    CocosDenshion::SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
+    AudioEngine::pause(currentBGM);
     videoIndex = whichVideo;
     isVideoButtonAvailable = false;
     this->runAction(Sequence::create(DelayTime::create(1), CallFunc::create(CC_CALLBACK_0(GameManager::enableVideoButton, this)), NULL));
@@ -1632,7 +1661,8 @@ void GameManager::showVideoDone(){
     }
     
 //    ((TitleLayer*)titleLayer)->showVideoDone();
-    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+//    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+    AudioEngine::resume(currentBGM);
 }
 bool GameManager::checkDataSecure(){
     int total = 0;
@@ -1704,7 +1734,8 @@ void GameManager::showVideoFailed(){
         getHudLayer()->videoFailed();
     }
 //    ((TitleLayer*)titleLayer)->showVideoFailed();
-    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+//    CocosDenshion::SimpleAudioEngine::getInstance()->resumeBackgroundMusic();
+    AudioEngine::resume(currentBGM);
 }
 void GameManager::clickAdsFailed(){
     
@@ -3915,6 +3946,12 @@ std::string GameManager::getSpineFileName(int unitType){
         return "salamander";
     }else if(unitType == UNIT_HERO_UNDINE){
         return "undine";
+    }else if(unitType == UNIT_HERO_CRAZY_WEREWOLF){
+        return "werewolf";
+    }else if(unitType == UNIT_HERO_CRAZY_LION){
+        return "lion";
+    }else if(unitType == UNIT_HERO_CRAZY_BEAR){
+        return "bear";
     }else if(unitType == UNIT_HERO_SANTA){
         return "santa";
     }else if(unitType == UNIT_HERO_RUDOLPH){
@@ -3945,12 +3982,36 @@ std::string GameManager::getSpineFileName(int unitType){
         return "parasite";
     }else if(unitType == UNIT_HERO_WATERMELON){
         return "watermelon";
+    }else if(unitType == UNIT_HERO_BABYMINO){
+        return "minobaby";
+    }else if(unitType == UNIT_HERO_MINO){
+        return "mino";
+    }else if(unitType == UNIT_HERO_KERBEROS){
+        return "kerberos";
+    }else if(unitType == UNIT_HERO_LAMIA){
+        return "lamia";
+    }else if(unitType == UNIT_HERO_CHUNJA){
+        return "chunja";
+    }else if(unitType == UNIT_HERO_GOLEM){
+        return "golem";
     }
     
     return "";
 }
+//게임 내 들어갈 캐릭터 일러스트 제작 요청입니다.
+//원본은 카툰 버전이고 요청하는 이미지는 정상체형(6~8등신)의 실사체 이미지입니다.
+//
+//1. 여검사
+//아래는 카툰 버전 이미지 링크입니다.
+//https://drive.google.com/file/d/1FB_G4w-YgiUAOLdTWxjR8tivnN7qv5yE/view?usp=sharing
+//
+//아래는 전에 메일로 보내드린 포인트 사용처 체크 엑셀파일입니다.
+//https://drive.google.com/file/d/10z_CclraSqNU6HvkXMx2QqeXH4wd02Is/view?usp=sharing
 std::string GameManager::getUnitName(int index){
-    if(index == UNIT_CASTLE){
+//    log("get unit name: %d", index);
+    if(index == UNIT_CASTLE ||
+       index == UNIT_ZOMBIE_CASTLE){
+        log("get unit castlename");
         return "castle";
     }else if(index == UNIT_MINE){
         return "mine";
@@ -3969,6 +4030,7 @@ std::string GameManager::getUnitName(int index){
     }else if(index == UNIT_WATCHERTOWER){
         return "watcher tower";
     }else if(index == UNIT_WORKER){
+        log("get unit worker");
         return "worker";
     }else if(index == UNIT_GOBLIN_WORKER){
         return "orc worker";
@@ -4000,7 +4062,8 @@ std::string GameManager::getUnitName(int index){
         return "goblin bomb";
     }else if(index == UNIT_TROLL){
         return "troll";
-    }else if(index == UNIT_ORC_HQ){
+    }else if(index == UNIT_ORC_HQ ||
+             index == UNIT_ZOMBIE_HQ){
         return "orc hq";
     }else if(index == UNIT_ORC_BARRACKS){
         return "orc barracks";
@@ -4090,6 +4153,18 @@ std::string GameManager::getUnitName(int index){
         return "hero parasite";
     }else if(index == UNIT_HERO_WATERMELON){
         return "hero watermelon";
+    }else if(index == UNIT_HERO_BABYMINO){
+        return "hero babymino";
+    }else if(index == UNIT_HERO_MINO){
+        return "hero mino";
+    }else if(index == UNIT_HERO_KERBEROS){
+        return "hero kerberos";
+    }else if(index == UNIT_HERO_LAMIA){
+        return "hero lamia";
+    }else if(index == UNIT_HERO_CHUNJA){
+        return "hero chunja";
+    }else if(index == UNIT_HERO_GOLEM){
+        return "hero golem";
     }
     return "worker";
 }
@@ -4142,6 +4217,41 @@ int GameManager::getDayDiff(int fromY, int fromM, int fromD, int toY, int toM, i
 }
 
 
+cocos2d::Size GameManager::getBuildingOccupySize(int unit){
+    if(unit == UNIT_ORC_BUNKER){
+        return cocos2d::Size(2, 2);
+    }else if(unit == UNIT_ORC_HQ){
+        return cocos2d::Size(4, 3);
+    }else if(unit == UNIT_FACTORY){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_FARM){
+        return cocos2d::Size(3, 2);
+    }else if(unit == UNIT_TREE_FOR_BATTLE ||
+             unit == UNIT_TREE){
+        return cocos2d::Size(1, 1);
+    }else if(unit == UNIT_LUMBERMILL){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_AIRPORT){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_CASTLE){
+        return cocos2d::Size(4, 3);
+    }else if(unit == UNIT_MINE){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_BARRACKS){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_WATCHERTOWER){
+        return cocos2d::Size(2, 2);
+    }else if(unit == UNIT_ORC_BARRACKS){
+        return cocos2d::Size(2, 2);
+    }else if(unit == UNIT_TEMPLE){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_ORC_TROLL_HOUSE){
+        return cocos2d::Size(3, 3);
+    }else if(unit == UNIT_BARBECUE){
+        return cocos2d::Size(3, 2);
+    }
+    return cocos2d::Size(1, 1);
+}
 int GameManager::getFoodUseForUnit(int index){
     if (index == UNIT_WORKER || index == UNIT_GOBLIN_WORKER) {
         return 1;
@@ -4152,7 +4262,7 @@ int GameManager::getFoodUseForUnit(int index){
     }else if (index == UNIT_ARCHER) {
         return 1;
     }else if (index == UNIT_CATAPULT) {
-        return 3;
+        return 4;
     }else if (index == UNIT_GOBLIN) {
         return 1;
     }else if (index == UNIT_GOBLIN_BOMB) {
@@ -4266,7 +4376,14 @@ spine::SkeletonAnimation* GameManager::getHeroSpine(int unitType){
         spChar->setSkin("bear");
     }else if (unitType == UNIT_HERO_LION) {
         spChar->setSkin("lion");
+    }else if (unitType == UNIT_HERO_CRAZY_BEAR) {
+        spChar->setSkin("crazy_bear");
+    }else if (unitType == UNIT_HERO_CRAZY_WEREWOLF) {
+        spChar->setSkin("crazy_werewolf");
+    }else if (unitType == UNIT_HERO_CRAZY_LION) {
+        spChar->setSkin("crazy_lion");
     }
+    spChar->setName(strFile);
     return spChar;
 }
 int GameManager::getMaxGold(int level){
@@ -4300,7 +4417,9 @@ int GameManager::getElement(int unit){
        unit == UNIT_HERO_LADY_WEREWOLF ||
        unit == UNIT_HERO_TANKER ||
        unit == UNIT_HERO_MOLE ||
-       unit == UNIT_HERO_ENT){
+       unit == UNIT_HERO_ENT ||
+       unit == UNIT_HERO_BABYMINO ||
+       unit == UNIT_HERO_GOLEM){
         return ELEMENT_GROUND;
     }else if(unit == UNIT_HERO_LIZARDMAN ||
              unit == UNIT_HERO_SPEARMAN ||
@@ -4309,6 +4428,7 @@ int GameManager::getElement(int unit){
              unit == UNIT_HERO_LADY_LION ||
              unit == UNIT_HERO_SANTA ||
              unit == UNIT_HERO_UNDINE||
+             unit == UNIT_HERO_LAMIA||
              unit == UNIT_HERO_PENGUIN ||
              unit == UNIT_HERO_SAVAGEARCHER){
         return ELEMENT_WATER;
@@ -4320,7 +4440,10 @@ int GameManager::getElement(int unit){
              unit == UNIT_HERO_CATINBOOTS ||
              unit == UNIT_HERO_SALAMANDER ||
              unit == UNIT_HERO_TOYMOUSE ||
-             unit == UNIT_HERO_BATMONSTER){
+             unit == UNIT_HERO_MINO ||
+             unit == UNIT_HERO_BATMONSTER ||
+             unit == UNIT_HERO_KERBEROS ||
+             unit == UNIT_HERO_CHUNJA){
         return ELEMENT_FIRE;
     }else if(unit == UNIT_HERO_ORC ||
              unit == UNIT_HERO_FIGHTER ||
@@ -4719,11 +4842,7 @@ int GameManager::getDailyMissionCampaignStageIndex(){
     return stage;
 }
 int GameManager::getMonthlyHeroType(){
-    if (BSM->month == 11) {
-        return UNIT_HERO_ENT;
-    }else if (BSM->month == 12) {
-        return UNIT_HERO_SANTA;
-    }else if (BSM->month == 1) {
+    if (BSM->month == 1) {
         return UNIT_HERO_SALAMANDER;
     }else if (BSM->month == 2) {
         return UNIT_HERO_UNDINE;
@@ -4739,6 +4858,14 @@ int GameManager::getMonthlyHeroType(){
         return UNIT_HERO_MEMEAT;
     }else if(BSM->month == 8){
         return UNIT_HERO_WATERMELON;
+    }else if(BSM->month == 9){
+        return UNIT_HERO_MINO;
+    }else if(BSM->month == 10){
+        return UNIT_HERO_LAMIA;
+    }else if (BSM->month == 11) {
+        return UNIT_HERO_ENT;
+    }else if (BSM->month == 12) {
+        return UNIT_HERO_SANTA;
     }
     return -1;
 }
@@ -4761,6 +4888,14 @@ int GameManager::getMidMonthHeroType(){
         return UNIT_HERO_BATMONSTER;
     }else if ((month == 7 && day > 15) || (month == 8 && day <= 15)) {
         return UNIT_HERO_PARASITE;
+    }else if ((month == 8 && day > 15) || (month == 9 && day <= 15)) {
+        return UNIT_HERO_BABYMINO;
+    }else if ((month == 9 && day > 15) || (month == 10 && day <= 15)) {
+        return UNIT_HERO_KERBEROS;
+    }else if ((month == 10 && day > 15) || (month == 11 && day <= 15)) {
+        return UNIT_HERO_CHUNJA;
+    }else if ((month == 11 && day > 15) || (month == 12 && day <= 15)) {
+        return UNIT_HERO_GOLEM;
     }
     return -1;
 }
@@ -4778,7 +4913,6 @@ int GameManager::getMidMonthHeroTimeLeft(){
     return timeLeft;
 }
 void GameManager::resetAsset(){
-    
 //    Director::getInstance()->purgeCachedData();
 //    SpriteFrameCache* cache = SpriteFrameCache::getInstance();
 //        cache->addSpriteFramesWithFile("CartoonCraftNV.plist");
@@ -4806,7 +4940,7 @@ int GameManager::getUnitAP(int unit){
     }else if(unit == UNIT_GOBLIN){
         return 8;
     }else if(unit == UNIT_GOBLIN_BOMB){
-        return 500;
+        return 200;
     }else if(unit == UNIT_TROLL){
         return 25;
     }else if(unit == UNIT_ORC_AXE){
@@ -4874,13 +5008,34 @@ int GameManager::getUnitMaxHP(int unit){
         }else if(unit == UNIT_ORC_SPEAR){
             return 120;
         }else if(unit == UNIT_ZOMBIE_ORC_AXE){
-            return 260;
+            return 150;
         }else if(unit == UNIT_ZOMBIE_SWORDSMAN){
-            return 220;
+            return 120;
         }else if(unit == UNIT_WIZARD){
             return 40;
         }else if(unit == UNIT_HERO_ORC){
             return 550;
         }
         return 60;
+}
+bool GameManager::isThisBuilding(int unitType){
+    if (unitType == UNIT_MINE ||
+        unitType == UNIT_ZOMBIE_CASTLE ||
+        unitType == UNIT_ZOMBIE_HQ ||
+        unitType == UNIT_FARM ||
+        unitType == UNIT_CASTLE ||
+        unitType == UNIT_BARRACKS ||
+        unitType == UNIT_WATCHERTOWER ||
+        unitType == UNIT_LUMBERMILL ||
+        unitType == UNIT_FACTORY ||
+        unitType == UNIT_AIRPORT ||
+        unitType == UNIT_BARBECUE ||
+        unitType == UNIT_ORC_HQ ||
+        unitType == UNIT_ORC_BARRACKS ||
+        unitType == UNIT_ORC_BUNKER ||
+        unitType == UNIT_ORC_TROLL_HOUSE ||
+        unitType == UNIT_TEMPLE) {
+        return true;
+    }
+    return false;
 }

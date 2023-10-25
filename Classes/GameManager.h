@@ -12,6 +12,10 @@
 #include "EditorHud.h"
 #include "HelloWorldScene.h"
 #include "BattleHud.h"
+
+#include <algorithm>
+#include <cctype>
+#include <locale>
 //#include "LoadBalancing-cpp/inc/Client.h"
 
 
@@ -42,6 +46,7 @@ using namespace cocos2d::ui;
 #define BTN_FROM_REF_AND_DISABLE Button* btn = (Button*)ref; btn->setEnabled(false);
 #define BTN_FROM_REF Button* btn = (Button*)ref;
 #define GM GameManager::getInstance()
+#define MM MultiplayManager::getInstance()
 #define SM ServerManager::getInstance()
 #define BSM BuggyServerManager::getInstance()
 #define HUD GameManager::getInstance()->getHudLayer()
@@ -254,7 +259,9 @@ using namespace cocos2d::ui;
 #define KEY_INVENTORY_ITEM_COUNT_FORMAT "KEY_INVENTORY_ITEM_COUNT_FORMAT_%d"
 #define KEY_LAST_HIRE_REFRESH_DAY "KEY_LAST_HIRE_REFRESH_DAY"
 #define KEY_LAST_SAVE_POINT "KEY_LAST_SAVE_POINT"
-#define KEY_HARD_MODE_CLEAR_STAGE "KEY_HARD_MODE_CLEAR_STAGE"
+#define KEY_HELL_MODE_CLEAR_STAGE "KEY_HARD_MODE_CLEAR_STAGE"
+#define KEY_HAD_MODE_CLEAR_STAGE "KEY_HAD_MODE_CLEAR_STAGE"
+#define KEY_EASY_MODE_CLEAR_STAGE "KEY_EASY_MODE_CLEAR_STAGE"
 #define KEY_LAST_CHECK_POINT "KEY_LAST_CHECK_POINT"
 #define KEY_LAST_SAVE_HEALTH "KEY_LAST_SAVE_HEALTH"
 #define KEY_NEXT_SPAWN_DIRECTION "KEY_NEXT_SPAWN_DIRECTION"
@@ -264,7 +271,8 @@ using namespace cocos2d::ui;
 #define KEY_POT_SOUL_COUNT "KEY_POT_SOUL_COUNT"
 #define KEY_POT_BROKEN_FORMAT "KEY_POT_BROKEN_FORMAT_%d_%d_%d"
 //#define KEY_LAST_CLEAR_STAGE "KEY_LAST_CLEAR_STAGE"
-
+#define KEY_MAP_SAVE_NAME_FORMAT "KEY_MAP_SAVE_NAME_FORMAT%d"
+#define KEY_MAP_SAVE_DATA_FORMAT "KEY_MAP_SAVE_DATA_FORMAT%d"
 #define KEY_DOUBLE_EXP_GET "DoubleExpGet"
 #define KEY_REMOVE_ADS_GET "RemoveAdsGet"
 #define KEY_INFINITY_LIFE_GET "InfiniteLivesGet"
@@ -312,6 +320,7 @@ using namespace cocos2d::ui;
 #define KEY_DEFENCE_RECORD "KEY_DEFENCE_RECORD"
 #define KEY_COLLECTION_UNLOCKED_FORMAT "KEY_COLLECTION_UNLOCKED_FORMAT%d"
 #define KEY_SAVED_ID "KEY_SAVED_ID"
+#define KEY_PREVIOUS_ID "KEY_PREVIOUS_ID"
 #define KEY_HERO_INVALIDATE "KEY_HERO_INVALIDATE"
 #define KEY_BATTLE_DATA_INVALIDATE "KEY_BATTLE_DATA_INVALIDATE"
 #define KEY_MESSAGE_BOX "KEY_MESSAGE_BOX"
@@ -459,6 +468,7 @@ using namespace cocos2d::ui;
 #define EFFECT_HIT_WITH_CIRCLE_ON_GROUND 27
 #define EFFECT_PURPLE_SLASH 28
 #define EFFECT_WATER_SPLASH 29
+#define EFFECT_LASER 30
 
 #define VEHICLE_NONE 0
 #define VEHICLE_GOLIATH 1
@@ -572,6 +582,7 @@ using namespace cocos2d::ui;
 #define KEY_STAGE_MASTER_FORMAT "StageMaster_%d"
 #define KEY_STAR_COUNT_FORMAT "StarCount_%d_%d"
 #define KEY_LAST_CLEAR_STAGE "LastClearStage"
+#define KEY_LAST_REWARDED_CODE "KEY_LAST_REWARDED_CODE"
 #define KEY_PREMIUM_START "KEY_PREMIUM_START"
 #define KEY_SPECIAL_UNITS "KEY_SPECIAL_UNITS"
 #define KEY_SPECIAL_OFFER_OPEN_TIME "KEY_SPECIAL_OFFER_OPEN_TIME_STR"
@@ -581,6 +592,7 @@ using namespace cocos2d::ui;
 #define KEY_CURRENT_COLOSSEUM_LEAGUE_INDEX "KEY_CURRENT_COLOSSEUM_LEAGUE_INDEX"
 #define KEY_CURRENT_COLOSSEUM_LEAGUE "KEY_CURRENT_COLOSSEUM_LEAGUE"
 #define KEY_COLOSSEUM_SCORE "KEY_COLOSSEUM_SCORE"
+#define KEY_SERVER "KEY_SERVER"
 #define COLOSSEUM_RESULT_FAILED 0
 #define COLOSSEUM_RESULT_CLEAR 1
 #define KEY_JUST_CLEARED_PREVIOUS_STAR_COUNT "JustClearedPreviousStarCount"
@@ -618,6 +630,7 @@ using namespace cocos2d::ui;
 #define KEY_SELECTED_LANGUAGE "SelectedLanguage"
 #define KEY_NAME "KEY_Name"
 #define KEY_SEASON_KEY "KEY_SEASON_KEY"
+#define KEY_MULTIPLAY_TROPHY "KEY_MULTIPLAY_TROPHY"
 #define KEY_INVENTORY_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM "KEY_INVENTORY_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM"
 #define KEY_DECK_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM "KEY_DECK_SAVE_RETURN_TO_INDIVIDUAL_SYSTEM"
 #define KEY_EVENT_ITEM_BOUGHT_COUNT "KEY_EVENT_ITEM_BOUGHT_COUNT"
@@ -632,6 +645,7 @@ using namespace cocos2d::ui;
 #define KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT "KEY_MONTHLY_EVENT_INFO_PROGRESS_FORMAT_%d"
 #define KEY_ARENA_RID "KEY_ARENA_RID"
 #define KEY_RID "KEY_RID"
+#define KEY_DIFFICULTY_MODE "KEY_DIFFICULTY_MODE"
 #define KEY_ROULETTE_VIDEO_BUTTON_ENABLED "KEY_ROULETTE_VIDEO_BUTTON_ENABLED"
 #define KEY_MID_MONTH_ROULETTE_ROLL_DAY "KEY_MID_MONTH_ROULETTE_ROLL_DAY"
 #define KEY_PVP6_TROPHY "KEY_PVP6_TROPHY"
@@ -817,8 +831,9 @@ public:
     int loadingSlot = -1;
     bool firstPlayed;
     const char* version;
+    
     int versionCode = 0;
-    int receivedVersionCode = 0;
+    int receivedVersionCode = -1;
     int serverMaintenance = 0;
     int rewardCode = 0;
     int rewardedCode = 0;
@@ -907,6 +922,7 @@ public:
     long getTodaysRandom();
     bool isFacebookReady;
     float getDistance(Node* target, Node* source);
+    float getDistance(Vec2 target, Vec2 source);
     float getSoundVolumnByDistance(Node* target, Node* source);
     void setFacebookReady(bool ready);
     void setBombCount(int bomb);
@@ -1083,6 +1099,8 @@ public:
     void inspectSurroundedStack(int x, int y, int distanceFromStart);
     void inspectSurroundedStack();
     
+    cocos2d::Size getBuildingOccupySize(int unit);
+    int occupyState[100][100];
     char tileState[100][100];
     char blockState[100][100];
     int closeStateTracker[10000];
@@ -1126,9 +1144,11 @@ public:
     std::string compressString(std::string data);
     std::string decompressString(std::string data);
     
+    std::string loadMapData = "";
+    std::string playedMapID = "";
     bool isColosseum = false;
     bool isCrossShown = false;
-    
+    bool isThisBuilding(int unitType);
     Node* crossPromotionLayer = nullptr;
     bool isVideoButtonAvailable = true;
     void enableVideoButton();
@@ -1199,7 +1219,7 @@ public:
     int getIntForOldDouble(std::string key, int defaultValue = 0);
     void addLightStormEffect(Node* node);
     
-    int directionStatic = 0;
+//    int directionStatic = 0;
     std::string getSpineFileName(int unitType);
     
     void addWoodKey(int amount);
@@ -1269,6 +1289,45 @@ public:
     
     int getUnitAP(int unit);
     int getUnitMaxHP(int unit);
+
+
+    // trim from start (in place)
+    static inline void ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+            return !std::isspace(ch);
+        }));
+    }
+
+    // trim from end (in place)
+    static inline void rtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    }
+
+    // trim from both ends (in place)
+    static inline void trim(std::string &s) {
+        ltrim(s);
+        rtrim(s);
+    }
+
+    // trim from start (copying)
+    static inline std::string ltrim_copy(std::string s) {
+        ltrim(s);
+        return s;
+    }
+
+    // trim from end (copying)
+    static inline std::string rtrim_copy(std::string s) {
+        rtrim(s);
+        return s;
+    }
+
+    // trim from both ends (copying)
+    static inline std::string trim_copy(std::string s) {
+        trim(s);
+        return s;
+    }
 };
 
 #endif

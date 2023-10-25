@@ -54,13 +54,13 @@ bool BuggyServerManager::init()
 //    serverUrl = "http://222.120.115.95:8101"; // cartoon craft server
 //    serverUrl = "http://222.120.115.95:8102"; // buggyland server
     
-//    serverUrl = "http://localhost:8103"; // cartoon-new server test
+//    serverUrl = "http://192.168.0.68:8103"; // cartoon-new server test
 #if CC_TARGET_PLATFORM == CC_PLATFORM_IOS || CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 //    serverUrl = "http://192.168.0.2:8103"; // cartoon-new server test
 #endif
     
-    serverUrl = "http://222.120.115.95:8103"; // yangpyung white test
-//    serverUrl = "http://222.120.115.95:8093"; // yangpyung macbook test
+    setServerUrl();
+//    serverUrl = "http://222.120.115123213.95:8103"; //  test
     
 ////////////////////////////    serverUrl = "http://52.78.139.153:8103"; // aws test - now use anymore
     log("**serverUrl: %s", serverUrl.c_str());
@@ -69,7 +69,22 @@ bool BuggyServerManager::init()
     apiName = "cc";
     return true;
 }
-
+void BuggyServerManager::setServerUrl(){
+    int server = UDGetInt(KEY_SERVER, 0);
+    if(server == 0){
+        serverUrl = "http://220.79.132.112:8103"; // yangpyung  alpha
+        //serverUrl = "http://3.35.68.88:8103"; // AWS Lightsail Vsisters alpha
+//        serverUrl = "http://3.36.133.207:8103"; // AWS Lightsail rightguy22 alpha
+    }else if(server == 1){
+        serverUrl = "http://220.79.132.112:8109"; // bungee
+//        serverUrl = "http://3.35.68.88:8109"; // AWS Lightsail Vsisters bungee
+//        serverUrl = "http://3.36.133.207:8109"; // AWS Lightsail rightguy22 beta
+    }else{
+        serverUrl = "http://220.79.132.112:8103"; // yangpyung  alpha
+//        serverUrl = "http://3.35.68.88:8103"; // AWS Lightsail Vsisters alpha
+//        serverUrl = "http://3.36.133.207:8103"; // AWS Lightsail rightguy22 alpha
+    }
+}
 void BuggyServerManager::getHttpTime()
 {
     if (getLocalTime) {
@@ -155,6 +170,21 @@ long tz_offset(time_t when = NULL_TIME)
 }
 void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
 {
+    // time return string not json so skip document check
+//    SET_DOCUMENT_AND_CHECK_ERROR
+
+//    rapidjson::Document document = getDocument(sender, data);
+//    if(document.IsNull()){
+//        this->isServerFailed = true;
+//        return;
+//
+//    }
+//    if (document.HasMember("error")) {
+//        log("server data error: %s", document["error"].GetString());
+//        isFailedToGetNetworkData = true;
+//
+//    }
+    
     log("time complete request http");
     HttpResponse *response = (HttpResponse*)data;
     std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
@@ -372,11 +402,15 @@ int BuggyServerManager::getDay(){
 int BuggyServerManager::getMonth(){
     std::string strTime = getStrFromTime(getCurrentTimeT());
     month = Value(strTime.substr(5, 2)).asInt();
-//    month = 8; // test 
+//    month = 12; // test 
     return month;
 }
 int BuggyServerManager::getYear(){
-    return receivedTime.tm_year;
+    std::string strTime = getStrFromTime(getCurrentTimeT());
+        int year = Value(strTime.substr(0, 4)).asInt();
+    //    month = 12; // test
+        return year;
+//    return receivedTime.tm_year;
 }
 int BuggyServerManager::getYesterdayDay(){
     return receivedYesterdayTime.tm_mday;
@@ -426,7 +460,7 @@ rapidjson::Document BuggyServerManager::getDocument(cocos2d::Node *sender, void 
         buffer->clear();
         return document;
     }else{
-        
+        log("buffer is empty");
     }
     return nullptr;
 }
@@ -471,6 +505,7 @@ void BuggyServerManager::getPostBoxItem(){std::string savedRID = UDGetStr(KEY_RI
     sendPost("getuserdata", strRID + "&" + "post=1", httpresponse_selector(BuggyServerManager::onGetPostBoxItem));
 }
 void BuggyServerManager::onGetPostBoxItem(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("post")) {
 //        HUD->postBoxTextFromServer = document["post"].GetString();
@@ -493,6 +528,7 @@ void BuggyServerManager::rename(std::string strName){
     }
 }
 void BuggyServerManager::onRenameComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("result")) {
         UDSetStr(KEY_NAME, document["result"].GetString());
@@ -518,6 +554,7 @@ void BuggyServerManager::saveUserData(std::string data){
 //    }
 }
 void BuggyServerManager::onSaveUserData(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("error")) {
         if (HUD) {
@@ -554,6 +591,7 @@ void BuggyServerManager::findMatch(int trophy){
     sendPost("findmatch", "id=" + requestedID + "&" + strmake("trophy=%d", trophy), httpresponse_selector(BuggyServerManager::onFindMatches));
 }
 void BuggyServerManager::onFindMatches(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("error")) {
         log("error: %s", document["error"].GetString());
@@ -600,6 +638,7 @@ void BuggyServerManager::setPostBoxItem(std::string items){
     sendPost("saveuser", "id=" + requestedID + "&" + "post=" + items, httpresponse_selector(BuggyServerManager::onGetPostBoxItem));
 }
 void BuggyServerManager::onSetPostBoxItem(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("post")) {
         
@@ -611,6 +650,7 @@ void BuggyServerManager::registerName(std::string name){
     sendPost("saveuser", "id=" + requestedID + "&" + "name=" + name, httpresponse_selector(BuggyServerManager::onRegisterNameComplete));
 }
 void BuggyServerManager::onRegisterNameComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("result")) {
         
@@ -927,7 +967,9 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     if(document.HasMember("gold")) GM->setCoin(document["gold"].GetInt());
     if(document.HasMember("tree")) GM->setTree(document["tree"].GetInt());
     if(document.HasMember("gem")){
-        GM->setGem(document["gem"].GetInt());
+//        int gemSaved = GM->getGem();
+        int gemFromServer = document["gem"].GetInt();
+        GM->setGem(gemFromServer);
     }
     if(document.HasMember("buildings")){
         std::string str = document["buildings"].GetString();
@@ -1064,6 +1106,14 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
         if(HUD && strIAPList.find("starter0") != std::string::npos){
 //            HUD->isNoAdsPurchased = true;
         }
+        if(strIAPList.find(IAP_DETAIL_CHAPTER2) != std::string::npos){
+            UDSetBool(KEY_CHAPTER_2_PURCHASED, true);
+        }else if(strIAPList.find(IAP_DETAIL_CHAPTER3) != std::string::npos){
+            UDSetBool(KEY_CHAPTER_3_PURCHASED, true);
+        }else if(strIAPList.find(IAP_DETAIL_PREMIUM_RETRY) != std::string::npos){
+            UDSetBool(KEY_PREMIUM_START, true);
+        }
+        UD->flush();
     }
     if(document.HasMember("iap_total")) {
         int total = document["iap_total"].GetInt();
@@ -1081,6 +1131,7 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
     }
     if(document.HasMember("rewarded_index")) {
         GM->rewardedCode = document["rewarded_index"].GetInt();
+        log("get user data rewarded_index: %d", GM->rewardedCode);
     }
     if(document.HasMember("shield_end")) {
         UDSetStr(KEY_SHIELD_END_TIME, document["shield_end"].GetString());
@@ -1101,7 +1152,7 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender, void *data
         UDSetInt(KEY_DAY_COUNT, dayCount);
     }
     
-    lastDocument = getDocument(sender, data);
+//    lastDocument = getDocument(sender, data);
     if(BHUD != nullptr){
         BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
     }
@@ -1125,6 +1176,7 @@ void BuggyServerManager::getMyRank(int trophy){
     sendPost("getrank", strmake("id=%s&trophy=%d", requestedID.c_str(), trophy), httpresponse_selector(BuggyServerManager::onGetMyRankComplete));
 }
 void BuggyServerManager::onGetMyRankComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
 //    if(HUD != nullptr){
 //        HUD->isLoadingRankSuccess = false;
@@ -1162,6 +1214,7 @@ void BuggyServerManager::getGameInfo(){
     request->release();
 }
 void BuggyServerManager::onGetGameInfoComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if(document.HasMember("iv") && TITLE) {
         TITLE->iv = document["iv"].GetInt();
@@ -1188,6 +1241,7 @@ void BuggyServerManager::getRewardInfo(){
     request->release();
 }
 void BuggyServerManager::onGetRewardInfoComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if(document.HasMember("rc") && TITLE) {
         TITLE->rewardInfo = document["rc"].GetString();
@@ -1425,6 +1479,7 @@ void BuggyServerManager::checkPlayID(std::string data){
     sendPost("checkplayid", "playid=" + data, httpresponse_selector(BuggyServerManager::onCheckPlayID));
 }
 void BuggyServerManager::onCheckPlayID(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("error")) {
         
@@ -1530,6 +1585,7 @@ void BuggyServerManager::getPvp6ResultAndTicket(){
     }
 }
 void BuggyServerManager::onGetPvp6ResultAndTicketComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("pvp_rwd_6")) {
         std::string strReward = document["pvp_rwd_6"].GetString();
@@ -1553,6 +1609,7 @@ void BuggyServerManager::getPvp6Rank(){
     sendPost("getp6rank", "_id=" + UDGetStr(KEY_RID, "_"), httpresponse_selector(BuggyServerManager::onGetPvp6RankComplete));
 }
 void BuggyServerManager::onGetPvp6RankComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("names")) {
         std::string strData = document["names"].GetString();
@@ -1595,8 +1652,12 @@ void BuggyServerManager::findMatchForPvp6(){
     sendPost("p6findmatch", "trophy=" + Value(UDGetInt(KEY_PVP6_TROPHY)).asString(), httpresponse_selector(BuggyServerManager::onFindMatchForPvp6Complete));
 }
 void BuggyServerManager::onFindMatchForPvp6Complete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
-    if (document.HasMember("userid")) {
+    log("find pvp 6 match complete");
+    
+//    if (document.HasMember("userid")) {
+    if (document.HasMember("data")) {
         pvpTargetTrophy = document["trophy"].GetInt();
         pvpTargetData = document["data"].GetString();
 //        pvpTargetData = "_50/100/13/13_62/0/14/14_50/201/17/14_50/200/14/13_48/200/16/13_58/0/18/14_55/0/18/13_54/0/16/15_55/0/21/11_58/0/20/11_49/200/18/15_57/0/22/11_"; // test
@@ -1609,6 +1670,7 @@ void BuggyServerManager::sendPvp6Result(int trophy){
     sendPost("p6sv", "_id=" + UDGetStr(KEY_RID, "_") + "&name=" + strName + "&trophy=" + Value(trophy).asString() + "&data=" + UDGetStr(KEY_UNITS_HERO_DECK, "_"), httpresponse_selector(BuggyServerManager::onSendPvp6ResultComplete));
 }
 void BuggyServerManager::onSendPvp6ResultComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("result")) {
         
@@ -1622,6 +1684,7 @@ void BuggyServerManager::getPvp12ResultAndTicket(){
     }
 }
 void BuggyServerManager::onGetPvp12ResultAndTicketComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("pvp_rwd_12")) {
         std::string strReward = document["pvp_rwd_12"].GetString();
@@ -1645,6 +1708,7 @@ void BuggyServerManager::getPvp12Rank(){
     sendPost("getp12rank", "_id=" + UDGetStr(KEY_RID, "_"), httpresponse_selector(BuggyServerManager::onGetPvp12RankComplete));
 }
 void BuggyServerManager::onGetPvp12RankComplete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("names")) {
         std::string strData = document["names"].GetString();
@@ -1694,7 +1758,9 @@ void BuggyServerManager::findMatchForPvp12(){
     sendPost("p12findmatch", "trophy=" + Value(UDGetInt(KEY_PVP12_TROPHY)).asString(), httpresponse_selector(BuggyServerManager::onFindMatchForPvp12Complete));
 }
 void BuggyServerManager::onFindMatchForPvp12Complete(cocos2d::Node *sender, void *data){
+    
     SET_DOCUMENT_AND_CHECK_ERROR
+    log("find pvp 6 match complete");
     if (document.HasMember("data")) {
         pvpTargetTrophy = document["trophy"].GetInt();
         pvpTargetData = document["data"].GetString();
@@ -1709,6 +1775,7 @@ void BuggyServerManager::sendPvp12Result(int trophy){
     sendPost("p12sv", "_id=" + UDGetStr(KEY_RID, "_") + "&name=" + UDGetStr(KEY_NAME, "Unknown") + "&trophy=" + Value(trophy).asString() + "&data=" + UDGetStr(KEY_UNITS_HERO_DECK, "_"), httpresponse_selector(BuggyServerManager::onSendPvp12ResultComplete));
 }
 void BuggyServerManager::onSendPvp12ResultComplete(cocos2d::Node *sender, void *data){
+
     SET_DOCUMENT_AND_CHECK_ERROR
     if (document.HasMember("result")) {
         
@@ -1735,20 +1802,29 @@ void BuggyServerManager::checkServer(){
 }
 void BuggyServerManager::onCheckServerCompleted(Node *sender, void *data)
 {
-    log("time complete request http");
+    log("check server request http");
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+//    log("time complete request http");
     HttpResponse *response = (HttpResponse*)data;
     std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
     int size = (int)response->getResponseHeader()->size();
     std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
-    rapidjson::Document document = getDocument(sender, data);
+//    rapidjson::Document document = getDocument(sender, data);
     if (!response->isSucceed())
     {
         log("!isSucceed %s", response->getErrorBuffer());
         return;
     }
+    
     if(document.IsNull()){
         this->isServerFailed = true;
         this->isOffline = true;
+
+        if(document.HasMember("rewarded_index")) {
+            GM->rewardedCode = document["rewarded_index"].GetInt();
+            log("check server rewarded_index: %d", GM->rewardedCode);
+        }
         return;
     }
     this->isOffline = false;
@@ -1805,6 +1881,7 @@ void BuggyServerManager::onCheckServerCompleted(Node *sender, void *data)
     
     if (document.HasMember("time")) {
         setTime(document["time"].GetString());
+        
     }
     isCheckServerComplete = true;
 }
@@ -1822,5 +1899,190 @@ int BuggyServerManager::getLastDayOfMonth(int month){
         lastDay = 28;
     }
     return lastDay;
+}
+void BuggyServerManager::uploadMap(std::string name, std::string mapData){
+    uploadState = -1;
+    std::string userid = UDGetStr(KEY_SAVED_ID, "-1");
+    std::string username = UDGetStr(KEY_NAME, "");
+    std::string mapdata = mapData;
+    std::string mapname = name;
+    
+    BSM->sendPost("usmpupload", strmake("userid=%s&username=%s&mapdata=%s&mapname=%s", userid.c_str(), username.c_str(), mapData.c_str(), mapname.c_str()), httpresponse_selector(BuggyServerManager::onUploadMapCompleted));
+}
+void BuggyServerManager::onUploadMapCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onUploadMapCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        uploadState = 0;
+        log("!isSucceed %s", response->getErrorBuffer());
+        return;
+    }
+    
+    if (document.HasMember("result")) {
+        std::string result = document["result"].GetString();
+        if(result.compare("upload success") == 0){
+            uploadState = 2;
+        }else{
+            uploadState = 1;
+        }
+    }else if (document.HasMember("error")) {
+        std::string result = document["error"].GetString();
+        if(result.compare("map exist") == 0){
+            uploadState = 3;
+        }else{
+            
+        }
+    }
+}
+void BuggyServerManager::deleteMap(std::string mapID){
+    uploadState = -1;
+    
+    BSM->sendPost("usmpdelete", strmake("_id=%s", mapID.c_str()), httpresponse_selector(BuggyServerManager::onDeleteMapCompleted));
+}
+void BuggyServerManager::onDeleteMapCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onUploadMapCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        uploadState = 0;
+        log("!isSucceed %s", response->getErrorBuffer());
+        return;
+    }
+    
+    if (document.HasMember("result")) {
+        bool result = document["result"].GetBool();
+        log("delete result: %d", result);
+    }
+}
+
+void BuggyServerManager::downloadMapList(int index){
+    downloadMapListState = -1;
+    if (index == 0) {
+        BSM->sendPost("getusmprecent", "", httpresponse_selector(BuggyServerManager::onDownloadMapListCompleted));
+    }else if (index == 1) {
+        BSM->sendPost("getusmptrophy", "", httpresponse_selector(BuggyServerManager::onDownloadMapListCompleted));
+    }else if (index == 2) {
+        BSM->sendPost("getusmplike", "", httpresponse_selector(BuggyServerManager::onDownloadMapListCompleted));
+    }
+}
+void BuggyServerManager::onDownloadMapListCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onDownloadMapListCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        downloadMapListState = 0;
+        log("!isSucceed %s", response->getErrorBuffer());
+        return;
+    }
+    if(document.IsNull()){
+        this->isServerFailed = true;
+        this->isOffline = true;
+        errorCode = 0;
+        return;
+    }
+    if (document.HasMember("maps")) {
+        mapList = document["maps"].GetString();
+        downloadMapListState = 2;
+    }else{
+        downloadMapListState = 1;
+    }
+}
+void BuggyServerManager::downloadMap(std::string mapID){
+    downloadMapState = -1;
+    BSM->sendPost("getusmpget", strmake("_id=%s", mapID.c_str()), httpresponse_selector(BuggyServerManager::onDownloadMapCompleted));
+}
+void BuggyServerManager::onDownloadMapCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onDownloadMapCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        downloadMapState = 0;
+        log("!downloadMapState fail %s", response->getErrorBuffer());
+        return;
+    }
+    
+    if (document.HasMember("mapdata")) {
+        mapData = document["mapdata"].GetString();
+        downloadMapState = 2;
+    }else if (document.HasMember("error")) {
+        downloadMapState = 1;
+    }
+}
+
+void BuggyServerManager::uploadCustomMapResult(std::string mapID, int like, int dislike, int success, int fail){
+    downloadMapState = -1;
+    BSM->sendPost("setusmpresult", strmake("_id=%s&like=%d&dislike=%d&success=%d&fail=%d", mapID.c_str(), like, dislike, success, fail), httpresponse_selector(BuggyServerManager::onUploadCustomMapResultCompleted));
+}
+void BuggyServerManager::onUploadCustomMapResultCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onUploadCustomMapResultCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        log("!onUploadCustomMapResultCompleted error %s", response->getErrorBuffer());
+        return;
+    }
+    
+    if (document.HasMember("result")) {
+        log("upload custom map result success");
+    }else if (document.HasMember("error")) {
+        log("upload custom map result fail");
+    }
+}
+void BuggyServerManager::resetMapLike(){
+    BSM->sendPost("usmpresetlike", "reset=like", httpresponse_selector(BuggyServerManager::onResetMapLikeCompleted));
+}
+
+void BuggyServerManager::onResetMapLikeCompleted(Node *sender, void *data)
+{
+    
+    SET_DOCUMENT_AND_CHECK_ERROR
+    log("onResetMapLikeCompleted request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+//    rapidjson::Document document = getDocument(sender, data);
+    if (!response->isSucceed())
+    {
+        log("!onResetMapLikeCompleted error %s", response->getErrorBuffer());
+        return;
+    }
+    
+    if (document.HasMember("result")) {
+        std::string result = document["result"].GetString();
+        log(" onResetMapLikeCompleted: %s", result.c_str());
+    }else if (document.HasMember("error")) {
+        log("upload custom map result fail");
+    }
 }
 

@@ -110,6 +110,8 @@ std::string LanguageManager::getText(std::string textId){
         str = row.at("turkish").asString();
     }else if (type == LanguageType::JAPANESE) {
         str = row.at("japanese").asString();
+    }else if (type == LanguageType::PORTUGUESE) {
+        str = row.at("pt").asString();
     }else{
         str = row.at("english").asString();
     }
@@ -123,6 +125,7 @@ std::string LanguageManager::getText(std::string textId){
             str.replace(index, 1, ",");
         }
     }
+//    log("getText: %s", str.c_str());
     return str;
 }
 void LanguageManager::loadLanguageSheet(){
@@ -182,7 +185,7 @@ void LanguageManager::setLocalizedString(Text* lbl, std::string str){
     setLocalizedStringNotKey(lbl, text);
 }
 void LanguageManager::setLocalizedStringNotKey(Text* lbl, std::string text){
-    if (text.compare(lbl->getString()) != 0) {
+//    if (text.compare(lbl->getString()) != 0) {
         lbl->setString(text);
         lbl->setFontName(getLocalizedFont());
         lbl->setFontSize(lbl->getFontSize());
@@ -215,5 +218,5 @@ void LanguageManager::setLocalizedStringNotKey(Text* lbl, std::string text){
             }
             lbl->setLocalZOrder(lbl->getLocalZOrder() + 1);
         }
-    }
+//    }
 }

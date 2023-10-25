@@ -690,6 +690,22 @@ void GameSharing::showRewardedVideoAds(){
 #endif
 }
 
+void GameSharing::signIn(){
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    JniMethodInfo mInfo;
+    if (JniHelper::getStaticMethodInfo(mInfo
+            , "org/cocos2dx/cpp/AppActivity"
+            , "signIn"
+            , "()V"))
+    {
+        mInfo.env->CallStaticVoidMethod(mInfo.classID, mInfo.methodID);
+        mInfo.env->DeleteLocalRef(mInfo.classID);
+    }
+#endif
+#if CC_TARGET_PLATFORM == CC_PLATFORM_IOS
+
+#endif
+}
 void GameSharing::showBanner(){
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
     JniMethodInfo mInfo;

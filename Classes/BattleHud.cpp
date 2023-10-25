@@ -161,6 +161,7 @@ void BattleHud::onHeroClick(){
     HeroPage* layer = HeroPage::create();
     this->addChild(layer);
     layer->setName("heroPage");
+    this->getChildByName("trainLayer")->setVisible(false);
     setAsPopup(layer);
 }
 int BattleHud::getUnitIndexForVideoStore(int day){
@@ -191,6 +192,7 @@ int BattleHud::getUnitIndexForVideoStore(int day){
     return UNIT_SWORDMAN;
 }
 void BattleHud::onVideoStoreClick(){
+    WORLD->setVisible(false);
     Node* layer = CSLoader::createNode("VideoStore.csb");
     this->addChild(layer, 4);
     layer->setName("videoStore");
@@ -250,6 +252,7 @@ void BattleHud::onVideoStoreClick(){
         btn = (Button*)nd->getChildByName(strmake("btnGem%d", i));
         btn->addClickEventListener(CC_CALLBACK_0(BattleHud::onVideoGemClick, this));
         lbl = (Text*)btn->getChildByName("lblGold");
+        lbl->setString(StringUtils::format("%d", i == 5 || i == 11 ? 20:5));
         lbl->setTag(Value(lbl->getString()).asInt());
     }
     
@@ -264,7 +267,13 @@ void BattleHud::onVideoRandomClick(){
     time_t watchedTimeT = GM->getSavedTime(KEY_VIDEO_STORE_RANDOM_WATCHED_TIME);//BSM->getTimeTFromStr(strWatchedTime);
     bool isReady = difftime(BSM->getCurrentTimeT(), watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){
-        GM->showVideo(VIDEO_STORE_RANDOM);
+        if(GameSharing::isVideoAvailable()){
+            log("on video click");
+            GM->showVideo(VIDEO_STORE_RANDOM);
+        }else{
+            log("on video click");
+            showInstanceMessage(LM->getText("video not available"));
+        }
     }else{
         showInstanceMessage(LM->getText("video not available"));
     }
@@ -278,7 +287,13 @@ void BattleHud::onVideoUnitClick(){
     nextIndex = UDGetInt(KEY_VIDEO_STORE_UNIT_INDEX, 0);
     bool isReady = difftime(now, watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){
-        GM->showVideo(VIDEO_STORE_UNIT);
+        if(GameSharing::isVideoAvailable()){
+            log("on video click");
+            GM->showVideo(VIDEO_STORE_UNIT);
+        }else{
+            log("on video click");
+            showInstanceMessage(LM->getText("video not available"));
+        }
     }else{
         showInstanceMessage(LM->getText("video not available"));
     }
@@ -292,7 +307,13 @@ void BattleHud::onVideoGemClick(){
     nextIndex = UDGetInt(KEY_VIDEO_STORE_GEM_INDEX, 0);
     bool isReady = difftime(now, watchedTimeT) > videoStoreWaitForNextVideoTime;
     if(isReady){ // test
-        GM->showVideo(VIDEO_STORE_GEM);
+        if(GameSharing::isVideoAvailable()){
+            log("on video click");
+            GM->showVideo(VIDEO_STORE_GEM);
+        }else{
+            log("on video click");
+            showInstanceMessage(LM->getText("video not available"));
+        }
     }else{
         showInstanceMessage(LM->getText("video not available"));
     }
@@ -834,6 +855,9 @@ void BattleHud::closePopup(){
         log("closePopup success");
         popup->removeFromParent();
     }
+    if (popupArray.size() == 0) {
+        WORLD->setVisible(true);
+    }
 }
 //void BattleHud::setAsPopup(Node* node){
 //    popupArray.pushBack(node);
@@ -1136,8 +1160,11 @@ void BattleHud::onBuyShieldWithGem(Ref* ref){
 void BattleHud::onPlayForShieldClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
     if(GameSharing::isVideoAvailable()){
+        log("on video click");
         GM->showVideo(VIDEO_SHIELD);
     }else{
+        log("on video click");
+        GM->showVideo(VIDEO_SHIELD);
         showInstanceMessage(LM->getText("video not available"));
     }
 }
@@ -1227,6 +1254,7 @@ void BattleHud::getLastAccessTime(){
 void BattleHud::onShopClick(){
     ShopLayer* shopLayer = ShopLayer::create();
     addPopup(shopLayer);
+    WORLD->setVisible(false);
     shopLayer->onShopTabClick(shopLayer->getChildByName("shopLayer")->getChildByName(strmake("btnTab%d", 0)));
 //    Node* layer = CSLoader::createNode("Shop.csb");
 //    this->addChild(layer, 4);
@@ -2668,6 +2696,8 @@ void BattleHud::saveUserData(std::vector<int>& datas){
             strData = strmake("%s&gold=%d", strData.c_str(), GM->getCoin());
         }else if (datas.at(i) == DATA_TYPE_TREE) {
             strData = strmake("%s&tree=%d", strData.c_str(), GM->getTree());
+        }else if (datas.at(i) == DATA_TYPE_PLAYID) {
+            strData = strmake("%s&playid=%d", GM->playerGPSID.c_str(), GM->getTree());
         }else if (datas.at(i) == DATA_TYPE_BUILDING) {
             strData = strmake("%s&buildings=%s", strData.c_str(), UDGetStr(KEY_BUILDINGS, "").c_str());
         }else if (datas.at(i) == DATA_TYPE_INVENTORY) {
@@ -2713,15 +2743,17 @@ void BattleHud::loadData(){
     log("loadData strEquipped: %s", strEquipped.c_str());
     Text* lbl = (Text*)hudLayer->getChildByName("btnTrophy")->getChildByName("lbl");
     lbl->setString(Value(UDGetInt(KEY_TROPHY, 1000)).asString());
-    if(strEquipped.length() == 0 && GM->getCoin() == 0 && GM->getTree() == 0 && GM->getGem() == 0){
-        Vec2 pos = Vec2(1300, 1400);
+    
+//    if(!UDGetBool(KEY_BATTLE_TUTORIAL_DONE)){//
+    if (strEquipped.length() == 0 && !UDGetBool(KEY_BATTLE_TUTORIAL_DONE)){
+        Vec2 pos = Vec2(1300/2, 1400/2);
         Vec2 sptPos = pos + Vec2(3*TILE_SIZE/2, 3*TILE_SIZE/2);
         Vec2 occupyPos = pos + Vec2(0, TILE_SIZE*3);
         EnemyBase* unit = WORLD->createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, sptPos, "castle", 1, "castle.png");
         WORLD->setOccupy(occupyPos, 4, 3, true, unit);
         buildings.pushBack(unit);
         
-        pos = Vec2(1600, 1700);
+        pos = Vec2(1600/2, 1700/2);
         sptPos = pos + Vec2(3*TILE_SIZE/2, 3*TILE_SIZE/2);
         occupyPos = pos + Vec2(0, TILE_SIZE*3);
         unit = WORLD->createUnit(UNIT_MINE, WHICH_SIDE_HERO, ITS_BUILDING, sptPos, "mine", 1, "mine.png");
@@ -2744,7 +2776,7 @@ void BattleHud::loadData(){
 //            addTreeToMap(x, y);
 //            x = 22 + i;
 //            addTreeToMap(x, y);
-//        }
+//     }
         for (int y = 17; y >= 5; y--) {
             int x = 5;
             addTreeToMap(x, y);
@@ -2768,7 +2800,6 @@ void BattleHud::loadData(){
         return;
     }
     
-    
     bool isCastleExist = false;
     ValueVector units = GM->split(strEquipped, "_");
     for(int i = 0; i < units.size(); i++){
@@ -2776,7 +2807,7 @@ void BattleHud::loadData(){
         if(datas.size() > 1){
             int unitType = Value(datas.at(0)).asInt();
             
-            cocos2d::Size occupySize = WORLD->getBuildingOccupySize(unitType);
+            cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
             float x = Value(datas.at(2)).asInt();
             float y = Value(datas.at(3)).asInt();
             Vec2 sptPos = Vec2(x, y);
@@ -2787,16 +2818,17 @@ void BattleHud::loadData(){
                 realY = y/2;
             }else{
                 float extraX = 0;
-                if ((int)WORLD->getBuildingOccupySize(unitType).width%2 == 1) {
+                if ((int)GM->getBuildingOccupySize(unitType).width%2 == 1) {
 //                    extraX = 50*WORLD->getScale();
                 }
                 float extraY = 0;
-                if ((int)WORLD->getBuildingOccupySize(unitType).height%2 == 1) {
+                if ((int)GM->getBuildingOccupySize(unitType).height%2 == 1) {
 //                    extraY = 50*WORLD->getScale();
                 }
                 realX = x*TILE_SIZE + extraX;
                 realY = y*TILE_SIZE + extraY;
             }
+            
             Size mapSize = WORLD->theMap->getMapSize();
             if(realX > (mapSize.width-1)*TILE_SIZE){
                 realX = (mapSize.width - 10)*TILE_SIZE;
@@ -2867,18 +2899,30 @@ void BattleHud::loadData(){
     }
     
     if (!isCastleExist) {
-        Vec2 pos = Vec2(1300, 1400);
-        Vec2 sptPos = pos + Vec2(3*TILE_SIZE/2, 3*TILE_SIZE/2);
-        Vec2 occupyPos = pos + Vec2(0, TILE_SIZE*3);
-        EnemyBase* unit = WORLD->createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, sptPos, "castle", 1, "castle.png");
-        WORLD->setOccupy(occupyPos, 4, 3, true, unit);
-        buildings.pushBack(unit);
+        
+//        Vec2 pos = Vec2(1300/2, 1400/2);
+//        Vec2 sptPos = pos + Vec2(3*TILE_SIZE/2, 3*TILE_SIZE/2);
+//        Vec2 occupyPos = pos + Vec2(0, TILE_SIZE*3);
+//        EnemyBase* unit = WORLD->createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, sptPos, "castle", 1, "castle.png");
+//        WORLD->setOccupy(occupyPos, 4, 3, true, unit);
+//        buildings.pushBack(unit);
+//
+//        pos = Vec2(1600/2, 1700/2);
+//        sptPos = pos + Vec2(3*TILE_SIZE/2, 3*TILE_SIZE/2);
+//        occupyPos = pos + Vec2(0, TILE_SIZE*3);
+//        unit = WORLD->createUnit(UNIT_MINE, WHICH_SIDE_HERO, ITS_BUILDING, sptPos, "mine", 1, "mine.png");
+//        WORLD->setOccupy(occupyPos, 3, 3, true, unit);
+//        buildings.pushBack(unit);
+//        setupBuilding(unit);
+//        unit->setLocalZOrder(-sptPos.y);
+
 //        GM->addCoin(100);
 //        GM->addTree(100);
 //        std::vector<int> datas;
 //        datas.push_back(DATA_TYPE_GOLD);
 //        datas.push_back(DATA_TYPE_TREE);
 //        saveUserData(datas);
+        onBackClick();
     }
     
     updateHero();
@@ -3540,13 +3584,13 @@ void BattleHud::update(float dt){
             int index = UDGetInt(KEY_VIDEO_STORE_GEM_INDEX, 0);
             std::vector<int> datas;
             if (index >= 0 && index <= 4) {
-                showGemRewardMessageBox("reward", 1);
+                showGemRewardMessageBox("reward", 5);
             }else if (index >= 6 && index <= 10) {
-                showGemRewardMessageBox("reward", 1);
+                showGemRewardMessageBox("reward", 5);
             }else if (index == 5) {
-                showGemRewardMessageBox("reward", 10);
+                showGemRewardMessageBox("reward", 20);
             }else if (index == 11){
-                showGemRewardMessageBox("reward", 10);
+                showGemRewardMessageBox("reward", 20);
             }
             datas.push_back(DATA_TYPE_GEM);
             saveUserData(datas);
@@ -4065,6 +4109,7 @@ void BattleHud::updateHero(){
     }
 }
 void BattleHud::onTrainClick(){
+    WORLD->setVisible(false);
     svUpgardeX = 0;
     Node* layer = CSLoader::createNode("Train.csb");
     this->addChild(layer, 4);
@@ -4586,7 +4631,14 @@ void BattleHud::onUnitClickInUpgradeTab(Ref* ref){
 void BattleHud::onTrainGachaClick(Ref* ref){
     BTN_FROM_REF
     if (btn->getTag() == 0) {
-        GM->showVideo(VIDEO_GACHA);
+        if(GameSharing::isVideoAvailable()){
+            log("on video click");
+            GM->showVideo(VIDEO_GACHA);
+        }else{
+            log("on video click");
+            showInstanceMessage(LM->getText("video not available"));
+        }
+        
     }else if (btn->getTag() == 1) {
         if(unitInfoListInventory.size() >= inventoryCountMax){
             showInstanceMessage(LM->getText("inventory full"));
@@ -4743,7 +4795,11 @@ void BattleHud::showItemGetAndAddToBag(std::vector<int> array){
     
     Button* btnAgain = (Button*)layer->getChildByName("btnAgain");
     btnAgain->addClickEventListener(CC_CALLBACK_1(BattleHud::onTrainGachaAgainClick, this));
-    btnAgain->setOpacity(0);
+    btnAgain->setOpacity(100);
+    Vec2 btnPos = btnAgain->getPosition();
+    btnAgain->setPosition(btnPos + Vec2(-700, 0));
+    btnAgain->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime), MoveTo::create(fadeInTime, btnPos), NULL));
+    
     btnAgain->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime), FadeIn::create(fadeInTime), NULL));
     Text* lblPickCount = (Text*)btnAgain->getChildByName("lblPickCount");
     lblPickCount->setString(strmake("x%d", (int)array.size()));
@@ -5511,7 +5567,13 @@ void BattleHud::updateTrainPopup(){
 }
 void BattleHud::onBanMessageBoxClosed(){
     onBackClick();
-    GM->showVideo(VIDEO_SUPPORT_0);
+    if(GameSharing::isVideoAvailable()){
+        log("on video click");
+        GM->showVideo(VIDEO_SUPPORT_0);
+    }else{
+        log("on video click");
+        showInstanceMessage(LM->getText("video not available"));
+    }
 }
 void BattleHud::updateUI(float dt){
     if (BSM->isBannedUser) {
@@ -5843,7 +5905,7 @@ void BattleHud::checkTrainLayerUI(time_t now, int timeLeftToMidnight){
     time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
     bool isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
     
-    if(hudLayer && hudLayer->getChildByName("btnTrainBR") && hudLayer->getChildByName("btnTrainBR")->getChildByName("imgRedDot")){
+    if(hudLayer && hudLayer->getChildByName( "btnTrainBR") && hudLayer->getChildByName("btnTrainBR")->getChildByName("imgRedDot")){
         hudLayer->getChildByName("btnTrainBR")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady || isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
     }
     
@@ -5852,34 +5914,92 @@ void BattleHud::checkTrainLayerUI(time_t now, int timeLeftToMidnight){
         updateTrainLayer(layer, now, gachaWatchedTimeT, nextGachaFreeTimeT, isGachaVideoReady, timeLeftToMidnight, isGachaFreeReady, isWoodChestGachaFreeReady, isGoldChestGachaFreeReady);
     }
 }
-void BattleHud::updateTrainLayer(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady){
+void BattleHud::updateTrainLayer1(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady) {
     Node* ndUnits = layer->getChildByName("ndUnits");
-    if(layer->getChildByName("btnTab2") && layer->getChildByName("btnTab2")->getChildByName("imgRedDot")){
+    if(ndUnits == nullptr) return;
+}
+
+void BattleHud::updateTrainLayer2(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady) {
+//    Node* ndUnits = layer->getChildByName("ndUnits");
+//    if(ndUnits == nullptr) return;
+    if(layer && layer->getChildByName("btnTab2") && layer->getChildByName("btnTab2")->getChildByName("imgRedDot")){
         layer->getChildByName("btnTab2")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady);
     }
-    
+}
+void BattleHud::updateTrainLayer3(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady) {
+    Node* ndUnits = layer->getChildByName("ndUnits");
+//    if(ndUnits == nullptr) return;
+//    if(layer && layer->getChildByName("btnTab2") && layer->getChildByName("btnTab2")->getChildByName("imgRedDot")){
+//        layer->getChildByName("btnTab2")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady);
+//    }
+
     if(ndUnits && ndUnits->isVisible()){
         Text* lbl = (Text*)ndUnits->getChildByName("lblHireDescription");
-        LM->setLocalizedStringNotKey(lbl, strmake("%s (%s)", LM->getText("new soldiers").c_str(), GM->getTimeLeftInString(timeLeftToMidnight).c_str()));
-        std::string str = lbl->getString();
+        if(lbl){
+            LM->setLocalizedStringNotKey(lbl, strmake("%s (%s)", LM->getText("new soldiers").c_str(), GM->getTimeLeftInString(timeLeftToMidnight).c_str()));
+            std::string str = lbl->getString();
+        }
         int lastHireRefreshDay = UDGetInt(KEY_LAST_HIRE_REFRESH_DAY, 0);
         int today = now/86400;
         if (lastHireRefreshDay != today) {
             UDSetInt(KEY_LAST_HIRE_REFRESH_DAY, today);
             refreshSearchState();
         }
-        
-        time_t now = BSM->getCurrentTimeT();
-        std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
-        time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
-        bool isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
-        
-        std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
-        time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
-        bool isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
-        
-        ndUnits->getChildByName("btnHero")->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
+        if(BSM){
+            time_t now = BSM->getCurrentTimeT();
+            std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
+            time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
+            isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
+
+            std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
+            time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
+            isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
+        }
+        if(ndUnits->getChildByName("btnHero") && ndUnits->getChildByName("btnHero")->getChildByName("imgRedDot")){
+            ndUnits->getChildByName("btnHero")->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
+        }
     }
+}
+void BattleHud::updateTrainLayer(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady){
+    updateTrainLayer1(layer,now, gachaWatchedTimeT, nextGachaFreeTimeT, isGachaVideoReady, timeLeftToMidnight, isGachaFreeReady, isWoodChestGachaFreeReady,  isGoldChestGachaFreeReady);
+    Node* ndUnits = layer->getChildByName("ndUnits");
+    if(ndUnits == nullptr) return;
+
+    updateTrainLayer2(layer,now, gachaWatchedTimeT, nextGachaFreeTimeT, isGachaVideoReady, timeLeftToMidnight, isGachaFreeReady, isWoodChestGachaFreeReady,  isGoldChestGachaFreeReady);
+
+//    if(layer && layer->getChildByName("btnTab2") && layer->getChildByName("btnTab2")->getChildByName("imgRedDot")){
+//        layer->getChildByName("btnTab2")->getChildByName("imgRedDot")->setVisible(isGachaFreeReady || isGachaVideoReady);
+//    }
+
+    updateTrainLayer3(layer,now, gachaWatchedTimeT, nextGachaFreeTimeT, isGachaVideoReady, timeLeftToMidnight, isGachaFreeReady, isWoodChestGachaFreeReady,  isGoldChestGachaFreeReady);
+
+
+//    if(ndUnits && ndUnits->isVisible()){
+//        Text* lbl = (Text*)ndUnits->getChildByName("lblHireDescription");
+//        if(lbl){
+//            LM->setLocalizedStringNotKey(lbl, strmake("%s (%s)", LM->getText("new soldiers").c_str(), GM->getTimeLeftInString(timeLeftToMidnight).c_str()));
+//            std::string str = lbl->getString();
+//        }
+//        int lastHireRefreshDay = UDGetInt(KEY_LAST_HIRE_REFRESH_DAY, 0);
+//        int today = now/86400;
+//        if (lastHireRefreshDay != today) {
+//            UDSetInt(KEY_LAST_HIRE_REFRESH_DAY, today);
+//            refreshSearchState();
+//        }
+//        if(BSM){
+//            time_t now = BSM->getCurrentTimeT();
+//            std::string strNextWoodChestGachaFreeTime = UDGetStr(KEY_WOOD_CHEST_GACHA_NEXT_FREE_TIME, "");
+//            time_t nextWoodChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextWoodChestGachaFreeTime);
+//            isWoodChestGachaFreeReady = difftime(nextWoodChestGachaFreeTimeT, now) <= 0;
+//
+//            std::string strNextGoldChestGachaFreeTime = UDGetStr(KEY_GOLD_CHEST_GACHA_NEXT_FREE_TIME, "");
+//            time_t nextGoldChestGachaFreeTimeT = BSM->getTimeTFromStr(strNextGoldChestGachaFreeTime);
+//            isGoldChestGachaFreeReady = difftime(nextGoldChestGachaFreeTimeT, now) <= 0;
+//        }
+//        if(ndUnits->getChildByName("btnHero") && ndUnits->getChildByName("btnHero")->getChildByName("imgRedDot")){
+//            ndUnits->getChildByName("btnHero")->getChildByName("imgRedDot")->setVisible(isWoodChestGachaFreeReady || isGoldChestGachaFreeReady);
+//        }
+//    }
     updateUpgrade(layer, now);
     updateGacha(layer, now);
 }

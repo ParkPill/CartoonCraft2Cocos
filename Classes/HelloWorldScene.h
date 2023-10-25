@@ -40,9 +40,16 @@ using namespace sdkbox;
 #define MAX_COIN_COUNT 691
 
 #define GAME_MODE_NORMAL 0
-#define GAME_MODE_HARD 1
+#define GAME_MODE_HELL 1
+#define GAME_MODE_EASY 2
+#define GAME_MODE_HARD 3
 #define GAME_MODE_PVP6 6
 #define GAME_MODE_PVP12 12
+
+#define DIFFICULTY_MODE_EASY 2
+#define DIFFICULTY_MODE_NORMAL 0
+#define DIFFICULTY_MODE_HARD 3
+#define DIFFICULTY_MODE_HELL 1
 
 #define MAP_FOUND 0
 #define MAP_NORMAL -1
@@ -65,7 +72,7 @@ using namespace sdkbox;
 #define CLEAR_CONDITION_SURVIVE_FOR_10_MIN 3
 #define CLEAR_CONDITION_SURVIVE_FOR_20_MIN 4
 #define CLEAR_CONDITION_PROTECT_ALLI_AND_TERMINATE 5
-
+#define STAGE_CUSTOM -5
 #define STAGE_SINGLEPLAY -4
 #define STAGE_RAID -3
 #define STAGE_LOBBY -1
@@ -94,6 +101,19 @@ using namespace sdkbox;
 //#include "../cocos2d/cocos/2d/CCFastTMXTiledMap.h"
 //#include "../cocos2d/cocos/2d/CCFastTMXLayer.h"
 
+
+struct HMsg {
+    std::string msgType;
+    std::string sourceIDs;
+    int targetID;
+    int value0;
+    int value1;
+    int value2;
+    int value3;
+    int startTime;
+} ;
+
+
 #define WHICH_SIDE_HERO 0
 #define WHICH_SIDE_ENEMY 1
 #define WHICH_SIDE_MUTUAL 2
@@ -104,11 +124,13 @@ using namespace cocos2d::ui;
 class HelloWorld : public cocos2d::Layer
 {
 protected:
+    std::vector<HMsg> ownMsgList;
     float stickTimeLeft=0;
     void updateIndicators();
     Vector<Sprite*> indicatorArray;
     Vector<Movable*> indicatedArray;
     std::vector<int> shopWeaponItem;
+    
     float missileEffectCollapsedTime;
     Vector<Movable*> enemyMissileArray;
     Vector<EnemyBase*> flyingSwimingEnemyArray;
@@ -159,14 +181,14 @@ protected:
     Vector<Sprite*> exitArray;
     bool isTalkBoxInCustomMoving = false;
     
+    int nextEnemyID = 0;
+    int nextHeroID = 0;
     
     void addTalkBalloon(EnemyBase* npc, std::string imgName);
     void addTalkBalloon(TMXTiledMap* map, std::string imgName, cocos2d::Vec2 pos);
     EnemyBase* addNPC(cocos2d::Vec2 pos, std::string name);
     Vector<Movable*> heroMissileArray;
     bool isBattleStarted = false;
-    void updateUnitMove(float dt);
-    void updateUnitMoveNew(float dt);
     bool isNewCommandSystem = true;
     void move(float dt, Movable* obj, Movable* target, bool horiFirst);
 //    void gettingReadyForBattle(float dt);
@@ -199,8 +221,6 @@ protected:
     cocos2d::Vec2 deadPoint;
     bool guidedMissile;
     
-    Movable* findTargetEnemy(Movable* finder);
-    Movable* findTargetHero(Movable* finder);
     Sprite* activityIndicator;
     int criticalLevel;
     
@@ -230,22 +250,36 @@ protected:
     int suitcaseCount = 0;
     void receivingData(float dt);
 public:
+    Movable* findTargetEnemy(Movable* finder);
+    Movable* findTargetHero(Movable* finder);
+    void updateUnitMove(float dt);
+    void updateUnitMoveNew(float dt);
+    int gameFrameTimer = 0;
+    std::vector<int> deadEnemyArray;
+    int isMultiplay = false;
+    bool isMultiplayStarted = false;
     Camera* camera;
     bool isBlockExistBetween(Vec2 start, Vec2 end);
-    bool blackSheepWell = false; // test
+    bool blackSheepWell = false; // test 
     bool testSuper = false; // test
-    bool isHardMode = false;
+    bool isMultitest = false; // test
+//    bool isHardMode = false;
+    int difficultyMode = 0;
+
+    int getTileGIDAt(TMXLayer* layer, Vec2 pos);
     Movable* getGroundOwner(Vec2 pos);
     Vector<EnemyBase*> unitsToCreateArray;
     Vector<EnemyBase*> heroArray;
     Vector<EnemyBase*> enemyArray;
     Vector<EnemyBase*> mutualArray;
     Vector<EnemyBase*> readyHeroArray;
-    EnemyBase* createUnit(int index, int whichSide, bool isBuilding, cocos2d::Vec2 pos, std::string name, int scaleX=1, std::string charName = "workerAxeStand0.png");
+//    EnemyBase* createUnit(int index, int whichSide, bool isBuilding, cocos2d::Vec2 pos, std::string name, int scaleX=1, std::string charName = "workerAxeStand0.png", bool sendMsgForMultiplay = false);
+    EnemyBase* createUnit(int index, int whichSide, bool isBuilding, cocos2d::Vec2 pos, std::string name, int scaleX=1, std::string charName = "workerAxeStand1.png");
     void addUnit(Movable* unit, bool addToWorld);
     Vector<EnemyBase*> selectedArray;
     void updateMiniMapForMoving();
     void updateMiniMapForNonMoving();
+    
     
     TMXTiledMap* theMap;
     Movable* createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, cocos2d::Vec2 pos, bool isFromEnemy, std::string weaponName = "");
@@ -361,7 +395,7 @@ public:
     float imageScale = 0.5f;
     cocos2d::Size mapSize;
     // there's no 'id' in cpp, so we recommend to return the class instance cocos2d::Vec2er
-    static cocos2d::Scene* scene(int stage, int mode);
+    static cocos2d::Scene* scene(int stage, int mode, bool multiplay = false);
 //    SpriteBatchNode* spriteBatch;
 //    SpriteBatchNode* spriteBatchBuilding;
 //    SpriteBatchNode* spriteBatchEffect;
@@ -528,6 +562,7 @@ public:
     void nodeMoveDone(Ref* obj);
     void runEffect(int effect, cocos2d::Vec2 point);
     void runEffect(int effect, cocos2d::Vec2 point, float angle);
+    void showLaser(cocos2d::Vec2 srcPoint, cocos2d::Vec2 tarPoint);
     void addGlowEffect(Sprite* sprite,const Color3B& colour, const cocos2d::Size& size);
     void gameClearAnimationDone(Ref* obj);
     void gameOver();
@@ -590,6 +625,7 @@ public:
     void showTargetHand(cocos2d::Vec2 pos, bool isAttack);
     void moveTo(EnemyBase* unit, cocos2d::Vec2 pos);
     void moveTo(Vector<EnemyBase*> troop, cocos2d::Vec2 pos);
+    void moveMultiplayEnemyTo(Vector<EnemyBase*> troop, cocos2d::Vec2 pos);
     void moveTo(Vector<EnemyBase*> troop, EnemyBase* target);
     void gatherTo(Vector<EnemyBase*> troop, EnemyBase* target);
     void stop(Vector<EnemyBase*> troop);
@@ -676,6 +712,7 @@ public:
     bool checkClearGame();
 //    Vector<Text*> lblConditionArray;
     float gameTimer = 0;
+    
     float lastTimeCheck = 0;
     int lastTenTick = 0;
     int lastTick = 0;
@@ -716,11 +753,11 @@ public:
     void makeZombiesAttack();
     bool tryBuilding(int index);
     void tryCreateUnit(int index);
-    void createBuildingTemplate(int index, int width, int height, std::string spriteName);
-    EnemyBase* buildTheBuilding(int index, int x, int y, int width, int height, std::string spriteName);
+    void createBuildingTemplate(int index, std::string spriteName);
+    EnemyBase* buildTheBuilding(int index, int x, int y, int width, int height, std::string spriteName, int whichSide, bool isFree = false);
     cocos2d::Size buildingTemplateSize;
     cocos2d::Vec2 buildingTemplateCoordinate;
-    cocos2d::Size getBuildingOccupySize(int unit);
+    
     bool isBuildingReadyToBuild = false;
     std::string getHeroWeapon(int slot);
     std::string getHeroHelmet(int slot);
@@ -810,9 +847,11 @@ public:
     void removeDeadUnit(EnemyBase* unit);
     void updateFog();
     void processNewFogState();
-    EnemyBase* getNearestCastle(cocos2d::Vec2 pos);
-    EnemyBase* getNearestLumberTank(cocos2d::Vec2 pos);
-    EnemyBase* getNearestTree(cocos2d::Vec2 pos);
+    EnemyBase* getNearestCastle(cocos2d::Vec2 pos, bool isEnemy);
+    EnemyBase* getNearestLumberTank(cocos2d::Vec2 pos, bool isEnemy);
+    EnemyBase* getNearestTree(cocos2d::Vec2 pos, Vector<Movable*> excludeList);
+    EnemyBase* getTreeIfTreeIsHere(cocos2d::Vec2 pos);
+    bool blockSending= false;
     float fogUpdateTimer = 0.3f;
     int fogWidth = 0;
     int fogHeight = 0;
@@ -852,6 +891,7 @@ public:
     
     bool isInScreen(cocos2d::Vec2 pos);
     void addDecoToBuilding(Movable* unit);
+    void setAfterBuildingProcess(Movable* unit);
     void attackNearHero(EnemyBase* enemy);
     
     void selectAllForces();
@@ -897,11 +937,35 @@ public:
     
     bool isGameEnded = false;
     void checkVisibilityForInScreen();
+
+    bool isBuilding(int unitType);
     
+    void setWorkerToBuild(EnemyBase* worker, int buildingIndex, int x, int y);
+    void setWorkerToMine(EnemyBase* worker, EnemyBase* mine);
+    void setWorkerToTree(EnemyBase* worker, EnemyBase* tree);
+    void enemyPaused();
+    void enemyResumed();
+    Node* multiplayPauseLayer = nullptr;
+    float enemyPauseTimer = 20;
+    
+    bool attackDdangSent = false;
+    Vec2 movePosForMultiplay;
+    std::string moveIDForMultiplay;
+    void checkAttackDdangSent(float dt);
+    int frameToCover = 0;
 //    void onConnectToServer();
 //    void onJoinRoom();
 //    void onRoomMessage(msgpack::object);
 //    void onRoomStateChange(State*);
+    
+    bool isHero(int index);
+    void loadMapData();
+    
+    int mapSizeWidth;
+    int mapSizeHeight;
+    int mutualID = 0;
+    
+    
 };
 
 

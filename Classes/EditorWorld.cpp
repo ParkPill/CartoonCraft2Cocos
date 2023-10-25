@@ -79,11 +79,11 @@ Scene* EditorWorld::scene(int stage, bool boss)
     }
     
 
-    Vec2 pos = Vec2(110, 110);
-    EHUD->selectedMode = MODE_PENCIL;
-    EHUD->selectedBrush = BRUSH_SWORDSMAN;
-    EHUD->doBrush(pos);
-    EHUD->showDetailPopup(pos);
+//    Vec2 pos = Vec2(110, 110);
+//    EHUD->selectedMode = MODE_PENCIL;
+//    EHUD->selectedBrush = BRUSH_SWORDSMAN;
+//    EHUD->doBrush(pos);
+//    EHUD->showEditDetail(pos); // test 
     
     return scene;
 }
@@ -125,9 +125,9 @@ bool EditorWorld::init()
     playerIgnoreGravity = false;
     bulletWasted = false;
     
-    spriteBatch = SpriteBatchNode::create("cartoonCraft.png");
+    spriteBatch = Node::create();//"cartoonCraft.png");
     this->addChild(spriteBatch, 10);
-    spriteBatchEffect = SpriteBatchNode::create("cartoonCraftEffect.png");
+    spriteBatchEffect = Node::create();//"cartoonCraftEffect.png");
     this->addChild(spriteBatchEffect, 10);
     std::string stage = UD->getStringForKey(KEY_LAST_SAVE_POINT, "stage0");
     
@@ -166,7 +166,7 @@ bool EditorWorld::init()
     GM->playSoundEffect(SOUND_BGM_MAYDAY);
     for(int i = 0; i < mapSizeWidth; i++){
         for (int j = 0; j < mapSizeHeight; j++) {
-            placedArray[i][j] = 0;
+            placedArray[j][i] = 0;
         }
     }
     // init done
@@ -2071,72 +2071,10 @@ void EditorWorld::setEntireMap(int stage){
     mapWidth = mapSize.width*TILE_SIZE;
     mapHeight = mapSize.height*TILE_SIZE;
     
-    // fog setting
-    fogMapSize = cocos2d::Size(mapWidth/FOG_SIZE, mapHeight/FOG_SIZE);
-    for (int j = 0; j < mapHeight; j+=FOG_SIZE) {
-        for (int i = 0; i < mapWidth; i+= FOG_SIZE) {
-            Fog* fog = Fog::create();
-            fogArray.pushBack(fog);
-            spriteBatchEffect->addChild(fog, 100);
-            fog->coordinate = Vec2(i, j);
-            fog->setPosition(Vec2(i + FOG_SIZE/2, j + FOG_SIZE/2));
-            
-            if(GM->nextScene != STAGE_FIELD){
-                fog->setPosition(Vec2::ZERO);
-            }
-        }
-    }
+    GM->astar->setMap(mapSize.width, mapSize.height);
     
     setLayerTag(theMap);
     setStage(theMap);
-    int index = 0;
-    for(auto fog: fogArray){
-        int x = index%(int)fogMapSize.width;
-        int y = index/(int)fogMapSize.width;
-        for (int i = -1; i < 2; i++) {
-            for (int j = -1; j < 2; j++) {
-                if (i == 0 && j == 0) {
-                    continue;
-                }
-                int adjacentX = x + i;
-                int adjacentY = y + j;
-                if (adjacentX < 0 || adjacentX >= fogMapSize.width || adjacentY < 0 || adjacentY >= fogMapSize.height) {
-                    continue;
-                }
-                fog->adjacentFogs.pushBack(fogArray.at(adjacentX + adjacentY*(int)fogMapSize.width));
-            }
-        }
-        for (int i = -1; i < 2; i++) {
-            int farX = x + i;
-            if (farX < 0 || farX >= fogMapSize.width) {
-                continue;
-            }
-            int farY = y + 2;
-            if (farY >= 0 && farY < fogMapSize.height) {
-                fog->farFogs.pushBack(fogArray.at(farX + farY*(int)fogMapSize.width));
-            }
-            farY = y - 2;
-            if (farY >= 0 && farY < fogMapSize.height) {
-                fog->farFogs.pushBack(fogArray.at(farX + farY*(int)fogMapSize.width));
-            }
-        }
-        for (int i = -1; i < 2; i++) {
-            int farY = y + i;
-            if (farY < 0 || farY >= fogMapSize.height) {
-                continue;
-            }
-            int farX = x + 2;
-            if (farX >= 0 && farX < fogMapSize.width) {
-                fog->farFogs.pushBack(fogArray.at(farX + farY*(int)fogMapSize.width));
-            }
-            farX = x - 2;
-            if (farX >= 0 && farX < fogMapSize.width) {
-                fog->farFogs.pushBack(fogArray.at(farX + farY*(int)fogMapSize.width));
-            }
-        }
-        index++;
-    }
-    
     // minimap setting
     drawMiniMapFrame = DrawNode::create();
     EHUD->addChild(drawMiniMapFrame, 100);
@@ -2192,12 +2130,131 @@ void EditorWorld::setEntireMap(int stage){
     //        this->addChild(theMap);
     //    }
     this->addChild(theMap);
-    if(GM->nextScene== STAGE_FIELD){
-        updateFog();
-    }
     moveScreen(getPosition());
 }
-
+void EditorWorld::loadMapData(){
+    ValueVector entireList = GM->split(GM->loadMapData, "_");
+    ValueVector smallList = GM->split(entireList.at(0).asString(), "/");// map size
+    mapSizeWidth = smallList.at(0).asInt();
+    mapSizeHeight = smallList.at(1).asInt();
+    
+    smallList = GM->split(entireList.at(1).asString(), "|");// tree
+    
+    ValueVector unitInfoList;
+    vector<int> decoLayerList;
+    for (int i = 0; i < smallList.size(); i++) {
+        unitInfoList = GM->split(smallList.at(i).asString(), "/");
+        if (unitInfoList.size() > 0) {
+            for (int j = 0; j < unitInfoList.at(1).asInt(); j++) {
+                int tile = unitInfoList.at(0).asInt();
+                decoLayerList.push_back(tile);
+            }
+        }
+    }
+    
+    int x = 0;
+    int y = 0;
+    for (int i = 0; i < decoLayerList.size(); i++) {
+        if (decoLayerList.at(i) == 49) {
+            brushTile(BRUSH_TREE, Vec2(y, x));
+        }
+        x++;
+        if (x >= mapSizeWidth) {
+            x = 0;
+            y++;
+        }
+    }
+    smallList = GM->split(entireList.at(2).asString(), "|"); // hero
+    for (int i = 0; i < smallList.size(); i++) {
+        unitInfoList = GM->split(smallList.at(i).asString(), "/");
+        if (unitInfoList.size() > 1) {
+            Vec2 pos = getPositionFromTileCoordinate(unitInfoList.at(1).asInt(), unitInfoList.at(2).asInt());
+            int unitType =unitInfoList.at(0).asInt();
+            EnemyBase* unit = createUnit(unitType, WHICH_SIDE_HERO, GM->isThisBuilding(unitInfoList.at(0).asInt()), pos, "worker", 1, getSpriteNameForUnit(unitType));
+            unit->setTag(unitInfoList.at(1).asInt() + unitInfoList.at(2).asInt()*mapSizeWidth);
+            
+            if (GM->isThisBuilding(unitType)) {
+                cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
+                Vec2 coordinate = getCoordinateFromPosition(pos);
+                setOccupy(getPositionFromTileCoordinate(coordinate.x, coordinate.y), occupySize.width, occupySize.height, true, unit);
+                unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+                unit->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+//                setAfterBuildingProcess(unit);
+                
+//                if (unitType == UNIT_CASTLE) {
+//                    this->setPosition(-pos*layerScale + Vec2(size.width/2 + TILE_SIZE*layerScale, size.height/2));
+//                }
+//                unit->setPosition(pos + Vec2(TILE_SIZE*occupySize.width/2, -TILE_SIZE*occupySize.height/2));
+                
+//                unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+//                spt->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+//                this->addChild(spt, 1000);
+//                spt->setScale(0.1f);
+//                log("anchorPoint: %f, %f", unit->getAnchorPoint().x, unit->getAnchorPoint().y);
+            }
+        }
+    }
+    
+    smallList = GM->split(entireList.at(3).asString(), "|"); // mutual
+    for (int i = 0; i < smallList.size(); i++) {
+        unitInfoList = GM->split(smallList.at(i).asString(), "/");
+        if (unitInfoList.size() > 1) {
+            Vec2 pos = getPositionFromTileCoordinate(unitInfoList.at(1).asInt(), unitInfoList.at(2).asInt());
+            int unitType =unitInfoList.at(0).asInt();
+            EnemyBase* unit = createUnit(unitInfoList.at(0).asInt(), WHICH_SIDE_READY_HERO, GM->isThisBuilding(unitInfoList.at(0).asInt()), pos, "worker", 1, getSpriteNameForUnit(unitInfoList.at(0).asInt()));
+            unit->setTag(unitInfoList.at(1).asInt() + unitInfoList.at(2).asInt()*mapSizeWidth);
+            
+            if (GM->isThisBuilding(unitType)) {
+                cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
+                Vec2 coordinate = getCoordinateFromPosition(pos);
+                setOccupy(getPositionFromTileCoordinate(coordinate.x, coordinate.y), occupySize.width, occupySize.height, true, unit);
+                unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+                unit->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+            }
+        }
+    }
+    
+    smallList = GM->split(entireList.at(4).asString(), "|"); // enemy
+    for (int i = 0; i < smallList.size(); i++) {
+        unitInfoList = GM->split(smallList.at(i).asString(), "/");
+        if (unitInfoList.size() > 1) {
+            Vec2 pos = getPositionFromTileCoordinate(unitInfoList.at(3).asInt(), unitInfoList.at(4).asInt());
+            int unitType =unitInfoList.at(0).asInt();
+            EnemyBase* unit = createUnit(unitInfoList.at(0).asInt(), WHICH_SIDE_ENEMY, GM->isThisBuilding(unitInfoList.at(0).asInt()), pos, "worker", 1, getSpriteNameForUnit(unitInfoList.at(0).asInt()));
+            unit->unitAct = unitInfoList.at(1).asInt();
+            unit->scheduledAttackTime = unitInfoList.at(2).asInt()*60;
+            unit->setTag(unitInfoList.at(3).asInt() + unitInfoList.at(4).asInt()*mapSizeWidth);
+            if (GM->isThisBuilding(unitType)) {
+                cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
+                Vec2 coordinate = getCoordinateFromPosition(pos);
+                setOccupy(getPositionFromTileCoordinate(coordinate.x, coordinate.y), occupySize.width, occupySize.height, true, unit);
+                unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+                unit->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+            }
+        }
+    }
+    
+    smallList = GM->split(entireList.at(5).asString(), "|"); // mutual
+    for (int i = 0; i < smallList.size(); i++) {
+        unitInfoList = GM->split(smallList.at(i).asString(), "/");
+        if (unitInfoList.size() > 1) {
+            Vec2 pos = getPositionFromTileCoordinate(unitInfoList.at(1).asInt(), unitInfoList.at(2).asInt());
+            int unitType =unitInfoList.at(0).asInt();
+            EnemyBase* unit = createUnit(unitInfoList.at(0).asInt(), WHICH_SIDE_MUTUAL, GM->isThisBuilding(unitInfoList.at(0).asInt()), pos, "worker", 1, getSpriteNameForUnit(unitInfoList.at(0).asInt()));
+            unit->setTag(unitInfoList.at(1).asInt() + unitInfoList.at(2).asInt()*mapSizeWidth);
+            if (GM->isThisBuilding(unitType)) {
+                cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
+                Vec2 coordinate = getCoordinateFromPosition(pos);
+                setOccupy(getPositionFromTileCoordinate(coordinate.x, coordinate.y), occupySize.width, occupySize.height, true, unit);
+                unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+                unit->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+            }
+        }
+    }
+    
+    GM->loadMapData = "";
+    updateMiniMapForNonMoving();
+}
 void EditorWorld::purgatoryUpdate(float dt){
     int startX = 8*TILE_SIZE;
     Vec2 pos = Vec2(startX, (16-(-6)-1)*TILE_SIZE) + Vec2(-TILE_SIZE/2, TILE_SIZE/2);
@@ -2421,6 +2478,12 @@ void EditorWorld::updateMiniMapForMoving(){
             drawMiniMapForMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F::RED);
         }
     }
+    for (auto unit: readyHeroArray) {
+        if(!unit->isBuilding && unit->isVisible()){
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit/2, miniMapBit/2);
+            drawMiniMapForMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F::YELLOW);
+        }
+    }
     drawMiniMapForMoving->drawRect(miniMapViewRect.origin, Vec2(miniMapViewRect.getMaxX(), miniMapViewRect.getMaxY()), Color4F::WHITE);
 }
 
@@ -2428,40 +2491,34 @@ void EditorWorld::updateMiniMapForNonMoving(){
     drawMiniMapForNonMoving->clear();
     
     Vec2 startPos;
-    Vec2 fogCoordinate;
-    Fog* fogAboveUnit;
     for (int i = 0; i < mapSize.width; i ++) {
         for (int j = 0; j < mapSize.height; j++) {
-            fogCoordinate = Vec2(i*TILE_SIZE/FOG_SIZE, (mapSize.height - j - 1)*TILE_SIZE/FOG_SIZE);
-            fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-            if (fogAboveUnit->appliedState > FOG_SEEN_NOT && decoLayer->getTileGIDAt(Vec2(i, j)) == 49) {
+            if (decoLayer->getTileGIDAt(Vec2(i, j)) == 49) {
                 startPos = miniMapDrawStartPos + Vec2(i, mapSize.height - j - 1)*TILE_SIZE*miniMapScale;
                 drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit, miniMapBit), Color4F(0.2f, 0.2f, 0.2f, 1));
             }
         }
     }
-    
-    for(auto fog: fogArray){
-        if (fog->appliedState == FOG_SEEN_NOT || fog->appliedState == FOG_SEEN_NOT_NOW) {
-            startPos = miniMapDrawStartPos + Vec2(fog->getBoundingBox().origin.x*miniMapScale + 2, fog->getBoundingBox().origin.y*miniMapScale + 3);
-            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*FOG_SIZE/TILE_SIZE, miniMapBit*FOG_SIZE/TILE_SIZE), fog->appliedState == FOG_SEEN_NOT?Color4F::BLACK:Color4F(0, 0, 0, 0.5f));
-        }
-    }
-    
-    for (auto unit: mutualArray) {
+
+    for (auto unit: readyHeroArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
+//        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
             startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
             drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
-        }
+//        }
+    }
+    for (auto unit: mutualArray) {
+        if(!unit->isBuilding) continue;
+//        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
+            startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
+            drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::YELLOW);
+//        }
     }
     for (auto unit: heroArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
+//        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+//        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
+//        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW){
             startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
             
             if (unit->isAlli) {
@@ -2469,16 +2526,16 @@ void EditorWorld::updateMiniMapForNonMoving(){
             }else{
                 drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::GREEN);
             }
-        }
+//        }
     }
     for (auto unit: enemyArray) {
         if(!unit->isBuilding) continue;
-        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW && unit->isDetected){
+//        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
+//        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
+//        if (fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW && unit->isDetected){
             startPos = miniMapDrawStartPos + unit->getPosition()*miniMapScale - Vec2(miniMapBit*unit->buildingOccupySize.width/2, miniMapBit*unit->buildingOccupySize.width/2);
             drawMiniMapForNonMoving->drawSolidRect(startPos, startPos + Vec2(miniMapBit*unit->buildingOccupySize.width, miniMapBit*unit->buildingOccupySize.width), Color4F::RED);
-        }
+//        }
     }
 }
 void EditorWorld::addMapToMiniMap(experimental::TMXTiledMap* map){
@@ -3439,6 +3496,11 @@ void EditorWorld::setOccupy(cocos2d::Vec2 pos, int width, int height, bool occup
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
             decoLayer->setTileGID(occupy?48:0, Vec2(point.x + i, point.y + j));
+
+//            Sprite* spt = Sprite::create("btnStop.png"); // test
+//            this->addChild(spt);
+//            spt->setScale(0.1f);
+//            spt->setPosition(getPositionFromTileCoordinate(point.x + i, point.y + j)); // test
         }
     }
 }
@@ -3647,6 +3709,12 @@ EnemyBase* EditorWorld::createUnit(int index, int whichSide, bool isBuilding, Ve
     if(isBuilding){
         unit->canMove = false;
         unit->isBuildingComplete = true;
+        
+//        Sprite* spt = Sprite::createWithSpriteFrameName(getSpriteNameForUnit(index));
+//        this->addChild(spt, 1900);
+//        spt->setScale(0.2f);
+//        spt->setPosition(pos);
+//        spt->setPosition(getPositionFromTileCoordinate(point.x + i, point.y + j)); // test
     }
 //    unit->refreshApproachPoints();
 //    unit->stop();
@@ -3657,6 +3725,8 @@ EnemyBase* EditorWorld::createUnit(int index, int whichSide, bool isBuilding, Ve
         unit->isFlying = true;
         unit->setLocalZOrder(10);
     }
+    
+    
     return unit;
 }
 
@@ -4388,6 +4458,9 @@ void EditorWorld::gravityUpdate(float dt)
     if (doubleClickTimer > 0) {
         doubleClickTimer -= dt;
     }
+    if(GM->loadMapData.length() > 0){
+        loadMapData();
+    }
     gameTimer += dt;
     if(lastTick + 1 < gameTimer){
         lastTick = gameTimer;
@@ -4473,8 +4546,10 @@ void EditorWorld::gravityUpdate(float dt)
         GameManager::getInstance()->totalTime -= dt;
     }
     
-    updateUnitMove(dt);
+//    updateUnitMove(dt);
     
+    bool isMiniMapForMovingChanged = false;
+    bool isMiniMapForNonMovingChanged = false;
     for (auto unit: unitsToCreateArray) {
         if (unit->isEnemy) {
             enemyArray.pushBack(unit);
@@ -4490,23 +4565,36 @@ void EditorWorld::gravityUpdate(float dt)
         }else if(unit->alliSide == WHICH_SIDE_READY_HERO){
             readyHeroArray.pushBack(unit);
         }
+        if (unit->isBuilding) {
+            isMiniMapForNonMovingChanged = true;
+        }else{
+            isMiniMapForMovingChanged = true;
+        }
     }
+    if (isMiniMapForMovingChanged) {
+        updateMiniMapForMoving();
+    }
+    if (isMiniMapForNonMovingChanged) {
+        updateMiniMapForNonMoving();
+    }
+    
+    
     bool shouldExit = false;
-    for (auto unit: readyHeroArray) {
-        for(auto hero: heroArray){
-            if (hero->getPosition().distanceSquared(unit->getPosition()) < 1000000) {
-                unit->blinkSelectedCircle();
-                readyHeroArray.eraseObject(unit);
-                heroArray.pushBack(unit);
-                unit->alliSide = WHICH_SIDE_HERO;
-                shouldExit = true;
-                break;
-            }
-        }
-        if(shouldExit){
-            break;
-        }
-    }
+//    for (auto unit: readyHeroArray) {
+//        for(auto hero: heroArray){
+//            if (hero->getPosition().distanceSquared(unit->getPosition()) < 1000000) {
+//                unit->blinkSelectedCircle();
+//                readyHeroArray.eraseObject(unit);
+//                heroArray.pushBack(unit);
+//                unit->alliSide = WHICH_SIDE_HERO;
+//                shouldExit = true;
+//                break;
+//            }
+//        }
+//        if(shouldExit){
+//            break;
+//        }
+//    }
     unitsToCreateArray.clear();
     
     if (!isGameOver) {
@@ -4666,110 +4754,11 @@ void EditorWorld::oneSecUpdate(float dt){
     oneSecTiemr = 1;
 }
 void EditorWorld::halfSecUpdate(float dt){
-    fogUpdateTimer -= dt;
-    if(fogUpdateTimer < 0){
-        fogUpdateTimer = 0.5f;
-        updateFog();
-    }
     halfSecTimer -= dt;
     if(halfSecTimer < 0){
         halfSecTimer = 0.5f;
         updateMiniMapForMoving();
     }
-}
-void EditorWorld::updateFog(){
-    //    return; // test
-    for(auto fog: fogArray){
-        fog->newState = FOG_SEEN_NOT;
-    }
-    updateMiniMapForNonMoving();
-    Vec2 fogCoordinate;
-    Fog* fogAboveUnit;
-    for(auto unit: heroArray){
-        if(unit->isBuilding){
-            for (int i = 0; i < 4; i++) {
-                if(i == 0){
-                    //                    fogCoordinate = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y)/FOG_SIZE;
-                    fogCoordinate = unit->approachingPoints[0]/FOG_SIZE;
-                }else if(i == 1){
-                    //                    fogCoordinate = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x + unit->buildingOccupySize.width-1, unit->buildingStartCoordinate.y)/FOG_SIZE;
-                    fogCoordinate = unit->approachingPoints[1]/FOG_SIZE;
-                }else if(i == 2){
-                    //                    fogCoordinate = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y+unit->buildingOccupySize.height-1)/FOG_SIZE;
-                    fogCoordinate = unit->approachingPoints[2]/FOG_SIZE;
-                }else if(i == 3){
-                    //                    fogCoordinate = getPositionFromTileCoordinate(unit->buildingStartCoordinate.x + unit->buildingOccupySize.width-1, unit->buildingStartCoordinate.y+unit->buildingOccupySize.height-1)/FOG_SIZE;
-                    fogCoordinate = unit->approachingPoints[3]/FOG_SIZE;
-                }
-                
-                fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-                fogAboveUnit->newState = FOG_SEEN_NOW;
-                for(auto fog:fogAboveUnit->adjacentFogs){
-                    fog->newState = FOG_SEEN_NOW;
-                }
-                for(auto fog:fogAboveUnit->farFogs){
-                    if(fog->appliedState != FOG_SEEN_NOT_NOW && fog->newState != FOG_SEEN_NOW){
-                        fog->newState = FOG_SEEN_LITTLE;
-                    }
-                }
-            }
-        }else{
-            fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-            fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-            fogAboveUnit->newState = FOG_SEEN_NOW;
-            for(auto fog:fogAboveUnit->adjacentFogs){
-                fog->newState = FOG_SEEN_NOW;
-            }
-            for(auto fog:fogAboveUnit->farFogs){
-                //                if(fog->appliedState != FOG_SEEN_NOT_NOW && fog->newState != FOG_SEEN_NOW){
-                if(fog->newState != FOG_SEEN_NOW){
-                    fog->newState = FOG_SEEN_LITTLE;
-                }
-            }
-        }
-    }
-    if(blackSheepWell){ // test
-        for(auto fog: fogArray){
-            fog->newState = FOG_SEEN_NOW;
-            //            fog->appliedState = FOG_SEEN_NOW;
-        }
-    }
-    
-    for(auto fog: fogArray){
-        if (fog->newState == fog->appliedState) {
-            continue;
-        }
-        if (fog->newState == FOG_SEEN_NOW) {
-            fog->setVisible(false);
-            fog->appliedState = FOG_SEEN_NOW;
-        }else if(fog->newState == FOG_SEEN_LITTLE){
-            fog->setVisible(true);
-            fog->setOpacity(100);
-            fog->appliedState = FOG_SEEN_LITTLE;
-        }else if(fog->appliedState > FOG_SEEN_NOT_NOW && fog->newState == FOG_SEEN_NOT){
-            fog->setVisible(true);
-            fog->setOpacity(150);
-            fog->appliedState = FOG_SEEN_NOT_NOW;
-        }
-    }
-    
-    for(auto unit: enemyArray){
-        fogCoordinate = Vec2(unit->getPositionX()/FOG_SIZE, unit->getPositionY()/FOG_SIZE);
-        fogAboveUnit = fogArray.at((int)fogCoordinate.x + (int)fogCoordinate.y*(int)fogMapSize.width);
-        unit->setVisible(fogAboveUnit->appliedState > FOG_SEEN_NOT_NOW || unit->isDetected);
-        if(unit->energyBar != nullptr){
-            unit->energyBar->setVisible(unit->isVisible());
-            unit->energyBarContent->setVisible(unit->isVisible());
-            unit->energyBarBack->setVisible(unit->isVisible());
-        }
-        if(!unit->isDetected && unit->isBuilding && unit->isVisible()){
-            unit->isDetected = true;
-            updateMiniMapForNonMoving();
-        }
-    }
-}
-void EditorWorld::coinMagnet(){
-    
 }
 Sprite* EditorWorld::getTeleport(int teleport){
     for(auto tele: teleportArray){
@@ -5022,6 +5011,7 @@ void EditorWorld::addListener(){
         }
         touchBeganPos = touches.at(0)->getLocation();
         this->stopAllActions();
+        lastTouchPoint = touchBeganPos;
         
         touchCount += touches.size();
         if (touchCount > 2) {
@@ -5049,8 +5039,20 @@ void EditorWorld::addListener(){
             moveScreen(newPos);
             //            }
             isTouchBeganFromMiniMap = true;
+            isMapMovingByMiniMap = true;
         }
+        Vec2 location = touch->getLocationInView();
+                        
+        location = Director::getInstance()->convertToGL(location);
         
+                        
+        if (EHUD->selectedMode == MODE_SELECT && EHUD->selectedUnitForEditDetail != nullptr && EHUD->selectedUnitForEditDetail->getBoundingBox().containsPoint(location - getPosition())) {
+            isSelectedUnitSelected = true;
+            selectedArrayPlacedPosition = getCoordinateFromPosition(EHUD->selectedUnitForEditDetail->getPosition());
+            selectedUnitsBrush = placedArray[(int)selectedArrayPlacedPosition.y][(int)selectedArrayPlacedPosition.x];
+        }else{
+            isSelectedUnitSelected = false;
+        }
     };
     listener->onTouchesMoved = [&](const std::vector<Touch*>& touches, Event* evt){
         //        log("onTouchesMoved. count: %d", (int)touches.size());
@@ -5107,36 +5109,32 @@ void EditorWorld::addListener(){
         
         EHUD->draw->clear();
         //        if(twoTouchEnabled || touches.size() > 1){
-        if(secondTouch != nullptr && touches.size() > 1){
-            Vec2 dtPos = secondTouch->getLocation() - lastTouchPoint;
-            moveScreen(getPosition() + dtPos);
-            
-            lastTouchPoint = secondTouch->getLocation();
-            if(touches.size() > 1 && false){
-                int distanceSquared = touches.at(0)->getLocation().distanceSquared(touches.at(1)->getLocation());
-                float scalingRate = 0.0000001f;
-                float distanceDiff = distanceSquared - secondTouchBeganDistance;
-                distanceDiff*= scalingRate;
-                float scale = this->getScale() + distanceDiff;
-                log("secondTouchBeganDistance: %d, distanceSquared: %d, distanceDiff: %f", secondTouchBeganDistance, distanceSquared, distanceDiff);
-                if(scale > maxLayerScale){
-                    scale = maxLayerScale;
-                }else if(scale < minLayerScale){
-                    scale = minLayerScale;
+//        if(secondTouch != nullptr && touches.size() > 1){
+        if(touches.size() >= 1 && EHUD->selectedMode == MODE_SELECT){
+            Vec2 dtPos = touches.at(0)->getLocation() - lastTouchPoint;
+            if (EHUD->selectedUnitForEditDetail != nullptr && isSelectedUnitSelected) {
+                EHUD->selectedUnitForEditDetail->setPosition(EHUD->selectedUnitForEditDetail->getPosition() + dtPos);
+            }else{
+
+                moveScreen(getPosition() + dtPos);
+                
+                if(touches.size() > 1 && false){
+                    int distanceSquared = touches.at(0)->getLocation().distanceSquared(touches.at(1)->getLocation());
+                    float scalingRate = 0.0000001f;
+                    float distanceDiff = distanceSquared - secondTouchBeganDistance;
+                    distanceDiff*= scalingRate;
+                    float scale = this->getScale() + distanceDiff;
+                    log("secondTouchBeganDistance: %d, distanceSquared: %d, distanceDiff: %f", secondTouchBeganDistance, distanceSquared, distanceDiff);
+                    if(scale > maxLayerScale){
+                        scale = maxLayerScale;
+                    }else if(scale < minLayerScale){
+                        scale = minLayerScale;
+                    }
+                    this->setScale(scale);
                 }
-                this->setScale(scale);
             }
+            lastTouchPoint = touches.at(0)->getLocation();
             
-            
-            if (this->stageIndex == 0 && EHUD->tutorialIndex == 2) {
-                EHUD->tutorialIndex++;
-                EHUD->talkIndex = 0;
-                EHUD->talkText = LM->getText("tutorial 3");
-                Sprite* spt = (Sprite*)EHUD->tutorialNode->getChildByName("sptIcon");
-                spt->setPosition(Vec2(size.width/2 - 750, 330));
-                spt->stopAllActions();
-                spt->setSpriteFrame("mine.png");
-            }
         }else if(touchCount < 2 && !isMapMovingByMiniMap){
 //            EHUD->draw->drawRect(touchBeganPos, touches.at(0)->getLocation(), Color4F::GREEN);
             Touch *touch = touches.at(0);
@@ -5145,8 +5143,13 @@ void EditorWorld::addListener(){
                 return;
             }
             location = Director::getInstance()->convertToGL(location);
+            Vec2 pos = location - getPosition();
             if(EHUD->selectedMode == MODE_PENCIL || EHUD->selectedMode == MODE_ERASER){
-                EHUD->doBrush(location - getPosition());
+                Vec2 newCoorinate = getCoordinateFromPosition(pos);
+                if (lastBrushedCoordinate != newCoorinate) {
+                    EHUD->doBrush(pos);
+                    lastBrushedCoordinate = newCoorinate;
+                }
             }
             
         }
@@ -5207,7 +5210,7 @@ void EditorWorld::addListener(){
         
         if(touchCount == 1 && !twoTouchEnabled){
             float touchBeganToEndDiff = touchBeganPos.distanceSquared(touch->getLocation());
-            if(touchBeganToEndDiff < 2000){ // click
+            if(touchBeganToEndDiff < 2000 && !isMapMovingByMiniMap){ // click
                 if (isTouchBeganFromMiniMap && cocos2d::Rect(drawMiniMapForMoving->getPosition() + miniMapDrawStartPos, cocos2d::Size(miniMapWidth, miniMapHeight)).containsPoint(touch->getLocation())) {   // click on minimap
                     if(false){
                         if(!isMapMovingByMiniMap){
@@ -5231,9 +5234,23 @@ void EditorWorld::addListener(){
                 Vec2 location = touch->getLocationInView();
                 location = Director::getInstance()->convertToGL(location);
                 if(EHUD->selectedMode == MODE_PENCIL || EHUD->selectedMode == MODE_ERASER){
-                    EHUD->doBrush(location - getPosition());
+                    Vec2 pos = location - getPosition();
+                    Vec2 newCoorinate = getCoordinateFromPosition(pos);
+                    if (lastBrushedCoordinate != newCoorinate) {
+                        EHUD->doBrush(pos);
+                        lastBrushedCoordinate = newCoorinate;
+                    }
+                    
                 }else if(EHUD->selectedMode == MODE_SELECT){
-                    EHUD->showDetailPopup(location - getPosition());
+//                    EHUD->showDetailPopup(location - getPosition());
+                    EHUD->hideOptions();
+                    log("doubleClickTimer: %f", doubleClickTimer);
+                    if (doubleClickTimer > 0) {
+                        EHUD->showOptions(location - getPosition(), true);
+                    }else{
+                        EHUD->showOptions(location - getPosition(), false);
+                    }
+                    doubleClickTimer = 0.3f;
                 }
                 
             }else{ // drag
@@ -5243,12 +5260,41 @@ void EditorWorld::addListener(){
                     GM->playSoundEffect(SOUND_PENCIL_SHORT);
                 }
             }
+            if (EHUD->selectedUnitForEditDetail != nullptr && isSelectedUnitSelected) {
+                
+                
+                Vec2 coordinate = getCoordinateFromPosition(EHUD->selectedUnitForEditDetail->getPosition());
+                
+                int owner = placedArray[(int)coordinate.y][(int)coordinate.x];
+                
+                placedArray[(int)selectedArrayPlacedPosition.y][(int)selectedArrayPlacedPosition.x] = owner;
+                placedArray[(int)coordinate.y][(int)coordinate.x] = selectedUnitsBrush;
+                Vec2 oldCoordinate = selectedArrayPlacedPosition;
+                if (owner > 0) {
+                    for(auto child : spriteBatch->getChildren()){
+                        Movable* unit = (Movable*)child;
+                        if (unit != EHUD->selectedUnitForEditDetail && unit->getBoundingBox().containsPoint(EHUD->selectedUnitForEditDetail->getPosition())) {
+                            Vec2 oldPos = getPositionFromTileCoordinate(selectedArrayPlacedPosition.x, selectedArrayPlacedPosition.y);
+                            unit->setPosition(oldPos);
+                            log("%d, %f, %f, ",unit->unitType, unit->getPositionX(), unit->getPositionY());
+                            unit->setTag(selectedArrayPlacedPosition.x + selectedArrayPlacedPosition.y*mapSizeWidth);
+                            break;
+                        }
+                    }
+                }
+                
+                EHUD->selectedUnitForEditDetail->setPosition(getPositionFromTileCoordinate(coordinate.x, coordinate.y));
+                EHUD->selectedUnitForEditDetail->setTag(coordinate.x + coordinate.y*mapSizeWidth);
+                EHUD->showSelectedCircle(true);
+            }
+            
         }
         touchCount -= touches.size();
         if(touchCount <= 0){
             touchCount = 0;
             twoTouchEnabled = false;
         }
+        updateMiniMapForNonMoving();
         EHUD->draw->clear();
     };
     listener->onTouchesCancelled = [&](const std::vector<Touch*>& touches, Event* evt){
@@ -5338,8 +5384,8 @@ void EditorWorld::moveScreen(cocos2d::Vec2 pos){
     if(pos.x > 0){
         pos.x = 0;
     }
-    if(pos.y > 300){
-        pos.y = 300;
+    if(pos.y > 600){
+        pos.y = 600;
     }
     if(pos.y < -TILE_SIZE*mapSize.height + size.height){
         pos.y = -TILE_SIZE*mapSize.height + size.height;
@@ -5627,15 +5673,22 @@ void EditorWorld::addDecoToBuilding(Movable* unit){
         spt->setPosition(Vec2(192, 255));
     }
 }
+
 std::string EditorWorld::getSpriteNameForUnit(int index){
     if(index == UNIT_WORKER){
         return "workerAxeStand0.png";
+    }else if(index == UNIT_GOBLIN_WORKER){
+        return "goblinAxeStand0.png";
     }else if(index == UNIT_SWORDMAN){
         return "swordmanStand0.png";
+    }else if(index == UNIT_MINE){
+        return "mine.png";
     }else if(index == UNIT_TROLL){
         return "trollStand0.png";
     }else if(index == UNIT_GOBLIN){
         return "goblinStand0.png";
+    }else if(index == UNIT_GOBLIN_BOMB){
+        return "goblinBombStand0.png";
     }else if(index == UNIT_ORC_SPEAR){
         return "orcSpearStand0.png";
     }else if(index == UNIT_ORC_AXE){
@@ -5646,6 +5699,10 @@ std::string EditorWorld::getSpriteNameForUnit(int index){
         return "helicopter0.png";
     }else if(index == UNIT_CATAPULT){
         return "catapult0.png";
+    }else if(index == UNIT_ZOMBIE_ORC_AXE){
+        return "zombieOrc0.png";
+    }else if(index == UNIT_ZOMBIE_SWORDSMAN){
+        return "zombieHuman0.png";
     }else if(index == UNIT_CASTLE){
         return "castle.png";
     }else if(index == UNIT_FARM){
@@ -5660,12 +5717,30 @@ std::string EditorWorld::getSpriteNameForUnit(int index){
         return "bunker.png";
     }else if(index == UNIT_ORC_HQ){
         return "hq.png";
+    }else if(index == UNIT_ORC_BARRACKS){
+        return "axeport.png";
+    }else if(index == UNIT_ORC_TROLL_HOUSE){
+        return "statueHouse.png";
+    }else if(index == UNIT_TEMPLE){
+        return "alter.png";
+    }else if(index == UNIT_BARBECUE){
+        return "barbecue.png";
     }else if(index == UNIT_AIRPORT){
         return "airport.png";
     }else if(index == UNIT_FACTORY){
         return "factory.png";
+    }else if(index == UNIT_UNDERGROUND_BUNKER){
+        return "undergroundBunker.png";
+    }else if(index == UNIT_TRIGGER){
+        return "trigger.png";
+    }else if(index == UNIT_TREE_FOR_BATTLE || index == UNIT_TREE){
+        return "tree3_0.png";
+    }else if(index == UNIT_WIZARD){
+        return "wizardStand0.png";
     }
+    return "workerAxeStand0.png";
 }
+
 std::string EditorWorld::getUnitName(int index){
     if(index == UNIT_WORKER){
         return "workerAxe";
@@ -5724,33 +5799,33 @@ Sprite* EditorWorld::getSpriteForIcon(int index){
     }
     else if(index ==  UNIT_CATAPULT  ){
         sptBuilding = Sprite::createWithSpriteFrameName("catapult0.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 20, sptBuilding->getTextureRect().origin.y, 160, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 20, sptBuilding->getTextureRect().origin.y, 160, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_CASTLE  ){
         sptBuilding = Sprite::createWithSpriteFrameName("castle.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y + 50, 230, 210));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y + 50, 230, 210));
     }
     else if(index ==  UNIT_FARM  ){
         sptBuilding = Sprite::createWithSpriteFrameName("farm.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, 230, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_BARRACKS  ){
         sptBuilding = Sprite::createWithSpriteFrameName("barracks.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_LUMBERMILL  ){
         sptBuilding = Sprite::createWithSpriteFrameName("lumberMill.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 0, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 0, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }else if(index ==  UNIT_WATCHERTOWER  ){
         sptBuilding = Sprite::createWithSpriteFrameName("watcherTower.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, 210));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, 210));
     }else if(index ==  UNIT_FACTORY  ){
         sptBuilding = Sprite::createWithSpriteFrameName("factory.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y , 230, sptBuilding->getContentSize().height));
     }
     else if(index ==  UNIT_AIRPORT  ){
         sptBuilding = Sprite::createWithSpriteFrameName("airport.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, sptBuilding->getContentSize().height));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x, sptBuilding->getTextureRect().origin.y, sptBuilding->getContentSize().width, sptBuilding->getContentSize().height));
         Sprite* spt = Sprite::createWithSpriteFrameName("airportPropeller0.png");
         sptBuilding->addChild(spt);
         spt->setPosition(Vec2(134, 206));
@@ -5764,6 +5839,8 @@ Sprite* EditorWorld::getSpriteForIcon(int index){
         sptBuilding = Sprite::createWithSpriteFrameName("orcSpearStand0.png");
     }else if(index ==  UNIT_TROLL){
         sptBuilding = Sprite::createWithSpriteFrameName("trollStand0.png");
+    }else if(index ==  UNIT_GOBLIN_WORKER){
+        sptBuilding = Sprite::createWithSpriteFrameName("goblinAxeStand0.png");
     }else if(index ==  UNIT_GOBLIN){
         sptBuilding = Sprite::createWithSpriteFrameName("goblinStand0.png");
     }else if(index ==  UNIT_GOBLIN_BOMB){
@@ -5772,11 +5849,21 @@ Sprite* EditorWorld::getSpriteForIcon(int index){
         sptBuilding = Sprite::createWithSpriteFrameName("bunker.png");
     }else if(index ==  UNIT_ORC_HQ){
         sptBuilding = Sprite::createWithSpriteFrameName("hq.png");
-        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 50, sptBuilding->getTextureRect().origin.y + 50 , 220, 210));
+//        sptBuilding->setTextureRect(cocos2d::Rect(sptBuilding->getTextureRect().origin.x + 50, sptBuilding->getTextureRect().origin.y + 50 , 220, 210));
     }else if(index ==  UNIT_ZOMBIE_ORC_AXE){
         sptBuilding = Sprite::createWithSpriteFrameName("zombieOrc0.png");
     }else if(index ==  UNIT_ZOMBIE_SWORDSMAN){
         sptBuilding = Sprite::createWithSpriteFrameName("zombieHuman0.png");
+    }else if(index ==  UNIT_WIZARD){
+        sptBuilding = Sprite::createWithSpriteFrameName("wizardStand0.png");
+    }else if(index ==  UNIT_ORC_BARRACKS){
+        sptBuilding = Sprite::createWithSpriteFrameName("axeport.png");
+    }else if(index ==  UNIT_BARBECUE){
+        sptBuilding = Sprite::createWithSpriteFrameName("barbecue.png");
+    }else if(index ==  UNIT_ORC_TROLL_HOUSE){
+        sptBuilding = Sprite::createWithSpriteFrameName("statueHouse.png");
+    }else if(index ==  UNIT_TEMPLE){
+        sptBuilding = Sprite::createWithSpriteFrameName("alter.png");
     }
     
     return sptBuilding;
@@ -5822,50 +5909,7 @@ void EditorWorld::tryCreateUnit(int index){
     }
 }
 bool EditorWorld::tryBuilding(int index){
-    int goldPrice = getGoldPriceForUnit(index);
-    int lumberPrice = getLumberPriceForUnit(index);
-    if(gold < goldPrice){
-        //        EHUD->showInstanceMessage(LM->getText("not enough gold"));
-        EHUD->showPriceInfo(LM->getText("not enough gold"), goldPrice, lumberPrice, 0);
-        GM->playSoundEffect(SOUND_NAGATIVE);
-        return false;
-    }else if(lumber < lumberPrice){
-        //        EHUD->showInstanceMessage(LM->getText("not enough lumber"));
-        EHUD->showPriceInfo(LM->getText("not enough lumber"), goldPrice, lumberPrice, 0);
-        GM->playSoundEffect(SOUND_NAGATIVE);
-        return false;
-    }else{
-        if(index == UNIT_FACTORY || index == UNIT_AIRPORT){
-            bool exist = false;
-            for(auto unit: heroArray){
-                if(unit->unitType == UNIT_LUMBERMILL){
-                    exist = true;
-                    break;
-                }
-            }
-            if(!exist){
-                PPLabel* lbl = EHUD->showInstanceMessage("Build a lumbermill, first.");
-                lbl->setWordColor("lumbermill", Color3B(245, 213, 71));
-                GM->playSoundEffect(SOUND_NAGATIVE);
-                return false;
-            }
-        }
-        if(index == UNIT_CASTLE){
-            createBuildingTemplete(index, 4, 3, "castle.png");
-        }else if(index == UNIT_FARM){
-            createBuildingTemplete(UNIT_FARM, 3, 2, "farm.png");
-        }else if(index == UNIT_WATCHERTOWER){
-            createBuildingTemplete(UNIT_WATCHERTOWER, 2, 2, "watcherTower.png");
-        }else if(index == UNIT_LUMBERMILL){
-            createBuildingTemplete(UNIT_LUMBERMILL, 3, 3, "lumberMill.png");
-        }else if(index == UNIT_BARRACKS){
-            createBuildingTemplete(UNIT_BARRACKS, 3, 3, "barracks.png");
-        }else if(index == UNIT_FACTORY){
-            createBuildingTemplete(UNIT_FACTORY, 3, 3, "factory.png");
-        }else if(index == UNIT_AIRPORT){
-            createBuildingTemplete(UNIT_AIRPORT, 3, 3, "airport.png");
-        }
-    }
+    
     return true;
 }
 void EditorWorld::createBuildingTemplete(int index, int width, int height, std::string spriteName){
@@ -6449,7 +6493,7 @@ void EditorWorld::goThroughPortal(){
 }
 void EditorWorld::showNPCEvent(int index){
     isInEvent = true;
-    EHUD->showEvent(index, false);
+    
 }
 void EditorWorld::stepBackDone(){
     
@@ -6964,15 +7008,19 @@ bool EditorWorld::checkMovableMissileCollision(Movable* p){
     return false;
 }
 int EditorWorld::getPlacedUnit(cocos2d::Vec2 coordinate){
-    return placedArray[(int)coordinate.x][(int)coordinate.y];
+    return placedArray[(int)coordinate.y][(int)coordinate.x];
 }
 void EditorWorld::eraseTile(cocos2d::Vec2 coordinate){
     int index = coordinate.x + coordinate.y*mapSizeWidth;
     Vec2 pos;
     for(auto unit: spriteBatch->getChildren()){
         if(unit->getTag() == index){
+//        if(unit->getBoundingBox().containsPoint(getPositionFromTileCoordinate(coordinate.x, coordinate.y))){
 //            pos = unit->getPosition();
             EnemyBase* enemy = (EnemyBase*)unit;
+            if ((Movable*)unit == EHUD->selectedUnitForEditDetail) {
+                EHUD->hideOptions();
+            }
             if(enemy->isBuilding){
                 for(int i = 0; i < enemy->buildingOccupySize.width; i++){
                     for(int j = 0;j < enemy->buildingOccupySize.height; j++){
@@ -6985,15 +7033,17 @@ void EditorWorld::eraseTile(cocos2d::Vec2 coordinate){
             }else if(enemy->unitType == UNIT_TREE){
                 decoLayer->setTileGID(0, getCoordinateFromPosition(enemy->getPosition()));
             }
+            
             mutualArray.eraseObject(enemy);
+            readyHeroArray.eraseObject(enemy);
             heroArray.eraseObject(enemy);
             enemyArray.eraseObject(enemy);
             unit->removeFromParent();
             break;
         }
     }
-    int brush = placedArray[(int)coordinate.x][(int)coordinate.y];
-    placedArray[(int)coordinate.x][(int)coordinate.y] = 0;
+//    int brush = placedArray[(int)coordinate.x][(int)coordinate.y];
+    placedArray[(int)coordinate.y][(int)coordinate.x] = 0;
 }
 void EditorWorld::setMapData(std::string data){
     ValueVector numbers = GM->split(data, ",");
@@ -7017,7 +7067,7 @@ std::string EditorWorld::getMapData(){
     std::string mapData = "";
     for(int i = 0; i < mapSizeWidth; i++){
         for (int j = 0; j < mapSizeHeight; j++) {
-            int unit = placedArray[i][j];
+            int unit = placedArray[j][i];
             mapData.append(std::to_string(unit));
             mapData.append(",");
             
@@ -7086,86 +7136,199 @@ std::string EditorWorld::getMapData(){
 
 //    return compressed;
 }
-void EditorWorld::brushTile(int brush, cocos2d::Vec2 coordinate){
+bool EditorWorld::isBrushBuilding(int brush){
+    if (brush == BRUSH_MINE ||
+        brush == BRUSH_TREE ||
+        brush == BRUSH_FARM ||
+        brush == BRUSH_BARRACKS ||
+        brush == BRUSH_LUMBERMILL ||
+        brush == BRUSH_CASTLE ||
+        brush == BRUSH_WATCHER_TOWER ||
+        brush == BRUSH_FACTORY ||
+        brush == BRUSH_AIRPORT ||
+        brush == BRUSH_HQ ||
+        brush == BRUSH_BUNKER ||
+        brush == BRUSH_ORC_BARRACKS ||
+        brush == BRUSH_BARBEQUE ||
+        brush == BRUSH_TROLL_HOUSE ||
+        brush == BRUSH_TEMPLE) {
+        return true;
+    }
+    return false;
+}
+int EditorWorld::getUnitIndexForBrush(int brush){
+    int unitIndex = -1;
+    if (brush == BRUSH_ORC_AXE) {
+        return UNIT_ORC_AXE;
+    }else if (brush == BRUSH_BUNKER) {
+        return UNIT_ORC_BUNKER;
+    }else if (brush == BRUSH_HQ) {
+        return UNIT_ORC_HQ;
+    }else if (brush == BRUSH_AIRPORT) {
+        return UNIT_AIRPORT;
+    }else if (brush == BRUSH_FACTORY) {
+        return UNIT_FACTORY;
+    }else if (brush == BRUSH_WATCHER_TOWER) {
+        return UNIT_WATCHERTOWER;
+    }else if (brush == BRUSH_CASTLE) {
+        return UNIT_CASTLE;
+    }else if (brush == BRUSH_LUMBERMILL) {
+        return UNIT_LUMBERMILL;
+    }else if (brush == BRUSH_BARRACKS) {
+        return UNIT_BARRACKS;
+    }else if (brush == BRUSH_FARM) {
+        return UNIT_FARM;
+    }else if (brush == BRUSH_TREE) {
+        return UNIT_TREE;
+    }else if (brush == BRUSH_MINE) {
+        return UNIT_MINE;
+    }else if (brush == BRUSH_TROLL) {
+        return UNIT_TROLL;
+    }else if (brush == BRUSH_ARCHER) {
+        return UNIT_ARCHER;
+    }else if (brush == BRUSH_GOLBIN) {
+        return UNIT_GOBLIN;
+    }else if (brush == BRUSH_GOLBIN_BOMB) {
+        return UNIT_GOBLIN_BOMB;
+    }else if (brush == BRUSH_TEMPLE) {
+        return UNIT_TEMPLE;
+    }else if (brush == BRUSH_WORKER) {
+        return UNIT_WORKER;
+    }else if (brush == BRUSH_BARBEQUE) {
+        return UNIT_BARBECUE;
+    }else if (brush == BRUSH_CATAPULT) {
+        return UNIT_CATAPULT;
+    }else if (brush == BRUSH_ORC_SPEAR) {
+        return UNIT_ORC_SPEAR;
+    }else if (brush == BRUSH_SWORDSMAN) {
+        return UNIT_SWORDMAN;
+    }else if (brush == BRUSH_WIZARD) {
+        return UNIT_WIZARD;
+    }else if (brush == BRUSH_HELICOPTER) {
+        return UNIT_HELICOPTER;
+    }else if (brush == BRUSH_TROLL_HOUSE) {
+        return UNIT_ORC_TROLL_HOUSE;
+    }else if (brush == BRUSH_ORC_BARRACKS) {
+        return UNIT_ORC_BARRACKS;
+    }else if (brush == BRUSH_ZOMBIE_ORC_AXE) {
+        return UNIT_ZOMBIE_ORC_AXE;
+    }else if (brush == BRUSH_ZOMBIE_SWORDSMAN) {
+        return UNIT_ZOMBIE_SWORDSMAN;
+    }else if (brush == BRUSH_GOBLIN_WORKER) {
+        return UNIT_GOBLIN_WORKER;
+    }
+    return -1;
+}
+EnemyBase* EditorWorld::brushTile(int brush, cocos2d::Vec2 coordinate){
     Vec2 pos = getPositionFromTileCoordinate(coordinate.x, coordinate.y);
     eraseTile(coordinate);
-    placedArray[(int)coordinate.x][(int)coordinate.y] = brush;
+    placedArray[(int)coordinate.y][(int)coordinate.x] = brush;
+    bool isBuilding = isBrushBuilding(brush);
+    if (isBuilding) {
+        Vec2 occupySize = GM->getBuildingOccupySize(getUnitIndexForBrush(brush));
+        if (occupySize.x + coordinate.x >= mapSizeWidth ||
+            occupySize.y + coordinate.y >= mapSizeHeight) {
+            return nullptr;
+        }
+    }
     
     EnemyBase* unit = nullptr;
-    if(brush ==  BRUSH_TREE ){
+    if(brush == BRUSH_TREE ){
         createTree(pos);
     }else if(brush ==  BRUSH_MINE ){
-        unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos + Vec2(100, -100), "mine", 1, "mine.png");
-        setOccupy(pos, 3, 3, true, unit);
-    }else if(brush ==  BRUSH_SWORDSMAN ){
-        unit = createUnit(UNIT_SWORDMAN, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "swordman");
-    }else if(brush ==  BRUSH_ARCHER ){
-        unit = createUnit(UNIT_ARCHER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "archer");
-    }else if(brush ==  BRUSH_WORKER ){
-        unit = createUnit(UNIT_WORKER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "workerAxe");
-    }else if(brush ==  BRUSH_CATAPULT ){
-        unit = createUnit(UNIT_CATAPULT, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "catapult");
-    }else if(brush ==  BRUSH_HELICOPTER ){
-        unit = createUnit(UNIT_HELICOPTER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "helicopter");
-    }else if(brush ==  BRUSH_CASTLE ){
-        unit = createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(150, -100), "castle", 1, "castle.png");
-        setOccupy(pos, 4, 3, true, unit);
-    }else if(brush ==  BRUSH_FARM ){
-        unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -0), "farm", 1, "farm.png");
-        setOccupy(pos, 3, 2, true, unit);
-    }else if(brush == BRUSH_BARRACKS ){
-        unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "barracks", 1, "barracks.png");
-        setOccupy(pos, 3, 3, true, unit);
-    }else if(brush == BRUSH_LUMBERMILL ){
-        unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "lumberMill", 1, "lumberMill.png");
-        setOccupy(pos, 3, 3, true, unit);
-    }else if(brush == BRUSH_WATCHER_TOWER ){
-        unit = createUnit(UNIT_WATCHERTOWER, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(50, 0), "watcherTower", 1, "watcherTower.png");
-        setOccupy(pos, 2, 2, true, unit);
-    }else if(brush == BRUSH_FACTORY ){
-        unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "factory", 1, "factory.png");
-        setOccupy(pos, 3, 3, true, unit);
-    }else if(brush == BRUSH_AIRPORT ){
-        unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "airport", 1, "airport.png");
-        setOccupy(pos, 3, 3, true, unit);
-    }else if(brush == BRUSH_ORC_AXE ){
-        unit = createUnit(UNIT_ORC_AXE, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcAxe");
-    }else if(brush == BRUSH_ORC_SPEAR ){
-        unit = createUnit(UNIT_ORC_SPEAR, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcSpear");
-    }else if(brush == BRUSH_TROLL ){
-        unit = createUnit(UNIT_TROLL, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "troll");
-    }else if(brush == BRUSH_GOLBIN ){
-        unit = createUnit(UNIT_GOBLIN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblin");
-    }else if(brush == BRUSH_GOLBIN_BOMB ){
-        unit = createUnit(UNIT_GOBLIN_BOMB, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblinBomb");
-    }else if(brush == BRUSH_BUNKER ){
-        unit = createUnit(UNIT_ORC_BUNKER, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(50, 0), "bunker", 1, "bunker.png");
-        setOccupy(pos, 2, 2, true, unit);
-    }else if(brush == BRUSH_HQ ){
-        unit = createUnit(UNIT_ORC_HQ, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(150, -50), "hq", 1, "hq.png");
-        setOccupy(pos, 4, 3, true, unit);
-    }else if(brush == BRUSH_ZOMBIE_SWORDSMAN ){
-        unit = createUnit(UNIT_ZOMBIE_SWORDSMAN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "zombieSwordsman");
-    }else if(brush == BRUSH_ZOMBIE_ORC_AXE ){
-        unit = createUnit(UNIT_ZOMBIE_ORC_AXE, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "zombieOrcAxe");
-    }else if(brush == BRUSH_START_POINT ){
-        unit = createUnit(UNIT_START_POINT, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos, "");
-    }else if(brush == BRUSH_EVENT_POINT ){
-        unit = createUnit(UNIT_EVENT_POINT, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos, "");
+        unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos, "mine", 1, "mine.png");
     }else{
-        log("because its non");// start point should be added
+        int unitIndex = getUnitIndexForBrush(brush);
+        unit = createUnit(unitIndex, WHICH_SIDE_HERO, GM->isThisBuilding(unitIndex), pos, getUnitName(unitIndex), 1, getSpriteNameForUnit(unitIndex));
+    }
+//    else if(brush ==  BRUSH_MINE ){
+//        unit = createUnit(UNIT_MINE, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos + Vec2(100, -100), "mine", 1, "mine.png");
+//        setOccupy(pos, 3, 3, true, unit);
+//    }else if(brush ==  BRUSH_SWORDSMAN ){
+//        unit = createUnit(UNIT_SWORDMAN, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "swordman");
+//    }else if(brush ==  BRUSH_ARCHER ){
+//        unit = createUnit(UNIT_ARCHER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "archer");
+//    }else if(brush ==  BRUSH_WORKER ){
+//        unit = createUnit(UNIT_WORKER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "workerAxe");
+//    }else if(brush ==  BRUSH_CATAPULT ){
+//        unit = createUnit(UNIT_CATAPULT, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "catapult");
+//    }else if(brush ==  BRUSH_HELICOPTER ){
+//        unit = createUnit(UNIT_HELICOPTER, WHICH_SIDE_HERO, ITS_NOT_BUILDING, pos, "helicopter");
+//    }else if(brush ==  BRUSH_CASTLE ){
+//        unit = createUnit(UNIT_CASTLE, WHICH_SIDE_HERO, ITS_BUILDING, pos, "castle", 1, "castle.png");
+//        setOccupy(pos, 4, 3, true, unit);
+//    }else if(brush ==  BRUSH_FARM ){
+//        unit = createUnit(UNIT_FARM, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -0), "farm", 1, "farm.png");
+//        setOccupy(pos, 3, 2, true, unit);
+//    }else if(brush == BRUSH_BARRACKS ){
+//        unit = createUnit(UNIT_BARRACKS, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "barracks", 1, "barracks.png");
+//        setOccupy(pos, 3, 3, true, unit);
+//    }else if(brush == BRUSH_LUMBERMILL ){
+//        unit = createUnit(UNIT_LUMBERMILL, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "lumberMill", 1, "lumberMill.png");
+//        setOccupy(pos, 3, 3, true, unit);
+//    }else if(brush == BRUSH_WATCHER_TOWER ){
+//        unit = createUnit(UNIT_WATCHERTOWER, WHICH_SIDE_HERO, ITS_BUILDING, pos + Vec2(50, 0), "watcherTower", 1, "watcherTower.png");
+//        setOccupy(pos, 2, 2, true, unit);
+//    }else if(brush == BRUSH_FACTORY ){
+//        unit = createUnit(UNIT_FACTORY, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "factory", 1, "factory.png");
+//        setOccupy(pos, 3, 3, true, unit);
+//    }else if(brush == BRUSH_AIRPORT ){
+//        unit = createUnit(UNIT_AIRPORT, WHICH_SIDE_HERO, ITS_BUILDING, pos+ Vec2(100, -100), "airport", 1, "airport.png");
+//        setOccupy(pos, 3, 3, true, unit);
+//    }else if(brush == BRUSH_ORC_AXE ){
+//        unit = createUnit(UNIT_ORC_AXE, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcAxe");
+//    }else if(brush == BRUSH_ORC_SPEAR ){
+//        unit = createUnit(UNIT_ORC_SPEAR, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "orcSpear");
+//    }else if(brush == BRUSH_TROLL ){
+//        unit = createUnit(UNIT_TROLL, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "troll");
+//    }else if(brush == BRUSH_GOLBIN ){
+//        unit = createUnit(UNIT_GOBLIN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblin");
+//    }else if(brush == BRUSH_GOLBIN_BOMB ){
+//        unit = createUnit(UNIT_GOBLIN_BOMB, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblinBomb");
+//    }else if(brush == BRUSH_GOBLIN_WORKER ){
+//        unit = createUnit(UNIT_GOBLIN_WORKER, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "goblinWorker");
+//    }else if(brush == BRUSH_BUNKER ){
+//        unit = createUnit(UNIT_ORC_BUNKER, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(50, 0), "bunker", 1, "bunker.png");
+//    }else if(brush == BRUSH_HQ ){
+//        unit = createUnit(UNIT_ORC_HQ, WHICH_SIDE_ENEMY, ITS_BUILDING, pos + Vec2(150, -50), "hq", 1, "hq.png");
+//    }else if(brush == BRUSH_BARBEQUE){
+//        unit = createUnit(UNIT_BARBECUE, WHICH_SIDE_ENEMY, ITS_BUILDING, pos, "barbeque");
+//    }else if(brush == BRUSH_ORC_BARRACKS){
+//        unit = createUnit(UNIT_ORC_BARRACKS, WHICH_SIDE_ENEMY, ITS_BUILDING, pos, "orcBarracks");
+//    }else if(brush == BRUSH_TROLL_HOUSE){
+//        unit = createUnit(UNIT_ORC_TROLL_HOUSE, WHICH_SIDE_ENEMY, ITS_BUILDING, pos, "trollHouse");
+//    }else if(brush == BRUSH_TEMPLE){
+//        unit = createUnit(UNIT_TEMPLE, WHICH_SIDE_ENEMY, ITS_BUILDING, pos, "temple");
+//    }else if(brush == BRUSH_WIZARD){
+//        unit = createUnit(UNIT_WIZARD, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "wizard");
+//    }else if(brush == BRUSH_ZOMBIE_SWORDSMAN ){
+//        unit = createUnit(UNIT_ZOMBIE_SWORDSMAN, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "zombieSwordsman");
+//    }else if(brush == BRUSH_ZOMBIE_ORC_AXE ){
+//        unit = createUnit(UNIT_ZOMBIE_ORC_AXE, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING, pos, "zombieOrcAxe");
+//    }else if(brush == BRUSH_START_POINT ){
+//        unit = createUnit(UNIT_START_POINT, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos, "");
+//    }else if(brush == BRUSH_EVENT_POINT ){
+//        unit = createUnit(UNIT_EVENT_POINT, WHICH_SIDE_MUTUAL, ITS_BUILDING, pos, "");
+//    }else{
+//        log("because its non");// start point should be added
+//    }
+    if (unit != nullptr ) {
+        unit->setTag(coordinate.x + coordinate.y*mapSizeWidth);
+//        if(unit->unitType != UNIT_TREE && !unit->isBuilding){
+            unit->setSpriteFrame(getSpriteNameForUnit(unit->unitType));
+//        }
+
+        if (unit->isBuilding) {
+            cocos2d::Size occupySize = GM->getBuildingOccupySize(unit->unitType);
+            Vec2 coordinate = getCoordinateFromPosition(pos);
+            setOccupy(getPositionFromTileCoordinate(coordinate.x, coordinate.y), occupySize.width, occupySize.height, true, unit);
+            unit->setPosition(pos + Vec2(TILE_SIZE*(occupySize.width-1)/2, -TILE_SIZE*(occupySize.height-1)/2));
+            unit->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+        }
     }
     
-    if(unit != nullptr){
-        unit->setTag(coordinate.x + coordinate.y*mapSizeWidth);
-        if(unit->isBuilding){
-            updateMiniMapForNonMoving();
-        }else{
-            
-        }
-    }else{
-        updateMiniMapForNonMoving();
-    }
+    
+    return unit;
 }
 bool EditorWorld::intersectsRect(cocos2d::Rect srcRect, cocos2d::Rect dstRect)
 {
@@ -8659,7 +8822,8 @@ void EditorWorld::createTree(cocos2d::Vec2 pos){
 //    spriteBatch->addChild(spt);
     Vec2 coordinate = getCoordinateFromPosition(pos);
     unit->setTag(coordinate.x + coordinate.y*mapSizeWidth);
-    unit->setPosition(pos + Vec2(-20 + rand()%40, -20 + rand()%40 + 20));
+//    unit->setPosition(pos + Vec2(-20 + rand()%40, -20 + rand()%40 + 20));
+    unit->setPosition(pos);
     unit->setLocalZOrder(-unit->getBoundingBox().origin.y);
 //    unit->childrenSprite.pushBack(spt);
     

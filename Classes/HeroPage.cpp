@@ -1111,6 +1111,9 @@ void HeroPage::onCloseHeroPage(){
     checkChangesForHeroes();
 //    closePopup();
     clearVectors();
+    if (this->getParent() && this->getParent()->getChildByName("trainLayer")) {
+        this->getParent()->getChildByName("trainLayer")->setVisible(true);
+    }
     closeThis();
 }
 void HeroPage::clearVectors(){
@@ -1726,7 +1729,32 @@ void HeroPage::onRemoveFromDeckUnitClick(){
     closePopup();
     updateHeroes();
 }
+
 void HeroPage::onFireHeroClick(){
+    Node* layer = CSLoader::createNode("MessageBox.csb");
+    this->addChild(layer, 4);
+    setAsPopup(layer);
+    layer->setName("messageBox");
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+    layer->setPositionY(size.height/2 - layer->getContentSize().height/2);
+    
+    Button* btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
+    
+    btn = (Button*)layer->getChildByName("btnNo");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::closePopup, this));
+    Text* lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "no");
+    btn = (Button*)layer->getChildByName("btnYes");
+    btn->addClickEventListener(CC_CALLBACK_0(HeroPage::onFireOk, this));
+    lbl = (Text*)btn->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "yes");
+    
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedString(lbl, "fire ask");
+}
+void HeroPage::onFireOk(){
+    
     int index= 0;
     for(auto info: unitInfoListHeroInventory){
         if(info == selectedUnitInfo){
@@ -1744,7 +1772,11 @@ void HeroPage::onFireHeroClick(){
     BSM->saveUserData(datas);
     
     closePopup();
+    closePopup();
     updateHeroes();
+}
+void HeroPage::onFireCancel(){
+    
 }
 void HeroPage::onMoveToDeckUnitClick(){
     if(unitInfoListHeroDeck.size() >= 12){
@@ -2151,7 +2183,10 @@ void HeroPage::pickHero(int minRank, int maxRank){
         btnAgain->addClickEventListener(CC_CALLBACK_0(HeroPage::onHeroGoldChestGachaAgainClick, this));
     }
     
-    btnAgain->setOpacity(0);
+    btnAgain->setOpacity(100);
+    Vec2 btnPos = btnAgain->getPosition();
+    btnAgain->setPosition(btnPos + Vec2(-700, 0));
+    btnAgain->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime), MoveTo::create(fadeInTime, btnPos), NULL));
     btnAgain->runAction(Sequence::create(DelayTime::create(showOffTime + initTime + fadeInTime + whiteStayTime), FadeIn::create(fadeInTime), NULL));
     Text* lblPickCount = (Text*)btnAgain->getChildByName("lblPickCount");
     lblPickCount->setString(strmake("x%d", (int)array.size()));
@@ -2373,6 +2408,7 @@ void HeroPage::onHeroShopClick(){
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     ShopLayer* shopLayer = ShopLayer::create();
     this->addChild(shopLayer);
+    this->getChildByName("heroPage")->setVisible(true);
     setAsPopup(shopLayer);
     shopLayer->hideTab(0);
     shopLayer->onShopTabClick(shopLayer->getChildByName("shopLayer")->getChildByName(strmake("btnTab%d", 2)));

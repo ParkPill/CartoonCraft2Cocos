@@ -378,13 +378,26 @@ public:
     Node* inventoryLayer = nullptr;
     Node* mapLayer = nullptr;
     void showMap();
+    void initShortcuts(Vec2 startPos);
+    void onShortcutClick(Ref* ref);
+    void onShortcutDeleteClick(Ref* ref);
+    int selectedShortcut = -1;
+    int shortcutCount = 5;
+    std::string shortcutList[5];
+    
     Node* selectedInventorySlot = nullptr;
     Node* abcLayer = nullptr;
     Node* selectedAbcOption = nullptr;
     PPLabel* showInstanceMessage(std::string msg);
     void showInventory();
     void updateInventory();
-    
+    void showDisassembleButton();
+    void hideDisassembleButton();
+    void showDisassembleConfirmButtons();
+    void hideDisassembleConfirmButtons();
+    void onDisassembleClick();
+    void onDisassembleConfirmClick();
+    void onDisassembleCancelClick();
     void selectInventorySlot(Ref* ref);
     int getItemTypeInSlot(int slot);
     
@@ -570,5 +583,9 @@ public:
     void onOkFromRaidWinPopup(Ref* ref);
     bool hideIndicatorRequested = false;
     int offsetRight;
+    
+    void hackerReportAlert(float dt);
+    void onLikeClick();
+    void onDislikeClick();
 };
 #endif

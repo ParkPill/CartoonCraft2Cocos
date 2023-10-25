@@ -89,9 +89,10 @@ void PPLabel::setAnchorPoint(const Vec2& anchor) {
     }
 }
 void PPLabel::setString(std::string txt){
+
     text = txt;
     
-    if (LM->getLanguageType() != LanguageType::ENGLISH && !isImageLabel) {
+    if ((LM->getLanguageType() != LanguageType::ENGLISH && !isImageLabel) || text.find("@") != string::npos) {
         if(lblNormal == nullptr){
             if(LM->getLanguageType() == LanguageType::KOREAN){
                 lblNormal = Label::createWithTTF(text, LM->getLocalizedFont(), fontSize*1.2f);
@@ -122,7 +123,8 @@ void PPLabel::setString(std::string txt){
     sprites.clear();
     Vector<Sprite*> shadowSprites;
     spriteBatch->removeAllChildren();
-    char buf[10];
+//    char buf[10];
+    std::string buf;
     if(text.length() == 0){
         return;
     }
@@ -164,11 +166,15 @@ void PPLabel::setString(std::string txt){
             chStr = "'";
         }
         if (isBorderEnabled && ch != ' '){
-            sprintf(buf, "%s%s.png", chStr.c_str(), chStr.c_str());
+//            sprintf(buf, "%s%s.png", chStr.c_str(), chStr.c_str());
+            buf = strmake("%s%s.png", chStr.c_str(), chStr.c_str());
         }else{
-            sprintf(buf, "%s.png", chStr.c_str());
+//            sprintf(buf, "%s.png", chStr.c_str());
+            buf = strmake("%s.png", chStr.c_str());
         }
-        
+        if (buf.size() == 0) {
+            continue;
+        }
         Sprite* sptCh = Sprite::createWithSpriteFrameName(buf);
         sptCh->setColor(fontColor);
         sprites.pushBack(sptCh);
@@ -178,9 +184,11 @@ void PPLabel::setString(std::string txt){
         }
         if (isShadowEnabled) {
             if (chStr.size() > 0) {
-                sprintf(buf, "%s.png", chStr.c_str());
+//                sprintf(buf, "%s.png", chStr.c_str());
+                buf = strmake("%s.png", chStr.c_str());
             }else{
-                sprintf(buf, "%c.png", ch);
+//                sprintf(buf, "%c.png", ch);
+                buf = strmake("%s.png", chStr.c_str());
             }
             sptCh = Sprite::createWithSpriteFrameName(buf);
             sptCh->setColor(Color3B(48, 53, 45));

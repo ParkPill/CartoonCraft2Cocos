@@ -7,19 +7,19 @@ $(call import-add-path,$(LOCAL_PATH)/../../../cocos2d/external)
 $(call import-add-path,$(LOCAL_PATH)/../../../cocos2d/cocos)
 $(call import-add-path,$(LOCAL_PATH)/../../../cocos2d/cocos/audio/include)
 
-LOCAL_MODULE := MyGame_shared
+LOCAL_MODULE := MyGame
 
 LOCAL_MODULE_FILENAME := libMyGame
 
 LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/AppDelegate.cpp \
                    $(LOCAL_PATH)/../../../Classes/Array2D.h \
+                   $(LOCAL_PATH)/../../../Classes/Cell.h\
                    $(LOCAL_PATH)/../../../Classes/AStar.cpp \
                    $(LOCAL_PATH)/../../../Classes/AwesomeDialogBox.cpp \
                    $(LOCAL_PATH)/../../../Classes/BattleHud.cpp \
                    $(LOCAL_PATH)/../../../Classes/BattleLobby.cpp \
                    $(LOCAL_PATH)/../../../Classes/BuggyServerManager.cpp \
-                   $(LOCAL_PATH)/../../../Classes/Cell.h \
                    $(LOCAL_PATH)/../../../Classes/ChatRoom.cpp \
                    $(LOCAL_PATH)/../../../Classes/EditorHud.cpp \
                    $(LOCAL_PATH)/../../../Classes/EditorWorld.cpp \
@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/MonthlyEventPopup.cpp \
                    $(LOCAL_PATH)/../../../Classes/Movable.cpp \
                    $(LOCAL_PATH)/../../../Classes/MultiplayLobby.cpp \
+                   $(LOCAL_PATH)/../../../Classes/MultiplayManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/NetworkWebSocket.cpp \
                    $(LOCAL_PATH)/../../../Classes/PPLabel.cpp \
                    $(LOCAL_PATH)/../../../Classes/PageBase.cpp \
@@ -51,7 +52,9 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/SneakyJoystick.cpp \
                    $(LOCAL_PATH)/../../../Classes/SneakyJoystickSkinnedBase.cpp \
                    $(LOCAL_PATH)/../../../Classes/TopBar.cpp \
-                   $(LOCAL_PATH)/../../../Classes/Title.cpp
+                   $(LOCAL_PATH)/../../../Classes/Title.cpp \
+                   $(LOCAL_PATH)/../../../Classes/UploadedMaps.cpp
+
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../Classes \
                     $(LOCAL_PATH)/../../../Source

@@ -140,6 +140,12 @@
 #define UNIT_HERO_MEMEAT 83
 #define UNIT_HERO_PARASITE 84
 #define UNIT_HERO_WATERMELON 85
+#define UNIT_HERO_BABYMINO 86
+#define UNIT_HERO_MINO 87
+#define UNIT_HERO_KERBEROS 88
+#define UNIT_HERO_LAMIA 89
+#define UNIT_HERO_CHUNJA 90
+#define UNIT_HERO_GOLEM 91
 #define UNIT_MISSILE_NOTHING 100
 
 #define WEAPON_DAGGER 0
@@ -202,7 +208,7 @@ class Movable : public cocos2d::Sprite
 private:
     
 public:
-    
+    int unitID = 0;
     float waterAccelX ;
     float waterMaxX ;
     float waterAccelYN;
@@ -217,6 +223,7 @@ public:
     int unitActDetail = UNIT_ACT_DETAIL_IDLE;
     Vec2 moveToPos = Vec2::ZERO;
     Vec2 moveFlagPos = Vec2::ZERO;
+    Vec2 moveFlagPosSent = Vec2::ZERO;
     void attackDdangTo(Vec2 pos);
     Vec2 attackDdangPos = Vec2::ZERO;
     bool isInAttackMotion = false;
@@ -226,6 +233,7 @@ public:
     cocos2d::Vec2 desiredPosition;
     cocos2d::Rect demageRect;
     Movable* target = nullptr;
+    Movable* targetSent = nullptr;
     Movable* dummyTarget = nullptr;
     virtual void setFlippedX(bool flip);
     virtual void setVisible(bool visible);
@@ -425,6 +433,8 @@ public:
     bool isDamaging = true;
     void attackUpdate(float dt);
     void attack();
+    bool isDead = false;
+    bool isRouteSet = false;
     bool getHitAndIsDead(int ap, Movable* attacker);
     Movable* missile;
     Movable* shooter = nullptr;
@@ -529,6 +539,7 @@ public:
     int attackTag = 78;
     void cancelAttackSchedule();
     Movable* unreachableTarget = nullptr;
+    Vector<Movable*> UnreachableUnitList;
     bool canRevengeAttack = true;
     
     void healNearFriend();
@@ -537,6 +548,12 @@ public:
     bool isUnderFog = false;
     void checkVisible();
     bool isBuildingABuilding = false;
+
+    void visibleLater();
+    
+
+    Vector<Movable*> ExcludeTreeList;
+    Movable* nextTree = nullptr;
 };
 
 #endif

@@ -2,10 +2,16 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/CartoonCraftNV.iml" filepath="$PROJECT_DIR$/app/CartoonCraftNV.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../cocos2d/cocos/platform/android/libcocos2dx/libcocos2dx.iml" filepath="$PROJECT_DIR$/../cocos2d/cocos/platform/android/libcocos2dx/libcocos2dx.iml" />
       <module fileurl="file://$PROJECT_DIR$/proj.android.iml" filepath="$PROJECT_DIR$/proj.android.iml" />
-      <module fileurl="file://$PROJECT_DIR$/unity-ads/unity-ads.iml" filepath="$PROJECT_DIR$/unity-ads/unity-ads.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.iml" filepath="$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/proj.android.CartoonCraftNV.unitTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.iml" filepath="$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.main.iml" filepath="$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/-1755028499/proj.android.libcocos2dx.unitTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/unity-ads/proj.android.unity-ads.iml" filepath="$PROJECT_DIR$/.idea/modules/unity-ads/proj.android.unity-ads.iml" />
     </modules>
   </component>
 </project>

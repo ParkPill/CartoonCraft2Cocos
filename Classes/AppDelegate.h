@@ -49,6 +49,9 @@ public:
      @param  the pointer of the application
      */
     virtual void applicationWillEnterForeground()override;
+    
+    time_t backgroundEnterTime;
+    
 
     
 #ifdef SDKBOX_ENABLED
@@ -83,6 +86,7 @@ public:
     void onIncrementalAchievementUnlocked( const std::string& achievement_name );
     void onIncrementalAchievementStep( const std::string& achievement_name, double step );
     void onAchievementUnlocked( const std::string& achievement_name, bool newlyUnlocked );
+    
 //
 #endif
   

@@ -25,13 +25,18 @@ class Title : public PageBase
 {
 private:
     cocos2d::Size size;
+    int _registerNameLimitStage = 3;
+    bool isBeginnerLockOn = false;
+    bool isServerCheckArrived = false;
+    int selectedServer = 0;
 public:
     Sprite* sptBackground;
     Sprite* sptTitle;
+    Button* btnGoogle;
     
     virtual bool init();
     CREATE_FUNC(Title);
-    
+    void onServerSelect();
     void onHeroClick();
     void showHeroPage(bool showAlert = false);
     void onChapterClick(Ref* ref);
@@ -43,11 +48,12 @@ public:
     void goToLoadedStage();
     void onArenaClick();
     void onMultiplayClick();
+    void onMultiplayClickAndSearch();
     
     int selectedSaveSlot;
     
     bool isGameCenterLoginRequestedFromShowColosseum = false;
-
+    
     void onCampaignChestShopClick();
     void onResetCampaignChestClick();
     void onForceOpenCampaignChestClick();
@@ -208,7 +214,9 @@ public:
     
     void onCommunityClick();
     void onFacebookClick();
-    
+    void showServerSelect(bool isNewUser);
+    void onServerSelected(Ref* ref);
+    void onMoveServerClick();
     void checkPlayerIDExist();
     bool isUserIDExistCheckRequested = false;
     bool isUserIDExistCheckArrived = false;
@@ -217,7 +225,7 @@ public:
     void onLanguageOkClick();
     void onLanguageButtonClick(Ref* ref);
     
-    void onHardModeClick();
+    void onDifficultyClick();
     void onEnterBackground();
     int iv = -1;
     int av = -1;
@@ -225,7 +233,8 @@ public:
     bool isGameInfoRecieved = false;
     const char* rewardInfo = "";
     bool isRewardInfoReceived = false;
-    bool isHardMode = false;
+//    bool isHardMode = false;
+    int difficultyMode = DIFFICULTY_MODE_NORMAL;
     void checkMonthlyEventAttend();
     bool isMonthlyEventAttendChecked = false;
     bool firstIndicatorDisposed = false;
@@ -235,6 +244,7 @@ public:
     void clearCacheForSmartPass();
     void onUpdateClick();
     void onRenameClick();
+    void onGoogleClick();
     bool isRename = false;
     
     void onYoutubeChannelClick();
@@ -245,5 +255,13 @@ public:
     void onDiscordOpenClick();
     
     void onCollectionClick();
+    void goToMultiplayStage(int stageNumber);
+    std::string crossSpriteName;
+    void onCrossClick();
+    void goToCross();
+    void onMapClick();
+    void onUploadedClick();
+    
+    void onServerChecked();
 };
 #endif /* Title_hpp */

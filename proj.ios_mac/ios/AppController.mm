@@ -28,7 +28,10 @@
 #import "cocos2d.h"
 #import "AppDelegate.h"
 #import "RootViewController.h"
+//#import <AppTrackingTransparency/AppTrackingTransparency.h>
+//#import <AdSupport/AdSupport.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
+
 
 @implementation AppController
 
@@ -76,6 +79,7 @@ static AppController *instance;
     // IMPORTANT: Setting the GLView should be done after creating the RootViewController
     cocos2d::GLView *glview = cocos2d::GLViewImpl::createWithEAGLView((__bridge void *)_viewController.view);
     cocos2d::Director::getInstance()->setOpenGLView(glview);
+
 
     
     //run the cocos2d-x game scene

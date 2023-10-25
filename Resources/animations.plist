@@ -15,6 +15,21 @@
 				<string>lightningAura2.png</string>
 			</array>
 		</dict>
+		<key>laser</key>
+		<dict>
+			<key>delay</key>
+			<real>0.07000000000000001</real>
+			<key>frames</key>
+			<array>
+				<string>laser0.png</string>
+				<string>laser1.png</string>
+				<string>laser0.png</string>
+				<string>laser1.png</string>
+				<string>laser0.png</string>
+				<string>laser1.png</string>
+				<string>laser0.png</string>
+			</array>
+		</dict>
 		<key>effectLightning</key>
 		<dict>
 			<key>delay</key>

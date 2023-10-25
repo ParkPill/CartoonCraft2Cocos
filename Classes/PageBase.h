@@ -27,7 +27,7 @@ public:
     Vector<Node*> popupArray;
     bool setAsPopup(Node* node);
     void closePopup();
-    void closeThis();
+    virtual void closeThis();
     Node* getPopup();
     void addPopup(Node* node);
     

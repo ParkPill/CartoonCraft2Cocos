@@ -57,6 +57,8 @@ public:
     void onMoveToDeckUnitClick();
     void onRemoveFromDeckUnitClick();
     void onFireHeroClick();
+    void onFireOk();
+    void onFireCancel();
     void onSortByRarity();
     void onSortBySlot();
     void onFusionClick();

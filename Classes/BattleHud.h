@@ -58,6 +58,7 @@
 #define DATA_TYPE_KEY_GET_STATE 13
 #define DATA_TYPE_STAGE_CLEAR 14
 #define DATA_TYPE_STAGE_HARD_CLEAR 15
+#define DATA_TYPE_PLAYID 16
 
 using namespace cocos2d;
 using namespace cocos2d::ui;
@@ -344,7 +345,9 @@ public:
     void checkDailyMissionUI(bool isNewDay, int timeLeftToMidnight);
     void checkTrainLayerUI(time_t now, int timeLeftToMidnight);
     void checkDefenceRecordPopupUI(time_t now);
-    
+    void updateTrainLayer1(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady);
+    void updateTrainLayer2(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady);
+    void updateTrainLayer3(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady);
     void updateTrainLayer(Node* layer, time_t now, time_t gachaWatchedTimeT, time_t nextGachaFreeTimeT, bool isGachaVideoReady, int timeLeftToMidnight, bool isGachaFreeReady, bool isWoodChestGachaFreeReady, bool isGoldChestGachaFreeReady);
     void checkTutorial();
     void updateGacha(Node* layer, time_t now);

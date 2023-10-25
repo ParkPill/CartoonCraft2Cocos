@@ -383,6 +383,9 @@ Sprite * TMXLayer::getTileAt(const Vec2& pos)
 
 uint32_t TMXLayer::getTileGIDAt(const Vec2& pos, TMXTileFlags* flags/* = nullptr*/)
 {
+    if(!(pos.x < _layerSize.width && pos.y < _layerSize.height && pos.x >=0 && pos.y >=0)){ // sppark
+        return -1;
+    }
     CCASSERT(pos.x < _layerSize.width && pos.y < _layerSize.height && pos.x >=0 && pos.y >=0, "TMXLayer: invalid position");
     CCASSERT(_tiles && _atlasIndexArray, "TMXLayer: the tiles map has been released");
 
@@ -644,6 +647,9 @@ void TMXLayer::removeChild(Node* node, bool cleanup)
 
 void TMXLayer::removeTileAt(const Vec2& pos)
 {
+    if(!(pos.x < _layerSize.width && pos.y < _layerSize.height && pos.x >=0 && pos.y >=0)){
+        return; // sppark
+    }
     CCASSERT(pos.x < _layerSize.width && pos.y < _layerSize.height && pos.x >=0 && pos.y >=0, "TMXLayer: invalid position");
     CCASSERT(_tiles && _atlasIndexArray, "TMXLayer: the tiles map has been released");
 

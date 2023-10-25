@@ -49,6 +49,7 @@ public:
     virtual void movingSchedule(float dt);
     EnemyBase();
     ~EnemyBase();
+    
     void stopSchedule();
     int orderAction;
     int currentAction;

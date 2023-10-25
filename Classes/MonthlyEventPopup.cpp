@@ -206,6 +206,8 @@ void MonthlyEventPopup::addMissions(){
     LM->setLocalizedString(lbl, strHeroName);
     lbl = (Text*)layer->getChildByName("lblDescription");
     LM->setLocalizedString(lbl, strmake("%s desc", strHeroName.c_str()));
+    float height = lbl->getContentSize().height;
+    lbl->setContentSize(Size(lbl->getContentSize().width, height*1.5f));
     lbl = (Text*)layer->getChildByName("lblMission");
     LM->setLocalizedString(lbl, "mission");
     lbl = (Text*)layer->getChildByName("lblRewardDescription");

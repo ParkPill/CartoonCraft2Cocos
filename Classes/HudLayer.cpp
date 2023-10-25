@@ -10,7 +10,7 @@
 #include "LegendDaryButton.h"
 #include "GameManager.h"
 #include "HelloWorldScene.h"
-
+#include "MultiplayManager.h"
 //#include "NativeInterface.h"
 #include "LanguageManager.h"
 #include "BuggyServerManager.h"
@@ -205,7 +205,7 @@ bool HudLayer::init()
     float y = 0;
     priceInfo = Node::create();
     this->addChild(priceInfo);
-    priceInfo->setPosition(Vec2(size.width/2, 130));
+    priceInfo->setPosition(Vec2(size.width/2, 260));
     PPLabel* lbl = PPLabel::create("0", 40, Color3B::WHITE, false, true, TextHAlignment::LEFT, false);//LM->getLocalizedLabel("0", Color4B::WHITE);
     priceInfo->addChild(lbl);
     lbl->setName("lblGold");
@@ -315,7 +315,18 @@ bool HudLayer::init()
             btn->setPosition(Vec2(offsetX + 327, 480));
             addLabelToButton("menu", btn, false, DARK_GRAY_3B);
         }
-        
+        if (WORLD->isMultiplay) {
+            Label* lblOpponentID = LM->getLocalizedLabel(MM->enemyID.c_str(), Color4B::WHITE);
+            this->addChild(lblOpponentID);
+            lblOpponentID->setAnchorPoint(Vec2::ZERO);
+            lblOpponentID->setPosition(Vec2(offsetX, 525));
+            lblOpponentID->enableOutline(Color4B::BLACK, 2);
+            Label* lblOpponentName = LM->getLocalizedLabel(MM->enemyName.c_str(), Color4B::WHITE);
+            this->addChild(lblOpponentName);
+            lblOpponentName->setAnchorPoint(Vec2::ZERO);
+            lblOpponentName->setPosition(Vec2(offsetX, 575));
+            lblOpponentName->enableOutline(Color4B::BLACK, 2);
+        }
         ImageView* img = ImageView::create("uiBoxSmallBlue.png");
         this->addChild(img, 99);
         img->setName("imgTimeBack");
@@ -343,8 +354,9 @@ bool HudLayer::init()
         offsetRight = 100;
         ndPanel->setPosition(Vec2(size.width - offsetRight, 0));
         
-        btn = (Button*)ndPanel->getChildByName("btnSelectAll");
-        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
+        Button* btnSelectAll = (Button*)ndPanel->getChildByName("btnSelectAll");
+        btnSelectAll->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
+        
         
         btn = (Button*)ndPanel->getChildByName("btnSelectDrag");
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
@@ -359,11 +371,14 @@ bool HudLayer::init()
         btn = (Button*)ndPanel->getChildByName("btnSelectScreen");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectForcesInScreen, this));
         
-        btn = (Button*)ndPanel->getChildByName("btnShowHide");
-        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onShowMoreMenuClick, this));
-        
+        Button* btnShow = (Button*)ndPanel->getChildByName("btnShowHide");
+        btnShow->addClickEventListener(CC_CALLBACK_1(HudLayer::onShowMoreMenuClick, this));
         rightBottomPanel = CSLoader::createNodeWithVisibleSize("RightBottomPanel.csb");
         this->addChild(rightBottomPanel, 5);
+        if (WORLD->isMultiplay) {
+            btnShow->setVisible(false);
+            btnSelectAll->setPosition(btnShow->getPosition());
+        }
         
         btn = (Button*)rightBottomPanel->getChildByName("btnSelectAll");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
@@ -435,7 +450,7 @@ bool HudLayer::init()
     }
     
     
-    if (WORLD->stageIndex == 0 && GM->nextScene == STAGE_FIELD && !GM->isColosseum && !WORLD->isHardMode) {
+    if (WORLD->stageIndex == 0 && GM->nextScene == STAGE_FIELD && !GM->isColosseum && WORLD->difficultyMode != DIFFICULTY_MODE_HELL) {
         tutorialIndex = 0;
         tutorialNode = Node::create();
         this->addChild(tutorialNode, 200);
@@ -477,10 +492,236 @@ bool HudLayer::init()
     }
     
     this->schedule(schedule_selector(HudLayer::update), 0.1f);
+    if (WORLD->isMultiplay) {
+        this->scheduleOnce(schedule_selector(HudLayer::hackerReportAlert), 3);
+    }
     
+    
+//    showWinPopup(true); // test 
     log("init done");
     // init done
     return true;
+}
+void HudLayer::showDisassembleButton(){
+    Button* btn = (Button*)this->getChildByName("btnDisassemble");
+    if(btn == nullptr){
+        btn = Button::create("btnDisassemble.png");
+        btn->setName("btnDisassemble");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onDisassembleClick, this));
+        this->addChild(btn);
+    }
+    btn->stopAllActions();
+    btn->setPosition(Vec2(size.width/2, -btn->getContentSize().height));
+    float gap = 40;
+    btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, btn->getContentSize().height/2 + gap/2)));
+}
+void HudLayer::onDisassembleClick(){
+    showDisassembleConfirmButtons();
+    hideDisassembleButton();
+}
+
+void HudLayer::onDisassembleConfirmClick(){
+    Movable* unit = WORLD->selectedArray.at(0);
+    if (unit->alliSide != WHICH_SIDE_HERO) {
+        return;
+    }
+    if (WORLD->isMultiplay) {
+        MM->deadUnit(unit->unitID, -1, 0, 0);
+    }
+    int gold = WORLD->getGoldPriceForUnit(unit->unitType);
+    int lumber = WORLD->getLumberPriceForUnit(unit->unitType);
+    WORLD->addGold(gold/3);
+    WORLD->addLumber(lumber/3);
+    WORLD->removeDeadUnit(WORLD->selectedArray.at(0));
+    
+    hideDisassembleConfirmButtons();
+}
+void HudLayer::onDisassembleCancelClick(){
+    hideDisassembleConfirmButtons();
+}
+void HudLayer::showDisassembleConfirmButtons(){
+    Button* btn = (Button*)this->getChildByName("btnDisassembleConfirm");
+    if(btn == nullptr){
+        btn = Button::create("btnOk.png");
+        btn->setName("btnDisassembleConfirm");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onDisassembleConfirmClick, this));
+        this->addChild(btn);
+    }
+    btn->stopAllActions();
+    btn->setPosition(Vec2(size.width/2, -btn->getContentSize().height));
+    float gap = 40;
+    btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2 - btn->getContentSize().width/2 - gap/2, btn->getContentSize().height/2 + gap/2)));
+    
+    btn = (Button*)this->getChildByName("btnDisassembleCancel");
+    if(btn == nullptr){
+        btn = Button::create("btnStop.png");
+        btn->setName("btnDisassembleCancel");
+        btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onDisassembleCancelClick, this));
+        this->addChild(btn);
+    }
+    btn->stopAllActions();
+    btn->setPosition(Vec2(size.width/2, -btn->getContentSize().height));
+    btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2 + btn->getContentSize().width/2 + gap/2, btn->getContentSize().height/2 + gap/2)));
+}
+void HudLayer::hideDisassembleConfirmButtons(){
+    Button* btn = (Button*)this->getChildByName("btnDisassembleCancel");
+    if(btn != nullptr){
+        btn->stopAllActions();
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, -btn->getContentSize().height)));
+    }
+    btn = (Button*)this->getChildByName("btnDisassembleConfirm");
+    if(btn != nullptr){
+        btn->stopAllActions();
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, -btn->getContentSize().height)));
+    }
+}
+void HudLayer::hideDisassembleButton(){
+    Button* btn = (Button*)this->getChildByName("btnDisassemble");
+    if(btn != nullptr){
+        btn->stopAllActions();
+        btn->runAction(MoveTo::create(0.3f, Vec2(size.width/2, -btn->getContentSize().height)));
+    }
+}
+void HudLayer::hackerReportAlert(float dt){
+    showInstanceMessage(LM->getText("hacker report"));
+}
+void HudLayer::initShortcuts(Vec2 startPos){
+    Button* btn;
+    Text* lbl;
+    float gap = 10;
+    float x = startPos.x + gap + 10;
+    Node* shortcutButton;
+    for (int i = 0; i < shortcutCount; i++) {
+        shortcutButton = (Widget*)CSLoader::createNode("ShortcutButton.csb");
+        btn = (Button*)shortcutButton->getChildByName("btn");
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onCommandClick, this));
+
+        shortcutButton->setName(strmake("btnShortcut%d", i));
+        this->addChild(shortcutButton);
+        shortcutButton->setPosition(Vec2(x, startPos.y));
+        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onShortcutClick, this));
+        x += btn->getContentSize().width + gap;
+        
+        lbl = (Text*)shortcutButton->getChildByName("lbl");
+        btn->setTag(i);
+        ((Text*)shortcutButton->getChildByName("lblIndex"))->setString(Value(i + 1).asString());
+        ((Text*)shortcutButton->getChildByName("lblCount"))->setString("0");
+        shortcutList[i] = "";
+    }
+    btn = Button::create("btnStop.png");
+    btn->setName("deleteShortcut");
+    btn->setScale(0.5f);
+    btn->setAnchorPoint(Vec2::ZERO);
+    this->addChild(btn);
+    btn->setVisible(false);
+    int offset = 10;
+    btn->setPosition(Vec2(x + offset, startPos.y + offset));
+    btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onShortcutDeleteClick, this));
+    btn->setTag(shortcutCount);
+}
+
+void HudLayer::onShortcutClick(Ref* ref){
+    getChildByName("deleteShortcut")->setVisible(true);
+    BTN_FROM_REF
+    int index = btn->getTag();
+    ValueVector list = GM->split(shortcutList[index], "|");
+    std::vector<int> identifiedIDs;
+    std::string str;
+    if (list.size() > 0) {
+        int unitID;
+        for (int i = 0; i < list.size(); i++) {
+            str = list.at(i).asString();
+            if (str.size() > 0) {
+                unitID = list.at(i).asInt();
+                if (unitID >= 0) {
+                    bool unitIdentified = false;
+                    for(auto unit : WORLD->heroArray){
+                        if (unit->unitID == unitID) {
+                            identifiedIDs.push_back(unitID);
+                            unitIdentified = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (identifiedIDs.size() == 0) { // register
+        if (shortcutList[index].length() == 0 && WORLD->selectedArray.size() > 0) { // no history
+            str = "";
+            for(auto unit : WORLD->selectedArray){
+                str = strmake("%s%d|", str.c_str(),unit->unitID);
+            }
+            str = str.substr(0, str.length()-1);
+            shortcutList[index] = str;
+            btn->getParent()->getChildByName("lblPlus")->setVisible(false);
+//            ((PPLabel*)btn->getChildByName("lbl"))->setString(Value((int)WORLD->selectedArray.size()).asString());
+            ((Text*)btn->getParent()->getChildByName("lblCount"))->setString(Value((int)WORLD->selectedArray.size()).asString());
+            ImageView* img = (ImageView*)btn->getParent()->getChildByName("img");
+            int unitIndex = WORLD->selectedArray.at(0)->unitType;
+            if (WORLD->isHero(unitIndex)) {
+                img->loadTexture("hh.png", Button::TextureResType::PLIST);
+            }else{
+                img->loadTexture(WORLD->getSpriteNameForUnit(unitIndex), Button::TextureResType::PLIST);
+            }
+            
+            img->setContentSize(cocos2d::Size(80, 80));
+            img->setVisible(true);
+            btn->setColor(Color3B::GREEN);
+            for (int i = 0; i < shortcutCount; i++) {
+                ((Button*)getChildByName(strmake("btnShortcut%d", i))->getChildByName("btn"))->setColor(i == index?Color3B::GREEN:Color3B::WHITE);
+            }
+        }else{ // history exist. it means saved forces are all dead
+            showInstanceMessage("no selected units");
+            btn->getParent()->getChildByName("lblPlus")->setVisible(true);
+            btn->getParent()->getChildByName("img")->setVisible(false);
+            ((Text*)btn->getParent()->getChildByName("lblCount"))->setString("0");
+            btn->setColor(Color3B::WHITE);
+        }
+    }else{ // select
+        for (int i = 0; i < shortcutCount; i++) {
+            ((Button*)getChildByName(strmake("btnShortcut%d", i))->getChildByName("btn"))->setColor(i == index?Color3B::GREEN:Color3B::WHITE);
+        }
+        str = "";
+        WORLD->deselectAll();
+        Vec2 selectedPos = Vec2::ZERO;
+        for (int i = 0; i < identifiedIDs.size(); i++) {
+            str = strmake("%s%d|", str.c_str(), identifiedIDs.at(i));
+            for(auto unit : WORLD->heroArray){
+                if(unit->unitID == identifiedIDs.at(i)){
+                    WORLD->selectUnit(unit);
+                    selectedPos = unit->getPosition();
+                    break;
+                }
+            }
+        }
+        
+        if (selectedShortcut == index || true) { // remove true if screen move should happen in the second time
+            WORLD->moveScreen(-selectedPos*WORLD->layerScale + size/2);
+        }
+        
+        str = str.substr(0, str.length()-1);
+        
+        shortcutList[index] = str;
+//        ((PPLabel*)btn->getChildByName("lbl"))->setString(Value((int)identifiedIDs.size()).asString());
+        btn->getParent()->getChildByName("lblPlus")->setVisible(false);
+        ((Text*)btn->getParent()->getChildByName("lblCount"))->setString(Value((int)identifiedIDs.size()).asString());
+    }
+    selectedShortcut = index;
+}
+void HudLayer::onShortcutDeleteClick(Ref* ref){
+    if (selectedShortcut < 0) {
+        return;
+    }
+    getChildByName("deleteShortcut")->setVisible(false);
+    Button* btn = (Button*)getChildByName(strmake("btnShortcut%d", selectedShortcut))->getChildByName("btn");
+    btn->setColor(Color3B::WHITE);
+    if (btn) {
+        btn->getParent()->getChildByName("lblPlus")->setVisible(true);
+        btn->getParent()->getChildByName("img")->setVisible(false);
+        shortcutList[selectedShortcut] = "";
+    }
+    selectedShortcut = -1;
 }
 void HudLayer::on2xFastClick(){
     rightBottomPanelForCampaign->getChildByName("img3xSelected")->setVisible(false);
@@ -573,7 +814,7 @@ void HudLayer::setRaid(){
             int unitType = Value(datas.at(0)).asInt();
             
             UnitInfo* info = GM->getUnitInfoFromString(units.at(i).asString());
-            cocos2d::Size occupySize = WORLD->getBuildingOccupySize(unitType);
+            cocos2d::Size occupySize = GM->getBuildingOccupySize(unitType);
             float x = Value(datas.at(2)).asInt();
             float y = Value(datas.at(3)).asInt();
             Vec2 sptPos = Vec2(x, y);
@@ -1212,15 +1453,18 @@ void HudLayer::onMenuClick(){
     btn =(Button*)layer->getChildByName("btnSave");
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSaveClick, this));
     LM->setLocalizedString((Text*)btn->getChildByName("lbl"), "save");
+    btn->setVisible(!WORLD->isMultiplay);
     btn =(Button*)layer->getChildByName("btnLoad");
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onLoadClick, this));
     LM->setLocalizedString((Text*)btn->getChildByName("lbl"), "load");
+    btn->setVisible(!WORLD->isMultiplay);
     btn =(Button*)layer->getChildByName("btnSound");
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onOptionClick, this));
     LM->setLocalizedString((Text*)btn->getChildByName("lbl"), "sound");
     btn =(Button*)layer->getChildByName("btnPremium");
     btn->addClickEventListener(CC_CALLBACK_0(HudLayer::showPremiumRetry, this));
     LM->setLocalizedString((Text*)btn->getChildByName("lbl"), "premium retry");
+    btn->setVisible(!WORLD->isMultiplay);
     if (GM->isColosseum || isRaid || UDGetBool(KEY_PREMIUM_START)) {
         btn->setVisible(false);
     }
@@ -1645,7 +1889,7 @@ void HudLayer::saveCurrentStageData(int slot){
     
     UDSetStr(strmake("savedData%d", slot).c_str(), data);
     
-    std::string strDataExtra = strmake("%d,", WORLD->isHardMode);
+    std::string strDataExtra = strmake("%d,", WORLD->difficultyMode);
     std::string strFog = "";
     for(auto fog: WORLD->fogArray){
         strFog += Value(fog->appliedState).asString();
@@ -1877,6 +2121,9 @@ void HudLayer::onResumeClick(){
     WORLD->resumeLayer();
 }
 void HudLayer::goToTitleScene(){
+    if (WORLD->isMultiplay) {
+        MM->disconnect();
+    }
     setGameSpeed(1);
     removeListener();
     if(GM->isAdsUser()){
@@ -1908,6 +2155,16 @@ void HudLayer::onExitClick(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
     GM->playSoundEffect(SOUND_PAPER_FLIP);
     GameSharing::logFB(strmake("STAGE %d QUIT", GM->currentStageIndex).c_str());
+    
+    if (WORLD->isMultiplay) {
+        MM->sendQuit();
+        MM->disconnect();
+        MM->isGameStarted = false;
+        MM->enemyGameReady = false;
+        MM->enemyRace = -1;
+        MM->enemyName = "";
+        MM->enemyTrophy = -1;
+    }
 //    Director::getInstance()->popScene();
     goToTitleScene();
 }
@@ -5616,6 +5873,36 @@ void HudLayer::showWinPopup(bool win){
         btn->setPosition(Vec2(size.width/2 + 500, size.height/2 - 450));
         //    btn->setColor(Color3B(244, 236, 5));
         addLabelToButton("ok", btn, false, DARK_GRAY_3B);
+        log("playedMapID: %s", GM->playedMapID.c_str());
+        if (GM->playedMapID.length() > 0) {
+            btn = Button::create("uiBoxSmall.png");
+            popup->addChild(btn);
+            btn->setName("btnLike");
+            btn->setTag(0);
+            
+            btn->setContentSize(cocos2d::Size(300, 200));
+            btn->setScale9Enabled(true);
+            btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onLikeClick, this));
+            btn->setPosition(Vec2(size.width/2 - 500, size.height/2 - 450));
+            
+            spt = Sprite::create("eventItem4.png");
+            btn->addChild(spt);
+            spt->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
+            
+//            btn = Button::create("uiBoxSmall.png");
+//            popup->addChild(btn);
+//            btn->setName("btnDislike");
+//            btn->setTag(0);
+//
+//            btn->setContentSize(cocos2d::Size(300, 200));
+//            btn->setScale9Enabled(true);
+//            btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onDislikeClick, this));
+//            btn->setPosition(Vec2(size.width/2 - 180, size.height/2 - 450));
+//
+//            spt = Sprite::create("dislike.png");
+//            btn->addChild(spt);
+//            spt->setPosition(Vec2(btn->getContentSize().width/2, btn->getContentSize().height/2));
+        }
         
         spt = Sprite::create("redFlag.png");
         spt->setPosition(Vec2(size.width/2, size.height/2 + 850/2 + 110 - spt->getContentSize().height/2));
@@ -5887,19 +6174,50 @@ void HudLayer::updateResultPopup(float dt){
     }
     
     resultPopup->getChildByName("btnOk")->setVisible(true);
-    if(WORLD->isGameOver && !UDGetBool(KEY_PREMIUM_START, false) && (WORLD->gameMode == GAME_MODE_NORMAL || WORLD->gameMode == GAME_MODE_HARD)){
+    if(WORLD->isGameOver && !WORLD->isMultiplay && !UDGetBool(KEY_PREMIUM_START, false) && (WORLD->gameMode == GAME_MODE_NORMAL || WORLD->gameMode == GAME_MODE_HARD) && GM->currentStageIndex != STAGE_CUSTOM){
         showPremiumRetry();
     }
     
     this->unschedule(schedule_selector(HudLayer::updateResultPopup));
 }
 
+void HudLayer::onLikeClick(){
+    Node* layer = this->getChildByName("winPopup");
+    Node* btn = layer->getChildByName("btnLike");
+    int tag = btn->getTag();
+    tag = tag == 0?1:0;
+    btn->setTag(tag);
+    if (tag == 0) {
+        btn->setColor(Color3B::WHITE);
+    }else{
+        btn->setColor(Color3B::GREEN);
+    }
+}
+void HudLayer::onDislikeClick(){
+    Node* layer = this->getChildByName("winPopup");
+    Node* btn = layer->getChildByName("btnDislike");
+    int tag = btn->getTag();
+    tag = tag == 0?1:0;
+    btn->setTag(tag);
+    if (tag == 0) {
+        btn->setColor(Color3B::WHITE);
+    }else{
+        btn->setColor(Color3B::GREEN);
+    }
+}
 void HudLayer::onOkFromWinPopup(Ref* ref){
     BTN_FROM_REF_AND_DISABLE
     btn->setEnabled(false);
     
+    if (GM->playedMapID.length() > 0) {
+        Node* layer = this->getChildByName("winPopup");
+        Node* btn = layer->getChildByName("btnLike");
+        int tag = btn->getTag();
+        BSM->uploadCustomMapResult(GM->playedMapID, tag==1?1:0, 0, isWon?1:0, isWon?0:1);
+        GM->playedMapID = "";
+    }
     if(!UDGetBool(KEY_RATE_POPUP_NEVER_SHOW, false) && (GM->market == MARKET_PAID || GM->market == MARKET_FREE)){ // review test
-//    if(true){ // test 
+//    if(true){ // test
         Node* popup = Node::create();
         this->addChild(popup, 200);
         ImageView* imgBack = ImageView::create("uiBox.png");
@@ -5966,20 +6284,34 @@ void HudLayer::onOkFromWinPopup(Ref* ref){
     Node* popup = this->getChildByName("winPopup");
     if(popup != nullptr && popup->getTag() == 1 && !WORLD->isGameOver){
         
-        if (WORLD->isHardMode) {
-            int clearStage = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, -1);
+        if (WORLD->difficultyMode == DIFFICULTY_MODE_HELL) {
+            int clearStage = UDGetInt(KEY_HELL_MODE_CLEAR_STAGE, -1);
             if(clearStage < stage){
-                UDSetInt(KEY_HARD_MODE_CLEAR_STAGE, stage);
+                UDSetInt(KEY_HELL_MODE_CLEAR_STAGE, stage);
+            }
+        }else if (WORLD->difficultyMode == DIFFICULTY_MODE_EASY) {
+            int clearStage = UDGetInt(KEY_EASY_MODE_CLEAR_STAGE, -1);
+            if(clearStage < stage){
+                UDSetInt(KEY_EASY_MODE_CLEAR_STAGE, stage);
+            }
+        }else if (WORLD->difficultyMode == DIFFICULTY_MODE_HARD) {
+            int clearStage = UDGetInt(KEY_HAD_MODE_CLEAR_STAGE, -1);
+            if(clearStage < stage){
+                UDSetInt(KEY_HAD_MODE_CLEAR_STAGE, stage);
             }
         }else{
             int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
-            if(clearStage < stage){
+            if(clearStage < stage && !WORLD->isMultiplay){
                 UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
                 std::vector<int> datas;
                 datas.push_back(DATA_TYPE_STAGE_CLEAR);
                 BSM->saveUserData(datas);
             }
         }
+    }
+    
+    if (WORLD->isMultiplay) {
+        MM->disconnect();
     }
     setGameSpeed(1);
     bool isWin = !WORLD->isGameOver;
@@ -6045,15 +6377,27 @@ void HudLayer::onReivewPopupButtonClick(Ref* ref){
         
         int stage = WORLD->stageIndex;
         if (!WORLD->isGameOver) {
-            if (WORLD->isHardMode) {
-                int clearStage = UDGetInt(KEY_HARD_MODE_CLEAR_STAGE, -1);
+            if (WORLD->difficultyMode == DIFFICULTY_MODE_HELL) {
+                int clearStage = UDGetInt(KEY_HELL_MODE_CLEAR_STAGE, -1);
                 if(clearStage < stage){
-                    UDSetInt(KEY_HARD_MODE_CLEAR_STAGE, stage);
+                    UDSetInt(KEY_HELL_MODE_CLEAR_STAGE, stage);
+                }
+            }else if (WORLD->difficultyMode == DIFFICULTY_MODE_EASY) {
+                int clearStage = UDGetInt(KEY_EASY_MODE_CLEAR_STAGE, -1);
+                if(clearStage < stage){
+                    UDSetInt(KEY_EASY_MODE_CLEAR_STAGE, stage);
+                }
+            }else if (WORLD->difficultyMode == DIFFICULTY_MODE_HARD) {
+                int clearStage = UDGetInt(KEY_HAD_MODE_CLEAR_STAGE, -1);
+                if(clearStage < stage){
+                    UDSetInt(KEY_HAD_MODE_CLEAR_STAGE, stage);
                 }
             }else{
                 int clearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
                 if(clearStage < stage){
-                    UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+                    if (!WORLD->isMultiplay) {
+                        UDSetInt(KEY_LAST_CLEAR_STAGE, stage);
+                    }
                 }
             }
             stage++;
@@ -6144,7 +6488,7 @@ void HudLayer::update(float dt){
             GM->nextScene = STAGE_FIELD;
             GM->isColosseum = false;
             GM->setHudLayer(nullptr);
-            auto scene = HelloWorld::scene(GM->currentStageIndex, WORLD->isHardMode);
+            auto scene = HelloWorld::scene(GM->currentStageIndex, WORLD->difficultyMode);
             Director::getInstance()->replaceScene(TransitionFade::create(2, scene, Color3B::BLACK));
         }
     }else if(GM->iapFlag == IAP_FLAG_FAILED){

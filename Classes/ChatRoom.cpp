@@ -12,7 +12,6 @@
 #include "GameManager.h"
 #include "LanguageManager.h"
 bool ChatRoom::init(){
-    
     if ( !PageBase::init())
     {
         return false;
@@ -20,7 +19,8 @@ bool ChatRoom::init(){
     
     // connect
 //    _webSocket = NetworkWebSocket::create("localhost:8104");
-    _webSocket = NetworkWebSocket::create("http://222.120.115.95:8104");
+//    _webSocket = NetworkWebSocket::create("http://222.120.115.95:8104"); // yangpyung server
+    _webSocket = NetworkWebSocket::create("http://220.79.132.112:8104"); // AWS Lightsail Vsisters
     if (_webSocket->connect()) {
         log("connected");
         this->_webSocket->setOnConnectionOpenedCallBack(CC_CALLBACK_0(ChatRoom::onConnectionOpened, this));
@@ -75,8 +75,19 @@ void ChatRoom::update(float dt){
         receivedMsgList.clear();
     }
 }
+// code
+// 0 join or create
+// 1 msg
+// 2 quit
 void ChatRoom::onSendClick(){
     string str = tfLine->getString();
+    if (str.length() <= 0) {
+        return;
+    }
+    string strTrim = GameManager::trim_copy(str);
+    if (strTrim.length() <= 0) {
+        return;
+    }
     
     int msgCode = 1;
     LanguageType lType = LM->getLanguageType();
@@ -89,7 +100,7 @@ void ChatRoom::AddLine(std::string str){
     std::string strName = UDGetStr(KEY_NAME);
     
     Text* lbl = (Text*)lblTemp->clone();
-    if(str.find(strName) != std::string::npos){
+    if(str.find(strName) == 0){
         lbl->setTextColor(Color4B(150, 163, 83, 255));
     }
     lbl->setVisible(true);
@@ -98,6 +109,8 @@ void ChatRoom::AddLine(std::string str){
     if(lvLines->getChildren().size() >50){
         lvLines->removeItem(0);
     }
+    
+    lvLines->scrollToBottom(0.3f, true);
 }
 void ChatRoom::onConnectionOpened()
 {
@@ -106,7 +119,16 @@ void ChatRoom::onConnectionOpened()
     LanguageType lType = LM->getLanguageType();
     std::string gameName = "cc";
     std::string msg = UDGetStr(KEY_NAME);
-    _webSocket->send(StringUtils::format("%d%d%s_%s", msgCode, lType, gameName.c_str(), msg.c_str()));
+    if(_webSocket == nullptr) return;
+
+    try
+    {
+        _webSocket->send(StringUtils::format("%d%d%s_%s", msgCode, lType, gameName.c_str(), msg.c_str()));
+    }
+    catch(...)
+    {
+        log("An error occurred. onConnectionOpened:_webSocket->send(string)");
+    }
 }
 
 void ChatRoom::onMessageReceived(string message)

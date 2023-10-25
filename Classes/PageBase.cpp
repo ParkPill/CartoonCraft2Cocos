@@ -40,6 +40,9 @@ void PageBase::closePopup(){
         popupArray.eraseObject(popup);
         popup->removeFromParent();
     }
+    if(popupArray.size() == 0 && WORLD && !WORLD->isVisible()){
+        WORLD->setVisible(true);
+    }
 }
 
 bool PageBase::setAsPopup(Node* node){
@@ -54,19 +57,20 @@ void PageBase::addPopup(Node* node){
 }
 void PageBase::showInstanceMessage(std::string msg, int offset){
     Label* lbl = LM->getLocalizedLabel(msg.c_str(), Color4B(255, 255, 255, 255), 50);//Label::createWithSystemFont(msg, "Thonburi", 50);
-    this->addChild(lbl, 300);
+    this->addChild(lbl, 3000);
     lbl->setName("lblInstanceMessage");
     lbl->enableShadow();
     lbl->enableOutline(Color4B(28, 28, 28, 255), 3);
     lbl->setTag(77);
     lbl->setPosition(Vec2(size.width/2, -100 + offset));
+    lbl->setAlignment(TextHAlignment::CENTER);
     float dur = 0.3f;
     float distanceToMove = 360;
     lbl->runAction(Sequence::create(EaseInOut::create(MoveBy::create(dur, Vec2(0, distanceToMove)), 3), DelayTime::create(2), EaseInOut::create(MoveBy::create(dur, Vec2(0, -distanceToMove)), 3), CallFunc::create(CC_CALLBACK_0(Node::removeFromParent, lbl)), nullptr));
     
     Sprite* spt = Sprite::create("whiteBigCircle.png");
     spt->setColor(Color3B::BLACK);
-    this->addChild(spt, 299);
+    this->addChild(spt, 1001);
     spt->setPosition(lbl->getPosition());
     spt->setScale(10, 1);
     spt->setOpacity(150);

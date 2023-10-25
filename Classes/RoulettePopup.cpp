@@ -78,6 +78,14 @@ bool RoulettePopup::init()
         strFileName = "batMonsterSprite.png";
     }else if(heroType == UNIT_HERO_PARASITE){
         strFileName = "parasiteSprite.png";
+    }else if(heroType == UNIT_HERO_BABYMINO){
+        strFileName = "babyminoSprite.png";
+    }else if(heroType == UNIT_HERO_KERBEROS){
+        strFileName = "kerberosSprite.png";
+    }else if(heroType == UNIT_HERO_CHUNJA){
+        strFileName = "chunjaSprite.png";
+    }else if(heroType == UNIT_HERO_GOLEM){
+        strFileName = "golemSprite.png";
     }
     for (int i =0; i < 2; i++) {
         Sprite* sptHero = Sprite::create(strFileName);

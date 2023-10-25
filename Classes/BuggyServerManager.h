@@ -20,7 +20,7 @@
 
 //#define DATA_KEY_LEVEL 
 
-#define SET_DOCUMENT_AND_CHECK_ERROR rapidjson::Document document = getDocument(sender, data); if(document.IsNull()){ this->isServerFailed = true; return; } if (document.HasMember("error")) { log("server data error: %s", document["error"].GetString()); isFailedToGetNetworkData = true;}
+#define SET_DOCUMENT_AND_CHECK_ERROR rapidjson::Document document = getDocument(sender, data); if(document.IsNull()){ this->isServerFailed = true; log("docu null"); return; } if (document.HasMember("error")) { log("server data error: %s", document["error"].GetString()); isFailedToGetNetworkData = true;}
 
 //#include "Title.h"
 
@@ -55,7 +55,7 @@ public:
     virtual bool init();
     CREATE_FUNC(BuggyServerManager);
     void getHttpTime();
-    
+    void setServerUrl();
     void onHttpRequestCompleted(cocos2d::Node *sender, void *data);
     void updateTick(float dt);
     
@@ -217,6 +217,30 @@ public:
     std::string postBoxConent = "";
     int getLastDayOfMonth(int month);
     bool isOffline = true;
+    
+    void uploadMap(std::string name, std::string mapData);
+    int uploadState = -1; //-1 none, 0 err, 1 fail, 2 success, 3 same name exist
+    void onUploadMapCompleted(Node *sender, void *data);
+    
+    void deleteMap(std::string mapID);
+    void onDeleteMapCompleted(Node *sender, void *data);
+    
+    
+    void downloadMapList(int index); // 0 recent, 1 by trophy, 2 by like
+    int downloadMapListState = -1; //-1 none, 0 err, 1 fail, 2 success
+    std::string mapList;
+    void onDownloadMapListCompleted(Node *sender, void *data);
+    
+    void downloadMap(std::string mapID);
+    int downloadMapState = -1; //-1 none, 0 err, 1 fail, 2 success
+    std::string mapData;
+    void onDownloadMapCompleted(Node *sender, void *data);
+    
+    void uploadCustomMapResult(std::string mapID, int like, int dislike, int success, int fail);
+    void onUploadCustomMapResultCompleted(Node *sender, void *data);
+    
+    void resetMapLike();
+    void onResetMapLikeCompleted(Node *sender, void *data);
 };
 
 #endif /* defined(__LegendDaryKakao__BuggyServerManager__) */

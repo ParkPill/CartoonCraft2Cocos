@@ -44,7 +44,7 @@ bool ServerManager::init()
     Layer::init();
 //    serverUrl = "http://118.32.41.70:8091";
 //    serverUrl = "http://192.168.123.165:8091";
-    serverUrl = "http://222.120.115.95:8101";
+    serverUrl = "http://220.79.132.112:8103";
     
     return true;
 }

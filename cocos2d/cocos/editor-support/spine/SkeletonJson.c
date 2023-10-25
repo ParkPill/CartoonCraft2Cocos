@@ -272,8 +272,8 @@ static spAnimation* _spSkeletonJson_readAnimation (spSkeletonJson* self, Json* r
 					timeline->boneIndex = boneIndex;
 
 					for (valueMap = timelineMap->child, frameIndex = 0; valueMap; valueMap = valueMap->next, ++frameIndex) {
-						spTranslateTimeline_setFrame(timeline, frameIndex, Json_getFloat(valueMap, "time", 0), Json_getFloat(valueMap, "x", 0) * timelineScale,
-								Json_getFloat(valueMap, "y", 0) * timelineScale);
+						spTranslateTimeline_setFrame(timeline, frameIndex, Json_getFloat(valueMap, "time", 0), Json_getFloat(valueMap, "x", 1) * timelineScale,
+								Json_getFloat(valueMap, "y", 1) * timelineScale); // sppark Json_getFloat(valueMap, "y", 0 to 1)
 						readCurve(valueMap, SUPER(timeline), frameIndex);
 					}
 					animation->timelines[animation->timelinesCount++] = SUPER_CAST(spTimeline, timeline);

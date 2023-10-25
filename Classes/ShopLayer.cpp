@@ -130,8 +130,8 @@ void ShopLayer::update(float dt){
             closeRequired = true;
         }else if (GM->iapDetail.compare(IAP_DETAIL_MID_MONTH_PACKAGE) == 0) {
             GM->addGem(264);
-            GM->addWoodKey(2);
-            GM->addGoldKey(1);
+            GM->addWoodKey(2); // 120
+            GM->addGoldKey(1); // 300
             int monthlyBoughtCount = getEventHeroBoughtCount();
             monthlyBoughtCount++;
             int count = getEventHeroSetBoughtCount();
@@ -611,7 +611,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl = (Text*)btn->getChildByName("lblFirstBonus");
             std::string str = LM->getText("first purchase bonus");
             if(str.length() > 3){
-                LM->setLocalizedStringNotKey(lbl, (str.replace(str.find("-77"), 3, ((Text*)btn->getChildByName("lblGemCount"))->getString())));
+                LM->setLocalizedStringNotKey(lbl, strmake("%s %s", str.c_str(), ((Text*)btn->getChildByName("lblGemCount"))->getString().c_str()));
                 lbl->setVisible(firstBonusAvailable);
             }
             if (GM->market == MARKET_SMARTPASS) {
@@ -828,7 +828,7 @@ void ShopLayer::onBuyBuilding(Ref* ref){
     //    }
 //    closePopup();
     closeShop();
-    WORLD->createBuildingTemplate(BHUD->getUnitIndex(index), occupySize.width, occupySize.height, WORLD->getSpriteNameForUnit(BHUD->getUnitIndex(index)));
+    WORLD->createBuildingTemplate(BHUD->getUnitIndex(index),WORLD->getSpriteNameForUnit(BHUD->getUnitIndex(index)));
     BHUD->currentJob = JOB_MOVE_BUILDING_TEMPATE;
     BHUD->currentJobDetailIndex = index;
 }
@@ -838,6 +838,9 @@ void ShopLayer::closeShop(){
             HeroPage* layer = (HeroPage*)GM->heroPage;
             layer->updateHeroes();
         }
+    }
+    if (this->getParent() && this->getParent()->getChildByName("heroPage")) {
+        this->getParent()->getChildByName("heroPage")->setVisible(true);
     }
     closeThis();
 }

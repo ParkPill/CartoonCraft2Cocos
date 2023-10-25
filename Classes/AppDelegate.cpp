@@ -1,6 +1,7 @@
 #include "cocos2d.h"
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
+#include "MultiplayManager.h"
 #include "HeroPage.h"
 //#include "HelloWorldAstar.h"
 //#include "BattleLobby.h" // test
@@ -126,6 +127,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     FileUtils::getInstance()->addSearchPath("fonts");
     FileUtils::getInstance()->addSearchPath("res");
     FileUtils::getInstance()->addSearchPath("spine");
+    FileUtils::getInstance()->addSearchPath("crossPromotion");
     FileUtils::getInstance()->addSearchPath("sounds");
     FileUtils::getInstance()->addSearchPath("useMapSetting");
     FileUtils::getInstance()->addSearchPath("Logo");
@@ -147,7 +149,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
      log("time request ");*/
     
     // turn on display FPS
-    director->setDisplayStats(false); // test
+//    director->setDisplayStats(false); // test 
     
     // set FPS. the default value is 1.0/60 if you don't call this
     director->setAnimationInterval(1.0 / 60);
@@ -226,7 +228,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    auto scene = HelloWorld::scene(5, false); // test
 
 
-//    auto scene = EditorWorld::scene(0, false);
 
 //    auto scene = Scene::create();
 //    scene->addChild(Title::create());
@@ -235,7 +236,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    Scene* scene = Scene::create();
 //    scene->addChild(Title::create());
     // title end
-    
     
 //    GM->nextScene = STAGE_FIELD; // test
 //    auto scene = HelloWorld::scene(36, GAME_MODE_NORMAL); // test 
@@ -250,14 +250,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
     GM->market = MARKET_PAID;
-    GM->version = "3.64";
-    GM->versionCode = 250;
-//    auto scene = HelloWorld::scene(36, false); // test
+    GM->versionCode = 312;
+    GM->version = "4.24";
+    log("start version code: %d", GM->versionCode);
+//    auto scene = HelloWorld::scene(7, DIFFICULTY_MODE_NORMAL); // test
+//    auto scene = HelloWorld::scene(4, DIFFICULTY_MODE_NORMAL); // test
+//    auto scene = EditorWorld::scene(0, false); // test
     auto scene = Scene::create();
     Intro* intro = Intro::create();
     scene->addChild(intro);
     // intro end
-    
+
     if (GM->market == MARKET_SMARTPASS) {
         UDSetInt(KEY_SELECTED_LANGUAGE, (int)LanguageType::JAPANESE);
     }
@@ -266,6 +269,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     for (int i = 0; i < 15; i++) {
         strName += (char)(rand()%10 + (int)'0');
     }
+    
     log("strName: %s", strName.c_str());
     log("strName: %s", strName.c_str());
 //    scene->addChild(FifteenSixLogo::create());
@@ -333,12 +337,24 @@ void AppDelegate::applicationDidEnterBackground() {
         HEROPAGE->checkChangesForHeroes();
     }
     
+    if (WORLD && WORLD->isMultiplay) {
+        backgroundEnterTime = BSM->getCurrentTimeT();
+//        MM->paused();
+    }
     // if you use SimpleAudioEngine, it must be pause
     // SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
 }
 
 // this function will be called when the app is active again
 void AppDelegate::applicationWillEnterForeground() {
+//    if (WORLD && WORLD->isMultiplay) {
+//        time_t current = BSM->getCurrentTimeT();
+//        if (current - backgroundEnterTime > 5000) {
+//            WORLD->gameTimer += (float)(current - backgroundEnterTime)*0.001f;
+//            MM->disconnect();
+//            WORLD->endGame(false);
+//        }
+//    }
 //#ifdef SDKBOX_ENABLED
 //    sdkbox::sessionStart();
 //#endif

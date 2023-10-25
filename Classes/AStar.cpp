@@ -208,12 +208,12 @@ void AStar::menuPathFinding(PathFindingType type){
                 startPathFinding(comparebyDistanceBetweenStartAndGoal,_startX,_startY,_goalX,_goalY);
                 break;
         };
-        _startDrawProgress = true;
+//        _startDrawProgress = true;
         
         //build path
         fullFillPathData();
         
-        float distance = _m_Map.Get(_goalX,_goalY)->getDistance();
+//        float distance = _m_Map.Get(_goalX,_goalY)->getDistance();
 //        CCLOG("the lowest distance: %f",distance);
     }else{
         CCLOG("invalidate position!");
