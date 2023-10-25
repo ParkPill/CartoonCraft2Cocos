@@ -1,0 +1,8 @@
+{
+  "ndkDirProperty": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b",
+  "sdkFolder": "/Users/rightpill-2016/Dev/AndroidSDK",
+  "sideBySideNdkFolderNames": [
+    "21.4.7075529",
+    "25.1.8937393"
+  ]
+}

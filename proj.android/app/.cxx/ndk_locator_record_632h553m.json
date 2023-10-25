@@ -1,0 +1,11 @@
+{
+  "ndk": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b",
+  "revision": {
+    "mMajor": 21,
+    "mMinor": 1,
+    "mMicro": 6352462,
+    "mPreview": 0,
+    "mPrecision": "MICRO",
+    "mPreviewSeparator": " "
+  }
+}

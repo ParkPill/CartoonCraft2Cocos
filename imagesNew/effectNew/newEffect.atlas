@@ -1,0 +1,195 @@
+
+newEffect.png
+size: 1449,1034
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+blueDot
+  rotate: true
+  xy: 394, 95
+  size: 373, 117
+  orig: 373, 117
+  offset: 0, 0
+  index: -1
+blueDust
+  rotate: true
+  xy: 513, 95
+  size: 373, 117
+  orig: 373, 117
+  offset: 0, 0
+  index: -1
+blueRing copy
+  rotate: true
+  xy: 632, 157
+  size: 373, 117
+  orig: 373, 117
+  offset: 0, 0
+  index: -1
+circle
+  rotate: true
+  xy: 811, 823
+  size: 209, 223
+  orig: 209, 223
+  offset: 0, 0
+  index: -1
+cloud
+  rotate: false
+  xy: 1194, 68
+  size: 97, 138
+  orig: 97, 138
+  offset: 0, 0
+  index: -1
+cloud2
+  rotate: true
+  xy: 1369, 659
+  size: 176, 78
+  orig: 176, 78
+  offset: 0, 0
+  index: -1
+fireball
+  rotate: true
+  xy: 1051, 613
+  size: 222, 316
+  orig: 222, 316
+  offset: 0, 0
+  index: -1
+greenBall
+  rotate: true
+  xy: 2, 470
+  size: 562, 203
+  orig: 562, 203
+  offset: 0, 0
+  index: -1
+greenLaser
+  rotate: true
+  xy: 207, 470
+  size: 562, 203
+  orig: 562, 203
+  offset: 0, 0
+  index: -1
+greenRing
+  rotate: true
+  xy: 412, 470
+  size: 562, 203
+  orig: 562, 203
+  offset: 0, 0
+  index: -1
+ground circle 0
+  rotate: false
+  xy: 2, 2
+  size: 90, 51
+  orig: 90, 51
+  offset: 0, 0
+  index: -1
+ground circle 1
+  rotate: false
+  xy: 241, 29
+  size: 149, 24
+  orig: 149, 24
+  offset: 0, 0
+  index: -1
+ground circle 2
+  rotate: false
+  xy: 94, 19
+  size: 145, 34
+  orig: 145, 34
+  offset: 0, 0
+  index: -1
+ground circle 3
+  rotate: true
+  xy: 394, 5
+  size: 88, 54
+  orig: 88, 54
+  offset: 0, 0
+  index: -1
+ground explosion
+  rotate: true
+  xy: 2, 55
+  size: 413, 390
+  orig: 413, 390
+  offset: 0, 0
+  index: -1
+ground tilt
+  rotate: true
+  xy: 1311, 117
+  size: 240, 129
+  orig: 240, 129
+  offset: 0, 0
+  index: -1
+hit
+  rotate: true
+  xy: 751, 169
+  size: 361, 297
+  orig: 361, 297
+  offset: 0, 0
+  index: -1
+lightening1
+  rotate: false
+  xy: 1050, 208
+  size: 259, 221
+  orig: 259, 221
+  offset: 0, 0
+  index: -1
+lightning0
+  rotate: true
+  xy: 811, 539
+  size: 282, 238
+  orig: 282, 238
+  offset: 0, 0
+  index: -1
+meteor
+  rotate: false
+  xy: 870, 9
+  size: 178, 158
+  orig: 178, 158
+  offset: 0, 0
+  index: -1
+slash
+  rotate: true
+  xy: 1050, 837
+  size: 195, 325
+  orig: 195, 325
+  offset: 0, 0
+  index: -1
+slashSmall
+  rotate: false
+  xy: 1323, 359
+  size: 102, 252
+  orig: 102, 252
+  offset: 0, 0
+  index: -1
+to left
+  rotate: false
+  xy: 1051, 431
+  size: 270, 180
+  orig: 270, 180
+  offset: 0, 0
+  index: -1
+to left daash
+  rotate: true
+  xy: 617, 532
+  size: 500, 192
+  orig: 500, 192
+  offset: 0, 0
+  index: -1
+to left soft
+  rotate: false
+  xy: 672, 8
+  size: 196, 147
+  orig: 196, 147
+  offset: 0, 0
+  index: -1
+toLeft after
+  rotate: false
+  xy: 450, 9
+  size: 220, 84
+  orig: 220, 84
+  offset: 0, 0
+  index: -1
+yellowRing
+  rotate: true
+  xy: 1050, 17
+  size: 189, 142
+  orig: 189, 142
+  offset: 0, 0
+  index: -1

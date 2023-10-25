@@ -1,0 +1,131 @@
+{
+  "buildFiles": [
+    "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk"
+  ],
+  "cleanCommands": [
+    "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang NDK_DEBUG\u003d0 clean"
+  ],
+  "buildTargetsCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 {LIST_OF_TARGETS_TO_BUILD}",
+  "libraries": {
+    "cocos2dandroid-release-arm64-v8a": {
+      "artifactName": "cocos2dandroid",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos2dandroid.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos2dandroid.a",
+      "runtimeFiles": []
+    },
+    "recast-release-arm64-v8a": {
+      "artifactName": "recast",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/librecast.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/librecast.a",
+      "runtimeFiles": []
+    },
+    "spine-release-arm64-v8a": {
+      "artifactName": "spine",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libspine.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libspine.a",
+      "runtimeFiles": []
+    },
+    "ui-release-arm64-v8a": {
+      "artifactName": "ui",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libui.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libui.a",
+      "runtimeFiles": []
+    },
+    "audioengine-release-arm64-v8a": {
+      "artifactName": "audioengine",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libaudioengine.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libaudioengine.a",
+      "runtimeFiles": []
+    },
+    "flatbuffers-release-arm64-v8a": {
+      "artifactName": "flatbuffers",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/flatbuffers.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/flatbuffers.a",
+      "runtimeFiles": []
+    },
+    "network-release-arm64-v8a": {
+      "artifactName": "network",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libnetwork.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libnetwork.a",
+      "runtimeFiles": []
+    },
+    "MyGame-release-arm64-v8a": {
+      "artifactName": "MyGame",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libMyGame.so",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libMyGame.so",
+      "runtimeFiles": []
+    },
+    "cocostudio-release-arm64-v8a": {
+      "artifactName": "cocostudio",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocostudio.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocostudio.a",
+      "runtimeFiles": []
+    },
+    "cocos2dxinternal-release-arm64-v8a": {
+      "artifactName": "cocos2dxinternal",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos2dxinternal.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos2dxinternal.a",
+      "runtimeFiles": []
+    },
+    "cpufeatures-release-arm64-v8a": {
+      "artifactName": "cpufeatures",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcpufeatures.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcpufeatures.a",
+      "runtimeFiles": []
+    },
+    "extension-release-arm64-v8a": {
+      "artifactName": "extension",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libextension.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libextension.a",
+      "runtimeFiles": []
+    },
+    "pvmp3dec-release-arm64-v8a": {
+      "artifactName": "pvmp3dec",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libpvmp3dec.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libpvmp3dec.a",
+      "runtimeFiles": []
+    },
+    "cocosdenshion-release-arm64-v8a": {
+      "artifactName": "cocosdenshion",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocosdenshion.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocosdenshion.a",
+      "runtimeFiles": []
+    },
+    "cocos3d-release-arm64-v8a": {
+      "artifactName": "cocos3d",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos3d.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocos3d.a",
+      "runtimeFiles": []
+    },
+    "vorbisidec-release-arm64-v8a": {
+      "artifactName": "vorbisidec",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libvorbisidec.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libvorbisidec.a",
+      "runtimeFiles": []
+    },
+    "cocosbuilder-release-arm64-v8a": {
+      "artifactName": "cocosbuilder",
+      "buildCommand": "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk NDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk APP_ABI\u003darm64-v8a NDK_ALL_ABIS\u003darm64-v8a NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-26 NDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/lib NDK_TOOLCHAIN_VERSION\u003dclang -j16 NDK_DEBUG\u003d0 /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocosbuilder.a",
+      "abi": "arm64-v8a",
+      "output": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/release/obj/local/arm64-v8a/libcocosbuilder.a",
+      "runtimeFiles": []
+    }
+  }
+}

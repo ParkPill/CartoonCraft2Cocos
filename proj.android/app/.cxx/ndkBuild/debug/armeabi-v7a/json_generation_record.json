@@ -1,0 +1,86 @@
+[
+  {
+    "level": "INFO",
+    "message": "Start JSON generation. Platform version: 26 min SDK version: armeabi-v7a",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "rebuilding JSON /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a/android_gradle_build.json due to:",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "- expected json /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a/android_gradle_build.json file is not present, will remove stale json folder",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "- missing previous command file /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a/build_command.txt, will remove stale json folder",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "- command changed from previous, will remove stale json folder",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "created folder \u0027/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a\u0027",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "executing ndkBuild Executable : /Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build\narguments : \nNDK_PROJECT_PATH\u003dnull\nAPP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk\nNDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk\nAPP_ABI\u003darmeabi-v7a\nNDK_ALL_ABIS\u003darmeabi-v7a\nNDK_DEBUG\u003d1\nAPP_PLATFORM\u003dandroid-26\nNDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/debug/obj\nNDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/debug/lib\nNDK_TOOLCHAIN_VERSION\u003dclang\n-j16\nNDK_DEBUG\u003d1\nAPP_SHORT_COMMANDS\u003dfalse\nLOCAL_SHORT_COMMANDS\u003dfalse\n-B\n-n\njvmArgs : \n\n",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "Executable : /Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/ndk-build\narguments : \nNDK_PROJECT_PATH\u003dnull\nAPP_BUILD_SCRIPT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk\nNDK_APPLICATION_MK\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk\nAPP_ABI\u003darmeabi-v7a\nNDK_ALL_ABIS\u003darmeabi-v7a\nNDK_DEBUG\u003d1\nAPP_PLATFORM\u003dandroid-26\nNDK_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/debug/obj\nNDK_LIBS_OUT\u003d/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/ndkBuild/debug/lib\nNDK_TOOLCHAIN_VERSION\u003dclang\n-j16\nNDK_DEBUG\u003d1\nAPP_SHORT_COMMANDS\u003dfalse\nLOCAL_SHORT_COMMANDS\u003dfalse\n-B\n-n\njvmArgs : \n\n",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "done executing ndkBuild",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "write build output /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a/build_output.txt",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "parse and convert ndk-build output to build configuration JSON",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "found application make file /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Application.mk",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "write command file /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/ndkBuild/debug/armeabi-v7a/build_command.txt",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  },
+  {
+    "level": "INFO",
+    "message": "JSON generation completed without problems",
+    "file": "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/jni/Android.mk",
+    "tag": "debug|armeabi-v7a"
+  }
+]
