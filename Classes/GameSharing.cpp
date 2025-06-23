@@ -817,6 +817,21 @@ void GameSharing::setupIAB(){
     initForIOS();
 #endif
 }
+
+void GameSharing::rateUs(){
+
+#if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
+    JniMethodInfo mInfo;
+    if (JniHelper::getStaticMethodInfo(mInfo
+            , "org/cocos2dx/cpp/AppActivity"
+            , "rateUs"
+            , "()V"))
+    {
+        mInfo.env->CallStaticVoidMethod(mInfo.classID, mInfo.methodID);
+        mInfo.env->DeleteLocalRef(mInfo.classID);
+    }
+#endif
+}
 void GameSharing::consumePurchased(){
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
     JniMethodInfo mInfo;

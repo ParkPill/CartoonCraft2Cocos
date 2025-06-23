@@ -250,8 +250,8 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    auto scene = HelloWorld::scene(GM->nextScene, false); // test
     // intro for normal start
     GM->market = MARKET_PAID;
-    GM->versionCode = 312;
-    GM->version = "4.24";
+    GM->versionCode = 314;
+    GM->version = "4.26";
     log("start version code: %d", GM->versionCode);
 //    auto scene = HelloWorld::scene(7, DIFFICULTY_MODE_NORMAL); // test
 //    auto scene = HelloWorld::scene(4, DIFFICULTY_MODE_NORMAL); // test

@@ -62,9 +62,21 @@ import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 //import com.google.android.gms.ads.rewarded.RewardedVideoAd;
 //import com.google.android.gms.ads.rewarded.RewardedVideoAdListener;
 import com.google.android.gms.common.api.GoogleApiClient;
-        import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.android.gms.tasks.Task;
+import com.google.android.play.core.review.ReviewException;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.play.core.review.model.ReviewErrorCode;
+import com.google.android.ump.ConsentDebugSettings;
+import com.google.android.ump.ConsentForm;
+import com.google.android.ump.ConsentInformation;
+import com.google.android.ump.ConsentRequestParameters;
+import com.google.android.ump.UserMessagingPlatform;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
         import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
         import android.graphics.Point;
 import android.os.Build;
@@ -99,6 +111,7 @@ import java.util.ArrayList;
         import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.android.gms.ads.MobileAds;
 import android.widget.LinearLayout;
@@ -173,6 +186,11 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
     public String receiptSignature;
     public String IAP_Buy;
     public boolean IsConsumeForReward = false;
+
+    private ConsentInformation consentInformation;
+    // Use an atomic boolean to initialize the Google Mobile Ads SDK and load ads once.
+    private final AtomicBoolean isMobileAdsInitializeCalled = new AtomicBoolean(false);
+
     @Override
     public void onSignInSucceeded(){
         Log.e(TAG, "test onSignInSucceeded");
@@ -248,12 +266,106 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
         // admob
 //        MobileAds.initialize(this, "ca-app-pub-7893694248975700~6775751360");
 
-        MobileAds.initialize(
+//        MobileAds.initialize(
+//                this,
+//                new OnInitializationCompleteListener() {
+//                    @Override
+//                    public void onInitializationComplete(InitializationStatus initializationStatus) {}
+//                });
+        requestConsentForm();
+
+
+
+        // firebase
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        // iab
+//        setupIABHandler(); // it is excuted by cpp after put sku
+
+
+
+// get token for FCM test
+//        FirebaseInstanceId.getInstance().getInstanceId()
+//                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+//                        if (!task.isSuccessful()) {
+//                            Log.w("FIREBASE", "getInstanceId failed", task.getException());
+//                            return;
+//                        }
+//
+//// Get new Instance ID token
+//                        String token = task.getResult().getToken();
+//
+//// Log and toast
+////String msg = getString(R.string.msg_token_fmt, token);
+//                        Log.d("FIREBASE token", token);
+//                        Toast.makeText(AppActivity.this, token, Toast.LENGTH_SHORT).show();
+//                    }
+//                });
+
+
+        Log.e(TAG, "onCreate done" );
+        // onCreate done init done
+    }
+    void requestConsentForm(){
+//        ConsentDebugSettings debugSettings = new ConsentDebugSettings.Builder(this)
+//                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+//                .addTestDeviceHashedId("5ABC2B2CF46B01E35A86CCDA20D8BC04") // test only
+//                .build();
+
+
+        ConsentRequestParameters params = new ConsentRequestParameters
+                .Builder()
+//                .setConsentDebugSettings(debugSettings) // test only
+                .setTagForUnderAgeOfConsent(false)
+                .build();
+
+        consentInformation = UserMessagingPlatform.getConsentInformation(this);
+        consentInformation.requestConsentInfoUpdate(
                 this,
-                new OnInitializationCompleteListener() {
-                    @Override
-                    public void onInitializationComplete(InitializationStatus initializationStatus) {}
+                params,
+                (ConsentInformation.OnConsentInfoUpdateSuccessListener) () -> {
+                    UserMessagingPlatform.loadAndShowConsentFormIfRequired(
+                            this,
+                            (ConsentForm.OnConsentFormDismissedListener) loadAndShowError -> {
+                                if (loadAndShowError != null) {
+                                    // Consent gathering failed.
+                                    Log.w(TAG, String.format("%s: %s",
+                                            loadAndShowError.getErrorCode(),
+                                            loadAndShowError.getMessage()));
+                                }
+
+                                // Consent has been gathered.
+                                if (consentInformation.canRequestAds()) {
+                                    initializeMobileAdsSdk();
+                                }
+                            }
+                    );
+                },
+                (ConsentInformation.OnConsentInfoUpdateFailureListener) requestConsentError -> {
+                    // Consent gathering failed.
+                    Log.w(TAG, String.format("%s: %s",
+                            requestConsentError.getErrorCode(),
+                            requestConsentError.getMessage()));
                 });
+
+        // Check if you can initialize the Google Mobile Ads SDK in parallel
+        // while checking for new consent information. Consent obtained in
+        // the previous session can be used to request ads.
+        if (consentInformation.canRequestAds()) {
+            initializeMobileAdsSdk();
+        }
+    }
+
+    private void initializeMobileAdsSdk() {
+        if (isMobileAdsInitializeCalled.getAndSet(true)) {
+            return;
+        }
+
+        // Initialize the Google Mobile Ads SDK.
+        MobileAds.initialize(this);
+
 
         int width = getDisplaySize(getWindowManager().getDefaultDisplay()).x;
         int height = getDisplaySize(getWindowManager().getDefaultDisplay()).y;
@@ -303,74 +415,6 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
 
         loadRewardedVideoAd();
         loadInterstitial();
-//        mInterstitialAd = new InterstitialAd(this);
-//        mInterstitialAd.setAdUnitId("ca-app-pub-7893694248975700/6251817812");
-//        mInterstitialAd.setAdListener(new AdListener() {
-//            @Override
-//            public void onAdLoaded() {
-//                // Code to be executed when an ad finishes loading.
-//            }
-//
-//            @Override
-//            public void onAdFailedToLoad(int errorCode) {
-//                // Code to be executed when an ad request fails.
-//            }
-//
-//            @Override
-//            public void onAdOpened() {
-//                // Code to be executed when the ad is displayed.
-//
-//            }
-//
-//            @Override
-//            public void onAdLeftApplication() {
-//                // Code to be executed when the user has left the app.
-//                if (!mActivity.mInterstitialAd.isLoaded()) {
-//                    mActivity.loadInterstitial();
-//                }
-//            }
-//
-//            @Override
-//            public void onAdClosed() {
-//                // Code to be executed when the interstitial ad is closed.
-//                if (!mActivity.mInterstitialAd.isLoaded()) {
-//                    mActivity.loadInterstitial();
-//                }
-//            }
-//        });
-        // end admob
-
-        // firebase
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-
-        // iab
-//        setupIABHandler(); // it is excuted by cpp after put sku
-
-
-
-// get token for FCM test
-//        FirebaseInstanceId.getInstance().getInstanceId()
-//                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
-//                        if (!task.isSuccessful()) {
-//                            Log.w("FIREBASE", "getInstanceId failed", task.getException());
-//                            return;
-//                        }
-//
-//// Get new Instance ID token
-//                        String token = task.getResult().getToken();
-//
-//// Log and toast
-////String msg = getString(R.string.msg_token_fmt, token);
-//                        Log.d("FIREBASE token", token);
-//                        Toast.makeText(AppActivity.this, token, Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-
-
-        Log.e(TAG, "onCreate done" );
-        // onCreate done init done
     }
     private BillingClient mBillingClient;
 
@@ -1173,6 +1217,27 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
 //        onVideoDone();
 //        loadRewardedVideoAd();
 //    }
+    public static void RateUs(){
+        Log.d(TAG, "rate us");
+        ReviewManager manager = ReviewManagerFactory.create(mActivity);
+        Task<ReviewInfo> request = manager.requestReviewFlow();
+        request.addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                // We can get the ReviewInfo object
+                ReviewInfo reviewInfo = task.getResult();
+
+                Task<Void> flow = manager.launchReviewFlow(mActivity, reviewInfo);
+                flow.addOnCompleteListener(task1 -> {
+                    // The flow has finished. The API does not indicate whether the user
+                    // reviewed or not, or even whether the review dialog was shown. Thus, no
+                    // matter the result, we continue our app flow.
+                });
+            } else {
+                // There was some problem, log or handle the error code.
+                @ReviewErrorCode int reviewErrorCode = ((ReviewException) task.getException()).getErrorCode();
+            }
+        });
+    }
     private void loadInterstitial(){
         AdRequest adRequest = new AdRequest.Builder().build();
 
@@ -1226,32 +1291,31 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
 //                    skuList.add(skuID2100);
                     SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
                     params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP);
-                    mBillingClient.querySkuDetailsAsync(params.build(), new SkuDetailsResponseListener() {
-                        @Override
-                        public void onSkuDetailsResponse(BillingResult billingResult, List<SkuDetails> skuDetailsList) {
-                            // Process the result.
-                            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
-                                for(int i = 0; i < skuDetailsList.size();i++){
-                                    long amount = (skuDetailsList.get(i).getPriceAmountMicros()/1000000);
-                                    priceAmountMap.put(skuDetailsList.get(i).getSku(), Long.toString(amount));
-                                    priceCurrencyMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i).getPriceCurrencyCode());
-                                    priceLocaleMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i).getPrice());
-                                    skuDetailsMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i));
+                    mBillingClient.querySkuDetailsAsync(params.build(), (billingResult1, skuDetailsList) -> {
+                        // Process the result.
+                        if (billingResult1.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
+                            Log.d(TAG, "setupIABHandler mBillingClient 4: "+  skuDetailsList.size());
+                            for(int i = 0; i < skuDetailsList.size();i++){
+                                long amount = (skuDetailsList.get(i).getPriceAmountMicros()/1000000);
+                                priceAmountMap.put(skuDetailsList.get(i).getSku(), Long.toString(amount));
+                                priceCurrencyMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i).getPriceCurrencyCode());
+                                priceLocaleMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i).getPrice());
+                                skuDetailsMap.put(skuDetailsList.get(i).getSku(), skuDetailsList.get(i));
 //                                    Log.e(TAG, "sku detail - sku: " + skuDetailsList.get(i).getSku() + " amount: " + Long.toString(amount) + " currency: " + skuDetailsList.get(i).getPriceCurrencyCode() + " /price: " + skuDetailsList.get(i).getPrice());
-                                }
+                            }
 
-                                for (SkuDetails skuDetails : skuDetailsList) {
-                                    String sku = skuDetails.getSku();
-                                    String price = skuDetails.getPrice();
+                            for (SkuDetails skuDetails : skuDetailsList) {
+                                String sku = skuDetails.getSku();
+                                String price = skuDetails.getPrice();
 //                                    skuList.add(sku);
 //                                    if(skuID700.equals(sku)) {
 //                                        skuDetails700 = skuDetails;
 //                                    } else if(skuID2100.equals(sku)) {
 //                                        skuDetails2100 = skuDetails;
 //                                    }
-                                }
                             }
-                        }});
+                        }
+                    });
                 }
             }
 
@@ -1469,6 +1533,7 @@ public class AppActivity extends BaseGameActivity implements  PurchasesUpdatedLi
     }
     // admob ends
 
+    @SuppressLint("SuspiciousIndentation")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to

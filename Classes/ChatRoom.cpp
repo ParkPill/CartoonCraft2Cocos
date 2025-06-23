@@ -129,6 +129,7 @@ void ChatRoom::onConnectionOpened()
     {
         log("An error occurred. onConnectionOpened:_webSocket->send(string)");
     }
+
 }
 
 void ChatRoom::onMessageReceived(string message)

@@ -349,6 +349,13 @@ void EditorHud::onMenuClick(){
 void EditorHud::showMenuConfirm(Ref* ref){
     BTN_FROM_REF
     selectedMenuSlot = btn->getTag();
+    std::string title = UDGetStr(strmake(KEY_MAP_SAVE_NAME_FORMAT, selectedMenuSlot).c_str(), "EMPTY");
+    if (selectedMenuMode == MENU_MODE_UPLOAD && title.compare("EMPTY") == 0) {
+        showInstanceMessage(LM->getText("save before upload"));
+        return;
+    }
+
+
     Node* layer = CSLoader::createNode("MessageBox.csb");
     this->addChild(layer, 112);
     layer->setName("messageBox");

@@ -274,6 +274,57 @@ void BuggyServerManager::onHttpRequestCompleted(Node *sender, void *data)
      timeinfo = localtime (&startLocalTime);*/
 }
 
+void BuggyServerManager::getVer()
+{
+    isTrying = true;
+    timeEstablished = false;
+    HttpRequest* request = new HttpRequest();
+    request->setUrl("http://www.1506games.com:8116/getVer");
+    std::vector<std::string> headers;
+    headers.push_back("Content-Type:text/plain");
+    request->setRequestType(cocos2d::network::HttpRequest::Type::POST);
+
+    request->setResponseCallback(this, httpresponse_selector(BuggyServerManager::onGetVerCompleted));
+    std::string requestData = "cc";
+    const char* postData = requestData.c_str();
+    request->setHeaders(headers);
+    request->setRequestData(requestData.c_str(), strlen(postData));
+    cocos2d::network::HttpClient::getInstance()->send(request);
+    request->release();
+}
+void BuggyServerManager::onGetVerCompleted(Node *sender, void *data)
+{
+    log("getVer  complete request http");
+    HttpResponse *response = (HttpResponse*)data;
+    std::string str = std::string(response->getResponseHeader()->begin(), response->getResponseHeader()->end());
+//    int size = (int)response->getResponseHeader()->size();
+    std::string responseData = std::string(response->getResponseData()->begin(), response->getResponseData()->end());
+
+    if (!response->isSucceed())
+    {
+        log("getVer isSucceed %s", response->getErrorBuffer());
+        if(HUD != nullptr){
+//            HUD->isTimeGetFailed = true;
+        }
+        return;
+    }
+    log("getVer resposeData: %s", responseData.c_str());
+
+    ValueVector infoList = GameManager::getInstance()->split(str, ",");
+    if(infoList.size() > 1){
+        int version = infoList.at(0).asInt();
+        if(GameManager::getInstance()->versionCode < version){
+            log("getver: %d, %d", version , GameManager::getInstance()->versionCode);
+            if (GM->titleLayer != nullptr) {
+
+            }
+        }
+    }
+
+
+
+}
+
 std::string BuggyServerManager::getStrFromTime(time_t timet){
     if(timet < 0){
         timet = 0;
@@ -324,6 +375,9 @@ time_t BuggyServerManager::getTimeTFromStr(std::string strTime){
 //}return p;
 //}
 void BuggyServerManager::setTime(std::string strTime){
+//    log("setTimeLength: %s",std::to_string( strTime.length()).c_str());
+//    log("setTime str: %s", strTime.c_str());
+    if(strTime.length() < 10) return;
     month = Value(strTime.substr(5, 2)).asInt();
 //    month = 2; // test
     day = Value(strTime.substr(8, 2)).asInt();
@@ -1525,9 +1579,9 @@ void BuggyServerManager::saveUserData(std::vector<int>& datas){
         }else if (datas.at(i) == DATA_TYPE_DECK) {
             strData = strmake("%s&deck=%s", strData.c_str(), UDGetStr(KEY_UNITS_DECK, "").c_str());
         }else if (datas.at(i) == DATA_TYPE_KEYS) {
-            //            strData = strmake("%s&keys=%s", strData.c_str(), UDGetStr(KEY_KEYS, "").c_str());
+//            strData = strmake("%s&keys=%s", strData.c_str(), UDGetStr(KEY_KEYS, "").c_str());
         }else if (datas.at(i) == DATA_TYPE_KEY_GET_STATE) {
-            //            strData = strmake("%s&keygetstate=%s", strData.c_str(), UDGetStr(KEY_KEY_GET_STATE, "").c_str());
+//            strData = strmake("%s&keygetstate=%s", strData.c_str(), UDGetStr(KEY_KEY_GET_STATE, "").c_str());
         }else if (datas.at(i) == DATA_TYPE_IAP) {
             strData = strmake("%s&iap_list=%s&iap_total=%d", strData.c_str(), UDGetStr(KEY_IAP_LIST, "").c_str(), UDGetInt(KEY_IAP_TOTAL, 0));
         }else if (datas.at(i) == DATA_TYPE_SEARCH_STATE) {

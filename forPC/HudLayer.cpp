@@ -360,6 +360,7 @@ bool HudLayer::init()
         
         btn = (Button*)ndPanel->getChildByName("btnSelectDrag");
         btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
+        btn->setVisible(false);
         
         btn = (Button*)ndPanel->getChildByName("btn2xFast");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::on2xFastClick, this));
@@ -383,8 +384,8 @@ bool HudLayer::init()
         btn = (Button*)rightBottomPanel->getChildByName("btnSelectAll");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectAllForces, this));
         
-        btn = (Button*)rightBottomPanel->getChildByName("btnSelectDrag");
-        btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
+        //btn = (Button*)rightBottomPanel->getChildByName("btnSelectDrag");
+        //btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onDragSelectClick, this));
         
         btn = (Button*)rightBottomPanel->getChildByName("btnSelectScreen");
         btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onSelectForcesInScreen, this));

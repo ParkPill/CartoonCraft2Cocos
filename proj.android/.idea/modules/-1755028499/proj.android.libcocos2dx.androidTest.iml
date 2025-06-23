@@ -24,7 +24,7 @@
     <content url="file://$MODULE_DIR$/../../../../cocos2d/cocos/platform/android/libcocos2dx/build/generated/source/buildConfig/androidTest/debug" />
     <content url="file://$MODULE_DIR$/../../../../cocos2d/cocos/platform/android/libcocos2dx/src/androidTest" />
     <content url="file://$MODULE_DIR$/../../../../cocos2d/cocos/platform/android/libcocos2dx/src/androidTestDebug" />
-    <orderEntry type="jdk" jdkName="Android API 33 Platform" jdkType="Android SDK" />
+    <orderEntry type="jdk" jdkName="Android API 34, extension level 7 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="proj.android.libcocos2dx.main" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="Gradle: /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/platform/android/java/libs/EngineDataManager.jar" level="project" />

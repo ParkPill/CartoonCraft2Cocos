@@ -43,6 +43,8 @@ public:
     void showChapterSelect();
     void onOptionClick();
     void onLoadClick();
+    void showUpdate();
+    void onUpdateConfirm();
     void onLoadSlotClick(Ref* ref);
     void onOkFromLoadData();
     void goToLoadedStage();
@@ -205,6 +207,7 @@ public:
     void onSettingClick();
     void onMusicInSettingClick();
     void onSoundClick();
+    void saveAll();
     void onRestoreClick();
     void updateSettingPopup();
     void onNetworkResetClick();

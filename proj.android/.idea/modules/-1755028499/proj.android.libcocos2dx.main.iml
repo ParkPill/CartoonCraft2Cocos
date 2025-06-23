@@ -36,7 +36,7 @@
     </content>
     <content url="file://$MODULE_DIR$/../../../../cocos2d/cocos/platform/android/libcocos2dx/src/debug" />
     <content url="file://$MODULE_DIR$/../../../../cocos2d/cocos/platform/android/libcocos2dx/src/main" />
-    <orderEntry type="jdk" jdkName="Android API 33 Platform" jdkType="Android SDK" />
+    <orderEntry type="jdk" jdkName="Android API 34, extension level 7 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/platform/android/java/libs/EngineDataManager.jar" level="project" />
     <orderEntry type="library" name="Gradle: /Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/platform/android/java/libs/android-async-http-1.4.9.jar" level="project" />

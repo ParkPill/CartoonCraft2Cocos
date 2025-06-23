@@ -57,6 +57,8 @@ public:
     void getHttpTime();
     void setServerUrl();
     void onHttpRequestCompleted(cocos2d::Node *sender, void *data);
+    void getVer();
+    void onGetVerCompleted(cocos2d::Node *sender, void *data);
     void updateTick(float dt);
     
     int getDay();

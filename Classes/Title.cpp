@@ -72,11 +72,17 @@ bool Title::init()
     btn->addClickEventListener(CC_CALLBACK_0(Title::onMapClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
+    lbl = addLabelToButton(btn, "map editor", 60, Color3B(4, 90, 4));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
+    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     
     btn = (Button*)title->getChildByName("btnUploaded");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onUploadedClick, this));
     btn->setOpacity(0);
     btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime), FadeIn::create(0.5f), NULL));
+    lbl = addLabelToButton(btn, "use map", 60, Color3B(4, 90, 4));
+    lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
+    doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
     
     btn = (Button*)title->getChildByName("btnHero");//Button::create("btnBox.png");
     btn->addClickEventListener(CC_CALLBACK_0(Title::onHeroClick, this));
@@ -497,9 +503,11 @@ bool Title::init()
     
 //    UDSetInt(KEY_LAST_CLEAR_STAGE, 20); // test
 
+//    BSM->getVer();
 //    showRegisterName(); // test 
     log("Title init done"); // test
-    
+
+
 //    showExitPopup(); // test 
     return true;
 }
@@ -998,6 +1006,10 @@ void Title::onMusicInSettingClick(){
 void Title::onSoundClick(){
     GM->setSoundVolumn(!GM->getSoundVolumn());
     updateSettingPopup();
+    this->saveAll();
+}
+void Title::saveAll(){
+
 }
 void Title::onNetworkResetClick(){
     Node* layer = CSLoader::createNode("MessageBox.csb");
@@ -1086,6 +1098,31 @@ void Title::onBattleClick(Ref* ref){
         auto scene = HelloWorld::scene(STAGE_LOBBY, DIFFICULTY_MODE_NORMAL);
         Director::getInstance()->replaceScene(TransitionFade::create(1, scene, Color3B::BLACK));
     }
+}
+void Title::showUpdate(){
+    Node* layer = CSLoader::createNode("MessageBox.csb");
+    this->addChild(layer, 4);
+    layer->setName("messageBox");
+    setAsPopup(layer);
+    layer->setPositionX(size.width/2 - layer->getContentSize().width/2);
+
+    Button* btn = (Button*)layer->getChildByName("btnBlock");
+    btn->addClickEventListener(CC_CALLBACK_0(Title::closePopup, this));
+    btn = (Button*)layer->getChildByName("btnNo");
+    btn->setVisible(false);
+    Vec2 posLeft = btn->getPosition();
+    Button* btnYES = (Button*)layer->getChildByName("btnYes");
+    Text* lbl = (Text*)btnYES->getChildByName("lbl");
+    LM->setLocalizedString(lbl, "ok");
+    btnYES->addClickEventListener(CC_CALLBACK_0(Title::onUpdateConfirm, this));
+    btn->setPosition(btnYES->getPosition());
+    btnYES->setPosition(posLeft);
+
+    lbl = (Text*)layer->getChildByName("lblDescription");
+    LM->setLocalizedString(lbl, "update required");
+}
+void Title::onUpdateConfirm(){
+
 }
 void Title::showExitPopup(){
     Node* layer = CSLoader::createNode("ExitPopup.csb");
