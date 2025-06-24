@@ -1,0 +1,1 @@
+/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/cxx/Debug/295y4k1m/obj/arm64-v8a

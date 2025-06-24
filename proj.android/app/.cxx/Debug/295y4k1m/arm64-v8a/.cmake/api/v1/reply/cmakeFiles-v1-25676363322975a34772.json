@@ -1,0 +1,276 @@
+{
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/build/cmake/android.toolchain.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/build/cmake/platforms.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Initialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCCompiler.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a/CMakeFiles/3.22.1-g37088a8/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Linux.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/UnixPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/Platform/Android-Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosBuildSet.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosBuildHelpers.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/CMakeParseArguments.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosSelectModule.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosCompileOptions.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosPickLibs.cmake"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosBuildModules.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/AndroidNdkModules.cmake"
+		},
+		{
+			"path" : "cocos2d/external/recast/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/tinyxml2/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/android-specific/pvmp3dec/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/android-specific/tremolo/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/unzip/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/flatbuffers/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/external/xxhash/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/2d/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/3d/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/platform/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/physics/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/physics3d/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/math/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/navmesh/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/renderer/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/vr/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/base/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/deprecated/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/ui/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/network/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/audio/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/storage/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/editor-support/cocosbuilder/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/editor-support/cocostudio/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cocos/editor-support/spine/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/extensions/CMakeLists.txt"
+		},
+		{
+			"path" : "cocos2d/cmake/Modules/CocosUseLibs.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a",
+		"source" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

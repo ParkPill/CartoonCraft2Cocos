@@ -136,7 +136,8 @@ dependencies {
     implementation project(':libcocos2dx')
     implementation 'com.android.billingclient:billing:6.0.1'
 //    implementation 'com.unity3d.ads:unity-ads:3.0.0'
-    implementation 'com.google.ads.mediation:unity:3.0.0.2'
+    // implementation 'com.google.ads.mediation:unity:3.0.0.2'
+    implementation 'com.google.ads.mediation:unity:4.10.0.0'
     implementation 'com.google.android.gms:play-services-games:23.1.0'
     implementation 'com.google.android.gms:play-services-plus:17.0.0'
     implementation 'com.google.firebase:firebase-core:21.1.1'

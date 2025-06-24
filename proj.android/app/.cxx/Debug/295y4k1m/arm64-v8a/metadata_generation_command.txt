@@ -1,0 +1,24 @@
+                        -H/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=23
+-DANDROID_PLATFORM=android-23
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b
+-DCMAKE_ANDROID_NDK=/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b
+-DCMAKE_TOOLCHAIN_FILE=/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/bin/ninja
+-DCMAKE_CXX_FLAGS=-frtti -fexceptions
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/cxx/Debug/295y4k1m/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/cxx/Debug/295y4k1m/obj/arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-B/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a
+-GNinja
+-DANDROID_STL=c++_static
+-DANDROID_TOOLCHAIN=clang
+-DANDROID_ARM_NEON=TRUE
+-DUSE_CHIPMUNK=TRUE
+-DUSE_BULLET=TRUE
+                        Build command args: []
+                        Version: 2

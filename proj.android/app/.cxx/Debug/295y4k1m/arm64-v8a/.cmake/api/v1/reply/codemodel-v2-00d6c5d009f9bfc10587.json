@@ -1,0 +1,281 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						3
+					]
+				},
+				{
+					"build" : "engine/external/recast",
+					"jsonFile" : "directory-engine.external.recast-Debug-a4b28da67bf03a6f071a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/recast",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "engine/external/tinyxml2",
+					"jsonFile" : "directory-engine.external.tinyxml2-Debug-74696bcc19482aa39c0f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/tinyxml2",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "engine/external/android-specific/pvmp3dec",
+					"jsonFile" : "directory-engine.external.android-specific.pvmp3dec-Debug-6bd702ca559718000a08.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/android-specific/pvmp3dec",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "engine/external/android-specific/tremolo",
+					"jsonFile" : "directory-engine.external.android-specific.tremolo-Debug-837663c0116e86355a8d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/android-specific/tremolo",
+					"targetIndexes" : 
+					[
+						8
+					]
+				},
+				{
+					"build" : "engine/external/unzip",
+					"jsonFile" : "directory-engine.external.unzip-Debug-e6a274a30d207fc3c8a3.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/unzip",
+					"targetIndexes" : 
+					[
+						9
+					]
+				},
+				{
+					"build" : "engine/external/flatbuffers",
+					"jsonFile" : "directory-engine.external.flatbuffers-Debug-d938e24105537e23257e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/flatbuffers",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "engine/external/xxhash",
+					"jsonFile" : "directory-engine.external.xxhash-Debug-534da34dc8faf32bbcbd.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/external/xxhash",
+					"targetIndexes" : 
+					[
+						10
+					]
+				},
+				{
+					"build" : "engine/cocos/core",
+					"jsonFile" : "directory-engine.cocos.core-Debug-b253acb54ec31a3f0032.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cocos2d/cocos",
+					"targetIndexes" : 
+					[
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"name" : "TemplateCpp",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "MyGame::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-MyGame-Debug-584b96db31bc54c52380.json",
+					"name" : "MyGame",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "cocos2d::@b17589fc6237857a1771",
+					"jsonFile" : "target-cocos2d-Debug-4d5f2a921d764c488bfd.json",
+					"name" : "cocos2d",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "cocos2d_android::@b17589fc6237857a1771",
+					"jsonFile" : "target-cocos2d_android-Debug-1300199de3d7224415f3.json",
+					"name" : "cocos2d_android",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "cpufeatures::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-cpufeatures-Debug-8776e93c68ca2fe9c170.json",
+					"name" : "cpufeatures",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "flatbuffers::@67f93efe07fdd38cdb56",
+					"jsonFile" : "target-flatbuffers-Debug-87710f1f91d3e460a812.json",
+					"name" : "flatbuffers",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "pvmp3dec::@942eff57d9b63e8baa4e",
+					"jsonFile" : "target-pvmp3dec-Debug-38b50d040e17bef58c67.json",
+					"name" : "pvmp3dec",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "recast::@49aedbc985f97720d891",
+					"jsonFile" : "target-recast-Debug-d230a2faae242df64eba.json",
+					"name" : "recast",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tinyxml2::@fd6ab661f4ee25a21ef0",
+					"jsonFile" : "target-tinyxml2-Debug-09d9c2e8fc865f7098c8.json",
+					"name" : "tinyxml2",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "tremolo::@afb4f15f0e6ee4fb58dc",
+					"jsonFile" : "target-tremolo-Debug-663e3c4dbd1e490fde5a.json",
+					"name" : "tremolo",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "unzip::@05a8bf1aba81c1a16e64",
+					"jsonFile" : "target-unzip-Debug-a8674958c3d1c7ef79b6.json",
+					"name" : "unzip",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "xxhash::@11e20b8b9139209a045a",
+					"jsonFile" : "target-xxhash-Debug-a21d70db4d68bc670b2e.json",
+					"name" : "xxhash",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/.cxx/Debug/295y4k1m/arm64-v8a",
+		"source" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

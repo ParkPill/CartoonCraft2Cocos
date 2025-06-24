@@ -1,0 +1,798 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/proj.android/app/build/intermediates/cxx/Debug/295y4k1m/obj/arm64-v8a/libMyGame.so"
+		}
+	],
+	"backtrace" : 2,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"cocos_build_app",
+			"target_link_libraries",
+			"add_dependencies",
+			"add_definitions",
+			"include",
+			"include_directories",
+			"android_ndk_import_module_cpufeatures"
+		],
+		"files" : 
+		[
+			"cocos2d/cmake/Modules/CocosBuildHelpers.cmake",
+			"CMakeLists.txt",
+			"cocos2d/cmake/Modules/CocosBuildModules.cmake",
+			"cocos2d/cmake/Modules/CocosBuildSet.cmake",
+			"cocos2d/cmake/Modules/CocosCompileOptions.cmake",
+			"/usr/local/Caskroom/android-sdk/4333796/cmake/3.22.1/share/cmake-3.22/Modules/AndroidNdkModules.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 155,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 212,
+				"parent" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 217,
+				"parent" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 263,
+				"parent" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 218,
+				"parent" : 1
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 264,
+				"parent" : 1
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 40,
+				"parent" : 0
+			},
+			{
+				"file" : 3,
+				"parent" : 7
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 45,
+				"parent" : 8
+			},
+			{
+				"file" : 2,
+				"parent" : 9
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 147,
+				"parent" : 10
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 62,
+				"parent" : 10
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 163,
+				"parent" : 10
+			},
+			{
+				"command" : 4,
+				"file" : 2,
+				"line" : 155,
+				"parent" : 10
+			},
+			{
+				"command" : 5,
+				"file" : 3,
+				"line" : 39,
+				"parent" : 8
+			},
+			{
+				"file" : 4,
+				"parent" : 15
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 112,
+				"parent" : 16
+			},
+			{
+				"command" : 4,
+				"file" : 4,
+				"line" : 154,
+				"parent" : 16
+			},
+			{
+				"command" : 6,
+				"file" : 1,
+				"line" : 36,
+				"parent" : 0
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 2,
+				"parent" : 10
+			},
+			{
+				"command" : 7,
+				"file" : 2,
+				"line" : 115,
+				"parent" : 10
+			},
+			{
+				"command" : 6,
+				"file" : 5,
+				"line" : 32,
+				"parent" : 21
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 127,
+				"parent" : 10
+			},
+			{
+				"command" : 6,
+				"file" : 1,
+				"line" : 56,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -frtti -fexceptions -std=c++11 -Wno-deprecated-declarations -Wno-reorder -Wno-invalid-offsetof -fPIC -fsigned-char -fexceptions -g -Wall -fPIC"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 11,
+					"define" : "CC_USE_JPEG=1"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "CC_USE_NAVMESH=1"
+				},
+				{
+					"backtrace" : 13,
+					"define" : "CC_USE_PNG=1"
+				},
+				{
+					"backtrace" : 14,
+					"define" : "CC_USE_TIFF=1"
+				},
+				{
+					"backtrace" : 17,
+					"define" : "COCOS2D_DEBUG=1"
+				},
+				{
+					"define" : "MyGame_EXPORTS"
+				},
+				{
+					"backtrace" : 18,
+					"define" : "USE_FILE32API"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 19,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/editor-support/spine"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/deprecated"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/platform"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/extensions"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/external"
+				},
+				{
+					"backtrace" : 22,
+					"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/sources/android/cpufeatures"
+				},
+				{
+					"backtrace" : 23,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/external/zlib/include"
+				},
+				{
+					"backtrace" : 24,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/Classes"
+				},
+				{
+					"backtrace" : 24,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/audio/include"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				13,
+				14
+			],
+			"sysroot" : 
+			{
+				"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c99 -fPIC -fexceptions -g -Wall -fPIC"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 11,
+					"define" : "CC_USE_JPEG=1"
+				},
+				{
+					"backtrace" : 12,
+					"define" : "CC_USE_NAVMESH=1"
+				},
+				{
+					"backtrace" : 13,
+					"define" : "CC_USE_PNG=1"
+				},
+				{
+					"backtrace" : 14,
+					"define" : "CC_USE_TIFF=1"
+				},
+				{
+					"backtrace" : 17,
+					"define" : "COCOS2D_DEBUG=1"
+				},
+				{
+					"define" : "MyGame_EXPORTS"
+				},
+				{
+					"backtrace" : 18,
+					"define" : "USE_FILE32API"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 19,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/editor-support/spine"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/deprecated"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/platform"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/extensions"
+				},
+				{
+					"backtrace" : 20,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/external"
+				},
+				{
+					"backtrace" : 22,
+					"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/sources/android/cpufeatures"
+				},
+				{
+					"backtrace" : 23,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/external/zlib/include"
+				},
+				{
+					"backtrace" : 24,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/Classes"
+				},
+				{
+					"backtrace" : 24,
+					"path" : "/Users/rightpill-2016/Dev/CocosProjects/CartoonCraftNV/cocos2d/cocos/audio/include"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12
+			],
+			"sysroot" : 
+			{
+				"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+			}
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 4,
+			"id" : "recast::@49aedbc985f97720d891"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "cpufeatures::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "pvmp3dec::@942eff57d9b63e8baa4e"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "tremolo::@afb4f15f0e6ee4fb58dc"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "tinyxml2::@fd6ab661f4ee25a21ef0"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "unzip::@05a8bf1aba81c1a16e64"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "flatbuffers::@67f93efe07fdd38cdb56"
+		},
+		{
+			"backtrace" : 4,
+			"id" : "xxhash::@11e20b8b9139209a045a"
+		},
+		{
+			"backtrace" : 5,
+			"id" : "cocos2d_android::@b17589fc6237857a1771"
+		},
+		{
+			"backtrace" : 6,
+			"id" : "cocos2d::@b17589fc6237857a1771"
+		}
+	],
+	"id" : "MyGame::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libgcc_real.a -Wl,--exclude-libs,libatomic.a -static-libstdc++ -Wl,--build-id -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "-Wl,-whole-archive",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "lib/libcocos2d_android.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "-Wl,-no-whole-archive",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "lib/libcocos2d.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libtremolo.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libpvmp3dec.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "libcpufeatures.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/zlib/prebuilt/android/arm64-v8a/libz.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libunzip.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libtinyxml2.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/freetype2/prebuilt/android/arm64-v8a/libfreetype.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/websockets/prebuilt/android/arm64-v8a/libwebsockets.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/curl/prebuilt/android/arm64-v8a/libcurl.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libflatbuffers.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/libxxhash.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/openssl/prebuilt/android/arm64-v8a/libssl.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/openssl/prebuilt/android/arm64-v8a/libcrypto.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/jpeg/prebuilt/android/arm64-v8a/libjpeg.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/webp/prebuilt/android/arm64-v8a/libwebp.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/tiff/prebuilt/android/arm64-v8a/libtiff.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/png/prebuilt/android/arm64-v8a/libpng.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/chipmunk/prebuilt/android/arm64-v8a/libchipmunk.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/bullet/prebuilt/android/arm64-v8a/libBulletDynamics.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/bullet/prebuilt/android/arm64-v8a/libBulletCollision.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/bullet/prebuilt/android/arm64-v8a/libBulletMultiThreaded.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/bullet/prebuilt/android/arm64-v8a/libLinearMath.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "../../../../../../cocos2d/external/bullet/prebuilt/android/arm64-v8a/libMiniCL.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "lib/librecast.a",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lGLESv2",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lEGL",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-llog",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-landroid",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-lOpenSLES",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-latomic -lm",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX",
+		"sysroot" : 
+		{
+			"path" : "/Users/rightpill-2016/Dev/Sdks/android-ndk-r21b/toolchains/llvm/prebuilt/darwin-x86_64/sysroot"
+		}
+	},
+	"name" : "MyGame",
+	"nameOnDisk" : "libMyGame.so",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "Classes/AppDelegate.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "Classes/HelloWorldScene.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Animation.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Atlas.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Attachment.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Bone.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Event.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/IkConstraint.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/PathConstraint.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Skeleton.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Skin.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/Slot.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 1,
+			"path" : "cocos2d/cocos/editor-support/spine/TransformConstraint.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "cocos2d/cocos/editor-support/spine/spine-cocos2dx.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "proj.android/app/jni/hellocpp/main.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"path" : "Classes/AppDelegate.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "Classes/HelloWorldScene.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Animation.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Atlas.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Attachment.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Bone.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Event.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/IkConstraint.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/PathConstraint.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Skeleton.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Skin.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/Slot.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/TransformConstraint.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cocos2d/cocos/editor-support/spine/spine-cocos2dx.h",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "SHARED_LIBRARY"
+}

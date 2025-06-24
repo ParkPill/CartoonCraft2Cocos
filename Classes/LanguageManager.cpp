@@ -164,9 +164,9 @@ void LanguageManager::loadLanguageSheet(){
             std::replace( value.begin(), value.end(), '`', ','); // change ` to ,
             std::string theKey = keys.at(j).asString();
             userParams[theKey] = value;
-            if(j == 1){
-                log("%s", value.c_str());
-            }
+//            if(j == 1){
+//                log("%s", value.c_str());
+//            }
         }
         std::string rowKey = params.at(0).asString();
         languageTable[rowKey] = userParams;
