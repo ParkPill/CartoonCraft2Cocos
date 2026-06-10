@@ -392,7 +392,7 @@ void EditorWorld::updateUnitMove(float dt){
     }
 }
 Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, float time, int angle, int speed, Vec2 pos, bool isFromEnemy, std::string weaponName){
-    Movable* sptMissile;
+    Movable* sptMissile = nullptr;
     
     if(missileType == MISSILE_SLASH){
         sptMissile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, dmg, 0, "slash.png");
@@ -401,6 +401,9 @@ Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, floa
     }else if(missileType == MISSILE_FIREBALL){
         sptMissile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, dmg, 0, "fire0.png");
         sptMissile->runAnimation("fire", true);
+    }
+    if (sptMissile == nullptr) {
+        return nullptr;
     }
     if(weaponName.size() > 0){
         sptMissile->setSpriteFrame(strmake("%sMs.png", weaponName.c_str()));
@@ -415,6 +418,7 @@ Movable* EditorWorld::createMissile(int missileType, int dmg, bool visible, floa
     }else{
         heroMissileArray.pushBack(sptMissile);
     }
+    return sptMissile;
 }
 //void EditorWorld::gettingReadyForBattle(float dt){
 //    battleReadyCountDown--;
@@ -7047,12 +7051,13 @@ void EditorWorld::eraseTile(cocos2d::Vec2 coordinate){
 }
 void EditorWorld::setMapData(std::string data){
     ValueVector numbers = GM->split(data, ",");
-    char newCharArray[numbers.size()];
-    for(int i = 0; i < numbers.size(); i++){
-        newCharArray[i] = numbers.at(i).asInt();
-        log("int %d", (int)newCharArray[i]);
+    std::string newCharString;
+    newCharString.reserve(numbers.size());
+    for (int i = 0; i < static_cast<int>(numbers.size()); i++) {
+        const char converted = static_cast<char>(numbers.at(i).asInt());
+        newCharString.push_back(converted);
+        log("int %d", static_cast<int>(converted));
     }
-    std::string newCharString(newCharArray, numbers.size());
 //    log("what about this %d: %s", (int)newCharString.length(), newCharString.c_str());
     std::string decompressed = GM->decompress_string(newCharString);
 //    log("decompressed: %s", decompressed.c_str());
@@ -7089,9 +7094,9 @@ std::string EditorWorld::getMapData(){
     compressed = GM->compress_string(mapData);
     const char* rawCharArray = compressed.c_str();
     int counter = 0;
-    int newNumberedArray[(int)compressed.size()];
-    while(counter < compressed.size()){
-        newNumberedArray[counter] = rawCharArray[counter];
+    std::vector<int> newNumberedArray(compressed.size());
+    while(counter < static_cast<int>(compressed.size())){
+        newNumberedArray[counter] = static_cast<unsigned char>(rawCharArray[counter]);
         counter++;
     }
     

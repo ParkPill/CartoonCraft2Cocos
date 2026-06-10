@@ -26,6 +26,9 @@ void PageBase::update(float dt){
         hideIndicatorRequested = false;
         hideIndicator();
     }
+    if (GM->accountRegistrationNode == this) {
+        GM->tickDeferredAccountRegistration(this);
+    }
 }
 Node* PageBase::getPopup(){
     if(popupArray.size() > 0){

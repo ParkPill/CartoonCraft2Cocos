@@ -511,11 +511,10 @@ void EditorHud::onUploadMapClick(){
     }
     showIndicator();
     
-    uploadHandleState = NETWORK_HANDLE_STATE_REQUESTED;
-    isUploadRequested = true;
-    
     GM->loadMapData = UDGetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), "");
-    BSM->uploadMap(tf->getString(), GM->loadMapData.c_str());
+    GM->pendingMapUploadName = tf->getString();
+    GM->pendingMapUploadData = GM->loadMapData;
+    GM->requestOnlineAccount(this, PENDING_ONLINE_ACTION_MAP_UPLOAD);
 }
 void EditorHud::playMap(){
     GM->loadMapData = UDGetStr(strmake(KEY_MAP_SAVE_DATA_FORMAT, selectedMenuSlot).c_str(), "");

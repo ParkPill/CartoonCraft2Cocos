@@ -722,6 +722,16 @@ void Movable::resumeProcess(){
 void Movable::resetProcessTimer(){
     processTimer = nullptr;
 }
+void Movable::removeBuildProgressIcon(){
+    if (processTimer != nullptr) {
+        processTimer->stopAllActions();
+        processTimer = nullptr;
+    }
+    if (buildProgressBtn != nullptr) {
+        buildProgressBtn->removeFromParent();
+        buildProgressBtn = nullptr;
+    }
+}
 void Movable::onBuildComplete(){//building(float dt){
 //    buildingTimer += dt;
 //    if(buildingTimer >= buildingCompleteTime){
@@ -748,6 +758,7 @@ void Movable::onBuildComplete(){//building(float dt){
         WORLD->addGold(300);
     }
     WORLD->setAfterBuildingProcess(builderBuilding);
+    removeBuildProgressIcon();
     
     this->untouchable = false;
     this->setVisible(true); // test
@@ -2349,6 +2360,34 @@ void Movable::cancelProduct(Ref* ref){
     btn->removeFromParent();
     updateProductButtons();
 }
+
+void Movable::cancelBuildingConstruction(Ref* ref){
+    if (!isBuildingABuilding || builderBuilding == nullptr || isEnemy) {
+        return;
+    }
+    isBuildingABuilding = false;
+    Movable* building = builderBuilding;
+    builderBuilding = nullptr;
+    int unitType = building->unitType;
+
+    stopAllActions();
+
+    removeBuildProgressIcon();
+
+    WORLD->addGold(WORLD->getGoldPriceForUnit(unitType));
+    WORLD->addLumber(WORLD->getLumberPriceForUnit(unitType));
+
+    building->stopAllActions();
+    WORLD->removeIncompleteBuilding((EnemyBase*)building);
+
+    untouchable = false;
+    setVisible(true);
+    if (!isCarryingGold && !isCarryingTree) {
+        attackType = ATTACK_TYPE_NEAR;
+    }
+    stopNew();
+}
+
 void Movable::updateProductButtons(){
     int counter = 0;
     for(auto btn: btns){
@@ -2502,19 +2541,22 @@ void Movable::stopNew(){
 
         float dur = WORLD->getUnitCreateTime(unit->unitType);
         if (!isEnemy) {
-            Sprite* spt = Sprite::create("uiBox.png");
-            spt->setPosition(unit->getPosition() + Vec2(50, unit->getContentSize().height/2 + 10));
-            WORLD->addChild(spt, 1000);
+            Button* btn = Button::create("uiBox.png");
+            btn->setPosition(unit->getPosition() + Vec2(50, unit->getContentSize().height/2 + 10));
+            btn->setScale(0.3f);
+            btn->setTag(unit->unitType);
+            btn->addClickEventListener(CC_CALLBACK_1(Movable::cancelBuildingConstruction, this));
+            WORLD->addChild(btn, 1000);
+            buildProgressBtn = btn;
             auto timer = ProgressTimer::create(WORLD->getSpriteForUnit(unit->unitType));
             processTimer = timer;
             timer->setType(ProgressTimer::Type::RADIAL);
-            spt->addChild(timer);
+            btn->addChild(timer);
             timer->setName("timer");
-            spt->setScale(0.3f);
-            timer->setPosition(spt->getContentSize()/2);
+            timer->setPosition(btn->getContentSize()/2);
             timer->setPercentage(0);
             log("building dur %f", dur);
-            timer->runAction(Sequence::create(ProgressTo::create(dur, 100), CallFunc::create(CC_CALLBACK_0(Movable::resetProcessTimer, this)), CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt)), nullptr));
+            timer->runAction(Sequence::create(ProgressTo::create(dur, 100), CallFunc::create(CC_CALLBACK_0(Movable::resetProcessTimer, this)), CallFunc::create(CC_CALLBACK_0(Movable::removeBuildProgressIcon, this)), nullptr));
         }// progress end
         
         if(WORLD->selectedArray.find((EnemyBase*)this) != WORLD->selectedArray.end()){

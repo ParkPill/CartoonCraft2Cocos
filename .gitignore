@@ -95,3 +95,7 @@ Thumbs.db.meta
 
 # VS Code
 *.vscode
+
+# Visual Studio Win32 build output
+**/Debug.win32/
+*.pch

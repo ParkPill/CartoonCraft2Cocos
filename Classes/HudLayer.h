@@ -384,6 +384,13 @@ public:
     int selectedShortcut = -1;
     int shortcutCount = 5;
     std::string shortcutList[5];
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+    std::string pcControlGroups[9];
+    int pcControlGroupLastKey = -1;
+    DWORD pcControlGroupLastPressTime = 0;
+    void handlePcControlGroupAssign(int groupIndex);
+    void handlePcControlGroupRecall(int groupIndex, bool addToSelection);
+#endif
     
     Node* selectedInventorySlot = nullptr;
     Node* abcLayer = nullptr;
@@ -499,6 +506,8 @@ public:
     PPLabel* lblTimer;
     void onOkFromWinPopup(Ref* ref);
     void arrangeMenu(cocos2d::Vec2 pos);
+    void dismissMenu();
+    bool tryHandleHudClick(const cocos2d::Vec2& glPos);
     
     Node* priceInfo = nullptr;
     void showPriceInfo(std::string msg, int gold, int lumber, int food);

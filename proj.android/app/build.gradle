@@ -10,12 +10,14 @@ android {
         // but continue the build even when errors are found:
         abortOnError false
     }
+    namespace 'com.magmon.cartooncraft'
+    ndkVersion '28.2.13676358'
     defaultConfig {
         applicationId "com.magmon.cartooncraft"
         minSdkVersion PROP_MIN_SDK_VERSION
         targetSdkVersion PROP_TARGET_SDK_VERSION
-        versionCode 314
-        versionName "4.26"
+        versionCode 315
+        versionName "4.27"
 
         externalNativeBuild {
             if (PROP_BUILD_TYPE == 'ndk-build') {
@@ -130,26 +132,64 @@ android.applicationVariants.all { variant ->
     }
 }
 dependencies {
-//    implementation fileTree(dir: 'libs', include: ['*.jar'])
-//    implementation fileTree(dir: 'libs', include: ['*.aar'])
+
+//    implementation fileTree(include: ['*.jar'], dir: 'libs')
+//    implementation project(':libcocos2dx')
+    implementation 'com.android.billingclient:billing:7.1.1'
+//    implementation 'com.unity3d.ads:unity-ads:4.12.3'
+//    implementation 'com.google.ads.mediation:unity:4.10.0.0'
+//    implementation 'com.google.android.gms:play-services-games:23.1.0'
+//    implementation 'com.google.android.gms:play-services-plus:17.0.0'
+//    implementation 'com.google.firebase:firebase-core:21.1.1'
+//    implementation 'com.google.android.gms:play-services-ads'
+//    implementation 'com.google.firebase:firebase-ads:22.4.0'
+//    implementation 'com.google.firebase:firebase-messaging:23.2.1'
+//    constraints.implementation 'androidx.fragment:fragment:1.3.6'
+//    implementation 'com.google.android.play:review:2.0.1'
+//    implementation("com.google.android.ump:user-messaging-platform:2.1.0")
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':libcocos2dx')
-    implementation 'com.android.billingclient:billing:6.0.1'
+// Google Play Billing Client
+//    implementation 'com.android.billingclient:billing:8.0.0'
+// Unity Ads SDK (최신 버전은 4.x대입니다. 5.x 대는 릴리즈 버전이 아닌 것으로 보입니다.)
+//    implementation 'com.unity3d.ads:unity-ads:4.8.0'
+// AdMob Mediation Adapter for Unity Ads (Unity Ads SDK 4.x 대에 맞는 최신 버전 중 안정적인 버전을 확인하여 적용)
+//    implementation 'com.google.ads.mediation:unity:4.12.5.0'
+// Google Play Games Services
+    implementation 'com.google.android.gms:play-services-games:23.2.0'
+// Google+ 서비스는 **사용 중단(Deprecated)**되어 최신 버전 업데이트가 불가능하며,
+// 종속성을 **제거**하거나 기존 버전을 **유지**하는 것이 권장됩니다. (일단 유지)
+    implementation 'com.google.android.gms:play-services-plus:17.0.0'
+// Firebase Core
+// 참고: Firebase SDK는 **BOM(Bill of Materials)**을 사용하여 버전을 관리하는 것이 권장됩니다.
+// 개별 컴포넌트의 최신 안정화 버전(2025년 10월 기준)을 적용했습니다.
+// firebase-core는 21.1.1이 최신 버전으로 검색되었으며, Firebase Analytics는 별도 모듈인 firebase-analytics로 대체되었습니다.
+    implementation 'com.google.firebase:firebase-core:21.1.1'
+// Google Mobile Ads (GMS)
+// 버전 충돌을 피하기 위해 firebase-ads와 gms:play-services-ads는 동일한 버전 계열을 사용하는 것이 좋습니다.
+    implementation 'com.google.android.gms:play-services-ads:24.6.0'
+// Firebase Ads (24.6.0에 해당하는 Firebase Ads 버전이 없으므로, GMS Ads와 동일한 계열의 최신 안정화 버전을 적용)
+// 24.6.0은 GMS 버전이므로, Firebase 버전은 해당 GMS 버전과 호환되는 버전을 선택해야 합니다.
+// 여기서는 Maven Repository에 검색된 최신 버전 중 안정적인 버전을 적용했습니다.
+    implementation 'com.google.firebase:firebase-ads:23.6.0'
+// Firebase Cloud Messaging
+    implementation 'com.google.firebase:firebase-messaging:25.0.1'
+// AndroidX Fragment (Constraints는 버전만 업데이트)
+    constraints.implementation 'androidx.fragment:fragment:1.8.9'
+// Google In-App Review API
+    implementation 'com.google.android.play:review:2.0.2'
+// Google User Messaging Platform (UMP)
+    implementation("com.google.android.ump:user-messaging-platform:2.1.0")
+// UMP는 2.1.0이 최신 안정화 버전으로 검색되었습니다. (2.2.0-alpha가 아닌 2.1.0)
+
+    //    implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    implementation fileTree(dir: 'libs', include: ['*.aar'])
 //    implementation 'com.unity3d.ads:unity-ads:3.0.0'
     // implementation 'com.google.ads.mediation:unity:3.0.0.2'
-    implementation 'com.google.ads.mediation:unity:4.10.0.0'
-    implementation 'com.google.android.gms:play-services-games:23.1.0'
-    implementation 'com.google.android.gms:play-services-plus:17.0.0'
-    implementation 'com.google.firebase:firebase-core:21.1.1'
     //    implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
 //    implementation 'com.google.android.gms:play-services-ads:18.0.0'
 //    implementation 'com.google.firebase:firebase-ads:17.2.0'
 //    implementation 'com.google.firebase:firebase-messaging:17.3.4'
-    implementation 'com.google.android.gms:play-services-ads'
-    implementation 'com.google.firebase:firebase-ads:22.4.0'
-    implementation 'com.google.firebase:firebase-messaging:23.2.1'
-    constraints.implementation 'androidx.fragment:fragment:1.3.6'
-    implementation 'com.google.android.play:review:2.0.1'
-    implementation("com.google.android.ump:user-messaging-platform:2.1.0")
 }
 apply plugin: 'com.google.gms.google-services'

@@ -1,3 +1,0 @@
-target 'CartoonCraftNV-mobile' do
-   pod 'Google-Mobile-Ads-SDK', '~> 7.69.0'
-end

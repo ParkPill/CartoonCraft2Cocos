@@ -27,6 +27,10 @@ bool Intro::init()
     
     int server = UDGetInt(KEY_SERVER, -1);
     log("server selected intro %d", server);
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+    GM->ensureWin32StartupDefaults();
+    this->runAction(Sequence::create(DelayTime::create(0), CallFunc::create(CC_CALLBACK_0(Intro::startAnimation, this)), NULL));
+#else
     if (server < 0) {
         std::string strName = UDGetStr(KEY_NAME, "");
         if (strName.length() > 0) {
@@ -38,6 +42,7 @@ bool Intro::init()
     }else{
         this->runAction(Sequence::create(DelayTime::create(0), CallFunc::create(CC_CALLBACK_0(Intro::startAnimation, this)), NULL)); // test
     }
+#endif
 //    UDSetStr(KEY_NAME, ""); // test
 //    UDSetStr(KEY_SAVED_ID, "-1");
 //    showUserSelect();

@@ -36,6 +36,7 @@ public:
     
     virtual bool init();
     CREATE_FUNC(Title);
+    static bool usesAccountSystem();
     void onServerSelect();
     void onHeroClick();
     void showHeroPage(bool showAlert = false);

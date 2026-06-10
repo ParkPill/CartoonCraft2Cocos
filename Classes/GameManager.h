@@ -5,7 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <zlib.h>
+#include "../cocos2d/external/win32-specific/zlib/include/zlib.h"
 #include "AStar.h"
 #include "cocos2d.h"
 #include "HudLayer.h"
@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <functional>
 //#include "LoadBalancing-cpp/inc/Client.h"
 
 
@@ -228,6 +229,12 @@ using namespace cocos2d::ui;
 #define NETWORK_HANDLE_STATE_COMPLETE 5
 #define NETWORK_HANDLE_STATE_ERROR 6
 #define POPUP_ZORDER 200
+
+#define PENDING_ONLINE_ACTION_NONE 0
+#define PENDING_ONLINE_ACTION_ARENA_SCORE 1
+#define PENDING_ONLINE_ACTION_MAP_UPLOAD 2
+#define PENDING_ONLINE_ACTION_MAP_LIKE 3
+
 #define KEY_HERO_LEVEL_FORMAT "KEY_HERO_LEVEL_%d"
 #define KEY_HERO_EXP_FORMAT "KEY_HERO_EXP_%d"
 #define KEY_HERO_POS_X_FORMAT "KEY_HERO_POS_X_FORMAT_%d"
@@ -864,6 +871,29 @@ public:
     const char* currentUserID;
     //Get instance of singleton
     static GameManager* getInstance();
+    static bool isWin32Offline();
+    static bool isWin32DeferredAuth();
+    static void ensureWin32LocalAccount();
+    static void ensureWin32StartupDefaults();
+    static bool hasLocalAccount();
+    void requestOnlineAccount(cocos2d::Node* host, int pendingAction);
+    void showAccountRegistrationOnNode(cocos2d::Node* host);
+    void completeDeferredAccountRegistration(bool success);
+    void fulfillPendingOnlineAction();
+    void tickDeferredAccountRegistration(cocos2d::Node* host);
+    bool deferredAccountRegistrationActive = false;
+    cocos2d::Node* accountRegistrationNode = nullptr;
+    int deferredNameHandleState = NETWORK_HANDLE_STATE_COMPLETE;
+    std::string deferredNameToRegister;
+    int pendingOnlineAction = PENDING_ONLINE_ACTION_NONE;
+    int pendingArenaScore = 0;
+    std::string pendingMapUploadName;
+    std::string pendingMapUploadData;
+    std::string pendingMapLikeMapId;
+    int pendingMapLike = 0;
+    int pendingMapDislike = 0;
+    int pendingMapSuccess = 0;
+    int pendingMapFail = 0;
     void showVideoDone();
     void showVideoFailed();
     void showVideo(int which);

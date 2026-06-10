@@ -275,6 +275,8 @@ public:
     void updateProductButtons();
     void queueUnit(int index);
     void cancelProduct(Ref* ref);
+    void cancelBuildingConstruction(Ref* ref);
+    cocos2d::ui::Button* buildProgressBtn = nullptr;
     bool forceAttackTarget = false;
     
     Vector<cocos2d::ui::Button*> btns;
@@ -514,6 +516,7 @@ public:
     void resumeProcess();
     ProgressTimer* processTimer = nullptr;
     void resetProcessTimer();
+    void removeBuildProgressIcon();
     int level = 0;
     int rank = 0;
     int unitState = 0;

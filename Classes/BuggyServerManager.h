@@ -55,6 +55,7 @@ public:
     virtual bool init();
     CREATE_FUNC(BuggyServerManager);
     void getHttpTime();
+    void establishLocalTimeBaseline();
     void setServerUrl();
     void onHttpRequestCompleted(cocos2d::Node *sender, void *data);
     void getVer();

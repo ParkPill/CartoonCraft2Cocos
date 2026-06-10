@@ -1,25 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="50" tileheight="50" nextobjectid="1">
- <tileset firstgid="1" name="grassTilemap" tilewidth="50" tileheight="50" tilecount="130">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="50" tileheight="50" infinite="0" nextlayerid="5" nextobjectid="1">
+ <tileset firstgid="1" name="grassTilemap" tilewidth="50" tileheight="50" tilecount="200" columns="10">
   <image source="50TileSet.png" width="512" height="1024"/>
-  <terraintypes>
-   <terrain name="soil" tile="-1"/>
-  </terraintypes>
-  <tile id="30" terrain=",,,0"/>
-  <tile id="31" terrain=",,0,0"/>
-  <tile id="32" terrain=",,0,"/>
-  <tile id="33" terrain="0,0,0,"/>
-  <tile id="34" terrain="0,0,,0"/>
-  <tile id="40" terrain=",0,,0"/>
-  <tile id="41" terrain="0,0,0,0"/>
-  <tile id="42" terrain="0,,0,"/>
-  <tile id="43" terrain="0,,0,0"/>
-  <tile id="44" terrain=",0,0,0"/>
-  <tile id="50" terrain=",0,,"/>
-  <tile id="51" terrain="0,0,,"/>
-  <tile id="52" terrain="0,,,"/>
+  <wangsets>
+   <wangset name="Terrains" type="corner" tile="-1">
+    <wangcolor name="soil" color="#ff0000" tile="-1" probability="1"/>
+    <wangtile tileid="30" wangid="0,0,0,1,0,0,0,0"/>
+    <wangtile tileid="31" wangid="0,0,0,1,0,1,0,0"/>
+    <wangtile tileid="32" wangid="0,0,0,0,0,1,0,0"/>
+    <wangtile tileid="33" wangid="0,1,0,0,0,1,0,1"/>
+    <wangtile tileid="34" wangid="0,1,0,1,0,0,0,1"/>
+    <wangtile tileid="40" wangid="0,1,0,1,0,0,0,0"/>
+    <wangtile tileid="41" wangid="0,1,0,1,0,1,0,1"/>
+    <wangtile tileid="42" wangid="0,0,0,0,0,1,0,1"/>
+    <wangtile tileid="43" wangid="0,0,0,1,0,1,0,1"/>
+    <wangtile tileid="44" wangid="0,1,0,1,0,1,0,0"/>
+    <wangtile tileid="50" wangid="0,1,0,0,0,0,0,0"/>
+    <wangtile tileid="51" wangid="0,1,0,0,0,0,0,1"/>
+    <wangtile tileid="52" wangid="0,0,0,0,0,0,0,1"/>
+   </wangset>
+  </wangsets>
  </tileset>
- <layer name="stage" width="30" height="20">
+ <layer id="1" name="stage" width="30" height="20">
   <data encoding="csv">
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -43,7 +45,7 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 </data>
  </layer>
- <layer name="soil" width="30" height="20">
+ <layer id="2" name="soil" width="30" height="20">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -67,7 +69,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <layer name="deco" width="30" height="20">
+ <layer id="3" name="deco" width="30" height="20">
   <data encoding="csv">
 50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,
 50,50,50,50,0,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,0,50,50,0,0,
@@ -91,7 +93,7 @@
 50,0,0,0,50,50,50,50,50,0,50,50,50,50,0,0,50,50,50,50,50,50,50,50,50,50,0,0,0,0
 </data>
  </layer>
- <layer name="unit" width="30" height="20">
+ <layer id="4" name="unit" width="30" height="20">
   <data encoding="csv">
 82,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
