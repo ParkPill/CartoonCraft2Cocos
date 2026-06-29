@@ -1,4 +1,4 @@
-//
+﻿//
 //  Enemies.cpp
 //  LegendDaryTheTower
 //
@@ -8,7 +8,7 @@
 
 #include "Enemies.h"
 #include "GameManager.h"
-#include "HelloWorldScene.h"
+#include "GameScene.h"
 #include "LanguageManager.h"
 
 
@@ -223,3 +223,4 @@ FlyingKnife* FlyingKnife::create(){
     spike->runAction(RepeatForever::create(RotateBy::create(0.5f, 360)));
     return spike;
 }
+

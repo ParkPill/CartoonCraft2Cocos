@@ -923,11 +923,6 @@ void BuggyServerManager::onGetOtherUserDataComplete(cocos2d::Node *sender,
   if (document.HasMember("buildings")) {
     GM->raidEnemyBuildings = document["buildings"].GetString();
   }
-
-  //    lastDocument = getDocument(sender, data);
-  if (BHUD != nullptr) {
-    BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-  }
 }
 void BuggyServerManager::getTopPlayers(int count) {
   topPlayerCount = count;
@@ -951,27 +946,6 @@ void BuggyServerManager::onGetTopPlayersComplete(cocos2d::Node *sender,
     //        return;
   }
   //    if(document.HasMember("time")) setTime(document["time"].GetString());
-  if (BHUD) {
-    BHUD->topRankIDs.clear();
-    BHUD->topRankNames.clear();
-    BHUD->topRankTrophys.clear();
-    for (int i = 0; i < document["result"].GetArray().Size(); i++) {
-      long trophy = document["result"].GetArray()[i]["trophy"].GetUint64();
-      if (trophy > 100000) {
-        continue;
-      }
-      BHUD->topRankIDs.push_back(
-          document["result"].GetArray()[i]["id"].GetString());
-      BHUD->topRankNames.push_back(
-          document["result"].GetArray()[i]["name"].GetString());
-      BHUD->topRankTrophys.push_back((int)trophy);
-    }
-    //
-    //    lastDocument = getDocument(sender, data);
-    if (BHUD != nullptr) {
-      BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-    }
-  }
 }
 void BuggyServerManager::getAllUserData() {
   std::string strRID = "id=" + requestedID;
@@ -1280,9 +1254,6 @@ void BuggyServerManager::onGetUserDataComplete(cocos2d::Node *sender,
   }
 
   //    lastDocument = getDocument(sender, data);
-  if (BHUD != nullptr) {
-    BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-  }
   if (GM->titleLayer && GM->titleLayer != nullptr) {
     if (TITLE->isHeroInfoRequested) {
       TITLE->isHeroInfoRequested = false;
@@ -1307,27 +1278,6 @@ void BuggyServerManager::onGetMyRankComplete(cocos2d::Node *sender,
                                              void *data) {
 
   SET_DOCUMENT_AND_CHECK_ERROR
-  //    if(HUD != nullptr){
-  //        HUD->isLoadingRankSuccess = false;
-  //    }
-  if (document.HasMember("result")) {
-    //        if(HUD != nullptr){
-    //            HUD->myRank = document["result"].GetInt() + 1;
-    //            HUD->isLoadingRankSuccess = true;
-    //            HUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-    //        }
-    if (BHUD != nullptr) {
-      BHUD->myRank = document["result"].GetInt() + 1;
-    }
-  } else {
-    if (BHUD != nullptr) {
-      BHUD->myRank = 999;
-    }
-  }
-  if (BHUD != nullptr) {
-    BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-    BHUD->isMyRankReceived = true;
-  }
 }
 void BuggyServerManager::getGameInfo() {
   cocos2d::network::HttpRequest *request = new cocos2d::network::HttpRequest();
@@ -1554,14 +1504,6 @@ void BuggyServerManager::onAddShieldComplete(cocos2d::Node *sender,
     isFailedToGetNetworkData = true;
   }
 
-  if (BHUD != nullptr) {
-    if (document.HasMember("result")) {
-      std::string strTime = document["result"].GetString();
-      BHUD->shieldEndTimeT = getTimeTFromStr(strTime);
-      log("shield end time: %s", strTime.c_str());
-    }
-    BHUD->networkStateGetData = NETWORK_HANDLE_STATE_ARRIVED;
-  }
 }
 
 void BuggyServerManager::verifyReceipt(std::string strSignedData,

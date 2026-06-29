@@ -146,7 +146,24 @@
 #define UNIT_HERO_LAMIA 89
 #define UNIT_HERO_CHUNJA 90
 #define UNIT_HERO_GOLEM 91
+#define UNIT_HUMAN_SHUTTLE 92
+#define UNIT_ORC_SHUTTLE 93
+#define UNIT_HUMAN_SHIP 94
+#define UNIT_ORC_SHIP 95
+#define UNIT_HUMAN_BATTLE_SHIP 96
+#define UNIT_HUMAN_SHIPYARD 97
+#define UNIT_ORC_SHIPYARD 98
+#define UNIT_ORC_BATTLE_SHIP 99
 #define UNIT_MISSILE_NOTHING 100
+#define UNIT_OIL_SPOT 101
+#define UNIT_HUMAN_OIL_SHIP 102
+#define UNIT_HUMAN_OIL_EXTRACTOR 103
+#define UNIT_HUMAN_FOUNDRY 104
+#define UNIT_HUMAN_OIL_REFINERY 105
+#define UNIT_ORC_OIL_SHIP 106
+#define UNIT_ORC_OIL_EXTRACTOR 107
+#define UNIT_ORC_OIL_REFINERY 108
+#define UNIT_ORC_FOUNDRY 109
 
 #define WEAPON_DAGGER 0
 #define WEAPON_SWORD 1
@@ -251,6 +268,16 @@ public:
     float gatheringTimer = 0;
     Movable* currentMine = nullptr;
     bool isCarryingGold = false;
+    bool isGatheringOil = false;
+    bool isCarryingOil = false;
+    bool isInExtractor = false;
+    bool isResearching = false;
+    float researchTimer = 0.0f;
+    int researchType = -1;
+    float oilGatheringTimer = 0;
+    Movable* currentOilExtractor = nullptr;
+    int oilCarryAmount = 0;
+    void gatherOil(Movable* extractor);
     void gatherTree(Movable* tree);
     void attackTree();
     void playTreeSound();
@@ -557,6 +584,18 @@ public:
 
     Vector<Movable*> ExcludeTreeList;
     Movable* nextTree = nullptr;
+
+    // Shuttle cargo (used on UNIT_HUMAN_SHUTTLE / UNIT_ORC_SHUTTLE)
+    struct CargoSlot {
+        Movable* unit = nullptr;
+        int col = 0, row = 0;
+        int cols = 1, rows = 1;
+    };
+    std::vector<CargoSlot> shuttleCargo;
+    bool cargoGrid[4][2];   // [col][row], 4 cols × 2 rows
+    Movable* myShuttle = nullptr;
+    Movable* pendingShuttle = nullptr;
+    bool isInShuttle = false;
 };
 
 #endif

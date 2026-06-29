@@ -1,4 +1,4 @@
-#ifndef GameManager_h
+﻿#ifndef GameManager_h
 #define GameManager_h
 #include <string>
 #include <stdexcept>
@@ -9,9 +9,7 @@
 #include "AStar.h"
 #include "cocos2d.h"
 #include "HudLayer.h"
-#include "EditorHud.h"
-#include "HelloWorldScene.h"
-#include "BattleHud.h"
+#include "GameScene.h"
 
 #include <algorithm>
 #include <cctype>
@@ -51,11 +49,9 @@ using namespace cocos2d::ui;
 #define SM ServerManager::getInstance()
 #define BSM BuggyServerManager::getInstance()
 #define HUD GameManager::getInstance()->getHudLayer()
-#define BHUD GameManager::getInstance()->battleHud
 #define RHUD GameManager::getInstance()->raitHud
 #define TITLE ((Title*)GameManager::getInstance()->titleLayer)
 #define HEROPAGE ((HeroPage*)GameManager::getInstance()->heroPage)
-#define EHUD GameManager::getInstance()->getEditorHud()
 #define WORLD GameManager::getInstance()->getWorld()
 #define LM LanguageManager::getInstance()
 #define LMText LanguageManager::getInstance()->getText
@@ -71,7 +67,7 @@ using namespace cocos2d::ui;
 // you should replace this into UDSetInt
 #define UDSetDouble UserDefault::getInstance()->setIntegerForKey
 #define SPT_REMOVE_FUNC CallFunc::create(CC_CALLBACK_0(Sprite::removeFromParent, spt))
-#define SHAKE_ONCE CallFunc::create(CC_CALLBACK_0(HelloWorld::shakeScreenOnce, this))
+#define SHAKE_ONCE CallFunc::create(CC_CALLBACK_0(GameScene::shakeScreenOnce, this))
 #define strmake StringUtils::format
 
 #define ITEM_TYPE_WEAPON 0
@@ -760,16 +756,15 @@ private:
     
     //Instance of the singleton
     static GameManager* m_mySingleton;
-    HelloWorld* stageLayer;
+    GameScene* stageLayer;
     HudLayer* hudLayer;
-    EditorHud* editorHud;
     Layer* pauseLayer;
     Layer* optionLayer;
     Layer* gameOverLayer;
     Layer* achievementLayer;
     
     Scene* gameOverScene;
-    HelloWorld* currentStageLayer = nullptr;
+    GameScene* currentStageLayer = nullptr;
     int sustainSoundTag=-1;
     
     
@@ -799,7 +794,6 @@ private:
     std::string userDefaultData;
     
 public:
-    BattleHud* battleHud = nullptr;
     int collectedJewelIndex = -1;
 //    bool isShieldPurcahsed();
 //    void setShield(long time);
@@ -851,6 +845,7 @@ public:
     bool isStageSetOnce;
     int currentStageIndex = -1;
     Color3B getRankColor(int rank);
+    Color3B getCardColorForLevel(int level);
     bool leftPressed;
     bool rightPressed;
     bool downPressed;
@@ -977,9 +972,8 @@ public:
 
     
     void scrollTheLayer(ui::ScrollView* scrollLayer, bool isLeft, bool isHorizontal, int howMuch);
-//    HelloWorld* getStageLayer();
+//    GameScene* getStageLayer();
     HudLayer* getHudLayer();
-    EditorHud* getEditorHud();
     Scene* getTitleScene();
     Layer* getGameStartLayer();
     Scene* getGameStartScene();
@@ -992,13 +986,12 @@ public:
     const char* getBulletName(int weaponType, int playerMissileDemage);
     Layer* getOptionLayer();
     Layer* getAchievementLayer();
-    void setCurrentStageLayer(HelloWorld* layer);
+    void setCurrentStageLayer(GameScene* layer);
     const char* getShortenedKoreanString(std::string str, int length);
-    HelloWorld* getWorld();
+    GameScene* getWorld();
     
 //    void setStageLayer(Layer* layer);
     void setHudLayer(HudLayer* layer);
-    void setEditorHud(EditorHud* layer);
     void setStageScene(Scene* scene);
 //    RepeatForever* getScaleUpDownAction(float scale);
     
@@ -1111,6 +1104,8 @@ public:
     void setPathState(int x, int y, int state);
     cocos2d::Size mapSize;
     PointArray* getPath(cocos2d::Vec2 start, cocos2d::Vec2 end);
+    PointArray* getPathForShip(cocos2d::Vec2 start, cocos2d::Vec2 end);
+    void setWaterPathState(int x, int y, int state);
     PointArray* getPathOld(cocos2d::Vec2 start, cocos2d::Vec2 end);
     void getNextAvailableWayAlongWall(int &firstX, int &firstY, int &secondX, int &secondY, int direction, int x, int y, int &firstDirection, int &secondDirection);
     bool getNextAvailableWay(int &firstX, int &firstY, int direction, int x, int y, int &firstDirection);
@@ -1187,6 +1182,7 @@ public:
     bool isAdsUser();
  
     AStar* astar;
+    AStar* waterAstar;
     
     int makeNumberCloseTo(int source, int target);
     
@@ -1209,9 +1205,6 @@ public:
     int raidMatchState = 0;
     UnitInfo* getUnitInfoFromString(std::string str);
     void loadBattleData();
-    ValueMap buildingCountForCastleLevelTable;
-    ValueMap buildingPriceForCastleLevelTable;
-    ValueMap buildingUpgradePriceForLevelTable;
     ValueMap buildingAbilityForCastleLevelTable;
     ValueMap castleStorageForCastleLevelTable;
     ValueMap unitCompleteTimeTable;
@@ -1299,10 +1292,6 @@ public:
     void saveHeroInventory(std::vector<UnitInfo*> list);
     std::vector<UnitInfo*> getHeroDeck();
     void saveHeroDeck(std::vector<UnitInfo*> list);
-    std::vector<UnitInfo*> getBattleUnitDeck();
-    void saveBattleUnitDeck(std::vector<UnitInfo*> list);
-    std::vector<UnitInfo*> getBattleUnitInventory();
-    void saveBattleUnitInventory(std::vector<UnitInfo*> list);
     int getDailyMissionCampaignStageIndex();
     int lastGem = -1;
     int isThisCampaignFromDailyMission = false;
@@ -1313,8 +1302,7 @@ public:
     int getMonthlyHeroType();
     
     void resetAsset();
-    
-    bool isPvpFromBHUD = false;
+
     int pvpOpenDate = 0;
     
     int getUnitAP(int unit);
@@ -1361,3 +1349,4 @@ public:
 };
 
 #endif
+

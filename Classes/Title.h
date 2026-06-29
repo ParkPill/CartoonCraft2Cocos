@@ -174,7 +174,6 @@ public:
     bool isAllUserDataRequested = false;
     bool isAllUserDataArrived = false;
     void getHeroInfoFromServer();
-    void onBattleClick(Ref* ref);
     int nameHandleState = 0;
     int renameHandleState = 0;
     bool isNameRequested = false;

@@ -55,7 +55,6 @@ public:
     int getEventHeroBoughtCount();
     int getEventHeroSetBoughtCount();
     int getMineGoldPerHour(int level);
-    void onBuyBuilding(Ref* ref);
     int currentTab = 0;
     void hideTab(int tab);
     bool heroesAreChanged = false;

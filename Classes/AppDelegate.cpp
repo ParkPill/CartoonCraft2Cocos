@@ -1,5 +1,5 @@
-#include "AppDelegate.h"
-#include "HelloWorldScene.h"
+﻿#include "AppDelegate.h"
+#include "GameScene.h"
 #include "HeroPage.h"
 #include "MultiplayManager.h"
 #include "cocos2d.h"
@@ -12,7 +12,7 @@
 // #ifdef SDKBOX_ENABLED
 // #include "PluginSdkboxAds/PluginSdkboxAds.h"
 // #endif
-#include "EditorWorld.h"
+#include "MapEditor.h"
 #include "Title.h"
 // #ifdef SDKBOX_ENABLED
 // #include "PluginFacebook/PluginFacebook.h"
@@ -248,7 +248,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    WORLD->addGold(15000);WORLD->addLumber(10000); // test
 
 //    GM->nextScene = STAGE_INTRO;
-//    auto scene = HelloWorld::scene(5, false); // test
+//    auto scene = GameScene::scene(5, false); // test
 
 //    auto scene = Scene::create();
 //    scene->addChild(Title::create());
@@ -259,17 +259,17 @@ bool AppDelegate::applicationDidFinishLaunching() {
 // title end
 
 //    GM->nextScene = STAGE_FIELD; // test
-//    auto scene = HelloWorld::scene(36, GAME_MODE_NORMAL); // test
+//    auto scene = GameScene::scene(36, GAME_MODE_NORMAL); // test
 //    BSM->pvpTargetData =
 //    "_60/401/8/9_61/401/9/9_62/401/10/9_63/401/11/9_52/100/12/9_53/100/13/9_57/100/14/9_57/100/15/9_55/100/15/6_50/0/17/9_64/401/18/9_54/200/19/9_";
 //    BSM->pvpTargetName ="박성필 테스트";
 //    WORLD->setPvpMode(12);
 //    GM->nextScene = STAGE_LOBBY; // test
 
-//    auto scene = HelloWorld::scene(36, false); // test
+//    auto scene = GameScene::scene(36, false); // test
 //    GM->nextScene = STAGE_SINGLEPLAY; // test
 //    GM->singlePlayStageIndex = 0;
-//    auto scene = HelloWorld::scene(GM->nextScene, false); // test
+//    auto scene = GameScene::scene(GM->nextScene, false); // test
 // intro for normal start
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
   GM->market = MARKET_WINDOWS;
@@ -280,12 +280,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
   GM->versionCode = 314;
   GM->version = "4.27";
   log("start version code: %d", GM->versionCode);
-  //    auto scene = HelloWorld::scene(7, DIFFICULTY_MODE_NORMAL); // test
-  //    auto scene = HelloWorld::scene(4, DIFFICULTY_MODE_NORMAL); // test
-  //    auto scene = EditorWorld::scene(0, false); // test
-  auto scene = Scene::create();
-  Intro *intro = Intro::create();
-  scene->addChild(intro);
+  //    auto scene = GameScene::scene(7, DIFFICULTY_MODE_NORMAL); // test
+  //    auto scene = GameScene::scene(4, DIFFICULTY_MODE_NORMAL); // test
+  auto scene = MapEditor::scene();
+  //  auto scene = Scene::create();
+  //  Intro *intro = Intro::create();
+  //  scene->addChild(intro);
   // intro end
 
   if (GM->market == MARKET_SMARTPASS) {
@@ -304,7 +304,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
   //    scene->addChild(PanZoomLayer::create());
   //    scene->addChild(Title::create());
   //    Scene* sceneTitle = Scene::create();
-  //    sceneTitle->addChild(HelloWorld::scene(STAGE_LOBBY, false));
+  //    sceneTitle->addChild(GameScene::scene(STAGE_LOBBY, false));
 
   //    std::string savedRID = "5c9dae8b385e48337a34dc5b";
   //    std::string data = "score="+Value(1100).asString() + "&name=tester1";
@@ -346,16 +346,6 @@ void AppDelegate::applicationDidEnterBackground() {
   log("background entered");
   Director::getInstance()->stopAnimation();
 
-  if (BHUD && GM->nextScene == STAGE_LOBBY) {
-    //        BHUD->saveInventoryAndDeck();
-    //        BHUD->saveBuildings();
-    //        auto scene = Scene::create();
-    //        Intro* intro = Intro::create();
-    //        scene->addChild(intro);
-    //
-    //        Director::getInstance()->replaceScene(scene);
-    //        BHUD->checkUnsaved();
-  }
   if (TITLE == nullptr && WORLD && GM->nextScene == STAGE_FIELD) {
     HUD->onMenuClick();
   }
@@ -527,3 +517,4 @@ void AppDelegate::onAchievementUnlocked(const std::string &achievement_name,
                                         bool newlyUnlocked) {}
 
 #endif
+

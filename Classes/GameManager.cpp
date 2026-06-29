@@ -1,4 +1,4 @@
-
+﻿
 #include "GameManager.h"
 #include "LanguageManager.h"
 // #include "SimpleAudioEngine.h"
@@ -20,7 +20,6 @@
 #include "HeroPage.h"
 #include "Title.h"
 #include "PageBase.h"
-#include "EditorHud.h"
 #include "HudLayer.h"
 #include "editor-support/cocostudio/CocoStudio.h"
 
@@ -238,9 +237,6 @@ void GameManager::completeDeferredAccountRegistration(bool success)
         if (HUD) {
             HUD->hideIndicator();
         }
-        if (EHUD) {
-            EHUD->hideIndicator();
-        }
     }
 }
 
@@ -260,12 +256,8 @@ void GameManager::fulfillPendingOnlineAction()
         pendingArenaScore = 0;
         break;
     case PENDING_ONLINE_ACTION_MAP_UPLOAD:
-        if (pendingMapUploadName.length() > 0 && pendingMapUploadData.length() > 0 && EHUD) {
-            EHUD->uploadHandleState = NETWORK_HANDLE_STATE_REQUESTED;
-            EHUD->isUploadRequested = true;
+        if (pendingMapUploadName.length() > 0 && pendingMapUploadData.length() > 0) {
             BSM->uploadMap(pendingMapUploadName, pendingMapUploadData);
-        } else if (EHUD) {
-            EHUD->hideIndicator();
         }
         pendingMapUploadName = "";
         pendingMapUploadData = "";
@@ -316,6 +308,8 @@ GameManager::GameManager()
 {
     astar = AStar::create();
     this->addChild(astar);
+    waterAstar = AStar::create();
+    this->addChild(waterAstar);
     size = Director::getInstance()->getVisibleSize();
     life = UserDefault::getInstance()->getIntegerForKey(KEY_LIFE, 5);
     s0 = (char)0;
@@ -748,7 +742,7 @@ int GameManager::getNextWeaponToUnlock(int weaponType)
 //     stageLayer->retain();
 // }
 
-// HelloWorld* GameManager::getStageLayer()
+// GameScene* GameManager::getStageLayer()
 //{
 //     if (!stageLayer) {
 //         return NULL;
@@ -770,19 +764,6 @@ HudLayer *GameManager::getHudLayer()
     }
     return hudLayer;
 }
-void GameManager::setEditorHud(EditorHud *layer)
-{
-    editorHud = layer;
-}
-EditorHud *GameManager::getEditorHud()
-{
-    if (!editorHud)
-    {
-        return NULL;
-    }
-    return editorHud;
-}
-
 void GameManager::setStageScene(Scene *scene)
 {
     isStageSetOnce = true;
@@ -1544,11 +1525,11 @@ Layer *GameManager::getShopLayer()
     return NULL; // shopLayer;
 }
 
-HelloWorld *GameManager::getWorld()
+GameScene *GameManager::getWorld()
 {
     return currentStageLayer;
 }
-void GameManager::setCurrentStageLayer(HelloWorld *layer)
+void GameManager::setCurrentStageLayer(GameScene *layer)
 {
     currentStageLayer = layer;
 }
@@ -3435,14 +3416,22 @@ void GameManager::setPathState(int x, int y, int state)
     }
     tileState[x][y] = state;
     astar->setPathState(x, y, state > 0 ? PATH_OCCUPIED : PATH_EMPTY);
-    //    ASTAR::Cordinate::blockState[x][y] = state==1;
-    // reset tile state
-    //    for (int i = 0; i < mapSize.width; i++) {
-    //        for (int j = 0; j < mapSize.height; j++) {
-    //            tileState[x + i + (y + j)*(int)mapSize.width] = state;
-    //        }
-    //    }
-    //    log("x: %d, y: %d, index: %d, state: %d", x, y, x + y*(int)mapSize.width, state);
+}
+void GameManager::setWaterPathState(int x, int y, int state)
+{
+    if (x < 0 || y < 0 || x >= mapSize.width || y >= mapSize.height) return;
+    waterAstar->setPathState(x, y, state > 0 ? PATH_OCCUPIED : PATH_EMPTY);
+}
+PointArray *GameManager::getPathForShip(cocos2d::Vec2 start, cocos2d::Vec2 end)
+{
+    deque<Cell *> _result = waterAstar->getPath(start.x, start.y, end.x, end.y);
+    PointArray *pointArray = PointArray::create(_result.size());
+    if (_result.size() <= 1) return pointArray;
+    for (int i = (int)_result.size() - 1; i >= 0; i--) {
+        Cell *cell = _result[i];
+        pointArray->addControlPoint(Vec2(cell->getX(), cell->getY()));
+    }
+    return pointArray;
 }
 PointArray *GameManager::getPathOld(cocos2d::Vec2 start, cocos2d::Vec2 end)
 {
@@ -4731,60 +4720,15 @@ void GameManager::enableButton(Ref *ref)
 }
 void GameManager::loadBattleData()
 {
-    std::string fileName = "cartoonCraftLanguageSheet/building_count-Table 1.csv";
-    std::string csvStr = FileUtils::getInstance()->getStringFromFile(fileName);
-    ValueVector rows = GameManager::getInstance()->split(csvStr, "\r\n");
-    ValueVector keys = GameManager::getInstance()->split(rows.at(0).asString(), ",");
+    // Loads the unit/castle stat tables that back hero leveling (getUnitHP,
+    // getUnitATT, etc.) - this is real, live data, not Lobby/Raid-only, even
+    // though it lives in the same "battle data" CSV folder as the (now
+    // removed) Lobby base-building cost tables used to.
+    std::string fileName;
+    std::string csvStr;
+    ValueVector rows;
+    ValueVector keys;
     ValueMap userParams;
-    for (int i = 1; i < (int)rows.size(); i++)
-    {
-        std::string strRow = rows.at(i).asString();
-
-        ValueVector params = GameManager::getInstance()->split(rows.at(i).asString(), ",");
-        for (int j = 1; j < (int)params.size(); j++)
-        {
-            std::string value = params.at(j).asString();
-            std::string theKey = keys.at(j).asString();
-            userParams[theKey] = value;
-        }
-        std::string rowKey = params.at(0).asString();
-        buildingCountForCastleLevelTable[rowKey] = userParams;
-    }
-
-    fileName = "cartoonCraftLanguageSheet/building_price-Table 1.csv";
-    csvStr = FileUtils::getInstance()->getStringFromFile(fileName);
-    rows = GameManager::getInstance()->split(csvStr, "\r\n");
-    keys = GameManager::getInstance()->split(rows.at(0).asString(), ",");
-    for (int i = 1; i < (int)rows.size(); i++)
-    {
-        std::string strRow = rows.at(i).asString();
-        ValueVector params = GM->split(rows.at(i).asString(), ",");
-        for (int j = 1; j < (int)params.size(); j++)
-        {
-            std::string value = params.at(j).asString();
-            std::string theKey = keys.at(j).asString();
-            userParams[theKey] = value;
-        }
-        std::string rowKey = params.at(0).asString();
-        buildingPriceForCastleLevelTable[rowKey] = userParams;
-    }
-    fileName = "cartoonCraftLanguageSheet/building_upgrade_price-Table 1.csv";
-    csvStr = FileUtils::getInstance()->getStringFromFile(fileName);
-    rows = GameManager::getInstance()->split(csvStr, "\r\n");
-    keys = GameManager::getInstance()->split(rows.at(0).asString(), ",");
-    for (int i = 1; i < (int)rows.size(); i++)
-    {
-        std::string strRow = rows.at(i).asString();
-        ValueVector params = GM->split(rows.at(i).asString(), ",");
-        for (int j = 1; j < (int)params.size(); j++)
-        {
-            std::string value = params.at(j).asString();
-            std::string theKey = keys.at(j).asString();
-            userParams[theKey] = value;
-        }
-        std::string rowKey = params.at(0).asString();
-        buildingUpgradePriceForLevelTable[rowKey] = userParams;
-    }
 
     for (int k = 0; k < 5; k++)
     {
@@ -5103,7 +5047,7 @@ std::string GameManager::getUnitName(int index)
     {
         return "mine";
     }
-    else if (index == UNIT_TREE_FOR_BATTLE)
+    else if (index == UNIT_TREE || index == UNIT_TREE_FOR_BATTLE)
     {
         return "tree";
     }
@@ -5401,6 +5345,66 @@ std::string GameManager::getUnitName(int index)
     {
         return "hero golem";
     }
+    else if (index == UNIT_HUMAN_SHUTTLE)
+    {
+        return "human ship";
+    }
+    else if (index == UNIT_ORC_SHUTTLE)
+    {
+        return "orc ship";
+    }
+    else if (index == UNIT_HUMAN_BATTLE_SHIP)
+    {
+        return "human battle ship";
+    }
+    else if (index == UNIT_HUMAN_SHIP)
+    {
+        return "human ship";
+    }
+    else if (index == UNIT_ORC_SHIP)
+    {
+        return "orc ship";
+    }
+    else if (index == UNIT_HUMAN_SHIPYARD)
+    {
+        return "shipyard";
+    }
+    else if (index == UNIT_ORC_SHIPYARD)
+    {
+        return "orc shipyard";
+    }
+    else if (index == UNIT_ORC_BATTLE_SHIP)
+    {
+        return "orc battle ship";
+    }
+    else if (index == UNIT_OIL_SPOT)
+    {
+        return "oil spot";
+    }
+    else if (index == UNIT_HUMAN_OIL_SHIP)
+    {
+        return "oil ship";
+    }
+    else if (index == UNIT_HUMAN_OIL_EXTRACTOR)
+    {
+        return "oil extractor";
+    }
+    else if (index == UNIT_ORC_OIL_SHIP)
+    {
+        return "oil ship";
+    }
+    else if (index == UNIT_ORC_OIL_EXTRACTOR)
+    {
+        return "oil extractor";
+    }
+    else if (index == UNIT_ORC_OIL_REFINERY)
+    {
+        return "oil refinery";
+    }
+    else if (index == UNIT_ORC_FOUNDRY)
+    {
+        return "foundry";
+    }
     return "worker";
 }
 int GameManager::getGemForTimeLeft(int timeLeft)
@@ -5527,6 +5531,34 @@ cocos2d::Size GameManager::getBuildingOccupySize(int unit)
     else if (unit == UNIT_BARBECUE)
     {
         return cocos2d::Size(3, 2);
+    }
+    else if (unit == UNIT_HUMAN_SHIPYARD || unit == UNIT_ORC_SHIPYARD)
+    {
+        return cocos2d::Size(3, 3);
+    }
+    else if (unit == UNIT_HUMAN_OIL_EXTRACTOR)
+    {
+        return cocos2d::Size(2, 2);
+    }
+    else if (unit == UNIT_HUMAN_FOUNDRY)
+    {
+        return cocos2d::Size(3, 3);
+    }
+    else if (unit == UNIT_HUMAN_OIL_REFINERY)
+    {
+        return cocos2d::Size(3, 3);
+    }
+    else if (unit == UNIT_ORC_OIL_EXTRACTOR)
+    {
+        return cocos2d::Size(2, 2);
+    }
+    else if (unit == UNIT_ORC_OIL_REFINERY)
+    {
+        return cocos2d::Size(3, 3);
+    }
+    else if (unit == UNIT_ORC_FOUNDRY)
+    {
+        return cocos2d::Size(3, 3);
     }
     return cocos2d::Size(1, 1);
 }
@@ -5874,6 +5906,38 @@ Color3B GameManager::getRankColor(int rank)
         return Color3B(179, 22, 135);
     }
     return Color3B::WHITE;
+}
+Color3B GameManager::getCardColorForLevel(int level)
+{
+    if (level == 0)
+    {
+        return Color3B::WHITE;
+    }
+    else if (level == 1)
+    {
+        return Color3B(65, 154, 186);
+    }
+    else if (level == 2)
+    {
+        return Color3B(111, 180, 40);
+    }
+    else if (level == 3)
+    {
+        return Color3B(28, 192, 185);
+    }
+    else if (level == 4)
+    {
+        return Color3B(215, 172, 79);
+    }
+    else if (level == 5)
+    {
+        return Color3B(168, 83, 45);
+    }
+    else if (level == 6)
+    {
+        return Color3B(236, 116, 10);
+    }
+    return Color3B(213, 0, 0);
 }
 void GameManager::setTextToNumberByTag(Ref *ref)
 {
@@ -6239,53 +6303,6 @@ void GameManager::saveHeroDeck(std::vector<UnitInfo *> list)
     UD->flush();
 }
 
-std::vector<UnitInfo *> GameManager::getBattleUnitInventory()
-{
-    int count = UDGetInt(KEY_UNITS_INVENTORY_COUNT, 0);
-    std::vector<UnitInfo *> list;
-    for (int i = 0; i < count; i++)
-    {
-        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_INVENTORY_FORMAT, i).c_str()));
-    }
-    return list;
-}
-void GameManager::saveBattleUnitInventory(std::vector<UnitInfo *> list)
-{
-
-    int count = (int)list.size();
-    UDSetInt(KEY_UNITS_INVENTORY_COUNT, count);
-    for (int i = 0; i < count; i++)
-    {
-        UnitInfo *info = list.at(i);
-        saveUnitInfo(strmake(KEY_UNITS_INVENTORY_FORMAT, i).c_str(), info);
-    }
-    UD->flush();
-}
-std::vector<UnitInfo *> GameManager::getBattleUnitDeck()
-{
-    int count = UDGetInt(KEY_UNITS_DECK_COUNT, 0);
-    std::vector<UnitInfo *> list;
-    for (int i = 0; i < count; i++)
-    {
-        list.push_back(getSavedUnitInfo(strmake(KEY_UNITS_DECK_FORMAT, i).c_str()));
-    }
-    return list;
-}
-void GameManager::saveBattleUnitDeck(std::vector<UnitInfo *> list)
-{
-    int count = (int)list.size();
-    UDSetInt(KEY_UNITS_DECK_COUNT, count);
-    if (count == 0)
-    {
-        log("save deck count 0");
-    }
-    for (int i = 0; i < count; i++)
-    {
-        UnitInfo *info = list.at(i);
-        saveUnitInfo(strmake(KEY_UNITS_DECK_FORMAT, i).c_str(), info);
-    }
-    //    UD->flush();
-}
 int GameManager::getDailyMissionCampaignStageIndex()
 {
     int lastClearStage = UDGetInt(KEY_LAST_CLEAR_STAGE, -1);
@@ -6506,6 +6523,14 @@ int GameManager::getUnitAP(int unit)
     {
         return 40;
     }
+    else if (unit == UNIT_HUMAN_SHIP || unit == UNIT_ORC_SHIP)
+    {
+        return 40;
+    }
+    else if (unit == UNIT_HUMAN_BATTLE_SHIP)
+    {
+        return 120;
+    }
     else if (unit == UNIT_HERO_ORC)
     {
         return 25;
@@ -6616,6 +6641,50 @@ int GameManager::getUnitMaxHP(int unit)
     {
         return 550;
     }
+    else if (unit == UNIT_HUMAN_SHUTTLE || unit == UNIT_ORC_SHUTTLE)
+    {
+        return 100;
+    }
+    else if (unit == UNIT_HUMAN_SHIP || unit == UNIT_ORC_SHIP)
+    {
+        return 400;
+    }
+    else if (unit == UNIT_HUMAN_BATTLE_SHIP || unit == UNIT_ORC_BATTLE_SHIP)
+    {
+        return 800;
+    }
+    else if (unit == UNIT_HUMAN_SHIPYARD || unit == UNIT_ORC_SHIPYARD)
+    {
+        return 2800;
+    }
+    else if (unit == UNIT_OIL_SPOT)
+    {
+        return 50000;
+    }
+    else if (unit == UNIT_HUMAN_OIL_SHIP)
+    {
+        return 150;
+    }
+    else if (unit == UNIT_HUMAN_OIL_EXTRACTOR)
+    {
+        return 1500;
+    }
+    else if (unit == UNIT_ORC_OIL_SHIP)
+    {
+        return 150;
+    }
+    else if (unit == UNIT_ORC_OIL_EXTRACTOR)
+    {
+        return 1500;
+    }
+    else if (unit == UNIT_ORC_OIL_REFINERY)
+    {
+        return 1500;
+    }
+    else if (unit == UNIT_ORC_FOUNDRY)
+    {
+        return 1500;
+    }
     return 60;
 }
 bool GameManager::isThisBuilding(int unitType)
@@ -6635,9 +6704,19 @@ bool GameManager::isThisBuilding(int unitType)
         unitType == UNIT_ORC_BARRACKS ||
         unitType == UNIT_ORC_BUNKER ||
         unitType == UNIT_ORC_TROLL_HOUSE ||
-        unitType == UNIT_TEMPLE)
+        unitType == UNIT_TEMPLE ||
+        unitType == UNIT_HUMAN_SHIPYARD ||
+        unitType == UNIT_ORC_SHIPYARD ||
+        unitType == UNIT_OIL_SPOT ||
+        unitType == UNIT_HUMAN_OIL_EXTRACTOR ||
+        unitType == UNIT_HUMAN_FOUNDRY ||
+        unitType == UNIT_HUMAN_OIL_REFINERY ||
+        unitType == UNIT_ORC_OIL_EXTRACTOR ||
+        unitType == UNIT_ORC_OIL_REFINERY ||
+        unitType == UNIT_ORC_FOUNDRY)
     {
         return true;
     }
     return false;
 }
+

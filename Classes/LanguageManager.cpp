@@ -40,10 +40,6 @@ cocos2d::Label* LanguageManager::getLocalizedLabel(const char* text, Color4B col
         Label* lbl = Label::createWithTTF(text, getLocalizedFont(), size);
         lbl->setTextColor(color);
         return lbl;
-    }else if (LanguageManager::getInstance()->getLanguageType() == LanguageType::KOREAN) {
-        Label* lbl = Label::createWithTTF(text, getLocalizedFont(), size*0.9f);
-        lbl->setTextColor(color);
-        return lbl;
     }else{
         
 //                Label* lbl = Label::createWithTTF("label", "bitdust1.ttf", 80);
@@ -116,8 +112,8 @@ std::string LanguageManager::getText(std::string textId){
         str = row.at("english").asString();
     }
 //    str = row.at("english").asString();
-    int index = (int)str.find("\\n");
-    if (index >= 0) {
+    int index;
+    while ((index = (int)str.find("\\n")) >= 0) {
         str.replace(index, 2, "\n");
     }
     while((index = (int)str.find("`")) >= 0){
@@ -160,6 +156,7 @@ void LanguageManager::loadLanguageSheet(){
         
         ValueVector params = GameManager::getInstance()->split(rows.at(i).asString(), ",");
         for (int j = 1; j < (int)params.size(); j ++) {
+            if (j >= (int)keys.size()) break;
             std::string value =  params.at(j).asString();
             std::replace( value.begin(), value.end(), '`', ','); // change ` to ,
             std::string theKey = keys.at(j).asString();

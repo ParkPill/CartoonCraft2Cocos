@@ -1,4 +1,4 @@
-//
+﻿//
 //  HudLayer.cpp
 //  AlmostLegendary
 //
@@ -6,9 +6,8 @@
 //
 //
 #include "HudLayer.h"
-#include "FindMatch.h"
 #include "GameManager.h"
-#include "HelloWorldScene.h"
+#include "GameScene.h"
 #include "LegendDaryButton.h"
 #include "MultiplayManager.h"
 
@@ -171,7 +170,7 @@ bool HudLayer::init() {
   this->addChild(img);
   img->setScale9Enabled(true);
   img->setTouchEnabled(true);
-  img->setContentSize(cocos2d::Size(950, 105));
+  img->setContentSize(cocos2d::Size(1250, 105));
   img->setAnchorPoint(Vec2(1, 1));
   img->setOpacity(150);
   img->setPosition(Vec2(size.width, size.height));
@@ -179,7 +178,7 @@ bool HudLayer::init() {
   lblGold = PPLabel::create("0", 40, Color3B::WHITE, false, false,
                             TextHAlignment::LEFT, true);
   this->addChild(lblGold);
-  lblGold->setPosition(Vec2(size.width - 800, size.height - 50));
+  lblGold->setPosition(Vec2(size.width - 1100, size.height - 50));
   Sprite *sptGold = Sprite::create("goldIcon.png");
   this->addChild(sptGold);
   sptGold->setName("iconGold");
@@ -188,12 +187,23 @@ bool HudLayer::init() {
   lblLumber = PPLabel::create("0", 40, Color3B::WHITE, false, false,
                               TextHAlignment::LEFT, true);
   this->addChild(lblLumber);
-  lblLumber->setPosition(Vec2(size.width - 500, size.height - 50));
+  lblLumber->setPosition(Vec2(size.width - 800, size.height - 50));
   lblLumber->setAnchorPoint(Vec2(0, 0.5));
   Sprite *sptTree = Sprite::create("lumberIcon.png");
   this->addChild(sptTree);
   sptTree->setName("iconLumber");
   sptTree->setPosition(lblLumber->getPosition() + Vec2(-50, 0));
+
+  lblOil = PPLabel::create("0", 40, Color3B::WHITE, false, false,
+                           TextHAlignment::LEFT, true);
+  this->addChild(lblOil);
+  lblOil->setPosition(Vec2(size.width - 500, size.height - 50));
+  lblOil->setAnchorPoint(Vec2(0, 0.5));
+  Sprite *sptOil = Sprite::createWithSpriteFrameName("oilSpot.png");
+  sptOil->setScale(0.12f);
+  this->addChild(sptOil);
+  sptOil->setName("iconOil");
+  sptOil->setPosition(lblOil->getPosition() + Vec2(-45, 0));
 
   lblFood = PPLabel::create("0", 40, Color3B::WHITE, false, false,
                             TextHAlignment::LEFT, true);
@@ -208,9 +218,11 @@ bool HudLayer::init() {
     img->setVisible(false);
     lblGold->setVisible(false);
     lblLumber->setVisible(false);
+    lblOil->setVisible(false);
     lblFood->setVisible(false);
     sptGold->setVisible(false);
     sptTree->setVisible(false);
+    sptOil->setVisible(false);
     sptMan->setVisible(false);
   }
 
@@ -436,7 +448,6 @@ bool HudLayer::init() {
       img->setGrayScale(true);
     }
     btn = (Button *)ndBattle->getChildByName("btnFindMatch");
-    btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onNextMatchClick, this));
     if (GM->isVisiting) {
       btn->setVisible(false);
     }
@@ -554,21 +565,23 @@ void HudLayer::showDisassembleButton() {
     btn->addClickEventListener(
         CC_CALLBACK_0(HudLayer::onDisassembleClick, this));
     this->addChild(btn);
+    log("platform: %d\n", CC_TARGET_PLATFORM == CC_PLATFORM_WIN32);
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
     btn->setScale(0.65f);
-    PPLabel *lbl = PPLabel::create("Demolish (D)", 28, Color3B::WHITE, true,
-                                   true, TextHAlignment::CENTER, true);
+    std::string demolishText = LM->getText("demolish") + " (D)";
+    CCLOG("demolishText: %s\n", demolishText.c_str());
+    PPLabel *lbl = PPLabel::create(demolishText.c_str(), 28, Color3B::WHITE,
+                                   true, true, TextHAlignment::CENTER, true);
     btn->addChild(lbl);
-    lbl->setPosition(Vec2(btn->getContentSize().width / 2,
-                          -lbl->getSize().height / 2 - 4));
+    lbl->setPosition(
+        Vec2(btn->getContentSize().width / 2, -lbl->getSize().height / 2 - 4));
 #endif
   }
   btn->stopAllActions();
   float gap = 40;
   float halfH = btn->getContentSize().height * btn->getScale() * 2 / 3;
   btn->setPosition(Vec2(size.width / 2, -btn->getContentSize().height));
-  btn->runAction(
-      MoveTo::create(0.3f, Vec2(size.width / 2, halfH + gap / 2)));
+  btn->runAction(MoveTo::create(0.3f, Vec2(size.width / 2, halfH + gap / 2)));
 }
 void HudLayer::onDisassembleClick() {
   showDisassembleConfirmButtons();
@@ -608,11 +621,12 @@ void HudLayer::showDisassembleConfirmButtons() {
     this->addChild(btn);
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
     btn->setScale(0.65f);
-    PPLabel *lbl = PPLabel::create("Confirm (Enter)", 28, Color3B::WHITE, true,
-                                   true, TextHAlignment::CENTER, true);
+    std::string confirmText = LM->getText("confirm") + " (Enter)";
+    PPLabel *lbl = PPLabel::create(confirmText.c_str(), 28, Color3B::WHITE,
+                                   true, true, TextHAlignment::CENTER, true);
     btn->addChild(lbl);
-    lbl->setPosition(Vec2(btn->getContentSize().width / 2,
-                          -lbl->getSize().height / 2 - 4));
+    lbl->setPosition(
+        Vec2(btn->getContentSize().width / 2, -lbl->getSize().height / 2 - 4));
 #endif
   }
   btn->stopAllActions();
@@ -633,11 +647,12 @@ void HudLayer::showDisassembleConfirmButtons() {
     this->addChild(btn);
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
     btn->setScale(0.65f);
-    PPLabel *lbl = PPLabel::create("Cancel (Esc)", 28, Color3B::WHITE, true,
+    std::string cancelText = LM->getText("cancel") + " (Esc)";
+    PPLabel *lbl = PPLabel::create(cancelText.c_str(), 28, Color3B::WHITE, true,
                                    true, TextHAlignment::CENTER, true);
     btn->addChild(lbl);
-    lbl->setPosition(Vec2(btn->getContentSize().width / 2,
-                          -lbl->getSize().height / 2 - 4));
+    lbl->setPosition(
+        Vec2(btn->getContentSize().width / 2, -lbl->getSize().height / 2 - 4));
 #endif
   }
   btn->stopAllActions();
@@ -676,14 +691,67 @@ bool HudLayer::tryHandleHudClick(const Vec2 &glPos) {
   Vec2 localPos = convertToNodeSpace(glPos);
   const float padding = 20.0f;
 
-  // Block clicks that land on the right-side campaign panel
+  // Block clicks on the menu button (direct HudLayer child, no re-firing needed)
+  {
+    Node *btnMenu = getChildByName("btnMenu");
+    if (btnMenu != nullptr && btnMenu->isVisible()) {
+      Rect box = btnMenu->getBoundingBox();
+      box.origin.x -= padding;
+      box.origin.y -= padding;
+      box.size.width += padding * 2;
+      box.size.height += padding * 2;
+      if (box.containsPoint(localPos)) {
+        return true;
+      }
+    }
+  }
+
+  // Block clicks on the right-side campaign panel and any of its visible children
   if (rightBottomPanelForCampaign != nullptr &&
       rightBottomPanelForCampaign->isVisible()) {
+    Vec2 panelLocalPos = rightBottomPanelForCampaign->convertToNodeSpace(glPos);
+    for (auto child : rightBottomPanelForCampaign->getChildren()) {
+      if (!child->isVisible())
+        continue;
+      Rect box = child->getBoundingBox();
+      box.origin.x -= padding;
+      box.origin.y -= padding;
+      box.size.width += padding * 2;
+      box.size.height += padding * 2;
+      if (box.containsPoint(panelLocalPos)) {
+        return true;
+      }
+    }
     if (rightBottomPanelForCampaign->getBoundingBox().containsPoint(localPos)) {
       return true;
     }
   }
 
+  // Block clicks on the shuttle cargo panel and its unload button
+  {
+    Node *panel = getChildByName("shuttleCargoPanel");
+    if (panel != nullptr && panel->isVisible()) {
+      Rect box = panel->getBoundingBox();
+      box.origin.x -= padding;
+      box.origin.y -= padding;
+      box.size.width += padding * 2;
+      box.size.height += padding * 2;
+      if (box.containsPoint(localPos))
+        return true;
+    }
+    Node *btnUnload = getChildByName("btnUnloadShuttle");
+    if (btnUnload != nullptr && btnUnload->isVisible()) {
+      Rect box = btnUnload->getBoundingBox();
+      box.origin.x -= padding;
+      box.origin.y -= padding;
+      box.size.width += padding * 2;
+      box.size.height += padding * 2;
+      if (box.containsPoint(localPos))
+        return true;
+    }
+  }
+
+  // Specific buttons that also need to fire their action handlers
   struct HudClickTarget {
     const char *name;
     void (HudLayer::*handler)();
@@ -909,26 +977,6 @@ void HudLayer::onShowMoreMenuClick(Ref *ref) {
   btn->getChildByName("img")->runAction(
       RotateTo::create(0.3f, shouldShow ? 0 : 180));
 }
-void HudLayer::onNextMatchClick(Ref *ref) {
-  BTN_FROM_REF_AND_DISABLE_FOR_A_SEC
-  int price =
-      Value(((Text *)btn->getChildByName("lblGold"))->getString()).asInt();
-  if (GM->getCoin() >= price) {
-    GM->addCoin(-price);
-    BSM->saveUserData("gold=" + Value(GM->getCoin()).asString());
-    this->unscheduleAllCallbacks();
-    removeListener();
-    GM->setHudLayer(nullptr);
-    GM->matchFindCount++;
-    GM->nextScene = STAGE_RAID; // test
-    auto scene = Scene::create();
-    FindMatch *findMatch = FindMatch::create();
-    scene->addChild(findMatch);
-    Director::getInstance()->replaceScene(TransitionFade::create(0.3f, scene));
-  } else {
-    showInstanceMessage(LM->getText("not enough gold"));
-  }
-}
 void HudLayer::onSurrenderClick(Ref *ref) {
   //    showRaidResult(false);
   goToBattleScene();
@@ -940,7 +988,7 @@ void HudLayer::onSurrenderClick(Ref *ref) {
   //    GM->setHudLayer(nullptr);
   //
   //    GM->nextScene = STAGE_LOBBY;
-  //    auto scene = HelloWorld::scene(STAGE_LOBBY, false);
+  //    auto scene = GameScene::scene(STAGE_LOBBY, false);
   //    Director::getInstance()->replaceScene(TransitionFade::create(1, scene,
   //    Color3B::BLACK));
 }
@@ -1401,8 +1449,8 @@ void HudLayer::showCancelBuildingButton() {
   PPLabel *lbl = PPLabel::create("Cancel (Esc)", 28, Color3B::WHITE, true, true,
                                  TextHAlignment::CENTER, true);
   btn->addChild(lbl);
-  lbl->setPosition(Vec2(btn->getContentSize().width / 2,
-                        -lbl->getSize().height / 2 - 4));
+  lbl->setPosition(
+      Vec2(btn->getContentSize().width / 2, -lbl->getSize().height / 2 - 4));
 #endif
   float halfH = btn->getContentSize().height * btn->getScale() * 2 / 3;
   btn->setPosition(Vec2(size.width / 2, halfH + 20));
@@ -1685,6 +1733,7 @@ void HudLayer::onMenuClick() {
 
   //    showWinPopup(true); // test
   Node *layer = CSLoader::createNode("Menu.csb");
+  layer->setName("menuPopup");
   this->addChild(layer, 5);
   layer->setPositionX(size.width / 2 - layer->getContentSize().width / 2);
   setAsPopup(layer);
@@ -1706,10 +1755,14 @@ void HudLayer::onMenuClick() {
   btn = (Button *)layer->getChildByName("btnPremium");
   btn->addClickEventListener(CC_CALLBACK_0(HudLayer::showPremiumRetry, this));
   LM->setLocalizedString((Text *)btn->getChildByName("lbl"), "premium retry");
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+  btn->setVisible(false);
+#else
   btn->setVisible(!WORLD->isMultiplay);
   if (GM->isColosseum || isRaid || UDGetBool(KEY_PREMIUM_START)) {
     btn->setVisible(false);
   }
+#endif
 
   btn = (Button *)layer->getChildByName("btnQuit");
   btn->addClickEventListener(CC_CALLBACK_1(HudLayer::onExitClick, this));
@@ -1717,6 +1770,17 @@ void HudLayer::onMenuClick() {
   btn = (Button *)layer->getChildByName("btnContinue");
   btn->addClickEventListener(CC_CALLBACK_0(HudLayer::onResumeClick, this));
   LM->setLocalizedString((Text *)btn->getChildByName("lbl"), "resume");
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+  {
+    PPLabel *escHint =
+        PPLabel::create("ESC", 28, Color3B(160, 160, 160), true, false,
+                        TextHAlignment::CENTER, true);
+    layer->addChild(escHint, 10);
+    escHint->setPosition(Vec2(btn->getPosition().x,
+                              btn->getPosition().y - btn->getContentSize().height / 2 - 30));
+  }
+#endif
 
   if (GM->isColosseum) {
     layer->getChildByName("btnSave")->setVisible(false);
@@ -2250,7 +2314,7 @@ void HudLayer::goToLoadedStage() {
     isHardMode = Value(datas.at(0)).asInt();
   }
   GM->isThisCampaignFromDailyMission = false;
-  auto scene = HelloWorld::scene(savedStage, isHardMode);
+  auto scene = GameScene::scene(savedStage, isHardMode);
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
 }
@@ -2473,7 +2537,7 @@ void HudLayer::goToBattleScene() {
   GM->isThisCampaignFromDailyMission = false;
   GM->setHudLayer(nullptr);
   GM->nextScene = STAGE_LOBBY;
-  auto scene = HelloWorld::scene(STAGE_LOBBY, false);
+  auto scene = GameScene::scene(STAGE_LOBBY, false);
   Director::getInstance()->replaceScene(
       TransitionFade::create(1, scene, Color3B::BLACK));
 }
@@ -2665,6 +2729,60 @@ void HudLayer::setMenu(int index, int btnType) {
   } else if (btnType == BTN_TYPE_BARBECUE) {
     unitIndex = UNIT_BARBECUE;
     lbl->setString(LM->getText("barbecue"));
+  } else if (btnType == BTN_TYPE_SHIPYARD) {
+    unitIndex = UNIT_HUMAN_SHIPYARD;
+    lbl->setString(LM->getText("shipyard"));
+  } else if (btnType == BTN_TYPE_HUMAN_SHUTTLE) {
+    unitIndex = UNIT_HUMAN_SHUTTLE;
+    lbl->setString(LM->getText("shuttle"));
+  } else if (btnType == BTN_TYPE_HUMAN_SHIP) {
+    unitIndex = UNIT_HUMAN_SHIP;
+    lbl->setString(LM->getText("human ship"));
+  } else if (btnType == BTN_TYPE_HUMAN_BATTLE_SHIP) {
+    unitIndex = UNIT_HUMAN_BATTLE_SHIP;
+    lbl->setString(LM->getText("human battle ship"));
+  } else if (btnType == BTN_TYPE_ORC_SHIPYARD) {
+    unitIndex = UNIT_ORC_SHIPYARD;
+    lbl->setString(LM->getText("orc shipyard"));
+  } else if (btnType == BTN_TYPE_ORC_SHUTTLE) {
+    unitIndex = UNIT_ORC_SHUTTLE;
+    lbl->setString(LM->getText("orc shuttle"));
+  } else if (btnType == BTN_TYPE_ORC_SHIP) {
+    unitIndex = UNIT_ORC_SHIP;
+    lbl->setString(LM->getText("orc ship"));
+  } else if (btnType == BTN_TYPE_ORC_BATTLE_SHIP) {
+    unitIndex = UNIT_ORC_BATTLE_SHIP;
+    lbl->setString(LM->getText("orc battle ship"));
+  } else if (btnType == BTN_TYPE_OIL_SHIP) {
+    unitIndex = UNIT_HUMAN_OIL_SHIP;
+    lbl->setString(LM->getText("oil ship"));
+  } else if (btnType == BTN_TYPE_OIL_EXTRACTOR) {
+    unitIndex = UNIT_HUMAN_OIL_EXTRACTOR;
+    lbl->setString(LM->getText("oil extractor"));
+  } else if (btnType == BTN_TYPE_FOUNDRY) {
+    unitIndex = UNIT_HUMAN_FOUNDRY;
+    lbl->setString(LM->getText("foundry"));
+  } else if (btnType == BTN_TYPE_OIL_REFINERY) {
+    unitIndex = UNIT_HUMAN_OIL_REFINERY;
+    lbl->setString(LM->getText("oil refinery"));
+  } else if (btnType == BTN_TYPE_ORC_OIL_SHIP) {
+    unitIndex = UNIT_ORC_OIL_SHIP;
+    lbl->setString(LM->getText("oil ship"));
+  } else if (btnType == BTN_TYPE_ORC_OIL_EXTRACTOR) {
+    unitIndex = UNIT_ORC_OIL_EXTRACTOR;
+    lbl->setString(LM->getText("oil extractor"));
+  } else if (btnType == BTN_TYPE_ORC_OIL_REFINERY) {
+    unitIndex = UNIT_ORC_OIL_REFINERY;
+    lbl->setString(LM->getText("oil refinery"));
+  } else if (btnType == BTN_TYPE_ORC_FOUNDRY) {
+    unitIndex = UNIT_ORC_FOUNDRY;
+    lbl->setString(LM->getText("foundry"));
+  } else if (btnType == BTN_TYPE_UPGRADE_ATTACK) {
+    unitIndex = UNIT_HUMAN_FOUNDRY;
+    lbl->setString(LM->getText("attack upgrade"));
+  } else if (btnType == BTN_TYPE_UPGRADE_DEFENSE) {
+    unitIndex = UNIT_HUMAN_FOUNDRY;
+    lbl->setString(LM->getText("defense upgrade"));
   } else if (btnType == BTN_TYPE_GOBLIN) {
     unitIndex = UNIT_GOBLIN;
     lbl->setString(LM->getText("goblin"));
@@ -2689,16 +2807,16 @@ void HudLayer::setMenu(int index, int btnType) {
     struct SC {
       int type;
       const char *key;
-      const char *fullName;
+      const char *csvKey;
     };
     static const SC shortcuts[] = {
-        {BTN_TYPE_MOVE, "M", "Move"},
-        {BTN_TYPE_STOP, "S", "Stop"},
-        {BTN_TYPE_ATTACK, "A", "Attack"},
-        {BTN_TYPE_GATHER, "G", "Gather"},
-        {BTN_TYPE_BUILD, "B", "Build"},
-        {BTN_TYPE_BUILD_BETTER, "V", "Advanced"},
-        {BTN_TYPE_CANCEL, "Esc", "Cancel"},
+        {BTN_TYPE_MOVE, "M", "move"},
+        {BTN_TYPE_STOP, "S", "stop"},
+        {BTN_TYPE_ATTACK, "A", "attack"},
+        {BTN_TYPE_GATHER, "G", "gather"},
+        {BTN_TYPE_BUILD, "B", "build"},
+        {BTN_TYPE_BUILD_BETTER, "V", "advanced"},
+        {BTN_TYPE_CANCEL, "Esc", "cancel"},
         {BTN_TYPE_WORKER, "W", nullptr},
         {BTN_TYPE_GOBLIN_WORKER, "W", nullptr},
         {BTN_TYPE_SWORDMAN, "S", nullptr},
@@ -2718,6 +2836,24 @@ void HudLayer::setMenu(int index, int btnType) {
         {BTN_TYPE_TROLL_HOUSE, "T", nullptr},
         {BTN_TYPE_TEMPLE, "E", nullptr},
         {BTN_TYPE_BARBECUE, "B", nullptr},
+        {BTN_TYPE_SHIPYARD, "Y", nullptr},
+        {BTN_TYPE_HUMAN_SHUTTLE, "S", nullptr},
+        {BTN_TYPE_HUMAN_SHIP, "H", nullptr},
+        {BTN_TYPE_HUMAN_BATTLE_SHIP, "B", nullptr},
+        {BTN_TYPE_ORC_SHIPYARD, "Y", nullptr},
+        {BTN_TYPE_ORC_SHUTTLE, "S", nullptr},
+        {BTN_TYPE_ORC_SHIP, "H", nullptr},
+        {BTN_TYPE_ORC_BATTLE_SHIP, "B", nullptr},
+        {BTN_TYPE_OIL_SHIP, "O", nullptr},
+        {BTN_TYPE_OIL_EXTRACTOR, "X", nullptr},
+        {BTN_TYPE_FOUNDRY, "F", nullptr},
+        {BTN_TYPE_OIL_REFINERY, "R", nullptr},
+        {BTN_TYPE_ORC_OIL_SHIP, "O", nullptr},
+        {BTN_TYPE_ORC_OIL_EXTRACTOR, "X", nullptr},
+        {BTN_TYPE_ORC_OIL_REFINERY, "R", nullptr},
+        {BTN_TYPE_ORC_FOUNDRY, "F", nullptr},
+        {BTN_TYPE_UPGRADE_ATTACK, "A", nullptr},
+        {BTN_TYPE_UPGRADE_DEFENSE, "D", nullptr},
         {BTN_TYPE_GOBLIN, "G", nullptr},
         {BTN_TYPE_GOBLIN_BOMB, "B", nullptr},
         {BTN_TYPE_ORC_AXE, "A", nullptr},
@@ -2728,8 +2864,8 @@ void HudLayer::setMenu(int index, int btnType) {
     for (const auto &sc : shortcuts) {
       if (sc.type != btnType)
         continue;
-      if (sc.fullName != nullptr) {
-        lbl->setString(std::string(sc.fullName) + " (" + sc.key + ")");
+      if (sc.csvKey != nullptr) {
+        lbl->setString(LM->getText(sc.csvKey) + " (" + sc.key + ")");
       } else {
         std::string existing = lbl->getString();
         if (!existing.empty())
@@ -2891,6 +3027,68 @@ void HudLayer::onCommandClick(Ref *ref) {
   } else if (index == BTN_TYPE_BARBECUE) {
     if (WORLD->tryBuilding(UNIT_BARBECUE)) {
       shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_SHIPYARD) {
+    if (WORLD->tryBuilding(UNIT_HUMAN_SHIPYARD)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_HUMAN_SHUTTLE) {
+    WORLD->tryCreateUnit(UNIT_HUMAN_SHUTTLE);
+  } else if (index == BTN_TYPE_HUMAN_SHIP) {
+    WORLD->tryCreateUnit(UNIT_HUMAN_SHIP);
+  } else if (index == BTN_TYPE_HUMAN_BATTLE_SHIP) {
+    WORLD->tryCreateUnit(UNIT_HUMAN_BATTLE_SHIP);
+  } else if (index == BTN_TYPE_ORC_SHIPYARD) {
+    if (WORLD->tryBuilding(UNIT_ORC_SHIPYARD)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_ORC_SHUTTLE) {
+    WORLD->tryCreateUnit(UNIT_ORC_SHUTTLE);
+  } else if (index == BTN_TYPE_ORC_SHIP) {
+    WORLD->tryCreateUnit(UNIT_ORC_SHIP);
+  } else if (index == BTN_TYPE_ORC_BATTLE_SHIP) {
+    WORLD->tryCreateUnit(UNIT_ORC_BATTLE_SHIP);
+  } else if (index == BTN_TYPE_OIL_SHIP) {
+    WORLD->tryCreateUnit(UNIT_HUMAN_OIL_SHIP);
+  } else if (index == BTN_TYPE_OIL_EXTRACTOR) {
+    if (WORLD->tryBuilding(UNIT_HUMAN_OIL_EXTRACTOR)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_FOUNDRY) {
+    if (WORLD->tryBuilding(UNIT_HUMAN_FOUNDRY)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_OIL_REFINERY) {
+    if (WORLD->tryBuilding(UNIT_HUMAN_OIL_REFINERY)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_ORC_OIL_SHIP) {
+    WORLD->tryCreateUnit(UNIT_ORC_OIL_SHIP);
+  } else if (index == BTN_TYPE_ORC_OIL_EXTRACTOR) {
+    if (WORLD->tryBuilding(UNIT_ORC_OIL_EXTRACTOR)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_ORC_OIL_REFINERY) {
+    if (WORLD->tryBuilding(UNIT_ORC_OIL_REFINERY)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_ORC_FOUNDRY) {
+    if (WORLD->tryBuilding(UNIT_ORC_FOUNDRY)) {
+      shouldHideMenu = true;
+    }
+  } else if (index == BTN_TYPE_UPGRADE_ATTACK) {
+    if (!WORLD->selectedArray.empty()) {
+      EnemyBase *foundry = dynamic_cast<EnemyBase *>(WORLD->selectedArray.at(0));
+      if (foundry != nullptr) {
+        WORLD->startResearch(foundry, foundry->alliSide == WHICH_SIDE_ENEMY ? RESEARCH_ORC_ATTACK : RESEARCH_HUMAN_ATTACK);
+      }
+    }
+  } else if (index == BTN_TYPE_UPGRADE_DEFENSE) {
+    if (!WORLD->selectedArray.empty()) {
+      EnemyBase *foundry = dynamic_cast<EnemyBase *>(WORLD->selectedArray.at(0));
+      if (foundry != nullptr) {
+        WORLD->startResearch(foundry, foundry->alliSide == WHICH_SIDE_ENEMY ? RESEARCH_ORC_DEFENSE : RESEARCH_HUMAN_DEFENSE);
+      }
     }
   } else if (index == BTN_TYPE_CANCEL) {
     setMenu(0, BTN_TYPE_BUILD);
@@ -3158,6 +3356,12 @@ void HudLayer::addHeartDone(Ref *obj) {
 }
 // Implementation of the keyboard event callback function prototype
 void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+  if (keyCode == EventKeyboard::KeyCode::KEY_LEFT_CTRL ||
+      keyCode == EventKeyboard::KeyCode::KEY_RIGHT_CTRL) {
+    win32CtrlHeld = true;
+  }
+#endif
   if (isInScene ||
       GameManager::getInstance()->getWorld()->indexToWarp != -9999) {
     return;
@@ -3209,9 +3413,8 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
       groupIndex = 8;
 
     if (groupIndex >= 0) {
-      bool isCtrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
       bool isShift = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
-      if (isCtrl) {
+      if (win32CtrlHeld) {
         handlePcControlGroupAssign(groupIndex);
       } else {
         handlePcControlGroupRecall(groupIndex, isShift);
@@ -3219,8 +3422,13 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
       return;
     }
 
-    // Escape: cancel building placement, or cancel disassemble confirm
+    // Escape: close menu popup, cancel building placement, or cancel disassemble
     if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
+      Node *menuPopup = this->getChildByName("menuPopup");
+      if (menuPopup != nullptr) {
+        onResumeClick();
+        return;
+      }
       Node *cancelBtn = this->getChildByName("btnCancelBuilding");
       if (cancelBtn != nullptr) {
         onCancelBuildingClick();
@@ -3323,6 +3531,22 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
         return KC::KEY_T;
       case BTN_TYPE_MAGE:
         return KC::KEY_M;
+      case BTN_TYPE_FOUNDRY:
+        return KC::KEY_F;
+      case BTN_TYPE_OIL_REFINERY:
+        return KC::KEY_R;
+      case BTN_TYPE_ORC_OIL_SHIP:
+        return KC::KEY_O;
+      case BTN_TYPE_ORC_OIL_EXTRACTOR:
+        return KC::KEY_X;
+      case BTN_TYPE_ORC_OIL_REFINERY:
+        return KC::KEY_R;
+      case BTN_TYPE_ORC_FOUNDRY:
+        return KC::KEY_F;
+      case BTN_TYPE_UPGRADE_ATTACK:
+        return KC::KEY_A;
+      case BTN_TYPE_UPGRADE_DEFENSE:
+        return KC::KEY_D;
       default:
         return KC::KEY_NONE;
       }
@@ -3341,7 +3565,19 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
 
     // General hotkeys (only reached if no menu button consumed the key)
     if (keyCode == EventKeyboard::KeyCode::KEY_A) {
-      WORLD->setWin32AttackMoveMode(true);
+      bool hasCombatUnit = false;
+      if (WORLD != nullptr) {
+        for (auto unit : WORLD->selectedArray) {
+          if (unit == nullptr || unit->isBuilding) continue;
+          if (unit->unitType != UNIT_WORKER && unit->unitType != UNIT_GOBLIN_WORKER) {
+            hasCombatUnit = true;
+            break;
+          }
+        }
+      }
+      if (hasCombatUnit) {
+        WORLD->setWin32AttackMoveMode(true);
+      }
       return;
     } else if (keyCode == EventKeyboard::KeyCode::KEY_S) {
       WORLD->onStopClick();
@@ -3583,10 +3819,16 @@ void HudLayer::onDialogDone() {
 void HudLayer::onEndCredit() {
   removeListener();
 
-  //    scene->addChild(HelloWorld::scene(STAGE_LOBBY, false));
+  //    scene->addChild(GameScene::scene(STAGE_LOBBY, false));
 }
 void HudLayer::showNextTalk() { dialogBox->showNextTalk(); }
 void HudLayer::onKeyReleased(EventKeyboard::KeyCode keyCode, Event *event) {
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+  if (keyCode == EventKeyboard::KeyCode::KEY_LEFT_CTRL ||
+      keyCode == EventKeyboard::KeyCode::KEY_RIGHT_CTRL) {
+    win32CtrlHeld = false;
+  }
+#endif
   if (isInScene ||
       GameManager::getInstance()->getWorld()->indexToWarp != -9999) {
     return;
@@ -4801,11 +5043,11 @@ void HudLayer::showDialog(const char *message, const char *btn1,
 
   this->setTouchEnabled(false);
 
-  ((HelloWorld *)GameManager::getInstance()->getWorld())->pauseLayer();
+  ((GameScene *)GameManager::getInstance()->getWorld())->pauseLayer();
 }
 
 void HudLayer::messageBoxClosed(Node *node) {
-  ((HelloWorld *)GameManager::getInstance()->getWorld())->resumeLayer();
+  ((GameScene *)GameManager::getInstance()->getWorld())->resumeLayer();
   this->setTouchEnabled(true);
   //	_dialogBox->setVisible(false);
 
@@ -4851,7 +5093,7 @@ void HudLayer::onEvent(float dt) {
     sptTalkBox = nullptr;
   }
   isReadyToShowNextTalk = false;
-  //    HelloWorld* stage = GameManager::getInstance()->getWorld();
+  //    GameScene* stage = GameManager::getInstance()->getWorld();
   std::string text;
   std::string key;
   if (talkState == TALK_STATE_ASKING) {
@@ -5090,7 +5332,7 @@ void HudLayer::onTalkBoxResizeDone() {
 }
 
 void HudLayer::readyToShowNextTalk() {
-  HelloWorld *stage = WORLD;
+  GameScene *stage = WORLD;
   if (stage->isInEvent) {
     if (talkState == TALK_STATE_QUESTIONING) {
       answer = 0;
@@ -6914,24 +7156,12 @@ void HudLayer::onPvpResultOk(Ref *ref) {
   BTN_FROM_REF_AND_DISABLE
   this->removeListener();
   Scene *scene = Scene::create();
-  if (GM->isPvpFromBHUD) {
-    GM->isPvpFromBHUD = false;
-    GM->titleLayer = nullptr;
-    GM->nextScene = STAGE_LOBBY;
-    GM->isColosseum = false;
-    auto scene = HelloWorld::scene(STAGE_LOBBY, false);
-    BHUD->onTrainClick();
-    BHUD->onHeroClick();
-    Director::getInstance()->replaceScene(
-        TransitionFade::create(1, scene, Color3B::BLACK));
-  } else {
-    Title *title = Title::create();
-    scene->addChild(title);
-    Director::getInstance()->replaceScene(
-        TransitionFade::create(2, scene, Color3B::BLACK));
-    title->showChapterSelect();
-    title->onHeroClick();
-  }
+  Title *title = Title::create();
+  scene->addChild(title);
+  Director::getInstance()->replaceScene(
+      TransitionFade::create(2, scene, Color3B::BLACK));
+  title->showChapterSelect();
+  title->onHeroClick();
 }
 void HudLayer::showPremiumRetry() {
   Node *layer = CSLoader::createNode("PremiumRetry.csb");
@@ -7252,7 +7482,7 @@ void HudLayer::onOkFromWinPopup(Ref *ref) {
   Scene *scene;
   if (GM->currentStageIndex == 11 && isWin) {
     GM->nextScene = STAGE_INTRO;
-    scene = HelloWorld::scene(12, false);
+    scene = GameScene::scene(12, false);
   } else {
     scene = Scene::create();
     Title *title = Title::create();
@@ -7312,7 +7542,7 @@ void HudLayer::onReivewPopupButtonClick(Ref *ref) {
   Scene *scene;
   if (GM->currentStageIndex == 11 && !WORLD->isGameOver) {
     GM->nextScene = STAGE_INTRO;
-    scene = HelloWorld::scene(12, false);
+    scene = GameScene::scene(12, false);
   } else {
 
     int stage = WORLD->stageIndex;
@@ -7472,7 +7702,7 @@ void HudLayer::update(float dt) {
       GM->isColosseum = false;
       GM->setHudLayer(nullptr);
       auto scene =
-          HelloWorld::scene(GM->currentStageIndex, WORLD->difficultyMode);
+          GameScene::scene(GM->currentStageIndex, WORLD->difficultyMode);
       Director::getInstance()->replaceScene(
           TransitionFade::create(2, scene, Color3B::BLACK));
     }
@@ -7487,7 +7717,7 @@ void HudLayer::update(float dt) {
     removeListener();
 
     GM->nextScene = STAGE_RAID;
-    auto scene = HelloWorld::scene(GM->nextScene, false);
+    auto scene = GameScene::scene(GM->nextScene, false);
     Director::getInstance()->replaceScene(
         TransitionFade::create(2, scene, Color3B::BLACK));
   }
@@ -7538,8 +7768,10 @@ void HudLayer::updatePvpUI(int playerHP, int enemyHP) {
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
 void HudLayer::handlePcControlGroupAssign(int groupIndex) {
-  if (WORLD == nullptr || WORLD->selectedArray.size() == 0)
+  if (WORLD == nullptr || WORLD->selectedArray.size() == 0) {
+    CCLOG("[CG] assign group %d SKIPPED (selectedArray empty)", groupIndex + 1);
     return;
+  }
 
   std::string str = "";
   for (auto unit : WORLD->selectedArray) {
@@ -7547,6 +7779,8 @@ void HudLayer::handlePcControlGroupAssign(int groupIndex) {
   }
   str = str.substr(0, str.length() - 1);
   pcControlGroups[groupIndex] = str;
+  CCLOG("[CG] assign group %d = %s", groupIndex + 1, str.c_str());
+  GM->playSoundEffect(SOUND_PENCIL_SHORT);
 }
 
 void HudLayer::handlePcControlGroupRecall(int groupIndex, bool addToSelection) {
@@ -7554,6 +7788,7 @@ void HudLayer::handlePcControlGroupRecall(int groupIndex, bool addToSelection) {
     return;
 
   std::string &groupStr = pcControlGroups[groupIndex];
+  CCLOG("[CG] recall group %d = '%s'", groupIndex + 1, groupStr.c_str());
   if (groupStr.empty())
     return;
 
@@ -7615,3 +7850,4 @@ void HudLayer::handlePcControlGroupRecall(int groupIndex, bool addToSelection) {
   }
 }
 #endif
+

@@ -1,4 +1,4 @@
-//
+﻿//
 //  UploadedMaps.cpp
 //  CartoonCraftNV
 //
@@ -95,7 +95,7 @@ void UploadedMaps::oneSecUpdate(float dt){
             log("map  download success: %s", BSM->mapList.c_str());
             GM->loadMapData = BSM->mapData;
             GM->nextScene = STAGE_FIELD;
-            auto scene = HelloWorld::scene(STAGE_CUSTOM, false);
+            auto scene = GameScene::scene(STAGE_CUSTOM, false);
             Director::getInstance()->replaceScene(scene);
         }
         BSM->downloadMapState = -1;
@@ -233,3 +233,4 @@ void UploadedMaps::onDeleteClick(Ref* ref){
     ValueVector dataDetail = GM->split(mapDataList[index].asString(), "_");
     BSM->deleteMap(dataDetail[0].asString());
 }
+

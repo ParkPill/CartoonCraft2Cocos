@@ -1,4 +1,4 @@
-//
+﻿//
 //  Title.cpp
 //  CartoonCraft
 //
@@ -21,6 +21,7 @@
 #include "MultiplayLobby.h"
 #include "ShopLayer.h"
 #include "UploadedMaps.h"
+#include "MapEditor.h"
 
 bool Title::usesAccountSystem() { return !GameManager::isWin32Offline(); }
 
@@ -231,22 +232,10 @@ bool Title::init() {
 
   btn = (Button *)title->getChildByName(
       "btnBattle"); // Button::create("btnBox.png");
-  //    this->addChild(btn);
-  //    btn->setPosition(Vec2(btnX, 150));
-  btn->addClickEventListener(CC_CALLBACK_1(Title::onBattleClick, this));
-  btn->setOpacity(0);
-  btn->runAction(Sequence::create(DelayTime::create(idleTime + moveTime),
-                                  FadeIn::create(0.5f), NULL));
-  //    GM->makeItScaleUpAndDown(btn->getChildByName("imgNewTag"));
-  //    GM->makeItScaleUpAndDown(btn->getChildByName("imgTag"));
-
-  lbl = addLabelToButton(btn, "battle", 60, Color3B(4, 90, 4));
-  lbl->setPosition(lbl->getPosition() + Vec2(-110, 10));
-  doLabelFadeInLater(lbl, idleTime + moveTime, 0.5f);
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+  // Lobby/Raid battle mode has been removed - this button has no destination
+  // anymore, so it stays hidden on every platform (it used to be Win32-only).
   btn->setVisible(false);
   btn->setEnabled(false);
-#endif
 
   //    Sprite* sptComingSoonTag = Sprite::create("comingSoon.png");
   //    btn->addChild(sptComingSoonTag);
@@ -612,7 +601,7 @@ void Title::onMapClick() {
   GM->nextScene = STAGE_FIELD;
   GM->isColosseum = false;
 
-  auto scene = EditorWorld::scene(STAGE_CUSTOM, false);
+  auto scene = MapEditor::scene();
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
 }
@@ -1168,71 +1157,6 @@ void Title::onNetworkResetConfirmClick() {
   UDSetBool(KEY_FIRST_LAUNCH_AFTER_NEW_SERVER, true);
   UDSetBool(KEY_ID_EXIST_CHECK_DONE, false);
   restartTheGame();
-}
-void Title::onBattleClick(Ref *ref) {
-  int stage = UDGetInt(KEY_LAST_CLEAR_STAGE, 0);
-  if (stage < _registerNameLimitStage && isBeginnerLockOn) {
-    showInstanceMessage(strmake(
-        "%s\n%d-%d %s", LM->getText("unlock condition").c_str(),
-        _registerNameLimitStage / 12 + 1, _registerNameLimitStage + 1,
-        LM->getText(strmake("stage title 0_%d", _registerNameLimitStage))
-            .c_str()));
-    return;
-  }
-  if (!BSM->timeEstablished || BSM->isOffline) {
-    showInstanceMessage(LM->getText("network fail play offline"));
-    return;
-  }
-
-  std::string previousID = UDGetStr(KEY_PREVIOUS_ID, "-1");
-  if (previousID.compare("-1") != 0) {
-    UDSetStr(KEY_PREVIOUS_ID, "-1");
-
-    std::vector<int> datas;
-    datas.push_back(DATA_TYPE_GEM);
-    datas.push_back(DATA_TYPE_IAP);
-    datas.push_back(DATA_TYPE_DECK);
-    datas.push_back(DATA_TYPE_GOLD);
-    datas.push_back(DATA_TYPE_KEYS);
-    datas.push_back(DATA_TYPE_TREE);
-    datas.push_back(DATA_TYPE_BUILDING);
-    datas.push_back(DATA_TYPE_INVENTORY);
-    datas.push_back(DATA_TYPE_HERO_DECK);
-    datas.push_back(DATA_TYPE_STAGE_CLEAR);
-    datas.push_back(DATA_TYPE_SEARCH_ITEMS);
-    datas.push_back(DATA_TYPE_HERO_INVENTORY);
-    datas.push_back(DATA_TYPE_STAGE_HARD_CLEAR);
-    datas.push_back(DATA_TYPE_KEY_GET_STATE);
-    datas.push_back(DATA_TYPE_SEARCH_STATE);
-    BSM->saveUserData(datas);
-  }
-
-  //    log("sku cc_gem100 amount: %s",
-  //    GameSharing::getPriceAmount("cc_gem100").c_str());
-  //    showInstanceMessage(LM->getText("coming soon")); // test
-  //    return; // test
-  //    showInstanceMessage(LM->getText("beta alert")); // test
-  GM->playSoundEffect(SOUND_PAPER_FLIP);
-  if (usesAccountSystem()) {
-    std::string id = UDGetStr(KEY_SAVED_ID, "-1");
-    BSM->requestedID = id;
-    if (id.compare("-1") == 0) {
-      nameHandleState = NETWORK_HANDLE_STATE_COMPLETE;
-      hideIndicator();
-      closePopup();
-      showRegisterName();
-      return;
-    }
-  }
-  {
-    BTN_FROM_REF_AND_DISABLE
-    GM->titleLayer = nullptr;
-    GM->nextScene = STAGE_LOBBY;
-    GM->isColosseum = false;
-    auto scene = HelloWorld::scene(STAGE_LOBBY, DIFFICULTY_MODE_NORMAL);
-    Director::getInstance()->replaceScene(
-        TransitionFade::create(1, scene, Color3B::BLACK));
-  }
 }
 void Title::showUpdate() {
   Node *layer = CSLoader::createNode("MessageBox.csb");
@@ -2087,6 +2011,32 @@ void Title::showStageSelect(int chapter) {
     lbl->setPosition(30, btn->getContentSize().height / 2);
     doLabelFadeInLater(lbl, 0.3f, 0.5f);
   }
+
+  // Scroll to show the next stage to clear
+  int nextStageIndex;
+  if (difficultyMode == DIFFICULTY_MODE_HELL) {
+    nextStageIndex = UDGetInt(KEY_HELL_MODE_CLEAR_STAGE, -1) + 1 - chapter * itemCount;
+  } else if (difficultyMode == DIFFICULTY_MODE_HARD) {
+    nextStageIndex = UDGetInt(KEY_HAD_MODE_CLEAR_STAGE, -1) + 1 - chapter * itemCount;
+  } else if (difficultyMode == DIFFICULTY_MODE_EASY) {
+    nextStageIndex = UDGetInt(KEY_EASY_MODE_CLEAR_STAGE, -1) + 1 - chapter * itemCount;
+  } else {
+    nextStageIndex = UDGetInt(KEY_LAST_CLEAR_STAGE, -1) + 1 - chapter * itemCount;
+  }
+  nextStageIndex = std::max(0, std::min(itemCount - 1, nextStageIndex));
+
+  float innerH = sv->getInnerContainerSize().height;
+  float svH = sv->getContentSize().height;
+  float itemCenterY = (itemCount - nextStageIndex - 0.5f) * itemHeight;
+  float targetY = svH * 0.5f - itemCenterY;
+  float minY = svH - innerH;
+  targetY = std::max(minY, std::min(0.0f, targetY));
+  float scrollRange = innerH - svH;
+  float scrollPercent = (scrollRange > 0.0f) ? 100.0f * (targetY - minY) / scrollRange : 0.0f;
+  scrollPercent = std::max(0.0f, std::min(100.0f, scrollPercent));
+  sv->scheduleOnce([sv, scrollPercent](float) {
+    sv->scrollToPercentVertical(scrollPercent, 0.5f, true);
+  }, 0.4f, "scrollToNextStage");
 }
 void Title::onCampaignChestShopClick() {
   Node *layer = CSLoader::createNode("CampaignChestShop.csb");
@@ -2359,7 +2309,7 @@ void Title::goToLoadedStage() {
   if (datas.size() > 0) {
     difficultyMode = Value(datas.at(0)).asInt();
   }
-  auto scene = HelloWorld::scene(savedStage, difficultyMode);
+  auto scene = GameScene::scene(savedStage, difficultyMode);
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
 }
@@ -2371,7 +2321,7 @@ void Title::goToMultiplayStage(int stageNumber) {
   cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(
       listener);
   GM->nextScene = STAGE_FIELD;
-  auto scene = HelloWorld::scene(stageNumber, GAME_MODE_NORMAL, true);
+  auto scene = GameScene::scene(stageNumber, GAME_MODE_NORMAL, true);
   WORLD->difficultyMode = DIFFICULTY_MODE_NORMAL;
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
@@ -2629,7 +2579,7 @@ void Title::onStageClick(Ref *ref) {
         listener);
     GM->nextScene = STAGE_INTRO;
     GM->isColosseum = false;
-    auto scene = HelloWorld::scene(btn->getTag(), difficultyMode);
+    auto scene = GameScene::scene(btn->getTag(), difficultyMode);
     Director::getInstance()->replaceScene(
         TransitionFade::create(2, scene, Color3B::BLACK));
     return;
@@ -2878,7 +2828,7 @@ void Title::goToStage(Ref *ref) {
   cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(
       listener);
   GM->nextScene = STAGE_FIELD;
-  auto scene = HelloWorld::scene(btn->getTag(), difficultyMode);
+  auto scene = GameScene::scene(btn->getTag(), difficultyMode);
   WORLD->difficultyMode = difficultyMode;
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
@@ -4608,7 +4558,7 @@ void Title::onPlayColosseum(Ref *ref) {
       listener);
   GM->nextScene = STAGE_FIELD;
   GM->isColosseum = true;
-  auto scene = HelloWorld::scene(stageIndex, DIFFICULTY_MODE_NORMAL);
+  auto scene = GameScene::scene(stageIndex, DIFFICULTY_MODE_NORMAL);
   Director::getInstance()->replaceScene(
       TransitionFade::create(2, scene, Color3B::BLACK));
 }
@@ -4919,3 +4869,4 @@ void Title::showSmartPassError(std::string msg) {
 }
 void Title::clearCacheForSmartPass() { GameSharing::clearCacheForSmartPass(); }
 void Title::onStartPassErrorOk() { GM->exitGame(); }
+

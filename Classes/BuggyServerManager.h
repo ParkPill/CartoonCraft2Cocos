@@ -18,7 +18,23 @@
 #include "network/HttpResponse.h"
 #include "network/HttpClient.h"
 
-//#define DATA_KEY_LEVEL 
+#define DATA_TYPE_GEM 0
+#define DATA_TYPE_GOLD 1
+#define DATA_TYPE_TREE 2
+#define DATA_TYPE_BUILDING 3
+#define DATA_TYPE_INVENTORY 4
+#define DATA_TYPE_DECK 5
+#define DATA_TYPE_IAP 6
+#define DATA_TYPE_SEARCH_STATE 7
+#define DATA_TYPE_LAST_LAUNCH_DATE 8
+#define DATA_TYPE_SEARCH_ITEMS 9
+#define DATA_TYPE_HERO_INVENTORY 10
+#define DATA_TYPE_HERO_DECK 11
+#define DATA_TYPE_KEYS 12
+#define DATA_TYPE_KEY_GET_STATE 13
+#define DATA_TYPE_STAGE_CLEAR 14
+#define DATA_TYPE_STAGE_HARD_CLEAR 15
+#define DATA_TYPE_PLAYID 16
 
 #define SET_DOCUMENT_AND_CHECK_ERROR rapidjson::Document document = getDocument(sender, data); if(document.IsNull()){ this->isServerFailed = true; log("docu null"); return; } if (document.HasMember("error")) { log("server data error: %s", document["error"].GetString()); isFailedToGetNetworkData = true;}
 

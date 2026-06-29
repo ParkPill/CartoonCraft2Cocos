@@ -1,4 +1,4 @@
-//
+﻿//
 //  HeroPage.cpp
 //  CartoonCraftNV
 //
@@ -296,11 +296,7 @@ void HeroPage::update(float dt){
 //               cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(TITLE->listener);
 //            }
             clearVectors();
-            if(BHUD){
-                GM->isPvpFromBHUD = true;
-                BHUD = nullptr;
-            }
-            auto scene = HelloWorld::scene(1, pvpNumber); // test
+            auto scene = GameScene::scene(1, pvpNumber); // test
             Director::getInstance()->replaceScene(scene);
             WORLD->setPvpMode(pvpNumber);
             GM->resetAsset();
@@ -2427,3 +2423,4 @@ void HeroPage::checkChangesForHeroes(){
         BSM->saveUserData(datas);
     }
 }
+

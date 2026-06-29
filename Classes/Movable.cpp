@@ -34,6 +34,7 @@ Movable::Movable()
     
     untouchable = false;
     onGround = true;
+    memset(cargoGrid, 0, sizeof(cargoGrid));
 //    wantsToStopHorizontal = false;
 //    wantsToStopVertical = false;
     wantsToGoLeft = false;
@@ -767,6 +768,33 @@ void Movable::onBuildComplete(){//building(float dt){
     }
     isBuildingABuilding = false;
     stopNew();
+
+    // If this builder is a ship unit and its current tile is now inside the
+    // completed water building, move it to the nearest free water tile.
+    bool isShipBuilder = (unitType == UNIT_HUMAN_SHUTTLE ||
+                          unitType == UNIT_ORC_SHUTTLE ||
+                          unitType == UNIT_HUMAN_SHIP ||
+                          unitType == UNIT_ORC_SHIP ||
+                          unitType == UNIT_HUMAN_BATTLE_SHIP ||
+                          unitType == UNIT_HUMAN_OIL_SHIP ||
+                          unitType == UNIT_ORC_OIL_SHIP);
+    if (isShipBuilder && builderBuilding != nullptr) {
+        EnemyBase *bldg = (EnemyBase *)builderBuilding;
+        Vec2 tile = WORLD->getCoordinateFromPosition(getPosition());
+        Vec2 st = bldg->buildingStartCoordinate;
+        Size sz = bldg->buildingOccupySize;
+        if ((int)tile.x >= (int)st.x && (int)tile.x < (int)(st.x + sz.width) &&
+            (int)tile.y >= (int)st.y && (int)tile.y < (int)(st.y + sz.height)) {
+            Vec2 freePos = WORLD->findEmptyWaterSpawnTile(
+                (int)st.x, (int)st.y, (int)sz.width, (int)sz.height);
+            if (freePos.x >= 0) {
+                moveFlagPos = freePos;
+                moveToPos   = freePos;
+                unitAct     = UNIT_ACT_MOVE;
+                unitActDetail = UNIT_ACT_DETAIL_IDLE;
+            }
+        }
+    }
 //    }
 }
 void Movable::releaseGathering(){
@@ -1405,6 +1433,15 @@ void Movable::attack(){
         }else if(unitType == UNIT_ORC_BUNKER || unitType == UNIT_ORC_HQ || unitType == UNIT_ORC_SPEAR){
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "spear.png");
             speed = 1500;
+        }else if(unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP){
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "canonBall.png");
+            missile->runAction(RotateBy::create(1.5f, 540));
+        }else if(unitType == UNIT_HUMAN_BATTLE_SHIP){
+            missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "battleCanonBall.png");
+            missile->runAction(RepeatForever::create(RotateBy::create(1.0f, 360)));
+            missile->effectType = MISSILE_EFFECT_RED_SMOKE;
+            missile->attackTargetType = ATTACK_TARGET_TYPE_SPLASH;
+            speed = 350;
         }else if(unitType == UNIT_CATAPULT || unitType == UNIT_HELICOPTER){
             missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "boulder.png");
             missile->runAction(RotateBy::create(2, 720));
@@ -1538,7 +1575,7 @@ void Movable::attack(){
                 extraPos = Vec2(0, 100);
             }
             missile->setRotation(-GM->getAngle(getPosition(), target->getPosition()) - 90);
-        }else if(unitType == UNIT_WIZARD || unitType == UNIT_HERO_SANTA ||  unitType == UNIT_HERO_PARASITE || (unitType == UNIT_HERO_LADY_BEAR && !isSkillOn)){
+        }else if(unitType == UNIT_WIZARD || unitType == UNIT_HERO_SANTA ||  unitType == UNIT_HERO_PARASITE || (unitType == UNIT_HERO_LADY_BEAR && !isSkillOn) || unitType == UNIT_HUMAN_BATTLE_SHIP){
             if(unitType == UNIT_HERO_SANTA){
                 extraPos = Vec2(isFlippedX()?70:-70, 70);
             }
@@ -1720,6 +1757,23 @@ bool Movable::getHitAndIsDead(int ap, Movable* attacker){
 //    if (isEnemy) {
 //        ap = 999999; // test 
 //    }
+    // Foundry upgrade bonus applies to ship units only.
+    auto isShipType = [](int t) -> bool {
+        return t == UNIT_HUMAN_SHUTTLE || t == UNIT_ORC_SHUTTLE ||
+               t == UNIT_HUMAN_SHIP   || t == UNIT_ORC_SHIP    ||
+               t == UNIT_HUMAN_BATTLE_SHIP ||
+               t == UNIT_HUMAN_OIL_SHIP    || t == UNIT_ORC_OIL_SHIP;
+    };
+    if (attacker != nullptr && !attacker->isEnemy && isShipType(attacker->unitType)) {
+        if (WORLD->isOrcTypeUnit(attacker->unitType))
+            ap += WORLD->orcAttackLevel * 5;
+        else
+            ap += WORLD->humanAttackLevel * 5;
+    }
+    if (!isEnemy && isShipType(unitType)) {
+        int armorLevel = WORLD->isOrcTypeUnit(unitType) ? WORLD->orcDefenseLevel : WORLD->humanDefenseLevel;
+        ap = std::max(1, ap - armorLevel * 2);
+    }
     energy -= ap;
     if(WORLD->isMultiplay){
         if(isEnemy){
@@ -2153,6 +2207,27 @@ void Movable::gatherGold(Movable* mine){
     
 }
 
+void Movable::gatherOil(Movable* extractor) {
+    if (extractor == nullptr) {
+        isGatheringOil = false;
+        stop();
+        return;
+    }
+    isGatheringOil = true;
+    isGatheringGold = false;
+    isGatheringTree = false;
+    isInExtractor = false;
+    isCarryingOil = false;
+    oilCarryAmount = 0;
+    unitAct = UNIT_ACT_MOVE;
+    unitActDetail = UNIT_ACT_DETAIL_IDLE;
+    moveToPos = Vec2::ZERO;
+    target = extractor;
+    moveFlagPos = extractor->getApproachingPoint(getPosition());
+    currentOilExtractor = extractor;
+    oilGatheringTimer = 5.0f;
+}
+
 void Movable::gatherTree(Movable* tree){
 //    log("movable gather tree");
     
@@ -2315,13 +2390,49 @@ void Movable::stopProductSchedule(){
     this->unschedule(schedule_selector(Movable::productUpdate));
 }
 void Movable::productUpdate(float dt){
-    if(btns.size() > 0){
+    if (isResearching) {
+        researchTimer -= dt;
+        if (researchTimer <= 0) {
+            isResearching = false;
+            WORLD->applyResearch(researchType);
+            researchType = -1;
+            // Remove research progress button
+            if (!btns.empty()) {
+                Button *resBtn = btns.at(0);
+                btns.eraseObject(resBtn);
+                resBtn->removeFromParent();
+                updateProductButtons();
+            }
+            // Refresh HUD if this building is currently selected
+            if (WORLD->selectedArray.size() == 1 &&
+                (Movable *)WORLD->selectedArray.at(0) == this) {
+                WORLD->updateMenu();
+            }
+        }
+    }
+    if(!isResearching && btns.size() > 0){
         productCompleteTimer -= dt;
         if(productCompleteTimer <= 0 && WORLD->foodMax >= WORLD->foodInUse+ GM->getFoodUseForUnit(btns.at(0)->getTag())){
             Button* btn = btns.at(0);
             int index = btn->getTag();
             std::string spriteName = WORLD->getSpriteNameForUnit(index);
-            EnemyBase* unit = WORLD->createUnit(index, isEnemy?WHICH_SIDE_ENEMY:WHICH_SIDE_HERO, ITS_NOT_BUILDING, approachingPoints[0], GM->getUnitName(index), 1, spriteName.c_str());
+
+            bool isShipUnit = (index == UNIT_HUMAN_SHUTTLE || index == UNIT_ORC_SHUTTLE ||
+                               index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP ||
+                               index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP ||
+                               index == UNIT_HUMAN_OIL_SHIP || index == UNIT_ORC_OIL_SHIP);
+
+            Vec2 spawnPos = approachingPoints[0];
+            if (isShipUnit) {
+                Vec2 tile = WORLD->getCoordinateFromPosition(getPosition());
+                Vec2 emptyTile = WORLD->findEmptyWaterSpawnTile(
+                    (int)buildingStartCoordinate.x, (int)buildingStartCoordinate.y,
+                    (int)buildingOccupySize.width, (int)buildingOccupySize.height);
+                if (emptyTile.x >= 0)
+                    spawnPos = emptyTile;
+            }
+
+            EnemyBase* unit = WORLD->createUnit(index, isEnemy?WHICH_SIDE_ENEMY:WHICH_SIDE_HERO, ITS_NOT_BUILDING, spawnPos, GM->getUnitName(index), 1, spriteName.c_str());
             btns.eraseObject(btn);
             btn->removeFromParent();
             if(btns.size() > 0){
@@ -2336,7 +2447,7 @@ void Movable::productUpdate(float dt){
             WORLD->totalProducedUnit++;
             updateProductButtons();
             if (WORLD->isMultiplay && !isEnemy) {
-                MM->createdUnit(unit->unitID, unit->unitType, (int)approachingPoints[0].x, (int)approachingPoints[0].y, WORLD->gameFrameTimer + LATANCY);
+                MM->createdUnit(unit->unitID, unit->unitType, (int)spawnPos.x, (int)spawnPos.y, WORLD->gameFrameTimer + LATANCY);
                 unit->setVisible(false);
                 unit->runAction(Sequence::create(DelayTime::create(LATANCY), CallFunc::create(CC_CALLBACK_0(Movable::visibleLater, unit)), NULL));
             }
@@ -2423,7 +2534,11 @@ void Movable::stopNew(){
 //        isGatheringGold = false;
 //    }
     // check multiple units in the same spot
-    if (!isGatheringGold && !WORLD->isThisSpotAvailable(this) && canMove && !isFlying) {
+    bool isShipUnit2 = (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE ||
+                         unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP ||
+                         unitType == UNIT_HUMAN_BATTLE_SHIP || unitType == UNIT_HUMAN_OIL_SHIP ||
+                         unitType == UNIT_ORC_OIL_SHIP);
+    if (!isGatheringGold && !WORLD->isThisSpotAvailable(this) && canMove && !isFlying && !isShipUnit2) {
         Vec2 coordinate = WORLD->getCoordinateFromPosition(getPosition());
         Vec2 originalCoordinate = coordinate;
         isTemporaryFlying = !WORLD->isThisSpotAvailable(coordinate);
@@ -2815,24 +2930,36 @@ void Movable::moveNew(float dt){// movenew start
 //                    }
 //                }
 //            }
-            if(!isRouteSet || true){
-                isRouteSet = true;
-            if(moveToPos != moveFlagPos){
-                moveToPos = moveFlagPos;
-            }
             PointArray* array;// = PointArray::create(1);
-            if (isFlying || isTemporaryFlying || !WORLD->isBlockExistBetween(getPosition(), moveToPos)) {
+            bool isShipUnit = (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE ||
+                               unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP ||
+                               unitType == UNIT_HUMAN_BATTLE_SHIP || unitType == UNIT_HUMAN_OIL_SHIP ||
+                               unitType == UNIT_ORC_OIL_SHIP);
+            if (isFlying || isTemporaryFlying) {
                 unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
-                array = PointArray::create(1);//GM->getPath(selfPos, targetMoveTilePos);
+                array = PointArray::create(1);
                 array->addControlPoint(moveToPos);
-            }else
-            {
+            } else if (isShipUnit) {
+                // Ships use A* over water tiles to navigate around land and water buildings.
+                array = GM->getPathForShip(selfPos, targetMoveTilePos);
+                if (array == nullptr || array->count() == 0) {
+                    // No water path found — fall back to straight line.
+                    unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
+                    array = PointArray::create(1);
+                    array->addControlPoint(moveToPos);
+                } else {
+                    unitActDetail = UNIT_ACT_DETAIL_WALK_ROUTE;
+                }
+            } else if (!WORLD->isBlockExistBetween(getPosition(), moveToPos)) {
+                unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
+                array = PointArray::create(1);
+                array->addControlPoint(moveToPos);
+            } else {
                 unitActDetail = UNIT_ACT_DETAIL_WALK_ROUTE;
-                
+
                 array = GM->getPath(selfPos, targetMoveTilePos);
                 if(array == nullptr || !array || array->count() == 0){
                     if (isGatheringTree && !isCarryingTree) {
-//                        log("add exclude tree");
                         ExcludeTreeList.pushBack(currentTree);
                         gatherTree(WORLD->getNearestTree(getPosition(), ExcludeTreeList));
                         return;
@@ -2854,7 +2981,6 @@ void Movable::moveNew(float dt){// movenew start
                         failedAttackFlagPos = attackFlagPos;
                         attackFlagPos = Vec2::ZERO;
                     }
-//                    return;
                 }
             }
 //            if (target) { // putback target occupy the ground
@@ -2915,9 +3041,6 @@ void Movable::moveNew(float dt){// movenew start
                         stopNew();
                     }
                 }
-            }
-                
-
             }
         }
 
@@ -2999,6 +3122,19 @@ void Movable::moveNew(float dt){// movenew start
 //                }
 //            }
         }else{
+            // Naval units (UNIT_HUMAN_SHUTTLE/UNIT_ORC_SHUTTLE) only - water-only
+            // movement + ship-vs-ship collision. Re-registering the current
+            // tile every frame (cheap no-op once already present) covers an
+            // idle ship too, not just the actively-moving case below.
+            bool isShip = (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE ||
+                           unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP ||
+                           unitType == UNIT_HUMAN_BATTLE_SHIP || unitType == UNIT_HUMAN_OIL_SHIP ||
+                           unitType == UNIT_ORC_OIL_SHIP);
+            Vec2 tileBeforeThisFrame;
+            if (isShip) {
+                tileBeforeThisFrame = WORLD->getCoordinateFromPosition(getPosition());
+                WORLD->shipOccupiedTiles.insert(std::make_pair((int)tileBeforeThisFrame.x, (int)tileBeforeThisFrame.y));
+            }
             if ((unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE || unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET)) {
                 Vec2 dest, current;
                 if (unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE) {
@@ -3029,10 +3165,34 @@ void Movable::moveNew(float dt){// movenew start
                    (xToMove < 0 && xWillMove <= xToMove) ||
                    (yToMove > 0 && yWillMove >= yToMove) ||
                    (yToMove < 0 && yWillMove <= yToMove)){
-                    this->setPosition(dest);
-                    movePointCounter++;
+                    bool shipBlocked = false;
+                    if (isShip) {
+                        Vec2 t = WORLD->getCoordinateFromPosition(dest);
+                        shipBlocked = !WORLD->isWaterTileAt((int)t.x, (int)t.y) ||
+                                      WORLD->isShipTileBlocked((int)t.x, (int)t.y, this);
+                    }
+                    if (!shipBlocked) {
+                        this->setPosition(dest);
+                        movePointCounter++;
+                    }
                 }else{
-                    this->setPosition(current + Vec2(xWillMove, yWillMove));
+                    Vec2 nextPos = current + Vec2(xWillMove, yWillMove);
+                    bool shipBlocked = false;
+                    if (isShip) {
+                        Vec2 t = WORLD->getCoordinateFromPosition(nextPos);
+                        shipBlocked = !WORLD->isWaterTileAt((int)t.x, (int)t.y) ||
+                                      WORLD->isShipTileBlocked((int)t.x, (int)t.y, this);
+                    }
+                    if (!shipBlocked) {
+                        this->setPosition(nextPos);
+                    }
+                }
+                if (isShip) {
+                    Vec2 tileAfter = WORLD->getCoordinateFromPosition(getPosition());
+                    if ((int)tileAfter.x != (int)tileBeforeThisFrame.x || (int)tileAfter.y != (int)tileBeforeThisFrame.y) {
+                        WORLD->shipOccupiedTiles.erase(std::make_pair((int)tileBeforeThisFrame.x, (int)tileBeforeThisFrame.y));
+                        WORLD->shipOccupiedTiles.insert(std::make_pair((int)tileAfter.x, (int)tileAfter.y));
+                    }
                 }
                 if (unitAct == UNIT_ACT_ATTACK) {
                     checkAttackTargetReturnSuccess(dt);
@@ -3413,11 +3573,93 @@ void Movable::move(float dt){
             return;
         }
     }
-    
+
+    // Oil gathering (OilShip <-> OilExtractor)
+    if (isGatheringOil) {
+        if (isCarryingOil) {
+            // Deliver oil: check bounding-box (Shipyard, water) or proximity to
+            // approaching point (OilRefinery, land — ship stays on water).
+            bool atDepot = false;
+            if (returningPlace != nullptr) {
+                if (returningPlace->getBoundingBoxForIntersect().intersectsRect(getBoundingBoxForIntersect())) {
+                    atDepot = true;
+                } else {
+                    Vec2 approach = returningPlace->getApproachingPoint(getPosition());
+                    if (approach.distanceSquared(getPosition()) < (float)(TILE_SIZE * TILE_SIZE)) {
+                        atDepot = true;
+                    }
+                }
+            }
+            if (atDepot) {
+                if (!isEnemy) {
+                    WORLD->addOil(oilCarryAmount);
+                }
+                isCarryingOil = false;
+                oilCarryAmount = 0;
+                unitName = getName();
+                this->attackType = ATTACK_TYPE_NEAR;
+                this->canFindTarget = true;
+                if (currentOilExtractor != nullptr) {
+                    gatherOil(currentOilExtractor);
+                }
+            } else if (returningPlace != nullptr) {
+                // Continuously update path toward depot (same as workers returning to castle)
+                this->moveFlagPos = returningPlace->getApproachingPoint(getPosition());
+                this->unitAct = UNIT_ACT_MOVE;
+                this->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+                this->target = returningPlace;
+            }
+        } else if (currentOilExtractor != nullptr) {
+            // Moving toward extractor; hide inside when reached
+            if (currentOilExtractor->getBoundingBoxForIntersect().intersectsRect(getBoundingBoxForIntersect())) {
+                if (!isInExtractor) {
+                    isInExtractor = true;
+                    this->setVisible(false);
+                    this->stop();
+                    this->untouchable = true;
+                    this->attackType = ATTACK_TYPE_NONE;
+                    this->canFindTarget = false;
+                    WORLD->deselect(this);
+                    oilGatheringTimer = 5.0f;
+                }
+                oilGatheringTimer -= dt;
+                if (oilGatheringTimer < 0) {
+                    // Compute carry amount: base 40, +30% if any OilRefinery exists
+                    int baseAmount = 40;
+                    bool hasRefinery = false;
+                    for (auto unit : WORLD->heroArray) {
+                        if (unit && (unit->unitType == UNIT_HUMAN_OIL_REFINERY ||
+                                    unit->unitType == UNIT_ORC_OIL_REFINERY)) {
+                            hasRefinery = true;
+                            break;
+                        }
+                    }
+                    oilCarryAmount = hasRefinery ? (int)(baseAmount * 1.3f) : baseAmount;
+                    isCarryingOil = true;
+                    isInExtractor = false;
+                    this->setVisible(true);
+                    this->untouchable = false;
+                    this->attackType = ATTACK_TYPE_NEAR;
+                    unitName = strmake("%sOil", getName().c_str());
+                    EnemyBase* depot = WORLD->getNearestOilDepot(getPosition());
+                    if (depot != nullptr) {
+                        returningPlace = depot;
+                        // Navigate like workers returning to castle
+                        target = depot;
+                        moveFlagPos = depot->getApproachingPoint(getPosition());
+                        unitAct = UNIT_ACT_MOVE;
+                        unitActDetail = UNIT_ACT_DETAIL_IDLE;
+                        moveToPos = Vec2::ZERO;
+                    }
+                }
+            }
+        }
+    }
+
     if(target == nullptr && attackFlagPos == Vec2::ZERO){
         return;
     }
-    
+
     if(delayFrameTimeBeforeMove > 0){
         delayFrameTimeBeforeMove--;
         return;
@@ -3750,7 +3992,7 @@ void Movable::setPosition(const Vec2 &position){
 }
 
 void Movable::checkVisible(){
-    if (isInMine || isBuildingABuilding) {
+    if (isInMine || isBuildingABuilding || isInExtractor || isInShuttle) {
 //        if(isBuildingABuilding)
 //            log("isbuilding %d", rand()%3);
     }else{

@@ -8,6 +8,58 @@
 
 #ifndef AlmostLegendary_HudLayer_h
 #define AlmostLegendary_HudLayer_h
+
+#define BTN_TYPE_NONE -1
+#define BTN_TYPE_MOVE 0
+#define BTN_TYPE_STOP 1
+#define BTN_TYPE_ATTACK 2
+#define BTN_TYPE_GATHER 3
+#define BTN_TYPE_BUILD 4
+#define BTN_TYPE_BUILD_BETTER 5
+#define BTN_TYPE_WORKER 6
+#define BTN_TYPE_SWORDMAN 7
+#define BTN_TYPE_ARCHER 8
+#define BTN_TYPE_HELICOPTER 9
+#define BTN_TYPE_CATAPULT 10
+#define BTN_TYPE_CASTLE 11
+#define BTN_TYPE_FARM 12
+#define BTN_TYPE_BARRACKS 13
+#define BTN_TYPE_LUMBER 14
+#define BTN_TYPE_WATCHER_TOWER 15
+#define BTN_TYPE_FACTORY 16
+#define BTN_TYPE_AIRPORT 17
+#define BTN_TYPE_GOBLIN_WORKER 18
+#define BTN_TYPE_ORC_AXE 19
+#define BTN_TYPE_ORC_SPEAR 20
+#define BTN_TYPE_GOBLIN 21
+#define BTN_TYPE_GOBLIN_BOMB 22
+#define BTN_TYPE_TROLL 23
+#define BTN_TYPE_MAGE 24
+#define BTN_TYPE_HQ 25
+#define BTN_TYPE_BUNKER 26
+#define BTN_TYPE_ORC_BARRACKS 27
+#define BTN_TYPE_TROLL_HOUSE 28
+#define BTN_TYPE_TEMPLE 29
+#define BTN_TYPE_BARBECUE 30
+#define BTN_TYPE_SHIPYARD 31
+#define BTN_TYPE_HUMAN_SHUTTLE 32
+#define BTN_TYPE_HUMAN_SHIP 33
+#define BTN_TYPE_HUMAN_BATTLE_SHIP 34
+#define BTN_TYPE_ORC_SHIPYARD 35
+#define BTN_TYPE_ORC_SHUTTLE 36
+#define BTN_TYPE_ORC_SHIP 37
+#define BTN_TYPE_ORC_BATTLE_SHIP 38
+#define BTN_TYPE_OIL_SHIP 39
+#define BTN_TYPE_OIL_EXTRACTOR 40
+#define BTN_TYPE_FOUNDRY 42
+#define BTN_TYPE_OIL_REFINERY 43
+#define BTN_TYPE_ORC_OIL_SHIP 44
+#define BTN_TYPE_ORC_OIL_EXTRACTOR 45
+#define BTN_TYPE_ORC_OIL_REFINERY 46
+#define BTN_TYPE_ORC_FOUNDRY 47
+#define BTN_TYPE_UPGRADE_ATTACK 48
+#define BTN_TYPE_UPGRADE_DEFENSE 49
+#define BTN_TYPE_CANCEL 50
 #include "PPLabel.h"
 #include "SneakyJoystickSkinnedBase.h"
 #include "SneakyJoystick.h"
@@ -82,7 +134,25 @@
 #define BTN_TYPE_TROLL_HOUSE 28
 #define BTN_TYPE_TEMPLE 29
 #define BTN_TYPE_BARBECUE 30
-#define BTN_TYPE_CANCEL 31
+#define BTN_TYPE_SHIPYARD 31
+#define BTN_TYPE_HUMAN_SHUTTLE 32
+#define BTN_TYPE_HUMAN_SHIP 33
+#define BTN_TYPE_HUMAN_BATTLE_SHIP 34
+#define BTN_TYPE_ORC_SHIPYARD 35
+#define BTN_TYPE_ORC_SHUTTLE 36
+#define BTN_TYPE_ORC_SHIP 37
+#define BTN_TYPE_ORC_BATTLE_SHIP 38
+#define BTN_TYPE_OIL_SHIP 39
+#define BTN_TYPE_OIL_EXTRACTOR 40
+#define BTN_TYPE_FOUNDRY 42
+#define BTN_TYPE_OIL_REFINERY 43
+#define BTN_TYPE_ORC_OIL_SHIP 44
+#define BTN_TYPE_ORC_OIL_EXTRACTOR 45
+#define BTN_TYPE_ORC_OIL_REFINERY 46
+#define BTN_TYPE_ORC_FOUNDRY 47
+#define BTN_TYPE_UPGRADE_ATTACK 48
+#define BTN_TYPE_UPGRADE_DEFENSE 49
+#define BTN_TYPE_CANCEL 50
 #define SELECT_DIALOG_GO_TO_NPC 0
 
 using namespace cocos2d;
@@ -388,6 +458,7 @@ public:
     std::string pcControlGroups[9];
     int pcControlGroupLastKey = -1;
     DWORD pcControlGroupLastPressTime = 0;
+    bool win32CtrlHeld = false;
     void handlePcControlGroupAssign(int groupIndex);
     void handlePcControlGroupRecall(int groupIndex, bool addToSelection);
 #endif
@@ -497,6 +568,7 @@ public:
     
     PPLabel* lblGold;
     PPLabel* lblLumber;
+    PPLabel* lblOil;
     PPLabel* lblFood;
     
     void onCommandClick(Ref* ref);
@@ -572,7 +644,6 @@ public:
     void goToBattleScene();
     void findMatchForRaid();
     void setRaid();
-    void onNextMatchClick(Ref* ref);
     void onSurrenderClick(Ref* ref);
     
     void setPvpUI(int playerHPMax, int enemyHPMax);

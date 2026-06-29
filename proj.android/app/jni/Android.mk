@@ -31,7 +31,7 @@ LOCAL_SRC_FILES := $(LOCAL_PATH)/hellocpp/main.cpp \
                    $(LOCAL_PATH)/../../../Classes/Fog.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameManager.cpp \
                    $(LOCAL_PATH)/../../../Classes/GameSharing.cpp \
-                   $(LOCAL_PATH)/../../../Classes/HelloWorldScene.cpp \
+                   $(LOCAL_PATH)/../../../Classes/GameScene.cpp \
                    $(LOCAL_PATH)/../../../Classes/HeroPage.cpp \
                    $(LOCAL_PATH)/../../../Classes/HudLayer.cpp \
                    $(LOCAL_PATH)/../../../Classes/Intro.cpp \

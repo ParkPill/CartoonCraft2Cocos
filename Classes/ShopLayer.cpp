@@ -10,7 +10,6 @@
 #include "TopBar.h"
 #include "BuggyServerManager.h"
 #include "LanguageManager.h"
-#include "BattleHud.h"
 #include "Title.h"
 bool ShopLayer::init()
 {
@@ -327,56 +326,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
     int x = 487.93f;
     int gapX = 740.45f;
     int y = 429.55f;
-    if (currentTab == 0) {
-        btnTemp = (Button*)layer->getChildByName("btnBuildingTemp");
-        for (int i = BUILDING_MINE; i < BUILDING_TOTAL; i++) {
-            btn = (Button*)btnTemp->clone();
-            btn->addClickEventListener(CC_CALLBACK_1(ShopLayer::onBuyBuilding, this));
-            sv->addChild(btn);
-            btn->setPosition(Vec2(x, y));
-            btn->setTag(i);
-            x += gapX;
-            
-            lbl = (Text*)btn->getChildByName("lblTitle");
-            PPLabel* lblPP = BHUD->replaceTextToPPLabel(lbl);
-            lblPP->setString(LM->getText(BHUD->getBuildingName(i)));
-            lblPP->setWidth(btn->getContentSize().width*0.8f);
-            
-            int currentBuildingCount =  BHUD->getCurrentBuildingCount(i);
-            int maxBuildingCount =  BHUD->getMaxBuildingCount(i);
-            ImageView* sptBuilding = ImageView::create(BHUD->getBuildingSpriteName(i), ui::Widget::TextureResType::PLIST);
-            sptBuilding->setScale(1/WORLD->imageScale);
-            img = (ImageView*)btn->getChildByName("img");
-            sptBuilding->setPosition(img->getPosition());
-            btn->addChild(sptBuilding);
-            img->removeFromParent();
-            
-            lbl = (Text*)btn->getChildByName("lblCount");
-            lbl->setString(strmake("%d/%d",currentBuildingCount, maxBuildingCount));
-            btn->setEnabled(currentBuildingCount < maxBuildingCount);
-            lbl->setTextColor(currentBuildingCount >= maxBuildingCount?Color4B::RED:Color4B::WHITE);
-            
-            int goldPrice = BHUD->getBuildingPriceGold(i);
-            lbl = (Text*)btn->getChildByName("lblGold");
-            lbl->setString(Value(goldPrice).asString());
-            lbl->setTextColor(GM->getCoin() < goldPrice?Color4B::RED:Color4B::WHITE);
-            
-            int treePrice = BHUD->getBuildingPriceTree(i);
-            lbl = (Text*)btn->getChildByName("lblTree");
-            lbl->setString(Value(treePrice).asString());
-            lbl->setTextColor(GM->getTree() < treePrice?Color4B::RED:Color4B::WHITE);
-            
-            if(GM->getCoin() < goldPrice || GM->getTree() < treePrice){
-                btn->setEnabled(false);
-            }
-            sptBuilding->setGrayScale(!btn->isEnabled());
-            if(i >= BUILDING_ORC_HQ){
-                PPLabel* lblComing = PPLabel::create("Coming soon!", 60, Color3B::ORANGE, false, true, TextHAlignment::CENTER, false);
-                btn->addChild(lblComing);
-                lblComing->setPosition(sptBuilding->getPosition());
-            }
-        }
-    }else if (currentTab == 1) {
+    if (currentTab == 1) {
         for (int i = 0; i < 3; i++) {
             btn = (Button*)((Button*)layer->getChildByName(strmake("btnGold%d", i)))->clone();
             btn->addClickEventListener(CC_CALLBACK_1(ShopLayer::onBuyGold, this));
@@ -805,32 +755,6 @@ void ShopLayer::onBuyGem(Ref* ref){
     }
     
     showIndicator();
-}
-void ShopLayer::onBuyBuilding(Ref* ref){
-    BTN_FROM_REF
-    if (!BHUD->isWorkerAvailable()) {
-        BHUD->showNotEnoughWorkerUseGem();
-        return;
-    }
-    int index = btn->getTag();
-    cocos2d::Size occupySize;
-    if (index == BUILDING_MINE || index == BUILDING_LUMBURMILL || index == BUILDING_BARRACKS || index == BUILDING_FACTORY || index == BUILDING_AIRPORT) {
-        occupySize = cocos2d::Size(3, 3);
-    }else if(index == BUILDING_TREE){
-        occupySize = cocos2d::Size(1, 1);
-    }else if(index == BUILDING_FARM){// || index == BUILDING_UNDERGROUND_BUNKER){
-        occupySize = cocos2d::Size(3, 2);
-    }else if(index == BUILDING_WATCHER_TOWER){
-        occupySize = cocos2d::Size(2, 2);
-    }
-    //    else if(index == BUILDING_TRIGGER){
-    //        occupySize = cocos2d::Size(1, 1);
-    //    }
-//    closePopup();
-    closeShop();
-    WORLD->createBuildingTemplate(BHUD->getUnitIndex(index),WORLD->getSpriteNameForUnit(BHUD->getUnitIndex(index)));
-    BHUD->currentJob = JOB_MOVE_BUILDING_TEMPATE;
-    BHUD->currentJobDetailIndex = index;
 }
 void ShopLayer::closeShop(){
     if(heroesAreChanged){
