@@ -200,8 +200,13 @@ private:
 public:
     std::string _string;
 };
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+struct StringCompare : public std::__binary_function<__String*, __String*, bool> {
+#else
+struct StringCompare : public std::binary_function<__String*, __String*, bool> {
+#endif
 
-struct StringCompare : public std::__binary_function<__String *, __String *, bool> {
+
     public:
         bool operator() (__String * a, __String * b) const {
             return strcmp(a->getCString(), b->getCString()) < 0;

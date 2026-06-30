@@ -282,31 +282,40 @@ protected:
     int comparison = 0;      // 0 AtLeast,1 AtMost,2 Exactly
     int amount = 1;
     int resourceKind = 0;    // 0 Gold,1 Tree
+    bool isRepeat = false;   // only passes when the trigger has already fired once
   };
   struct RuntimeTriggerAction {
     int type = 0; // 0 DisplayMessage,1 CreateUnit,2 RemoveUnit,3 SetSwitch,
-                  // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk
+                  // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk,9 RevealFog
     std::string message;
     int unitSide = 0;
     int unitTypeIndex = -1;
     int tileX = 0;
     int tileY = 0;
     int targetObjectId = -1; // -1 = use tileX/tileY, else a placed object's id
-    int count = 1;
+    int count = 1;           // RevealFog: radius in fog tiles
     int switchIndex = 0;
     int switchAction = 0; // 0 Set,1 Clear,2 Toggle
     float waitSeconds = 1.0f;
+    bool visionEnabled = true; // RevealFog: true=reveal, false=cancel
+  };
+  // A fog region made permanently visible by a TACT_REVEAL_FOG trigger action,
+  // independent of unit presence. Stored as world-space centre + fog-tile radius.
+  struct TriggerRevealedFogRegion {
+    cocos2d::Vec2 centerWorldPos;
+    int radius = 5; // fog-tile radius
   };
   struct RuntimeTrigger {
     std::string name;
     bool sides[4] = {false, false, false, false};
-    bool preserve = true;
+    bool preserve = false;
     std::vector<RuntimeTriggerCondition> conditions;
     std::vector<RuntimeTriggerAction> actions;
     bool hasFired = false; // preserve==false: only ever runs once
   };
   std::vector<RuntimeTrigger> activeTriggers;
   bool triggerSwitches[16] = {false};
+  std::vector<TriggerRevealedFogRegion> triggerRevealedFogRegions;
   // Placed-object id -> world position, snapshotted once when the stage's
   // JSON loads (alongside spawnObjectsFromEditorJsonFile). Trigger actions
   // resolve targetObjectId through this - it's the *initial* placement
@@ -319,7 +328,7 @@ protected:
 
   void loadTriggersFromEditorJsonFile(const std::string &path);
   void updateTriggers();
-  bool evaluateTriggerCondition(const RuntimeTriggerCondition &c);
+  bool evaluateTriggerCondition(const RuntimeTriggerCondition &c, bool triggerHasFired = false);
   void runTriggerActions(const RuntimeTrigger &t);
   // flipOutcome: true when this action's parent trigger represents the
   // Enemy side rather than Ally (sides[1] set, sides[0] not) - Victory/Defeat

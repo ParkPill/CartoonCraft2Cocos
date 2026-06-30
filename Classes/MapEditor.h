@@ -6,6 +6,7 @@
 #include "ui/UIScale9Sprite.h"
 #include <vector>
 #include <functional>
+#include <utility>
 
 // Standalone terrain editor. Deliberately has no dependency on Movable /
 // EnemyBase / HelloWorldScene — it only paints terrain and places object
@@ -110,6 +111,12 @@ private:
         // existing action list is already executed in order, so no separate
         // "scenario" container is needed.
         TACT_TALK,
+        // Permanently reveals (or re-hides) a circular fog area centred on the
+        // target position, independent of unit presence. `visionEnabled` = true
+        // enables the revelation; false cancels it. Radius is stored in `count`
+        // (fog tiles, default 5). Position uses targetObjectId / tileX / tileY
+        // identical to CENTER_CAMERA.
+        TACT_REVEAL_FOG,
         TACT_TYPE_COUNT
     };
 
@@ -152,21 +159,23 @@ private:
         TriggerComparison comparison = CMP_AT_LEAST; // UNIT_COUNT, RESOURCE
         int amount = 1;                      // UNIT_COUNT, RESOURCE
         TriggerResourceKind resourceKind = RESOURCE_GOLD; // RESOURCE
+        bool isRepeat = false; // only satisfied on repeated firings (trigger already fired once)
     };
 
     struct TriggerAction {
         TriggerActionType type = TACT_DISPLAY_MESSAGE;
-        std::string message;                 // DISPLAY_MESSAGE
+        std::string message;                 // DISPLAY_MESSAGE, TALK
         int unitSide = SIDE_ALLY;            // CREATE_UNIT, REMOVE_UNIT
         int unitTypeIndex = -1;              // CREATE_UNIT, REMOVE_UNIT; -1 = Any (REMOVE_UNIT only)
-        int tileX = 0;                       // CREATE_UNIT, CENTER_CAMERA; used when targetObjectId < 0
-        int tileY = 0;                       // CREATE_UNIT, CENTER_CAMERA; used when targetObjectId < 0
-        int targetObjectId = -1;             // CREATE_UNIT, CENTER_CAMERA; -1 = use tileX/tileY,
+        int tileX = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; used when targetObjectId < 0
+        int tileY = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; used when targetObjectId < 0
+        int targetObjectId = -1;             // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; -1 = use tileX/tileY,
                                               // else the id of a placed flag/unit whose position to use
-        int count = 1;                       // CREATE_UNIT
+        int count = 1;                       // CREATE_UNIT; REVEAL_FOG: radius in fog tiles (default 5)
         int switchIndex = 0;                 // SET_SWITCH
         TriggerSwitchAction switchAction = SWITCH_ACTION_SET; // SET_SWITCH
         float waitSeconds = 1.0f;            // WAIT
+        bool visionEnabled = true;           // REVEAL_FOG: true = reveal, false = cancel revelation
     };
 
     struct Trigger {
@@ -276,6 +285,7 @@ private:
     cocos2d::ui::TextField* tfTriggerName = nullptr;
     std::vector<cocos2d::ui::Scale9Sprite*> triggerSideButtonBgs;
     cocos2d::ui::Scale9Sprite* triggerPreserveBg = nullptr;
+    cocos2d::ui::Scale9Sprite* condIsRepeatBg = nullptr;
     cocos2d::Node* conditionListContainer = nullptr;
     cocos2d::Node* actionListContainer = nullptr;
 
@@ -340,8 +350,24 @@ private:
     cocos2d::ui::TextField* tfActTalkX = nullptr;
     cocos2d::Node* rowActTalkY = nullptr;
     cocos2d::ui::TextField* tfActTalkY = nullptr;
+    cocos2d::Node* rowActRevealFog = nullptr;
+    cocos2d::Label* lblActRevealFogEnabled = nullptr;
+    cocos2d::Label* lblActRevealFogTarget = nullptr;
+    cocos2d::Node* rowActRevealFogX = nullptr;
+    cocos2d::ui::TextField* tfActRevealFogX = nullptr;
+    cocos2d::Node* rowActRevealFogY = nullptr;
+    cocos2d::ui::TextField* tfActRevealFogY = nullptr;
+    cocos2d::ui::TextField* tfActRevealFogRadius = nullptr;
+
+    cocos2d::Node* targetDropdown = nullptr;
+    bool isTargetDropdownOpen = false;
+    int targetDropdownScroll = 0;
+    std::vector<std::pair<int, std::string>> targetDropdownList;
 
     cocos2d::LayerColor* modalDimmer = nullptr;
+    // Sits at z=22, between triggerPanel (z=20) and conditionEditPanel/actionEditPanel (z=25).
+    // Shown whenever a second-level edit panel is open so triggerPanel buttons are blocked.
+    cocos2d::LayerColor* triggerSubDimmer = nullptr;
 
     cocos2d::Node* newMapPanel = nullptr;
     cocos2d::ui::TextField* tfWidth = nullptr;
@@ -407,6 +433,7 @@ private:
     void highlightGroup(std::vector<cocos2d::ui::Scale9Sprite*>& group, int activeIndex);
     void setupModalDimmer();
     void setModalDimmerVisible(bool visible);
+    void setTriggerSubDimmerVisible(bool visible);
     void setupNewMapPanel();
     void showNewMapPanel();
     void hideNewMapPanel();
@@ -462,6 +489,7 @@ private:
     void cycleConditionSwitchIndex(int dir);
     void cycleConditionSwitchState(int dir);
     void refreshConditionEditPanel();
+    void toggleConditionIsRepeat();
     void onConfirmCondition();
     void deleteConditionAtIndex(int index);
 
@@ -478,11 +506,18 @@ private:
     void cycleActionCreateTarget(int dir);
     void cycleActionCameraTarget(int dir);
     void cycleActionTalkTarget(int dir);
+    void cycleActionRevealFogEnabled(int dir);
+    void cycleActionRevealFogTarget(int dir);
     int cycleTargetObjectId(int currentId, int dir) const;
     std::string describeTargetObject(int id) const;
     void refreshActionEditPanel();
     void onConfirmAction();
     void deleteActionAtIndex(int index);
+    std::vector<std::pair<int, std::string>> buildTargetList() const;
+    void openTargetDropdown();
+    void closeTargetDropdown();
+    void selectTargetObject(int id);
+    void rebuildTargetDropdown();
 
     void setupInput();
     bool isAnyModalOpen() const;

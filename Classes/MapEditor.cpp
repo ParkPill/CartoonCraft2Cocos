@@ -211,7 +211,7 @@ namespace {
     const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource"};
     const char* const kTriggerActionTypeNames[] = {
         "Display Message", "Create Unit", "Remove Unit", "Set Switch",
-        "Victory", "Defeat", "Wait", "Center Camera", "Talk"
+        "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog"
     };
     const char* const kComparisonNames[] = {"At Least", "At Most", "Exactly"};
     const char* const kSwitchStateNames[] = {"Set", "Cleared"};
@@ -1413,11 +1413,42 @@ void MapEditor::setupModalDimmer() {
     modalDimmer = LayerColor::create(Color4B(0, 0, 0, 160));
     modalDimmer->setVisible(false);
     this->addChild(modalDimmer, 15); // above toolbar/grid (z=10), below modal panels (z=20)
+
+    // Block touch/click events from reaching toolbar Menu buttons behind the dimmer.
+    // SceneGraphPriority puts this listener above all z<15 nodes, so it fires first
+    // and swallows the event. Checking isVisible() ensures no swallowing when hidden,
+    // so normal operation is unaffected. Any future popup that calls
+    // setModalDimmerVisible(true) automatically benefits from this blocking.
+    auto* blocker = EventListenerTouchOneByOne::create();
+    blocker->setSwallowTouches(true);
+    blocker->onTouchBegan = [this](Touch*, Event*) -> bool {
+        return modalDimmer->isVisible();
+    };
+    Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(blocker, modalDimmer);
+
+    // Second blocker between triggerPanel (z=20) and its child edit panels (z=25).
+    // Same pattern: swallows touches only when visible.
+    triggerSubDimmer = LayerColor::create(Color4B(0, 0, 0, 120));
+    triggerSubDimmer->setVisible(false);
+    this->addChild(triggerSubDimmer, 22);
+
+    auto* subBlocker = EventListenerTouchOneByOne::create();
+    subBlocker->setSwallowTouches(true);
+    subBlocker->onTouchBegan = [this](Touch*, Event*) -> bool {
+        return triggerSubDimmer->isVisible();
+    };
+    Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(subBlocker, triggerSubDimmer);
 }
 
 void MapEditor::setModalDimmerVisible(bool visible) {
     if (modalDimmer) {
         modalDimmer->setVisible(visible);
+    }
+}
+
+void MapEditor::setTriggerSubDimmerVisible(bool visible) {
+    if (triggerSubDimmer) {
+        triggerSubDimmer->setVisible(visible);
     }
 }
 
@@ -1785,6 +1816,8 @@ std::string MapEditor::serialize() const {
             writer.Int(c.amount);
             writer.Key("resourceKind");
             writer.Int(c.resourceKind);
+            writer.Key("isRepeat");
+            writer.Bool(c.isRepeat);
             writer.EndObject();
         }
         writer.EndArray();
@@ -1814,6 +1847,8 @@ std::string MapEditor::serialize() const {
             writer.Int(a.switchAction);
             writer.Key("waitSeconds");
             writer.Double(a.waitSeconds);
+            writer.Key("visionEnabled");
+            writer.Bool(a.visionEnabled);
             writer.EndObject();
         }
         writer.EndArray();
@@ -1936,6 +1971,9 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     if (citem.HasMember("resourceKind")) {
                         c.resourceKind = static_cast<TriggerResourceKind>(citem["resourceKind"].GetInt());
                     }
+                    if (citem.HasMember("isRepeat")) {
+                        c.isRepeat = citem["isRepeat"].GetBool();
+                    }
                     t.conditions.push_back(c);
                 }
             }
@@ -1974,6 +2012,9 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     }
                     if (aitem.HasMember("waitSeconds")) {
                         a.waitSeconds = static_cast<float>(aitem["waitSeconds"].GetDouble());
+                    }
+                    if (aitem.HasMember("visionEnabled")) {
+                        a.visionEnabled = aitem["visionEnabled"].GetBool();
                     }
                     t.actions.push_back(a);
                 }
@@ -2380,21 +2421,32 @@ void MapEditor::toggleTriggerPreserve() {
 }
 
 std::string MapEditor::describeCondition(const TriggerCondition& c) const {
+    std::string base;
     switch (c.type) {
         case COND_ALWAYS:
-            return "Always";
+            base = "Always";
+            break;
         case COND_ELAPSED_TIME:
-            return StringUtils::format("Elapsed time >= %d sec", c.elapsedSeconds);
+            base = StringUtils::format("Elapsed time >= %d sec", c.elapsedSeconds);
+            break;
         case COND_SWITCH:
-            return StringUtils::format("Switch %d is %s", c.switchIndex + 1, kSwitchStateNames[c.switchState]);
+            base = StringUtils::format("Switch %d is %s", c.switchIndex + 1, kSwitchStateNames[c.switchState]);
+            break;
         case COND_UNIT_COUNT:
-            return StringUtils::format("%s unit count for %s is %s %d", unitTypeCycleName(c.unitTypeIndex).c_str(),
+            base = StringUtils::format("%s unit count for %s is %s %d", unitTypeCycleName(c.unitTypeIndex).c_str(),
                                         kSideNames[c.unitSide], kComparisonNames[c.comparison], c.amount);
+            break;
         case COND_RESOURCE:
-            return StringUtils::format("%s is %s %d", kResourceKindNames[c.resourceKind], kComparisonNames[c.comparison], c.amount);
+            base = StringUtils::format("%s is %s %d", kResourceKindNames[c.resourceKind], kComparisonNames[c.comparison], c.amount);
+            break;
         default:
-            return "Unknown condition";
+            base = "Unknown condition";
+            break;
     }
+    if (c.isRepeat) {
+        base += " [Repeat]";
+    }
+    return base;
 }
 
 std::string MapEditor::describeAction(const TriggerAction& a) const {
@@ -2422,6 +2474,10 @@ std::string MapEditor::describeAction(const TriggerAction& a) const {
         case TACT_TALK: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
             return StringUtils::format("Talk at %s: \"%s\"", at.c_str(), a.message.c_str());
+        }
+        case TACT_REVEAL_FOG: {
+            std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
+            return StringUtils::format("Reveal fog %s at %s r=%d", a.visionEnabled ? "ON" : "OFF", at.c_str(), a.count);
         }
         default:
             return "Unknown action";
@@ -2516,6 +2572,143 @@ void MapEditor::deleteActionAtIndex(int index) {
     refreshTriggerDetail();
 }
 
+std::vector<std::pair<int, std::string>> MapEditor::buildTargetList() const {
+    std::vector<std::pair<int, std::string>> list;
+    list.push_back({-1, "Manual (Tile X/Y)"});
+    for (const PlacedObject& obj : placedObjects) {
+        if (strcmp(kObjectTypes[obj.typeIndex].name, "Tree") == 0) continue;
+        list.push_back({obj.id, StringUtils::format("%s #%d", kObjectTypes[obj.typeIndex].name, obj.id)});
+    }
+    return list;
+}
+
+void MapEditor::openTargetDropdown() {
+    if (isTargetDropdownOpen) {
+        closeTargetDropdown();
+        return;
+    }
+    targetDropdownList = buildTargetList();
+    targetDropdownScroll = 0;
+    for (int i = 0; i < (int)targetDropdownList.size(); i++) {
+        if (targetDropdownList[i].first == actionDraft.targetObjectId) {
+            targetDropdownScroll = std::max(0, i - 4);
+            break;
+        }
+    }
+    isTargetDropdownOpen = true;
+    rebuildTargetDropdown();
+}
+
+void MapEditor::closeTargetDropdown() {
+    if (targetDropdown) {
+        targetDropdown->removeFromParent();
+        targetDropdown = nullptr;
+    }
+    isTargetDropdownOpen = false;
+}
+
+void MapEditor::selectTargetObject(int id) {
+    actionDraft.targetObjectId = id;
+    refreshActionEditPanel();
+    closeTargetDropdown();
+}
+
+void MapEditor::rebuildTargetDropdown() {
+    if (targetDropdown) {
+        targetDropdown->removeFromParent();
+        targetDropdown = nullptr;
+    }
+    if (!isTargetDropdownOpen || !actionEditPanel || !actionEditPanel->isVisible()) return;
+
+    const int kMaxVis = 8;
+    const float itemH = 36.0f;
+    const float dropW = 400.0f;
+    const float padV = 6.0f;
+    const float scrollBtnH = 30.0f;
+    int total = (int)targetDropdownList.size();
+    bool needScroll = total > kMaxVis;
+    int visCount = std::min(total - targetDropdownScroll, kMaxVis);
+    float dropH = padV * 2 + visCount * itemH + (needScroll ? scrollBtnH * 2.0f : 0.0f);
+
+    // Determine panel-relative y of the active "At:" row center
+    // actionEditPanel height=560, groupY=400 (panelH-160)
+    const float panelH = 560.0f;
+    const float groupY = panelH - 160.0f;
+    float atRowPanelY = (actionDraft.type == TACT_CREATE_UNIT) ? (groupY - 100.0f) : groupY;
+
+    // Try below the "At:" row; if it clips the panel bottom, show above instead
+    float dropBottom = atRowPanelY - 22.0f - dropH;
+    if (dropBottom < 5.0f) {
+        dropBottom = atRowPanelY + 22.0f;
+        if (dropBottom + dropH > panelH - 5.0f) dropBottom = panelH - 5.0f - dropH;
+    }
+    if (dropBottom < 5.0f) dropBottom = 5.0f;
+
+    targetDropdown = Node::create();
+    targetDropdown->setPosition(Vec2(180.0f, dropBottom));
+    actionEditPanel->addChild(targetDropdown, 10);
+
+    DrawNode* bg = DrawNode::create();
+    bg->drawSolidRect(Vec2::ZERO, Vec2(dropW, dropH), Color4F(0.07f, 0.07f, 0.13f, 0.97f));
+    bg->drawRect(Vec2::ZERO, Vec2(dropW, dropH), Color4F(0.45f, 0.45f, 0.65f, 1.0f));
+    targetDropdown->addChild(bg);
+
+    Vector<MenuItem*> items;
+
+    if (needScroll) {
+        bool canUp = targetDropdownScroll > 0;
+        Color4B col = canUp ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
+        MenuItemLabel* upBtn = MenuItemLabel::create(
+            LM->getLocalizedLabel("^ Up", col, 18),
+            [this](Ref*) {
+                if (targetDropdownScroll > 0) --targetDropdownScroll;
+                this->scheduleOnce([this](float){ rebuildTargetDropdown(); }, 0.0f, "dd_scroll");
+            }
+        );
+        upBtn->setEnabled(canUp);
+        upBtn->setPosition(Vec2(dropW / 2, dropH - padV - scrollBtnH / 2));
+        items.pushBack(upBtn);
+    }
+
+    float curY = dropH - padV - (needScroll ? scrollBtnH : 0.0f) - itemH / 2;
+    for (int i = 0; i < visCount; i++) {
+        int idx = targetDropdownScroll + i;
+        int capturedId = targetDropdownList[idx].first;
+        std::string text = targetDropdownList[idx].second;
+        bool isCurrent = (capturedId == actionDraft.targetObjectId);
+        Color4B col = isCurrent ? Color4B(100, 230, 100, 255) : Color4B::WHITE;
+        Label* lbl = LM->getLocalizedLabel(text.c_str(), col, 20);
+        MenuItemLabel* item = MenuItemLabel::create(lbl, [this, capturedId](Ref*) {
+            int id = capturedId;
+            this->scheduleOnce([this, id](float){ selectTargetObject(id); }, 0.0f, "dd_sel");
+        });
+        item->setPosition(Vec2(dropW / 2, curY));
+        items.pushBack(item);
+        curY -= itemH;
+    }
+
+    if (needScroll) {
+        bool canDown = targetDropdownScroll + kMaxVis < total;
+        Color4B col = canDown ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
+        MenuItemLabel* downBtn = MenuItemLabel::create(
+            LM->getLocalizedLabel("v Down", col, 18),
+            [this, total](Ref*) {
+                if (targetDropdownScroll + 8 < total) ++targetDropdownScroll;
+                this->scheduleOnce([this](float){ rebuildTargetDropdown(); }, 0.0f, "dd_scroll");
+            }
+        );
+        downBtn->setEnabled(canDown);
+        downBtn->setPosition(Vec2(dropW / 2, padV + scrollBtnH / 2));
+        items.pushBack(downBtn);
+    }
+
+    if (!items.empty()) {
+        Menu* dropMenu = Menu::createWithArray(items);
+        dropMenu->setPosition(Vec2::ZERO);
+        targetDropdown->addChild(dropMenu);
+    }
+}
+
 void MapEditor::setupConditionEditPanel() {
     Size visibleSize = Director::getInstance()->getVisibleSize();
 
@@ -2565,6 +2758,15 @@ void MapEditor::setupConditionEditPanel() {
     addCycleRow(rowCondResource, "Comparison:", 30, -50, &lblCondResourceComparison, [this](int dir) { cycleConditionResourceComparison(dir); });
     addTextFieldRow(rowCondResource, "Amount:", 30, -100, 150, "0", &tfCondResourceAmount);
 
+    Scale9Sprite* isRepeatBg = nullptr;
+    MenuItemSprite* itemIsRepeat = createTextButton("Is Repeat", 160, 50,
+                                                    [this](Ref*) { toggleConditionIsRepeat(); }, &isRepeatBg);
+    itemIsRepeat->setPosition(Vec2(panelWidth / 2, 110));
+    Menu* isRepeatMenu = Menu::create(itemIsRepeat, nullptr);
+    isRepeatMenu->setPosition(Vec2::ZERO);
+    conditionEditPanel->addChild(isRepeatMenu);
+    condIsRepeatBg = isRepeatBg;
+
     MenuItemSprite* itemConfirm = createTextButton("OK", 140, 56, [this](Ref*) { onConfirmCondition(); });
     MenuItemSprite* itemCancel = createTextButton("Cancel", 140, 56, [this](Ref*) { closeConditionEditPanel(); });
     itemConfirm->setPosition(Vec2(panelWidth / 2 - 90, 40));
@@ -2594,12 +2796,14 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     conditionEditPanel->setVisible(true);
     isConditionEditPanelOpen = true;
     setModalDimmerVisible(true);
+    setTriggerSubDimmerVisible(true);
 }
 
 void MapEditor::closeConditionEditPanel() {
     conditionEditPanel->setVisible(false);
     isConditionEditPanelOpen = false;
     setModalDimmerVisible(isTriggerPanelOpen);
+    setTriggerSubDimmerVisible(isActionEditPanelOpen);
 }
 
 void MapEditor::cycleConditionType(int dir) {
@@ -2642,6 +2846,13 @@ void MapEditor::cycleConditionSwitchState(int dir) {
     refreshConditionEditPanel();
 }
 
+void MapEditor::toggleConditionIsRepeat() {
+    conditionDraft.isRepeat = !conditionDraft.isRepeat;
+    if (condIsRepeatBg) {
+        condIsRepeatBg->setColor(conditionDraft.isRepeat ? Color3B(255, 221, 120) : Color3B::WHITE);
+    }
+}
+
 void MapEditor::refreshConditionEditPanel() {
     lblCondType->setString(kConditionTypeNames[conditionDraft.type]);
 
@@ -2657,6 +2868,9 @@ void MapEditor::refreshConditionEditPanel() {
     lblCondComparison->setString(kComparisonNames[conditionDraft.comparison]);
     lblCondResource->setString(kResourceKindNames[conditionDraft.resourceKind]);
     lblCondResourceComparison->setString(kComparisonNames[conditionDraft.comparison]);
+    if (condIsRepeatBg) {
+        condIsRepeatBg->setColor(conditionDraft.isRepeat ? Color3B(255, 221, 120) : Color3B::WHITE);
+    }
 }
 
 void MapEditor::onConfirmCondition() {
@@ -2717,7 +2931,25 @@ void MapEditor::setupActionEditPanel() {
     actionEditPanel->addChild(rowActCreateUnit);
     addCycleRow(rowActCreateUnit, "Side:", 30, 0, &lblActCreateSide, [this](int dir) { cycleActionCreateSide(dir); });
     addCycleRow(rowActCreateUnit, "Unit Type:", 30, -50, &lblActCreateUnitType, [this](int dir) { cycleActionCreateUnitType(dir); });
-    addCycleRow(rowActCreateUnit, "At:", 30, -100, &lblActCreateTarget, [this](int dir) { cycleActionCreateTarget(dir); });
+    // addTargetOverlay: attaches a transparent-but-clickable MenuItemSprite over the
+    // cycle-row value label so that clicking the text opens the target dropdown.
+    // The normal skin is opacity-0 (invisible, showing the label beneath), the
+    // selected skin flashes green as press feedback.
+    auto addTargetOverlay = [&](Node* row) {
+        const float arrowSz = 34.0f, valW = 260.0f, leftX = 180.0f;
+        const float valX = leftX + arrowSz / 2 + 10 + valW / 2;
+        Scale9Sprite* n = makeButtonSkin(BTN_SKIN_NORMAL, Size(valW, arrowSz + 4));
+        n->setOpacity(0);
+        Scale9Sprite* s = makeButtonSkin(BTN_SKIN_SELECTED, Size(valW, arrowSz + 4));
+        MenuItemSprite* btn = MenuItemSprite::create(n, s, [this](Ref*) {
+            this->scheduleOnce([this](float){ openTargetDropdown(); }, 0.0f, "dd_open");
+        });
+        btn->setPosition(Vec2(valX, 0));
+        Menu* m = Menu::create(btn, nullptr);
+        m->setPosition(Vec2::ZERO);
+        row->addChild(m);
+    };
+    addTargetOverlay(addCycleRow(rowActCreateUnit, "At:", 30, -100, &lblActCreateTarget, [this](int dir) { cycleActionCreateTarget(dir); }));
     rowActCreateX = addTextFieldRow(rowActCreateUnit, "Tile X:", 30, -150, 150, "0", &tfActCreateX);
     rowActCreateY = addTextFieldRow(rowActCreateUnit, "Tile Y:", 30, -200, 150, "0", &tfActCreateY);
     addTextFieldRow(rowActCreateUnit, "Count:", 30, -250, 150, "1", &tfActCreateCount);
@@ -2742,17 +2974,26 @@ void MapEditor::setupActionEditPanel() {
     rowActCamera = Node::create();
     rowActCamera->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActCamera);
-    addCycleRow(rowActCamera, "At:", 30, 0, &lblActCameraTarget, [this](int dir) { cycleActionCameraTarget(dir); });
+    addTargetOverlay(addCycleRow(rowActCamera, "At:", 30, 0, &lblActCameraTarget, [this](int dir) { cycleActionCameraTarget(dir); }));
     rowActCameraX = addTextFieldRow(rowActCamera, "Tile X:", 30, -50, 150, "0", &tfActCameraX);
     rowActCameraY = addTextFieldRow(rowActCamera, "Tile Y:", 30, -100, 150, "0", &tfActCameraY);
 
     rowActTalk = Node::create();
     rowActTalk->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActTalk);
-    addCycleRow(rowActTalk, "At:", 30, 0, &lblActTalkTarget, [this](int dir) { cycleActionTalkTarget(dir); });
+    addTargetOverlay(addCycleRow(rowActTalk, "At:", 30, 0, &lblActTalkTarget, [this](int dir) { cycleActionTalkTarget(dir); }));
     rowActTalkX = addTextFieldRow(rowActTalk, "Tile X:", 30, -50, 150, "0", &tfActTalkX);
     rowActTalkY = addTextFieldRow(rowActTalk, "Tile Y:", 30, -100, 150, "0", &tfActTalkY);
     addTextFieldRow(rowActTalk, "Message:", 30, -150, 300, "", &tfActTalkMessage);
+
+    rowActRevealFog = Node::create();
+    rowActRevealFog->setPosition(Vec2(0, groupY));
+    actionEditPanel->addChild(rowActRevealFog);
+    addCycleRow(rowActRevealFog, "Vision:", 30, 0, &lblActRevealFogEnabled, [this](int dir) { cycleActionRevealFogEnabled(dir); });
+    addTargetOverlay(addCycleRow(rowActRevealFog, "At:", 30, -50, &lblActRevealFogTarget, [this](int dir) { cycleActionRevealFogTarget(dir); }));
+    rowActRevealFogX = addTextFieldRow(rowActRevealFog, "Tile X:", 30, -100, 150, "0", &tfActRevealFogX);
+    rowActRevealFogY = addTextFieldRow(rowActRevealFog, "Tile Y:", 30, -150, 150, "0", &tfActRevealFogY);
+    addTextFieldRow(rowActRevealFog, "Radius (fog):", 30, -200, 150, "5", &tfActRevealFogRadius);
 
     MenuItemSprite* itemConfirm = createTextButton("OK", 140, 56, [this](Ref*) { onConfirmAction(); });
     MenuItemSprite* itemCancel = createTextButton("Cancel", 140, 56, [this](Ref*) { closeActionEditPanel(); });
@@ -2785,20 +3026,28 @@ void MapEditor::openActionEditPanel(int actionIndex) {
     tfActTalkX->setString(StringUtils::format("%d", actionDraft.tileX));
     tfActTalkY->setString(StringUtils::format("%d", actionDraft.tileY));
     tfActTalkMessage->setString(actionDraft.message);
+    int revealRadius = (actionDraft.type == TACT_REVEAL_FOG) ? std::max(1, actionDraft.count) : 5;
+    tfActRevealFogX->setString(StringUtils::format("%d", actionDraft.tileX));
+    tfActRevealFogY->setString(StringUtils::format("%d", actionDraft.tileY));
+    tfActRevealFogRadius->setString(StringUtils::format("%d", revealRadius));
     refreshActionEditPanel();
 
     actionEditPanel->setVisible(true);
     isActionEditPanelOpen = true;
     setModalDimmerVisible(true);
+    setTriggerSubDimmerVisible(true);
 }
 
 void MapEditor::closeActionEditPanel() {
+    closeTargetDropdown();
     actionEditPanel->setVisible(false);
     isActionEditPanelOpen = false;
     setModalDimmerVisible(isTriggerPanelOpen);
+    setTriggerSubDimmerVisible(isConditionEditPanelOpen);
 }
 
 void MapEditor::cycleActionType(int dir) {
+    closeTargetDropdown();
     actionDraft.type = static_cast<TriggerActionType>(cyclicAdd(actionDraft.type, dir, 0, TACT_TYPE_COUNT - 1));
     refreshActionEditPanel();
 }
@@ -2840,6 +3089,7 @@ int MapEditor::cycleTargetObjectId(int currentId, int dir) const {
     std::vector<int> ids;
     ids.push_back(-1);
     for (const PlacedObject& obj : placedObjects) {
+        if (strcmp(kObjectTypes[obj.typeIndex].name, "Tree") == 0) continue;
         ids.push_back(obj.id);
     }
     int idx = 0;
@@ -2879,6 +3129,16 @@ void MapEditor::cycleActionTalkTarget(int dir) {
     refreshActionEditPanel();
 }
 
+void MapEditor::cycleActionRevealFogEnabled(int dir) {
+    actionDraft.visionEnabled = !actionDraft.visionEnabled;
+    refreshActionEditPanel();
+}
+
+void MapEditor::cycleActionRevealFogTarget(int dir) {
+    actionDraft.targetObjectId = cycleTargetObjectId(actionDraft.targetObjectId, dir);
+    refreshActionEditPanel();
+}
+
 void MapEditor::refreshActionEditPanel() {
     lblActType->setString(kTriggerActionTypeNames[actionDraft.type]);
 
@@ -2889,6 +3149,7 @@ void MapEditor::refreshActionEditPanel() {
     rowActWait->setVisible(actionDraft.type == TACT_WAIT);
     rowActCamera->setVisible(actionDraft.type == TACT_CENTER_CAMERA);
     rowActTalk->setVisible(actionDraft.type == TACT_TALK);
+    rowActRevealFog->setVisible(actionDraft.type == TACT_REVEAL_FOG);
 
     bool createUsesManual = actionDraft.targetObjectId < 0;
     rowActCreateX->setVisible(createUsesManual);
@@ -2899,6 +3160,9 @@ void MapEditor::refreshActionEditPanel() {
     bool talkUsesManual = actionDraft.targetObjectId < 0;
     rowActTalkX->setVisible(talkUsesManual);
     rowActTalkY->setVisible(talkUsesManual);
+    bool revealUsesManual = actionDraft.targetObjectId < 0;
+    rowActRevealFogX->setVisible(revealUsesManual);
+    rowActRevealFogY->setVisible(revealUsesManual);
 
     lblActCreateSide->setString(kSideNames[actionDraft.unitSide]);
     int createUnitType = actionDraft.unitTypeIndex < 0 ? 0 : actionDraft.unitTypeIndex;
@@ -2910,6 +3174,8 @@ void MapEditor::refreshActionEditPanel() {
     lblActSwitchAction->setString(kSwitchActionNames[actionDraft.switchAction]);
     lblActCameraTarget->setString(describeTargetObject(actionDraft.targetObjectId));
     lblActTalkTarget->setString(describeTargetObject(actionDraft.targetObjectId));
+    lblActRevealFogEnabled->setString(actionDraft.visionEnabled ? "Enabled" : "Disabled");
+    lblActRevealFogTarget->setString(describeTargetObject(actionDraft.targetObjectId));
 }
 
 void MapEditor::onConfirmAction() {
@@ -2940,6 +3206,12 @@ void MapEditor::onConfirmAction() {
             a.tileY = atoi(tfActTalkY->getString().c_str());
         }
         a.message = tfActTalkMessage->getString();
+    } else if (a.type == TACT_REVEAL_FOG) {
+        if (a.targetObjectId < 0) {
+            a.tileX = atoi(tfActRevealFogX->getString().c_str());
+            a.tileY = atoi(tfActRevealFogY->getString().c_str());
+        }
+        a.count = std::max(1, atoi(tfActRevealFogRadius->getString().c_str()));
     }
 
     Trigger& t = triggers[selectedTriggerIndex];

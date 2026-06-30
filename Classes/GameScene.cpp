@@ -3379,6 +3379,7 @@ void GameScene::loadTriggersFromEditorJsonFile(const std::string &path) {
         if (citem.HasMember("comparison")) c.comparison = citem["comparison"].GetInt();
         if (citem.HasMember("amount")) c.amount = citem["amount"].GetInt();
         if (citem.HasMember("resourceKind")) c.resourceKind = citem["resourceKind"].GetInt();
+        if (citem.HasMember("isRepeat")) c.isRepeat = citem["isRepeat"].GetBool();
         t.conditions.push_back(c);
       }
     }
@@ -3396,6 +3397,7 @@ void GameScene::loadTriggersFromEditorJsonFile(const std::string &path) {
         if (aitem.HasMember("switchIndex")) a.switchIndex = aitem["switchIndex"].GetInt();
         if (aitem.HasMember("switchAction")) a.switchAction = aitem["switchAction"].GetInt();
         if (aitem.HasMember("waitSeconds")) a.waitSeconds = static_cast<float>(aitem["waitSeconds"].GetDouble());
+        if (aitem.HasMember("visionEnabled")) a.visionEnabled = aitem["visionEnabled"].GetBool();
         t.actions.push_back(a);
       }
     }
@@ -3451,7 +3453,10 @@ void GameScene::showTriggerTalkBubble(const std::string &message, const cocos2d:
   activeTalkBubble = bubble;
 }
 
-bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c) {
+bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c, bool triggerHasFired) {
+  if (c.isRepeat && !triggerHasFired) {
+    return false;
+  }
   switch (c.type) {
     case 0: // Always
       return true;
@@ -3598,6 +3603,31 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       showTriggerTalkBubble(a.message, targetPos);
       break;
     }
+    case 9: { // RevealFog
+      Vec2 centerPos = resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY);
+      int radius = std::max(1, a.count);
+      if (a.visionEnabled) {
+        // Add a new permanently-revealed region (allow duplicates so two
+        // separate ON triggers for the same area each have their own entry
+        // to be removed by a matching OFF trigger).
+        TriggerRevealedFogRegion region;
+        region.centerWorldPos = centerPos;
+        region.radius = radius;
+        triggerRevealedFogRegions.push_back(region);
+      } else {
+        // Remove the first region whose centre matches within one fog tile so
+        // each OFF trigger cancels exactly one prior ON trigger.
+        float threshold = FOG_SIZE * 1.0f;
+        auto it = std::find_if(triggerRevealedFogRegions.begin(), triggerRevealedFogRegions.end(),
+          [&](const TriggerRevealedFogRegion& r) {
+            return r.centerWorldPos.distance(centerPos) < threshold;
+          });
+        if (it != triggerRevealedFogRegions.end()) {
+          triggerRevealedFogRegions.erase(it);
+        }
+      }
+      break;
+    }
     default:
       break;
   }
@@ -3641,7 +3671,7 @@ void GameScene::updateTriggers() {
     // trigger fires, for resolving Victory/Defeat - see runTriggerActions.
     bool allTrue = true;
     for (const RuntimeTriggerCondition &c : t.conditions) {
-      if (!evaluateTriggerCondition(c)) {
+      if (!evaluateTriggerCondition(c, t.hasFired)) {
         allTrue = false;
         break;
       }
@@ -8310,6 +8340,25 @@ void GameScene::updateFog() {
     for (auto fog : fogArray) {
       fog->newState = FOG_SEEN_NOW;
       //            fog->appliedState = FOG_SEEN_NOW;
+    }
+  }
+
+  // Apply trigger-revealed fog regions: permanently clear regardless of units.
+  for (const auto& region : triggerRevealedFogRegions) {
+    int cx = static_cast<int>(region.centerWorldPos.x / FOG_SIZE);
+    int cy = static_cast<int>(region.centerWorldPos.y / FOG_SIZE);
+    int r = region.radius;
+    for (int dy = -r; dy <= r; dy++) {
+      for (int dx = -r; dx <= r; dx++) {
+        int fx = cx + dx;
+        int fy = cy + dy;
+        if (fx < 0 || fy < 0 || fx >= static_cast<int>(fogMapSize.width) || fy >= static_cast<int>(fogMapSize.height))
+          continue;
+        int idx = fx + fy * static_cast<int>(fogMapSize.width);
+        if (idx < 0 || idx >= static_cast<int>(fogArray.size()))
+          continue;
+        fogArray.at(idx)->newState = FOG_SEEN_NOW;
+      }
     }
   }
 
