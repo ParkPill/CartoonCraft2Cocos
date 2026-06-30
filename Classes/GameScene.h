@@ -780,8 +780,8 @@ public:
   void cancelWin32AttackMoveMode();
   void handleWin32RightClick(cocos2d::Vec2 screenPos);
   void handleWin32AttackMoveClick(cocos2d::Vec2 screenPos);
-  static bool usesPcRtsControls();
 #endif
+  static bool usesPcRtsControls();
   static bool isShiftHeldForSelection();
   static bool isCtrlHeldForSelection();
   int selectedCommand = -1;

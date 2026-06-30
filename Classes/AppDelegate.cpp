@@ -1,4 +1,4 @@
-﻿#include "AppDelegate.h"
+#include "AppDelegate.h"
 #include "GameScene.h"
 #include "HeroPage.h"
 #include "MultiplayManager.h"
@@ -102,26 +102,31 @@ bool AppDelegate::applicationDidFinishLaunching() {
       (int)director->getWinSize().height);
   auto glview = director->getOpenGLView();
   if (!glview) {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) ||                               \
-    (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) ||                                 \
-    (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-    //        glview = GLViewImpl::createWithRect("Cartoon Craft",
-    //        cocos2d::Rect(0, 0, 1334, 750));
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    glview = GLViewImpl::createWithFullScreen("Cartoon Craft");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) ||                             \
+      (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
     float rate = 3.8f;
-    //        glview = GLViewImpl::createWithRect("Cartoon Craft",
-    //        cocos2d::Rect(0, 0, 1500*rate, 750*rate));
     glview = GLViewImpl::createWithRect(
         "Cartoon Craft", cocos2d::Rect(0, 0, 1024 * rate, 768 * rate));
-//        glview = GLViewImpl::createWithRect("Cartoon Craft", cocos2d::Rect(0,
-//        0, 1500*rate, 750*rate)); glview = GLViewImpl::createWithRect("Cartoon
-//        Craft", cocos2d::Rect(0, 0, 1024, 768)); glview =
-//        GLViewImpl::createWithFullScreen("Cartoon Craft"); glview =
-//        GLViewImpl::create("Cartoon Craft");
 #else
     glview = GLViewImpl::create("Cartoon Craft");
 #endif
     director->setOpenGLView(glview);
   }
+  else{
+      
+      
+      
+  }
+    
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    float retinaScale = 2.0f;
+//      CCLog("retina!!");
+    auto originSize = glview->getFrameSize();
+    glview->setFrameSize(originSize.width*retinaScale, originSize.height*retinaScale);
+    glview->setDesignResolutionSize(1920, 1080, ResolutionPolicy::SHOW_ALL);
+#endif
 
   //    for (int i = 0; i < 6; i++) {
   //        cache->addSpriteFrame(Sprite::create(__String::createWithFormat("laserThinBlueHit%d.png",

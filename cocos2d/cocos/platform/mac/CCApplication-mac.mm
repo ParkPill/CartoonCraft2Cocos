@@ -36,6 +36,14 @@ THE SOFTWARE.
 #include "base/CCDirector.h"
 #include "base/ccUtils.h"
 
+// Helper for CCGLViewImpl-desktop.cpp: GLFW 3.2.x on modern macOS may report
+// glfwGetFramebufferSize == glfwGetWindowSize even on Retina displays. This
+// function returns the actual backing scale factor from NSScreen so the Retina
+// detection fallback in updateFrameSize() can compute the correct viewport.
+extern "C" float cocos2d_getScreenBackingScaleFactor() {
+    return (float)[[NSScreen mainScreen] backingScaleFactor];
+}
+
 NS_CC_BEGIN
 
 static long getCurrentMillSecond()

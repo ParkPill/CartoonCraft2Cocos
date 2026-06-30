@@ -9088,6 +9088,7 @@ void GameScene::handleWin32AttackMoveClick(Vec2 screenPos) {
   cancelWin32AttackMoveMode();
 }
 #else
+bool GameScene::usesPcRtsControls() { return false; }
 bool GameScene::isShiftHeldForSelection() { return false; }
 bool GameScene::isCtrlHeldForSelection() { return false; }
 #endif
@@ -10552,9 +10553,11 @@ bool GameScene::tryClickBuildProgressIcon(const Vec2 &glPos) {
   if (GM->currentStageIndex == STAGE_LOBBY) {
     return false;
   }
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
   if (getWorkerMenuButtonAtGlPos(glPos) != nullptr) {
     return false;
   }
+#endif
 
   ui::Button *hitBtn = nullptr;
   int hitZOrder = -9999999;

@@ -1,5 +1,6 @@
 #include "MapEditor.h"
 #include "GameManager.h"
+#include "LanguageManager.h"
 #include "ui/UIScale9Sprite.h"
 #include "json/document.h"
 #include "json/writer.h"
@@ -274,11 +275,11 @@ namespace {
         Scale9Sprite* normal = makeButtonSkin(BTN_SKIN_NORMAL, Size(width, height));
         Scale9Sprite* selected = makeButtonSkin(BTN_SKIN_SELECTED, Size(width, height));
 
-        Label* lblNormal = Label::createWithSystemFont(text, "Arial", 24);
+        Label* lblNormal = LM->getLocalizedLabel(text.c_str(), Color4B::WHITE, 24);
         lblNormal->setPosition(Vec2(width / 2, height / 2));
         normal->addChild(lblNormal);
 
-        Label* lblSelected = Label::createWithSystemFont(text, "Arial", 24);
+        Label* lblSelected = LM->getLocalizedLabel(text.c_str(), Color4B::WHITE, 24);
         lblSelected->setPosition(Vec2(width / 2, height / 2));
         selected->addChild(lblSelected);
 
@@ -985,7 +986,7 @@ void MapEditor::setupUI() {
     terrainMenu->setPosition(Vec2(150, visibleSize.height - 105));
     terrainToolsRow->addChild(terrainMenu);
 
-    toolLabel = Label::createWithSystemFont("", "Arial", 24);
+    toolLabel = LM->getLocalizedLabel("", Color4B::WHITE, 24);
     toolLabel->setAnchorPoint(Vec2(0, 1));
     toolLabel->setPosition(Vec2(20, visibleSize.height - 165));
     terrainToolsRow->addChild(toolLabel);
@@ -1012,7 +1013,7 @@ void MapEditor::setupUI() {
     fileMenu->setPosition(Vec2(120, visibleSize.height - 285));
     this->addChild(fileMenu, 10);
 
-    statusLabel = Label::createWithSystemFont("", "Arial", 22);
+    statusLabel = LM->getLocalizedLabel("", Color4B::WHITE, 22);
     statusLabel->setAnchorPoint(Vec2(0, 1));
     statusLabel->setPosition(Vec2(20, visibleSize.height - 325));
     this->addChild(statusLabel, 10);
@@ -1045,7 +1046,7 @@ void MapEditor::setupObjectPalette() {
     objectPaletteRow->setPosition(Vec2(80, visibleSize.height - 165));
     unitToolsRow->addChild(objectPaletteRow);
 
-    Label* paletteLabel = Label::createWithSystemFont("Objects:", "Arial", 22);
+    Label* paletteLabel = LM->getLocalizedLabel("Objects:", Color4B::WHITE, 22);
     paletteLabel->setAnchorPoint(Vec2(0, 0.5f));
     paletteLabel->setPosition(Vec2(20, visibleSize.height - 165));
     unitToolsRow->addChild(paletteLabel);
@@ -1178,7 +1179,7 @@ void MapEditor::setupUnitPropertiesBar() {
     Size visibleSize = Director::getInstance()->getVisibleSize();
     const float rowY = visibleSize.height - 225;
 
-    Label* sideLabel = Label::createWithSystemFont("Side:", "Arial", 22);
+    Label* sideLabel = LM->getLocalizedLabel("Side:", Color4B::WHITE, 22);
     sideLabel->setAnchorPoint(Vec2(0, 0.5f));
     sideLabel->setPosition(Vec2(20, rowY));
     unitToolsRow->addChild(sideLabel);
@@ -1199,7 +1200,7 @@ void MapEditor::setupUnitPropertiesBar() {
     unitToolsRow->addChild(sideMenu);
     highlightGroup(sideButtonBgs, currentSide);
 
-    Label* hpLabel = Label::createWithSystemFont("HP:", "Arial", 22);
+    Label* hpLabel = LM->getLocalizedLabel("HP:", Color4B::WHITE, 22);
     hpLabel->setAnchorPoint(Vec2(0, 0.5f));
     hpLabel->setPosition(Vec2(650, rowY));
     unitToolsRow->addChild(hpLabel);
@@ -1234,7 +1235,7 @@ void MapEditor::setupUnitPropertiesBar() {
     rowLevel = Node::create();
     unitToolsRow->addChild(rowLevel);
 
-    Label* levelLabel = Label::createWithSystemFont("Level:", "Arial", 22);
+    Label* levelLabel = LM->getLocalizedLabel("Level:", Color4B::WHITE, 22);
     levelLabel->setAnchorPoint(Vec2(0, 0.5f));
     levelLabel->setPosition(Vec2(1060, rowY));
     rowLevel->addChild(levelLabel);
@@ -1264,7 +1265,7 @@ void MapEditor::setupPaletteTooltip() {
     paletteTooltipBg = DrawNode::create();
     paletteTooltip->addChild(paletteTooltipBg);
 
-    paletteTooltipLabel = Label::createWithSystemFont("", "Arial", 20);
+    paletteTooltipLabel = LM->getLocalizedLabel("", Color4B::WHITE, 20);
     paletteTooltipLabel->setAnchorPoint(Vec2(0, 1));
     paletteTooltip->addChild(paletteTooltipLabel);
 }
@@ -1352,9 +1353,9 @@ void MapEditor::setupTriggerToolsRow() {
     openMenu->setPosition(Vec2::ZERO);
     triggerToolsRow->addChild(openMenu);
 
-    Label* hintLabel = Label::createWithSystemFont(
+    Label* hintLabel = LM->getLocalizedLabel(
         "Click a unit or flag on the map to inspect/edit it (id, side, HP). This tab does not paint or place.",
-        "Arial", 20);
+        Color4B::WHITE, 20);
     hintLabel->setAnchorPoint(Vec2(0, 0.5f));
     hintLabel->setPosition(Vec2(20, visibleSize.height - 165));
     triggerToolsRow->addChild(hintLabel);
@@ -1435,7 +1436,7 @@ void MapEditor::setupNewMapPanel() {
     panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.08f, 0.08f, 0.08f, 0.9f));
     newMapPanel->addChild(panelBg);
 
-    Label* title = Label::createWithSystemFont("New Map", "Arial", 28);
+    Label* title = LM->getLocalizedLabel("New Map", Color4B::WHITE, 28);
     title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
     newMapPanel->addChild(title);
 
@@ -1443,7 +1444,7 @@ void MapEditor::setupNewMapPanel() {
     const float fieldBoxHeight = 44;
     const float fieldBoxX = 140;
 
-    Label* lblWidth = Label::createWithSystemFont("Width:", "Arial", 24);
+    Label* lblWidth = LM->getLocalizedLabel("Width:", Color4B::WHITE, 24);
     lblWidth->setAnchorPoint(Vec2(0, 0.5f));
     lblWidth->setPosition(Vec2(40, panelHeight - 90));
     newMapPanel->addChild(lblWidth);
@@ -1464,7 +1465,7 @@ void MapEditor::setupNewMapPanel() {
     newMapPanel->addChild(tfWidth);
     watchTextFieldFocus(tfWidth);
 
-    Label* lblHeight = Label::createWithSystemFont("Height:", "Arial", 24);
+    Label* lblHeight = LM->getLocalizedLabel("Height:", Color4B::WHITE, 24);
     lblHeight->setAnchorPoint(Vec2(0, 0.5f));
     lblHeight->setPosition(Vec2(40, panelHeight - 140));
     newMapPanel->addChild(lblHeight);
@@ -1551,15 +1552,13 @@ void MapEditor::setupEditUnitPanel() {
 
     const Color3B panelTextColor(60, 40, 25); // dark brown, readable on the parchment
 
-    editUnitTitle = Label::createWithSystemFont("Edit Unit", "Arial", 28);
+    editUnitTitle = LM->getLocalizedLabel("Edit Unit", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 28);
     editUnitTitle->setPosition(Vec2(panelWidth / 2, panelHeight - 40));
-    editUnitTitle->setColor(panelTextColor);
     editUnitPanel->addChild(editUnitTitle);
 
-    Label* sideLabel = Label::createWithSystemFont("Side:", "Arial", 22);
+    Label* sideLabel = LM->getLocalizedLabel("Side:", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 22);
     sideLabel->setAnchorPoint(Vec2(0, 0.5f));
     sideLabel->setPosition(Vec2(20, panelHeight - 100));
-    sideLabel->setColor(panelTextColor);
     editUnitPanel->addChild(sideLabel);
 
     const float sideBtnW = 110;
@@ -1580,10 +1579,9 @@ void MapEditor::setupEditUnitPanel() {
     rowEditHp = Node::create();
     editUnitPanel->addChild(rowEditHp);
 
-    Label* hpLabel = Label::createWithSystemFont("HP:", "Arial", 22);
+    Label* hpLabel = LM->getLocalizedLabel("HP:", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 22);
     hpLabel->setAnchorPoint(Vec2(0, 0.5f));
     hpLabel->setPosition(Vec2(40, panelHeight - 165));
-    hpLabel->setColor(panelTextColor);
     rowEditHp->addChild(hpLabel);
 
     DrawNode* hpBg = DrawNode::create();
@@ -1605,10 +1603,9 @@ void MapEditor::setupEditUnitPanel() {
     rowEditLevel = Node::create();
     editUnitPanel->addChild(rowEditLevel);
 
-    Label* editLevelLabel = Label::createWithSystemFont("Level:", "Arial", 22);
+    Label* editLevelLabel = LM->getLocalizedLabel("Level:", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 22);
     editLevelLabel->setAnchorPoint(Vec2(0, 0.5f));
     editLevelLabel->setPosition(Vec2(360, panelHeight - 165));
-    editLevelLabel->setColor(panelTextColor);
     rowEditLevel->addChild(editLevelLabel);
 
     DrawNode* editLevelBg = DrawNode::create();
@@ -2078,7 +2075,7 @@ Node* MapEditor::addCycleRow(Node* parent, const std::string& title, float x, fl
     row->setPosition(Vec2(x, y));
     parent->addChild(row);
 
-    Label* titleLbl = Label::createWithSystemFont(title, "Arial", 22);
+    Label* titleLbl = LM->getLocalizedLabel(title.c_str(), Color4B::WHITE, 22);
     titleLbl->setAnchorPoint(Vec2(0, 0.5f));
     titleLbl->setPosition(Vec2(0, 0));
     row->addChild(titleLbl);
@@ -2097,7 +2094,7 @@ Node* MapEditor::addCycleRow(Node* parent, const std::string& title, float x, fl
     menu->setPosition(Vec2::ZERO);
     row->addChild(menu);
 
-    Label* valueLbl = Label::createWithSystemFont("", "Arial", 22);
+    Label* valueLbl = LM->getLocalizedLabel("", Color4B::WHITE, 22);
     valueLbl->setPosition(Vec2(valueX, 0));
     row->addChild(valueLbl);
 
@@ -2115,7 +2112,7 @@ Node* MapEditor::addTextFieldRow(Node* parent, const std::string& title, float x
     row->setPosition(Vec2(x, y));
     parent->addChild(row);
 
-    Label* titleLbl = Label::createWithSystemFont(title, "Arial", 22);
+    Label* titleLbl = LM->getLocalizedLabel(title.c_str(), Color4B::WHITE, 22);
     titleLbl->setAnchorPoint(Vec2(0, 0.5f));
     titleLbl->setPosition(Vec2(0, 0));
     row->addChild(titleLbl);
@@ -2167,7 +2164,7 @@ void MapEditor::setupTriggerPanel() {
     panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.08f, 0.08f, 0.08f, 0.95f));
     triggerPanel->addChild(panelBg);
 
-    Label* title = Label::createWithSystemFont("Trigger Editor", "Arial", 30);
+    Label* title = LM->getLocalizedLabel("Trigger Editor", Color4B::WHITE, 30);
     title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
     triggerPanel->addChild(title);
 
@@ -2181,7 +2178,7 @@ void MapEditor::setupTriggerPanel() {
     const float listX = 20;
     const float listWidth = 300;
 
-    Label* listHeader = Label::createWithSystemFont("Triggers", "Arial", 24);
+    Label* listHeader = LM->getLocalizedLabel("Triggers", Color4B::WHITE, 24);
     listHeader->setAnchorPoint(Vec2(0, 0.5f));
     listHeader->setPosition(Vec2(listX, panelHeight - 80));
     triggerPanel->addChild(listHeader);
@@ -2201,7 +2198,7 @@ void MapEditor::setupTriggerPanel() {
     // Right column: selected trigger detail
     const float detailX = listX + listWidth + 30;
 
-    Label* nameLbl = Label::createWithSystemFont("Name:", "Arial", 22);
+    Label* nameLbl = LM->getLocalizedLabel("Name:", Color4B::WHITE, 22);
     nameLbl->setAnchorPoint(Vec2(0, 0.5f));
     nameLbl->setPosition(Vec2(detailX, panelHeight - 80));
     triggerPanel->addChild(nameLbl);
@@ -2222,7 +2219,7 @@ void MapEditor::setupTriggerPanel() {
     watchTextFieldFocus(tfTriggerName);
 
     // Side checkboxes + preserve toggle (StarCraft "Players" + "Preserve Trigger")
-    Label* sidesLbl = Label::createWithSystemFont("Applies to:", "Arial", 22);
+    Label* sidesLbl = LM->getLocalizedLabel("Applies to:", Color4B::WHITE, 22);
     sidesLbl->setAnchorPoint(Vec2(0, 0.5f));
     sidesLbl->setPosition(Vec2(detailX, panelHeight - 140));
     triggerPanel->addChild(sidesLbl);
@@ -2250,7 +2247,7 @@ void MapEditor::setupTriggerPanel() {
     triggerPanel->addChild(sideMenu);
 
     // Conditions section
-    Label* condHeader = Label::createWithSystemFont("Conditions", "Arial", 24);
+    Label* condHeader = LM->getLocalizedLabel("Conditions", Color4B::WHITE, 24);
     condHeader->setAnchorPoint(Vec2(0, 0.5f));
     condHeader->setPosition(Vec2(detailX, panelHeight - 200));
     triggerPanel->addChild(condHeader);
@@ -2266,7 +2263,7 @@ void MapEditor::setupTriggerPanel() {
     triggerPanel->addChild(conditionListContainer);
 
     // Actions section
-    Label* actHeader = Label::createWithSystemFont("Actions", "Arial", 24);
+    Label* actHeader = LM->getLocalizedLabel("Actions", Color4B::WHITE, 24);
     actHeader->setAnchorPoint(Vec2(0, 0.5f));
     actHeader->setPosition(Vec2(detailX, panelHeight - 520));
     triggerPanel->addChild(actHeader);
@@ -2460,7 +2457,7 @@ void MapEditor::refreshTriggerDetail() {
         int idx = static_cast<int>(i);
         float y = -static_cast<float>(i) * rowH - rowH / 2;
 
-        Label* lbl = Label::createWithSystemFont(describeCondition(t.conditions[i]), "Arial", 20);
+        Label* lbl = LM->getLocalizedLabel(describeCondition(t.conditions[i]).c_str(), Color4B::WHITE, 20);
         lbl->setAnchorPoint(Vec2(0, 0.5f));
         lbl->setPosition(Vec2(0, y));
         conditionListContainer->addChild(lbl);
@@ -2478,7 +2475,7 @@ void MapEditor::refreshTriggerDetail() {
         int idx = static_cast<int>(i);
         float y = -static_cast<float>(i) * rowH - rowH / 2;
 
-        Label* lbl = Label::createWithSystemFont(describeAction(t.actions[i]), "Arial", 20);
+        Label* lbl = LM->getLocalizedLabel(describeAction(t.actions[i]).c_str(), Color4B::WHITE, 20);
         lbl->setAnchorPoint(Vec2(0, 0.5f));
         lbl->setPosition(Vec2(0, y));
         actionListContainer->addChild(lbl);
@@ -2534,7 +2531,7 @@ void MapEditor::setupConditionEditPanel() {
     panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.12f, 0.12f, 0.16f, 0.97f));
     conditionEditPanel->addChild(panelBg);
 
-    Label* title = Label::createWithSystemFont("Edit Condition", "Arial", 28);
+    Label* title = LM->getLocalizedLabel("Edit Condition", Color4B::WHITE, 28);
     title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
     conditionEditPanel->addChild(title);
 
@@ -2702,7 +2699,7 @@ void MapEditor::setupActionEditPanel() {
     panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.12f, 0.12f, 0.16f, 0.97f));
     actionEditPanel->addChild(panelBg);
 
-    Label* title = Label::createWithSystemFont("Edit Action", "Arial", 28);
+    Label* title = LM->getLocalizedLabel("Edit Action", Color4B::WHITE, 28);
     title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
     actionEditPanel->addChild(title);
 

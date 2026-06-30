@@ -69,18 +69,16 @@
 		EC91843D26BE81CF00E63225 /* Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183DC26BE81CE00E63225 /* Node_Class.cpp */; };
 		EC91843E26BE81CF00E63225 /* Laser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E126BE81CE00E63225 /* Laser.cpp */; };
 		EC91843F26BE81CF00E63225 /* Laser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E126BE81CE00E63225 /* Laser.cpp */; };
+		EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
+		EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
 		EC91844026BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844126BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844226BE81CF00E63225 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E626BE81CE00E63225 /* HeroPage.cpp */; };
 		EC91844326BE81CF00E63225 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E626BE81CE00E63225 /* HeroPage.cpp */; };
-		EC91844426BE81CF00E63225 /* EditorWorld.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E826BE81CE00E63225 /* EditorWorld.cpp */; };
-		EC91844526BE81CF00E63225 /* EditorWorld.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E826BE81CE00E63225 /* EditorWorld.cpp */; };
 		EC91844626BE81CF00E63225 /* AStar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EB26BE81CE00E63225 /* AStar.cpp */; };
 		EC91844726BE81CF00E63225 /* AStar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EB26BE81CE00E63225 /* AStar.cpp */; };
-		EC91844826BE81CF00E63225 /* BattleLobby.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EE26BE81CE00E63225 /* BattleLobby.cpp */; };
-		EC91844926BE81CF00E63225 /* BattleLobby.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EE26BE81CE00E63225 /* BattleLobby.cpp */; };
-		EC91844A26BE81CF00E63225 /* HelloWorldScene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EF26BE81CE00E63225 /* HelloWorldScene.cpp */; };
-		EC91844B26BE81CF00E63225 /* HelloWorldScene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EF26BE81CE00E63225 /* HelloWorldScene.cpp */; };
+		EC91844A26BE81CF00E63225 /* GameScene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EF26BE81CE00E63225 /* GameScene.cpp */; };
+		EC91844B26BE81CF00E63225 /* GameScene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183EF26BE81CE00E63225 /* GameScene.cpp */; };
 		EC91844C26BE81CF00E63225 /* Intro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183F126BE81CE00E63225 /* Intro.cpp */; };
 		EC91844D26BE81CF00E63225 /* Intro.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183F126BE81CE00E63225 /* Intro.cpp */; };
 		EC91844E26BE81CF00E63225 /* NetworkWebSocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183F526BE81CE00E63225 /* NetworkWebSocket.cpp */; };
@@ -91,10 +89,6 @@
 		EC91845326BE81CF00E63225 /* MonthlyEventPopup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183FB26BE81CE00E63225 /* MonthlyEventPopup.cpp */; };
 		EC91845426BE81CF00E63225 /* Movable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183FC26BE81CE00E63225 /* Movable.cpp */; };
 		EC91845526BE81CF00E63225 /* Movable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183FC26BE81CE00E63225 /* Movable.cpp */; };
-		EC91845626BE81CF00E63225 /* FindMatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183FE26BE81CF00E63225 /* FindMatch.cpp */; };
-		EC91845726BE81CF00E63225 /* FindMatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183FE26BE81CF00E63225 /* FindMatch.cpp */; };
-		EC91845826BE81CF00E63225 /* EditorHud.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91840026BE81CF00E63225 /* EditorHud.cpp */; };
-		EC91845926BE81CF00E63225 /* EditorHud.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91840026BE81CF00E63225 /* EditorHud.cpp */; };
 		EC91845A26BE81CF00E63225 /* HudLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91840326BE81CF00E63225 /* HudLayer.cpp */; };
 		EC91845B26BE81CF00E63225 /* HudLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91840326BE81CF00E63225 /* HudLayer.cpp */; };
 		EC91845C26BE81CF00E63225 /* GameSharing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91840426BE81CF00E63225 /* GameSharing.cpp */; };
@@ -109,8 +103,6 @@
 		EC91846526BE81CF00E63225 /* AppDelegate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841026BE81CF00E63225 /* AppDelegate.cpp */; };
 		EC91846626BE81CF00E63225 /* Location_Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841126BE81CF00E63225 /* Location_Node_Class.cpp */; };
 		EC91846726BE81CF00E63225 /* Location_Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841126BE81CF00E63225 /* Location_Node_Class.cpp */; };
-		EC91846826BE81CF00E63225 /* BattleHud.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841326BE81CF00E63225 /* BattleHud.cpp */; };
-		EC91846926BE81CF00E63225 /* BattleHud.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841326BE81CF00E63225 /* BattleHud.cpp */; };
 		EC91846A26BE81CF00E63225 /* PageBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841426BE81CF00E63225 /* PageBase.cpp */; };
 		EC91846B26BE81CF00E63225 /* PageBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841426BE81CF00E63225 /* PageBase.cpp */; };
 		EC91846C26BE81CF00E63225 /* QuestLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC91841526BE81CF00E63225 /* QuestLayer.cpp */; };
@@ -300,29 +292,24 @@
 		EC9183DA26BE81CE00E63225 /* EndingCredit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EndingCredit.cpp; sourceTree = "<group>"; };
 		EC9183DB26BE81CE00E63225 /* LegendDaryButton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LegendDaryButton.cpp; sourceTree = "<group>"; };
 		EC9183DC26BE81CE00E63225 /* Node_Class.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Node_Class.cpp; sourceTree = "<group>"; };
-		EC9183DD26BE81CE00E63225 /* FindMatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FindMatch.h; sourceTree = "<group>"; };
-		EC9183DE26BE81CE00E63225 /* EditorWorld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorWorld.h; sourceTree = "<group>"; };
 		EC9183DF26BE81CE00E63225 /* Array2D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Array2D.h; sourceTree = "<group>"; };
 		EC9183E026BE81CE00E63225 /* Enemies.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Enemies.h; sourceTree = "<group>"; };
 		EC9183E126BE81CE00E63225 /* Laser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Laser.cpp; sourceTree = "<group>"; };
 		EC9183E226BE81CE00E63225 /* ChatRoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ChatRoom.h; sourceTree = "<group>"; };
 		EC9183E326BE81CE00E63225 /* EventInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventInfo.cpp; sourceTree = "<group>"; };
-		EC9183E426BE81CE00E63225 /* HelloWorldScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HelloWorldScene.h; sourceTree = "<group>"; };
+		EC9183E426BE81CE00E63225 /* GameScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameScene.h; sourceTree = "<group>"; };
 		EC9183E526BE81CE00E63225 /* PPLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PPLabel.h; sourceTree = "<group>"; };
 		EC9183E626BE81CE00E63225 /* HeroPage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HeroPage.cpp; sourceTree = "<group>"; };
 		EC9183E726BE81CE00E63225 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		EC9183E826BE81CE00E63225 /* EditorWorld.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EditorWorld.cpp; sourceTree = "<group>"; };
 		EC9183E926BE81CE00E63225 /* ServerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerManager.h; sourceTree = "<group>"; };
 		EC9183EA26BE81CE00E63225 /* ShopLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShopLayer.h; sourceTree = "<group>"; };
 		EC9183EB26BE81CE00E63225 /* AStar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AStar.cpp; sourceTree = "<group>"; };
 		EC9183EC26BE81CE00E63225 /* SneakyJoystick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SneakyJoystick.h; sourceTree = "<group>"; };
 		EC9183ED26BE81CE00E63225 /* GameSharing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameSharing.h; sourceTree = "<group>"; };
-		EC9183EE26BE81CE00E63225 /* BattleLobby.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BattleLobby.cpp; sourceTree = "<group>"; };
-		EC9183EF26BE81CE00E63225 /* HelloWorldScene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HelloWorldScene.cpp; sourceTree = "<group>"; };
+		EC9183EF26BE81CE00E63225 /* GameScene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameScene.cpp; sourceTree = "<group>"; };
 		EC9183F026BE81CE00E63225 /* TopBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TopBar.h; sourceTree = "<group>"; };
 		EC9183F126BE81CE00E63225 /* Intro.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Intro.cpp; sourceTree = "<group>"; };
 		EC9183F226BE81CE00E63225 /* Movable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Movable.h; sourceTree = "<group>"; };
-		EC9183F326BE81CE00E63225 /* BattleLobby.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BattleLobby.h; sourceTree = "<group>"; };
 		EC9183F426BE81CE00E63225 /* HeroPage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HeroPage.h; sourceTree = "<group>"; };
 		EC9183F526BE81CE00E63225 /* NetworkWebSocket.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NetworkWebSocket.cpp; sourceTree = "<group>"; };
 		EC9183F626BE81CE00E63225 /* EventPopup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventPopup.h; sourceTree = "<group>"; };
@@ -333,12 +320,11 @@
 		EC9183FB26BE81CE00E63225 /* MonthlyEventPopup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MonthlyEventPopup.cpp; sourceTree = "<group>"; };
 		EC9183FC26BE81CE00E63225 /* Movable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Movable.cpp; sourceTree = "<group>"; };
 		EC9183FD26BE81CE00E63225 /* Cell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cell.h; sourceTree = "<group>"; };
-		EC9183FE26BE81CF00E63225 /* FindMatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FindMatch.cpp; sourceTree = "<group>"; };
-		EC9183FF26BE81CF00E63225 /* BattleHud.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BattleHud.h; sourceTree = "<group>"; };
-		EC91840026BE81CF00E63225 /* EditorHud.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EditorHud.cpp; sourceTree = "<group>"; };
 		EC91840126BE81CF00E63225 /* Intro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Intro.h; sourceTree = "<group>"; };
 		EC91840226BE81CF00E63225 /* LanguageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanguageManager.h; sourceTree = "<group>"; };
 		EC91840326BE81CF00E63225 /* HudLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HudLayer.cpp; sourceTree = "<group>"; };
+		EC9185AA26BE81CF00E63225 /* MapEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapEditor.cpp; sourceTree = "<group>"; };
+		EC9185AB26BE81CF00E63225 /* MapEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapEditor.h; sourceTree = "<group>"; };
 		EC91840426BE81CF00E63225 /* GameSharing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameSharing.cpp; sourceTree = "<group>"; };
 		EC91840526BE81CF00E63225 /* EventPopup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventPopup.cpp; sourceTree = "<group>"; };
 		EC91840626BE81CF00E63225 /* LegendDaryButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendDaryButton.h; sourceTree = "<group>"; };
@@ -348,13 +334,11 @@
 		EC91840A26BE81CF00E63225 /* Location_Node_Class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Location_Node_Class.h; sourceTree = "<group>"; };
 		EC91840B26BE81CF00E63225 /* MultiplayManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MultiplayManager.cpp; sourceTree = "<group>"; };
 		EC91840C26BE81CF00E63225 /* MultiplayManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MultiplayManager.h; sourceTree = "<group>"; };
-		EC91840D26BE81CF00E63225 /* EditorHud.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorHud.h; sourceTree = "<group>"; };
 		EC91840E26BE81CF00E63225 /* EventInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventInfo.h; sourceTree = "<group>"; };
 		EC91840F26BE81CF00E63225 /* NetworkWebSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkWebSocket.h; sourceTree = "<group>"; };
 		EC91841026BE81CF00E63225 /* AppDelegate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AppDelegate.cpp; sourceTree = "<group>"; };
 		EC91841126BE81CF00E63225 /* Location_Node_Class.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Location_Node_Class.cpp; sourceTree = "<group>"; };
 		EC91841226BE81CF00E63225 /* Node_Class.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node_Class.h; sourceTree = "<group>"; };
-		EC91841326BE81CF00E63225 /* BattleHud.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BattleHud.cpp; sourceTree = "<group>"; };
 		EC91841426BE81CF00E63225 /* PageBase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PageBase.cpp; sourceTree = "<group>"; };
 		EC91841526BE81CF00E63225 /* QuestLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QuestLayer.cpp; sourceTree = "<group>"; };
 		EC91841626BE81CF00E63225 /* QuestLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QuestLayer.h; sourceTree = "<group>"; };
@@ -618,19 +602,11 @@
 				EC91841E26BE81CF00E63225 /* AStar.h */,
 				EC9183F726BE81CE00E63225 /* AwesomeDialogBox.cpp */,
 				EC9183CF26BE81CE00E63225 /* AwesomeDialogBox.h */,
-				EC91841326BE81CF00E63225 /* BattleHud.cpp */,
-				EC9183FF26BE81CF00E63225 /* BattleHud.h */,
-				EC9183EE26BE81CE00E63225 /* BattleLobby.cpp */,
-				EC9183F326BE81CE00E63225 /* BattleLobby.h */,
 				EC91841B26BE81CF00E63225 /* BuggyServerManager.cpp */,
 				EC9183F826BE81CE00E63225 /* BuggyServerManager.h */,
 				EC9183FD26BE81CE00E63225 /* Cell.h */,
 				EC9183D326BE81CE00E63225 /* ChatRoom.cpp */,
 				EC9183E226BE81CE00E63225 /* ChatRoom.h */,
-				EC91840026BE81CF00E63225 /* EditorHud.cpp */,
-				EC91840D26BE81CF00E63225 /* EditorHud.h */,
-				EC9183E826BE81CE00E63225 /* EditorWorld.cpp */,
-				EC9183DE26BE81CE00E63225 /* EditorWorld.h */,
 				EC9183DA26BE81CE00E63225 /* EndingCredit.cpp */,
 				EC9183F926BE81CE00E63225 /* EndingCredit.h */,
 				EC9183D426BE81CE00E63225 /* Enemies.cpp */,
@@ -639,16 +615,14 @@
 				EC91840E26BE81CF00E63225 /* EventInfo.h */,
 				EC91840526BE81CF00E63225 /* EventPopup.cpp */,
 				EC9183F626BE81CE00E63225 /* EventPopup.h */,
-				EC9183FE26BE81CF00E63225 /* FindMatch.cpp */,
-				EC9183DD26BE81CE00E63225 /* FindMatch.h */,
 				EC9183D726BE81CE00E63225 /* Fog.cpp */,
 				EC91842526BE81CF00E63225 /* Fog.h */,
 				EC9183CD26BE81CE00E63225 /* GameManager.cpp */,
 				EC9183D226BE81CE00E63225 /* GameManager.h */,
 				EC91840426BE81CF00E63225 /* GameSharing.cpp */,
 				EC9183ED26BE81CE00E63225 /* GameSharing.h */,
-				EC9183EF26BE81CE00E63225 /* HelloWorldScene.cpp */,
-				EC9183E426BE81CE00E63225 /* HelloWorldScene.h */,
+				EC9183EF26BE81CE00E63225 /* GameScene.cpp */,
+				EC9183E426BE81CE00E63225 /* GameScene.h */,
 				EC9183E626BE81CE00E63225 /* HeroPage.cpp */,
 				EC9183F426BE81CE00E63225 /* HeroPage.h */,
 				EC91840326BE81CF00E63225 /* HudLayer.cpp */,
@@ -671,6 +645,8 @@
 				EC9183F226BE81CE00E63225 /* Movable.h */,
 				EC9183D626BE81CE00E63225 /* MultiplayLobby.cpp */,
 				EC91840926BE81CF00E63225 /* MultiplayLobby.h */,
+					EC9185AA26BE81CF00E63225 /* MapEditor.cpp */,
+					EC9185AB26BE81CF00E63225 /* MapEditor.h */,
 				EC91840B26BE81CF00E63225 /* MultiplayManager.cpp */,
 				EC91840C26BE81CF00E63225 /* MultiplayManager.h */,
 				EC9183D526BE81CE00E63225 /* NativeInterface.h */,
@@ -970,13 +946,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EC91844A26BE81CF00E63225 /* HelloWorldScene.cpp in Sources */,
-				EC91844426BE81CF00E63225 /* EditorWorld.cpp in Sources */,
+				EC91844A26BE81CF00E63225 /* GameScene.cpp in Sources */,
 				EC91844226BE81CF00E63225 /* HeroPage.cpp in Sources */,
 				EC91847026BE81CF00E63225 /* ShopLayer.cpp in Sources */,
 				EC91846226BE81CF00E63225 /* MultiplayManager.cpp in Sources */,
 				EC91844026BE81CF00E63225 /* EventInfo.cpp in Sources */,
-				EC91845826BE81CF00E63225 /* EditorHud.cpp in Sources */,
 				EC91843226BE81CF00E63225 /* Fog.cpp in Sources */,
 				EC91847226BE81CF00E63225 /* SneakyJoystick.cpp in Sources */,
 				EC9C38E32840BEDE009A1030 /* GameCenterHelper.mm in Sources */,
@@ -988,7 +962,6 @@
 				EC91846C26BE81CF00E63225 /* QuestLayer.cpp in Sources */,
 				EC91844626BE81CF00E63225 /* AStar.cpp in Sources */,
 				EC91847A26BE81CF00E63225 /* PPLabel.cpp in Sources */,
-				EC91846826BE81CF00E63225 /* BattleHud.cpp in Sources */,
 				EC9C38E42840BEDE009A1030 /* Ios_BillingManager.mm in Sources */,
 				EC91842626BE81CF00E63225 /* GameManager.cpp in Sources */,
 				EC91842E26BE81CF00E63225 /* Enemies.cpp in Sources */,
@@ -997,8 +970,6 @@
 				1AF87B8B1F6F782A007BE51C /* RootViewController.mm in Sources */,
 				EC91846E26BE81CF00E63225 /* ServerManager.cpp in Sources */,
 				EC91845426BE81CF00E63225 /* Movable.cpp in Sources */,
-				EC91845626BE81CF00E63225 /* FindMatch.cpp in Sources */,
-				EC91844826BE81CF00E63225 /* BattleLobby.cpp in Sources */,
 				EC91845026BE81CF00E63225 /* AwesomeDialogBox.cpp in Sources */,
 				EC91843426BE81CF00E63225 /* Title.cpp in Sources */,
 				EC91845E26BE81CF00E63225 /* EventPopup.cpp in Sources */,
@@ -1016,6 +987,7 @@
 				EC91844C26BE81CF00E63225 /* Intro.cpp in Sources */,
 				EC91845C26BE81CF00E63225 /* GameSharing.cpp in Sources */,
 				EC91846426BE81CF00E63225 /* AppDelegate.cpp in Sources */,
+					EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */,
 				EC91844E26BE81CF00E63225 /* NetworkWebSocket.cpp in Sources */,
 				1AF87B8A1F6F7822007BE51C /* main.m in Sources */,
 			);
@@ -1031,19 +1003,15 @@
 				EC91847526BE81CF00E63225 /* BuggyServerManager.cpp in Sources */,
 				EC91846326BE81CF00E63225 /* MultiplayManager.cpp in Sources */,
 				EC91842B26BE81CF00E63225 /* SneakyJoystickSkinnedBase.cpp in Sources */,
-				EC91844526BE81CF00E63225 /* EditorWorld.cpp in Sources */,
 				EC91847326BE81CF00E63225 /* SneakyJoystick.cpp in Sources */,
-				EC91846926BE81CF00E63225 /* BattleHud.cpp in Sources */,
 				EC91846D26BE81CF00E63225 /* QuestLayer.cpp in Sources */,
 				EC91844126BE81CF00E63225 /* EventInfo.cpp in Sources */,
 				EC91842D26BE81CF00E63225 /* ChatRoom.cpp in Sources */,
 				EC91845F26BE81CF00E63225 /* EventPopup.cpp in Sources */,
-				EC91845926BE81CF00E63225 /* EditorHud.cpp in Sources */,
 				EC91845126BE81CF00E63225 /* AwesomeDialogBox.cpp in Sources */,
 				EC91845B26BE81CF00E63225 /* HudLayer.cpp in Sources */,
 				EC91843726BE81CF00E63225 /* RoulettePopup.cpp in Sources */,
-				EC91844926BE81CF00E63225 /* BattleLobby.cpp in Sources */,
-				EC91844B26BE81CF00E63225 /* HelloWorldScene.cpp in Sources */,
+				EC91844B26BE81CF00E63225 /* GameScene.cpp in Sources */,
 				EC91845526BE81CF00E63225 /* Movable.cpp in Sources */,
 				EC91843F26BE81CF00E63225 /* Laser.cpp in Sources */,
 				EC91843D26BE81CF00E63225 /* Node_Class.cpp in Sources */,
@@ -1064,8 +1032,8 @@
 				EC91847926BE81CF00E63225 /* TopBar.cpp in Sources */,
 				EC91847726BE81CF00E63225 /* LanguageManager.cpp in Sources */,
 				EC91843126BE81CF00E63225 /* MultiplayLobby.cpp in Sources */,
-				EC91845726BE81CF00E63225 /* FindMatch.cpp in Sources */,
 				EC91846526BE81CF00E63225 /* AppDelegate.cpp in Sources */,
+					EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */,
 				EC91846126BE81CF00E63225 /* Inventory.cpp in Sources */,
 				EC91842726BE81CF00E63225 /* GameManager.cpp in Sources */,
 				EC91845D26BE81CF00E63225 /* GameSharing.cpp in Sources */,
@@ -1209,7 +1177,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
@@ -1231,6 +1199,9 @@
 				OTHER_LDFLAGS = (
 					"$(_COCOS_LIB_MAC_BEGIN)",
 					"$(_COCOS_LIB_MAC_END)",
+					"-lz",
+					"-liconv",
+					"-framework Security",
 				);
 				USER_HEADER_SEARCH_PATHS = "$(_COCOS_HEADER_MAC_BEGIN) $(_COCOS_HEADER_MAC_END)";
 			};
@@ -1242,7 +1213,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1263,6 +1234,9 @@
 				OTHER_LDFLAGS = (
 					"$(_COCOS_LIB_MAC_BEGIN)",
 					"$(_COCOS_LIB_MAC_END)",
+					"-lz",
+					"-liconv",
+					"-framework Security",
 				);
 				USER_HEADER_SEARCH_PATHS = "$(_COCOS_HEADER_MAC_BEGIN) $(_COCOS_HEADER_MAC_END)";
 			};
@@ -1271,7 +1245,7 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				COPY_PHASE_STRIP = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1297,7 +1271,7 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;

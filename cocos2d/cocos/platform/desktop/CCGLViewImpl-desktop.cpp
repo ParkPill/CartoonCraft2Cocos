@@ -30,7 +30,15 @@ THE SOFTWARE.
 #include <unordered_map>
 
 #include "platform/CCApplication.h"
+#include "platform/CCPlatformConfig.h"
 #include "base/CCDirector.h"
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+// Declared in CCApplication-mac.mm. GLFW 3.2.x on modern macOS may report
+// glfwGetFramebufferSize == glfwGetWindowSize for fullscreen windows even on
+// Retina displays. This helper lets us fall back to NSScreen.backingScaleFactor.
+extern "C" float cocos2d_getScreenBackingScaleFactor();
+#endif
 #include "base/CCTouch.h"
 #include "base/CCEventDispatcher.h"
 #include "base/CCEventKeyboard.h"
@@ -572,6 +580,21 @@ void GLViewImpl::updateFrameSize()
 
         int frameBufferW = 0, frameBufferH = 0;
         glfwGetFramebufferSize(_mainWindow, &frameBufferW, &frameBufferH);
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+        // GLFW 3.2.x on macOS Ventura/Sonoma may return frameBufferSize == windowSize
+        // for Retina windowed windows. Apply NSScreen backing scale as a fallback.
+        // In fullscreen mode (_monitor != nullptr), frameBufferW == w means the GL
+        // framebuffer is genuinely at logical resolution on modern macOS — applying
+        // a 2x retinaFactor there causes only 1/4 of the screen to be rendered.
+        if (frameBufferW == w && frameBufferH == h && w > 0 && _monitor == nullptr) {
+            float scale = cocos2d_getScreenBackingScaleFactor();
+            if (scale >= 2.0f) {
+                frameBufferW = (int)(w * scale);
+                frameBufferH = (int)(h * scale);
+            }
+        }
+#endif
 
         if (frameBufferW == 2 * w && frameBufferH == 2 * h)
         {

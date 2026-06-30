@@ -1,4 +1,4 @@
-﻿//
+//
 //  Title.cpp
 //  CartoonCraft
 //
@@ -547,12 +547,12 @@ bool Title::init() {
   // spine test
 
 #if !(CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-  if (name.length() == 0 && id.compare("-1") == 0) {
-
-  } else {
-    //        showIndicator();
-    BSM->checkServer();
-  }
+//  if (name.length() == 0 && id.compare("-1") == 0) {
+//
+//  } else {
+//    //        showIndicator();
+//    BSM->checkServer();
+//  }
 #endif
 
   //    Button* btnCross = Button::create("uiBox.png");
@@ -2945,24 +2945,24 @@ void Title::titleUpdate(float dt) {
   }
 #endif
   Node *layer = this->getChildByName("stageSelect");
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-
-#elif
-
-  if (layer && layer != nullptr) {
-    int chestIndex = UDGetInt(
-        strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, layer->getTag()).c_str(),
-        0);
-    ScrollView *sv = (ScrollView *)layer->getChildByName("sv");
-    Button *btn = (Button *)sv->getChildByName(strmake("btn%d", chestIndex));
-    Text *lblTimeLeft = (Text *)btn->getChildByName("lblTimeLeft");
-    int timeLeft = GM->getTimeLeftForCampaignChest(layer->getTag());
-    lblTimeLeft->setVisible(timeLeft > 0);
-    if (timeLeft > 0) {
-      lblTimeLeft->setString(GM->getTimeLeftInString(timeLeft));
-    }
-  }
-#endif
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+//
+//#elif
+//
+//  if (layer && layer != nullptr) {
+//    int chestIndex = UDGetInt(
+//        strmake(KEY_CAMPAIGN_CHEST_STAGE_INDEX_FORMAT, layer->getTag()).c_str(),
+//        0);
+//    ScrollView *sv = (ScrollView *)layer->getChildByName("sv");
+//    Button *btn = (Button *)sv->getChildByName(strmake("btn%d", chestIndex));
+//    Text *lblTimeLeft = (Text *)btn->getChildByName("lblTimeLeft");
+//    int timeLeft = GM->getTimeLeftForCampaignChest(layer->getTag());
+//    lblTimeLeft->setVisible(timeLeft > 0);
+//    if (timeLeft > 0) {
+//      lblTimeLeft->setString(GM->getTimeLeftInString(timeLeft));
+//    }
+//  }
+//#endif
 
   if (isGameInfoRecieved) {
     isGameInfoRecieved = false;
