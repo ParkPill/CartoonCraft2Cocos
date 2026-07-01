@@ -117,6 +117,11 @@ private:
         // (fog tiles, default 5). Position uses targetObjectId / tileX / tileY
         // identical to CENTER_CAMERA.
         TACT_REVEAL_FOG,
+        // Orders all units of the specified side (and optional unit type) to
+        // attack the nearest enemy on the opposing side. Useful for scripting
+        // uncontrollable ally units or triggering an enemy charge.
+        // Fields used: unitSide (which side to order), unitTypeIndex (-1 = all).
+        TACT_ORDER_ATTACK,
         TACT_TYPE_COUNT
     };
 
@@ -353,6 +358,9 @@ private:
     cocos2d::Node* rowActRevealFog = nullptr;
     cocos2d::Label* lblActRevealFogEnabled = nullptr;
     cocos2d::Label* lblActRevealFogTarget = nullptr;
+    cocos2d::Node* rowActOrderAttack = nullptr;
+    cocos2d::Label* lblActOrderAttackSide = nullptr;
+    cocos2d::Label* lblActOrderAttackUnitType = nullptr;
     cocos2d::Node* rowActRevealFogX = nullptr;
     cocos2d::ui::TextField* tfActRevealFogX = nullptr;
     cocos2d::Node* rowActRevealFogY = nullptr;
@@ -508,6 +516,8 @@ private:
     void cycleActionTalkTarget(int dir);
     void cycleActionRevealFogEnabled(int dir);
     void cycleActionRevealFogTarget(int dir);
+    void cycleActionOrderAttackSide(int dir);
+    void cycleActionOrderAttackUnitType(int dir);
     int cycleTargetObjectId(int currentId, int dir) const;
     std::string describeTargetObject(int id) const;
     void refreshActionEditPanel();

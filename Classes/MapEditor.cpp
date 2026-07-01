@@ -211,7 +211,8 @@ namespace {
     const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource"};
     const char* const kTriggerActionTypeNames[] = {
         "Display Message", "Create Unit", "Remove Unit", "Set Switch",
-        "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog"
+        "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog",
+        "Order Attack"
     };
     const char* const kComparisonNames[] = {"At Least", "At Most", "Exactly"};
     const char* const kSwitchStateNames[] = {"Set", "Cleared"};
@@ -2479,6 +2480,8 @@ std::string MapEditor::describeAction(const TriggerAction& a) const {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
             return StringUtils::format("Reveal fog %s at %s r=%d", a.visionEnabled ? "ON" : "OFF", at.c_str(), a.count);
         }
+        case TACT_ORDER_ATTACK:
+            return StringUtils::format("Order attack: %s %s -> enemy", kSideNames[a.unitSide], unitTypeCycleName(a.unitTypeIndex).c_str());
         default:
             return "Unknown action";
     }
@@ -2995,6 +2998,12 @@ void MapEditor::setupActionEditPanel() {
     rowActRevealFogY = addTextFieldRow(rowActRevealFog, "Tile Y:", 30, -150, 150, "0", &tfActRevealFogY);
     addTextFieldRow(rowActRevealFog, "Radius (fog):", 30, -200, 150, "5", &tfActRevealFogRadius);
 
+    rowActOrderAttack = Node::create();
+    rowActOrderAttack->setPosition(Vec2(0, groupY));
+    actionEditPanel->addChild(rowActOrderAttack);
+    addCycleRow(rowActOrderAttack, "Side:", 30, 0, &lblActOrderAttackSide, [this](int dir) { cycleActionOrderAttackSide(dir); });
+    addCycleRow(rowActOrderAttack, "Unit Type:", 30, -50, &lblActOrderAttackUnitType, [this](int dir) { cycleActionOrderAttackUnitType(dir); });
+
     MenuItemSprite* itemConfirm = createTextButton("OK", 140, 56, [this](Ref*) { onConfirmAction(); });
     MenuItemSprite* itemCancel = createTextButton("Cancel", 140, 56, [this](Ref*) { closeActionEditPanel(); });
     itemConfirm->setPosition(Vec2(panelWidth / 2 - 90, 40));
@@ -3139,6 +3148,16 @@ void MapEditor::cycleActionRevealFogTarget(int dir) {
     refreshActionEditPanel();
 }
 
+void MapEditor::cycleActionOrderAttackSide(int dir) {
+    actionDraft.unitSide = cyclicAdd(actionDraft.unitSide, dir, 0, kSideCount - 1);
+    refreshActionEditPanel();
+}
+
+void MapEditor::cycleActionOrderAttackUnitType(int dir) {
+    actionDraft.unitTypeIndex = cyclicAdd(actionDraft.unitTypeIndex, dir, -1, kObjectTypeCount - 1);
+    refreshActionEditPanel();
+}
+
 void MapEditor::refreshActionEditPanel() {
     lblActType->setString(kTriggerActionTypeNames[actionDraft.type]);
 
@@ -3150,6 +3169,7 @@ void MapEditor::refreshActionEditPanel() {
     rowActCamera->setVisible(actionDraft.type == TACT_CENTER_CAMERA);
     rowActTalk->setVisible(actionDraft.type == TACT_TALK);
     rowActRevealFog->setVisible(actionDraft.type == TACT_REVEAL_FOG);
+    rowActOrderAttack->setVisible(actionDraft.type == TACT_ORDER_ATTACK);
 
     bool createUsesManual = actionDraft.targetObjectId < 0;
     rowActCreateX->setVisible(createUsesManual);
@@ -3176,6 +3196,8 @@ void MapEditor::refreshActionEditPanel() {
     lblActTalkTarget->setString(describeTargetObject(actionDraft.targetObjectId));
     lblActRevealFogEnabled->setString(actionDraft.visionEnabled ? "Enabled" : "Disabled");
     lblActRevealFogTarget->setString(describeTargetObject(actionDraft.targetObjectId));
+    lblActOrderAttackSide->setString(kSideNames[actionDraft.unitSide]);
+    lblActOrderAttackUnitType->setString(unitTypeCycleName(actionDraft.unitTypeIndex));
 }
 
 void MapEditor::onConfirmAction() {

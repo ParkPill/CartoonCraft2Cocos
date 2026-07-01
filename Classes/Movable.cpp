@@ -2736,6 +2736,8 @@ void Movable::moveNew(float dt){// movenew start
             if (returningPlace != nullptr && isCarryingGold && returningPlace->getBoundingBoxForIntersect().intersectsRect(getBoundingBoxForIntersect())){
                 if (!isEnemy) {
                     WORLD->addGold(40);
+                } else {
+                    WORLD->addEnemyGold(40);
                 }
                 this->attackType = ATTACK_TYPE_NEAR;
                 isCarryingGold = false;
@@ -2850,8 +2852,10 @@ void Movable::moveNew(float dt){// movenew start
                 runAnimation(ANIMATION_TYPE_IDLE);
                 if (!isEnemy) {
                     WORLD->addLumber(40);
+                } else {
+                    WORLD->addEnemyLumber(40);
                 }
-                
+
                 Movable* tree;
                 if (nextTree != nullptr) {
                     tree = nextTree;

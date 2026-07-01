@@ -282,11 +282,13 @@ protected:
     int comparison = 0;      // 0 AtLeast,1 AtMost,2 Exactly
     int amount = 1;
     int resourceKind = 0;    // 0 Gold,1 Tree
-    bool isRepeat = false;   // only passes when the trigger has already fired once
+    bool isRepeat = false;   // ElapsedTime: true = repeating; false = fire once
+    float elapsedTimeLastFired = 0.0f; // runtime only: gameTimer value at last fire (for isRepeat reset)
   };
   struct RuntimeTriggerAction {
     int type = 0; // 0 DisplayMessage,1 CreateUnit,2 RemoveUnit,3 SetSwitch,
-                  // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk,9 RevealFog
+                  // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk,9 RevealFog,
+                  // 10 OrderAttack
     std::string message;
     int unitSide = 0;
     int unitTypeIndex = -1;
@@ -311,7 +313,7 @@ protected:
     bool preserve = false;
     std::vector<RuntimeTriggerCondition> conditions;
     std::vector<RuntimeTriggerAction> actions;
-    bool hasFired = false; // preserve==false: only ever runs once
+    bool hasFired = false; // true = permanently deactivated (isRepeat=false after first fire)
   };
   std::vector<RuntimeTrigger> activeTriggers;
   bool triggerSwitches[16] = {false};
@@ -328,7 +330,7 @@ protected:
 
   void loadTriggersFromEditorJsonFile(const std::string &path);
   void updateTriggers();
-  bool evaluateTriggerCondition(const RuntimeTriggerCondition &c, bool triggerHasFired = false);
+  bool evaluateTriggerCondition(const RuntimeTriggerCondition &c);
   void runTriggerActions(const RuntimeTrigger &t);
   // flipOutcome: true when this action's parent trigger represents the
   // Enemy side rather than Ally (sides[1] set, sides[0] not) - Victory/Defeat
@@ -1058,6 +1060,14 @@ public:
   int gold = 0;
   int lumber = 0;
   int oil = 0;
+  int enemyGold = 1000;
+  int enemyLumber = 1000;
+  int enemyFoodInUse = 0;
+  int enemyFoodMax = 0;
+  float enemyAIBuildTimer = 0.0f;
+  float enemyAITrainTimer = 0.0f;
+  bool mapHasWater = false;
+  bool enemyAIInitialized = false;
   int humanAttackLevel = 0;
   int humanDefenseLevel = 0;
   int orcAttackLevel = 0;
@@ -1067,6 +1077,15 @@ public:
   void addGold(int amount);
   void addLumber(int amount);
   void addOil(int amount);
+  void addEnemyGold(int amount);
+  void addEnemyLumber(int amount);
+  void updateEnemyAI();
+  void enemyAIUpdateFood();
+  void enemyAIManageWorkers();
+  void enemyAICheckBuildings();
+  void enemyAITrainUnits();
+  bool enemyAIIsTileFree(int bx, int by, int w, int h);
+  bool enemyAIFindBuildTile(cocos2d::Vec2 nearPos, int w, int h, int &outBx, int &outBy, bool avoidMines = false);
   void updateFoodInUse();
   void addFoodMax(int amount);
   int getGoldPriceForUnit(int index);

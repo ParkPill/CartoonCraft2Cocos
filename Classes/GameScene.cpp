@@ -3453,14 +3453,16 @@ void GameScene::showTriggerTalkBubble(const std::string &message, const cocos2d:
   activeTalkBubble = bubble;
 }
 
-bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c, bool triggerHasFired) {
-  if (c.isRepeat && !triggerHasFired) {
-    return false;
-  }
+bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c) {
   switch (c.type) {
     case 0: // Always
       return true;
     case 1: // ElapsedTime
+      // isRepeat=true: check from last fire time (reset by updateTriggers when preserve=false)
+      // isRepeat=false: check from game start (one-shot)
+      if (c.isRepeat) {
+        return (gameTimer - c.elapsedTimeLastFired) >= static_cast<float>(c.elapsedSeconds);
+      }
       return gameTimer >= static_cast<float>(c.elapsedSeconds);
     case 2: { // Switch
       if (c.switchIndex < 0 || c.switchIndex >= 16) {
@@ -3628,6 +3630,49 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       }
       break;
     }
+    case 10: { // OrderAttack — attack-move toward nearest enemy building
+      Vector<EnemyBase *> *srcArray = &heroArray;
+      Vector<EnemyBase *> *tgtArray = &enemyArray;
+      if (a.unitSide == 1) { srcArray = &enemyArray; tgtArray = &heroArray; }
+      else if (a.unitSide == 2 || a.unitSide == 3) { srcArray = &mutualArray; tgtArray = &enemyArray; }
+      int wantUnitType = -1;
+      if (a.unitTypeIndex >= 0 && a.unitTypeIndex < kEditorTypeCount) {
+        wantUnitType = kEditorTypeToUnit[a.unitTypeIndex];
+      }
+      // Snapshot target buildings (and non-buildings as fallback) once,
+      // then for each ordered unit pick the nearest building to attack-move toward.
+      std::vector<EnemyBase *> tgtBuildings;
+      std::vector<EnemyBase *> tgtUnits;
+      for (EnemyBase *tgt : *tgtArray) {
+        if (tgt->energy <= 0 || tgt->untouchable) continue;
+        if (tgt->isBuilding) tgtBuildings.push_back(tgt);
+        else tgtUnits.push_back(tgt);
+      }
+      std::vector<EnemyBase *> srcs;
+      for (EnemyBase *u : *srcArray) {
+        if (u->energy <= 0) continue;
+        if (wantUnitType >= 0 && u->unitType != wantUnitType) continue;
+        srcs.push_back(u);
+      }
+      for (EnemyBase *unit : srcs) {
+        // Prefer nearest building; fall back to nearest unit if no buildings remain.
+        const std::vector<EnemyBase *> &pool = tgtBuildings.empty() ? tgtUnits : tgtBuildings;
+        EnemyBase *destination = nullptr;
+        float minDist = FLT_MAX;
+        for (EnemyBase *tgt : pool) {
+          float d = unit->getPosition().distanceSquared(tgt->getPosition());
+          if (d < minDist) { minDist = d; destination = tgt; }
+        }
+        if (destination != nullptr) {
+          Vector<EnemyBase *> single;
+          single.pushBack(unit);
+          moveAndAttackTo(single, destination->getPosition());
+        } else {
+          unit->canFindTarget = true;
+        }
+      }
+      break;
+    }
     default:
       break;
   }
@@ -3662,27 +3707,36 @@ void GameScene::runTriggerActions(const RuntimeTrigger &t) {
 
 void GameScene::updateTriggers() {
   for (RuntimeTrigger &t : activeTriggers) {
-    if (!t.preserve && t.hasFired) {
-      continue;
-    }
+    if (t.hasFired) continue; // permanently deactivated
     // Conditions evaluate the same regardless of which sides[] are marked -
     // a condition that cares about a particular side already says so itself
     // (e.g. UnitCount's own unitSide field). sides[] only matters once the
     // trigger fires, for resolving Victory/Defeat - see runTriggerActions.
     bool allTrue = true;
     for (const RuntimeTriggerCondition &c : t.conditions) {
-      if (!evaluateTriggerCondition(c, t.hasFired)) {
+      if (!evaluateTriggerCondition(c)) {
         allTrue = false;
         break;
       }
     }
-    if (!allTrue) {
-      continue;
-    }
+    if (!allTrue) continue;
     runTriggerActions(t);
-    if (!t.preserve) {
-      t.hasFired = true;
+    // isRepeat=false on any condition (or no conditions) → deactivate after one fire
+    bool anyRepeat = false;
+    for (const auto &c : t.conditions) {
+      if (c.isRepeat) { anyRepeat = true; break; }
     }
+    if (!anyRepeat) {
+      t.hasFired = true; // deactivate regardless of preserve
+    } else if (!t.preserve) {
+      // isRepeat=true + preserve=false: reset elapsed timer so it fires again after N more seconds
+      for (auto &c : t.conditions) {
+        if (c.type == 1 && c.isRepeat) {
+          c.elapsedTimeLastFired = gameTimer;
+        }
+      }
+    }
+    // isRepeat=true + preserve=true: no reset, fires every frame while condition met
   }
 }
 
@@ -8207,6 +8261,8 @@ void GameScene::oneSecUpdate(float dt) {
   if (GM->loadMapData.length() > 0) {
     loadMapData();
   }
+
+  updateEnemyAI();
 }
 void GameScene::halfSecUpdate(float dt) {
   fogUpdateTimer -= dt;
@@ -15399,5 +15455,425 @@ void GameScene::applyResearch(int type) {
   else if (type == RESEARCH_HUMAN_DEFENSE) humanDefenseLevel++;
   else if (type == RESEARCH_ORC_ATTACK) orcAttackLevel++;
   else if (type == RESEARCH_ORC_DEFENSE) orcDefenseLevel++;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enemy AI
+// ─────────────────────────────────────────────────────────────────────────────
+
+static const int kEAIMaxWorkersPerHQ = 10;
+static const int kEAIMaxUnitsPerType = 10;
+
+void GameScene::addEnemyGold(int amount) {
+  enemyGold += amount;
+  if (enemyGold < 0) enemyGold = 0;
+}
+
+void GameScene::addEnemyLumber(int amount) {
+  enemyLumber += amount;
+  if (enemyLumber < 0) enemyLumber = 0;
+}
+
+// Recount enemy food from buildings/units (called each AI tick).
+void GameScene::enemyAIUpdateFood() {
+  int foodMax = 0;
+  int foodUse = 0;
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0) continue;
+    if (u->isBuilding && u->isBuildingComplete) {
+      if (u->unitType == UNIT_CASTLE)   foodMax += 6;
+      else if (u->unitType == UNIT_FARM)      foodMax += 7;
+      else if (u->unitType == UNIT_BARBECUE)  foodMax += 6;
+    } else if (!u->isBuilding) {
+      foodUse += GM->getFoodUseForUnit(u->unitType);
+    }
+  }
+  enemyFoodMax  = std::min(foodMax, 100);
+  enemyFoodInUse = foodUse;
+}
+
+// Check whether the building footprint (same coord convention as buildTheBuilding)
+// is fully clear of deco/soil blocks.
+bool GameScene::enemyAIIsTileFree(int bx, int by, int w, int h) {
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int tx = bx + i;
+      int ty = by - j - 1;
+      if (tx < 1 || ty < 1 ||
+          tx >= (int)mapSize.width  - 1 ||
+          ty >= (int)mapSize.height - 1) return false;
+      Vec2 coord(tx, ty);
+      if (decoLayer && isDecoBlock(getTileGIDAt(decoLayer, coord))) return false;
+      if (soilLayer && isSoilBlock(getTileGIDAt(soilLayer, coord))) return false;
+    }
+  }
+  return true;
+}
+
+// Spiral search around nearPos for a free placement tile.
+// avoidMines=true keeps the spot at least 6 tiles away from any mine.
+bool GameScene::enemyAIFindBuildTile(Vec2 nearPos, int w, int h,
+                                     int &outBx, int &outBy, bool avoidMines) {
+  Vec2 coord = getCoordinateFromPosition(nearPos);
+  int cx = (int)coord.x;
+  int cy = (int)coord.y;
+
+  for (int radius = 3; radius <= 22; radius++) {
+    for (int dy = -radius; dy <= radius; dy++) {
+      for (int dx = -radius; dx <= radius; dx++) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) continue;
+        // Footprint bottom row starts at cy+dy; buildTheBuilding uses by-h as bottom row
+        int bx = cx + dx;
+        int by = cy + dy + h;
+        if (!enemyAIIsTileFree(bx, by, w, h)) continue;
+        if (avoidMines) {
+          Vec2 worldPos = getPositionFromTileCoordinate(bx + w / 2, by - h / 2);
+          bool tooClose = false;
+          for (auto *m : mutualArray) {
+            if (m->unitType != UNIT_MINE) continue;
+            if (worldPos.distance(m->getPosition()) < 6.0f * TILE_SIZE) {
+              tooClose = true;
+              break;
+            }
+          }
+          if (tooClose) continue;
+        }
+        outBx = bx;
+        outBy = by;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ── Worker management ─────────────────────────────────────────────────────────
+
+void GameScene::enemyAIManageWorkers() {
+  const float HQ_RADIUS_SQ = (28.0f * TILE_SIZE) * (28.0f * TILE_SIZE);
+
+  // Snapshot to avoid iterator invalidation if units spawn/die during iteration.
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  // Collect enemy HQs.
+  std::vector<EnemyBase *> hqs;
+  for (auto *u : snap) {
+    if (u->unitType == UNIT_CASTLE && u->isBuilding &&
+        u->isBuildingComplete && u->energy > 0)
+      hqs.push_back(u);
+  }
+  if (hqs.empty()) return;
+
+  for (auto *hq : hqs) {
+    Vec2 hqPos = hq->getPosition();
+
+    std::vector<EnemyBase *> nearWorkers;
+    for (auto *u : snap) {
+      if (u->isBuilding || u->energy <= 0) continue;
+      if (u->unitType != UNIT_WORKER && u->unitType != UNIT_GOBLIN_WORKER) continue;
+      if (!u->isEnemy) continue;
+      if (hqPos.distanceSquared(u->getPosition()) > HQ_RADIUS_SQ) continue;
+      nearWorkers.push_back(u);
+    }
+
+    int goldWorkers = 0, woodWorkers = 0;
+    std::vector<EnemyBase *> idleWorkers;
+    for (auto *w : nearWorkers) {
+      if (w->isGatheringGold || w->unitAct == UNIT_ACT_GATHER_GOLD) goldWorkers++;
+      else if (w->isGatheringTree || w->unitAct == UNIT_ACT_GATHER_TREE) woodWorkers++;
+      else if (!w->isGoingToBuild && w->unitAct == UNIT_ACT_NONE) idleWorkers.push_back(w);
+    }
+
+    for (auto *worker : idleWorkers) {
+      if ((int)nearWorkers.size() > kEAIMaxWorkersPerHQ) break;
+
+      // Assign returning place so deposits work.
+      EnemyBase *tank = getNearestLumberTank(worker->getPosition(), true);
+      if (tank) worker->returningPlace = tank;
+
+      bool sendToGold = (goldWorkers <= woodWorkers);
+      if (sendToGold) {
+        EnemyBase *nearest = nullptr;
+        float minD = FLT_MAX;
+        for (auto *m : mutualArray) {
+          if (m->unitType != UNIT_MINE || m->energy <= 0) continue;
+          float d = worker->getPosition().distanceSquared(m->getPosition());
+          if (d < minD) { minD = d; nearest = m; }
+        }
+        if (nearest) { setWorkerToMine(worker, nearest); goldWorkers++; }
+      } else {
+        EnemyBase *nearest = nullptr;
+        float minD = FLT_MAX;
+        for (auto *m : mutualArray) {
+          if ((m->unitType != UNIT_TREE && m->unitType != UNIT_TREE_FOR_BATTLE) ||
+              m->energy <= 0) continue;
+          float d = worker->getPosition().distanceSquared(m->getPosition());
+          if (d < minD) { minD = d; nearest = m; }
+        }
+        if (nearest) { setWorkerToTree(worker, nearest); woodWorkers++; }
+      }
+    }
+  }
+}
+
+// ── Building management ───────────────────────────────────────────────────────
+
+struct EAIBuildDef {
+  int unitType;
+  const char *sprite;
+  int prereqType; // -1 = none
+};
+
+static const EAIBuildDef kHumanBuildList[] = {
+  {UNIT_FARM,       "farm.png",        -1},
+  {UNIT_BARRACKS,   "barracks.png",    -1},
+  {UNIT_LUMBERMILL, "lumberMill.png",  -1},
+  {UNIT_FACTORY,    "factory.png",     UNIT_LUMBERMILL},
+  {UNIT_AIRPORT,    "airport.png",     UNIT_LUMBERMILL},
+};
+static const EAIBuildDef kOrcBuildList[] = {
+  {UNIT_BARBECUE,        "barbecue.png",   -1},
+  {UNIT_ORC_BUNKER,      "bunker.png",     -1},
+  {UNIT_ORC_BARRACKS,    "axeport.png",    -1},
+  {UNIT_ORC_TROLL_HOUSE, "statueHouse.png",UNIT_ORC_BARRACKS},
+  {UNIT_TEMPLE,          "alter.png",      UNIT_ORC_BARRACKS},
+};
+
+void GameScene::enemyAICheckBuildings() {
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  // Detect race from any orc unit already in the enemy array.
+  bool isOrc = false;
+  for (auto *u : snap) {
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+  }
+
+  const EAIBuildDef *buildList     = isOrc ? kOrcBuildList : kHumanBuildList;
+  const int          buildListSize = 5;
+  const float        BASE_RADIUS_SQ = (22.0f * TILE_SIZE) * (22.0f * TILE_SIZE);
+
+  // Collect completed HQs.
+  std::vector<EnemyBase *> hqs;
+  for (auto *u : snap) {
+    if (u->unitType == UNIT_CASTLE && u->isBuilding &&
+        u->isBuildingComplete && u->energy > 0)
+      hqs.push_back(u);
+  }
+
+  // If workers exist but no HQ, build one first.
+  if (hqs.empty()) {
+    bool hasWorker = false;
+    Vec2 workerPos;
+    for (auto *u : snap) {
+      if (!u->isBuilding && u->energy > 0 && u->isEnemy &&
+          (u->unitType == UNIT_WORKER || u->unitType == UNIT_GOBLIN_WORKER)) {
+        hasWorker = true;
+        workerPos = u->getPosition();
+        break;
+      }
+    }
+    if (!hasWorker) return;
+
+    int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
+    int gCost  = getGoldPriceForUnit(hqType);
+    int lCost  = getLumberPriceForUnit(hqType);
+    if (enemyGold < gCost || enemyLumber < lCost) return;
+
+    Vec2 sz = GM->getBuildingOccupySize(hqType);
+    int w = (int)sz.x, h = (int)sz.y;
+    int bx, by;
+    if (!enemyAIFindBuildTile(workerPos, w, h, bx, by, true)) return;
+
+    const char *spr = isOrc ? "hq.png" : "castle.png";
+    EnemyBase *bld = buildTheBuilding(hqType, bx, by, w, h, spr, WHICH_SIDE_ENEMY, true);
+    if (bld) {
+      addEnemyGold(-gCost);
+      addEnemyLumber(-lCost);
+      setAfterBuildingProcess(bld);
+    }
+    return;
+  }
+
+  bool foodShort = (enemyFoodMax > 0 && enemyFoodInUse >= enemyFoodMax - 4);
+
+  auto countNear = [&](int type, Vec2 hqPos) {
+    int n = 0;
+    for (auto *u : snap)
+      if (u->unitType == type && u->isBuilding && u->energy > 0 &&
+          hqPos.distanceSquared(u->getPosition()) < BASE_RADIUS_SQ) n++;
+    return n;
+  };
+
+  for (auto *hq : hqs) {
+    Vec2 hqPos = hq->getPosition();
+
+    const EAIBuildDef *pick = nullptr;
+
+    if (foodShort) {
+      int foodType = isOrc ? UNIT_BARBECUE : UNIT_FARM;
+      if (countNear(foodType, hqPos) == 0)
+        for (int i = 0; i < buildListSize; i++)
+          if (buildList[i].unitType == foodType) { pick = &buildList[i]; break; }
+    }
+
+    if (!pick) {
+      for (int i = 0; i < buildListSize; i++) {
+        const EAIBuildDef &def = buildList[i];
+        if (countNear(def.unitType, hqPos) > 0) continue;
+        if (def.prereqType != -1 && countNear(def.prereqType, hqPos) == 0) continue;
+        pick = &def;
+        break;
+      }
+    }
+
+    if (!pick) continue;
+
+    int gCost = getGoldPriceForUnit(pick->unitType);
+    int lCost = getLumberPriceForUnit(pick->unitType);
+    if (enemyGold < gCost || enemyLumber < lCost) continue;
+
+    Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
+    int w = (int)sz.x, h = (int)sz.y;
+    int bx, by;
+    if (!enemyAIFindBuildTile(hqPos, w, h, bx, by, false)) continue;
+
+    EnemyBase *bld = buildTheBuilding(pick->unitType, bx, by, w, h,
+                                      pick->sprite, WHICH_SIDE_ENEMY, true);
+    if (!bld) continue;
+    addEnemyGold(-gCost);
+    addEnemyLumber(-lCost);
+    setAfterBuildingProcess(bld);
+  }
+}
+
+// ── Unit training ─────────────────────────────────────────────────────────────
+
+struct EAIProdEntry {
+  int buildType;
+  int units[4]; // -1 terminates
+};
+
+static const EAIProdEntry kHumanProd[] = {
+  {UNIT_BARRACKS, {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
+  {UNIT_FACTORY,  {UNIT_CATAPULT,  -1, -1, -1}},
+  {UNIT_AIRPORT,  {UNIT_HELICOPTER,-1, -1, -1}},
+  {-1, {-1,-1,-1,-1}},
+};
+static const EAIProdEntry kOrcProd[] = {
+  {UNIT_ORC_BARRACKS,    {UNIT_ORC_AXE,  UNIT_ORC_SPEAR, -1, -1}},
+  {UNIT_ORC_TROLL_HOUSE, {UNIT_TROLL,    -1, -1, -1}},
+  {UNIT_TEMPLE,          {UNIT_GOBLIN,   UNIT_GOBLIN_BOMB, -1, -1}},
+  {-1, {-1,-1,-1,-1}},
+};
+
+void GameScene::enemyAITrainUnits() {
+  enemyAITrainTimer += 1.0f;
+  if (enemyAITrainTimer < 30.0f) return;
+  enemyAITrainTimer = 0.0f;
+
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  bool isOrc = false;
+  for (auto *u : snap)
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+
+  const EAIProdEntry *prodTable = isOrc ? kOrcProd : kHumanProd;
+  int workerType = isOrc ? UNIT_GOBLIN_WORKER : UNIT_WORKER;
+
+  // Count existing non-building enemy units by type.
+  std::map<int, int> counts;
+  for (auto *u : snap)
+    if (!u->isBuilding && u->energy > 0) counts[u->unitType]++;
+
+  // Count HQs to set worker target.
+  int hqCount = 0;
+  for (auto *u : snap)
+    if (u->unitType == UNIT_CASTLE && u->isBuilding && u->isBuildingComplete && u->energy > 0)
+      hqCount++;
+
+  for (auto *bld : snap) {
+    if (!bld->isBuilding || !bld->isBuildingComplete || bld->energy <= 0) continue;
+
+    Vec2 spawnPos = bld->getApproachingPoint(bld->getPosition());
+
+    // Castle → workers
+    if (bld->unitType == UNIT_CASTLE) {
+      int targetWorkers = hqCount * kEAIMaxWorkersPerHQ;
+      if (counts[workerType] >= targetWorkers) continue;
+      int gCost = getGoldPriceForUnit(workerType);
+      int lCost = getLumberPriceForUnit(workerType);
+      int fCost = GM->getFoodUseForUnit(workerType);
+      if (enemyGold < gCost || enemyLumber < lCost) continue;
+      if (enemyFoodInUse + fCost > enemyFoodMax) continue;
+      EnemyBase *u = createUnit(workerType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
+                                spawnPos, GM->getUnitName(workerType), 1,
+                                getSpriteNameForUnit(workerType).c_str());
+      if (u) {
+        addEnemyGold(-gCost);
+        addEnemyLumber(-lCost);
+        enemyFoodInUse += fCost;
+        counts[workerType]++;
+      }
+      continue;
+    }
+
+    // Combat buildings
+    for (int pi = 0; prodTable[pi].buildType != -1; pi++) {
+      if (prodTable[pi].buildType != bld->unitType) continue;
+      for (int ui = 0; ui < 4 && prodTable[pi].units[ui] != -1; ui++) {
+        int uType = prodTable[pi].units[ui];
+        if (counts[uType] >= kEAIMaxUnitsPerType) continue;
+        int gCost = getGoldPriceForUnit(uType);
+        int lCost = getLumberPriceForUnit(uType);
+        int fCost = GM->getFoodUseForUnit(uType);
+        if (enemyGold < gCost || enemyLumber < lCost) continue;
+        if (enemyFoodInUse + fCost > enemyFoodMax) continue;
+        EnemyBase *u = createUnit(uType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
+                                  spawnPos, GM->getUnitName(uType), 1,
+                                  getSpriteNameForUnit(uType).c_str());
+        if (u) {
+          addEnemyGold(-gCost);
+          addEnemyLumber(-lCost);
+          enemyFoodInUse += fCost;
+          counts[uType]++;
+        }
+        break; // one unit type per building per training tick
+      }
+      break;
+    }
+  }
+}
+
+// ── Main AI entry point (called every second) ─────────────────────────────────
+
+void GameScene::updateEnemyAI() {
+  if (isMultiplay) return;
+
+  // One-time init: detect whether the map has any water tiles.
+  if (!enemyAIInitialized) {
+    enemyAIInitialized = true;
+    mapHasWater = false;
+    for (int j = 0; j < (int)mapSize.height && !mapHasWater; j++)
+      for (int i = 0; i < (int)mapSize.width && !mapHasWater; i++)
+        if (isWaterTileAt(i, j)) mapHasWater = true;
+    enemyGold   = 1000;
+    enemyLumber = 1000;
+  }
+
+  // Only run when the enemy side has at least one building.
+  bool hasEnemyBuilding = false;
+  for (auto *u : enemyArray)
+    if (u->isBuilding && u->energy > 0) { hasEnemyBuilding = true; break; }
+  if (!hasEnemyBuilding) return;
+
+  enemyAIUpdateFood();
+  enemyAIManageWorkers();
+  enemyAITrainUnits();
+
+  enemyAIBuildTimer += 1.0f;
+  if (enemyAIBuildTimer >= 60.0f) {
+    enemyAIBuildTimer = 0.0f;
+    enemyAICheckBuildings();
+  }
 }
 
