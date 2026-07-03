@@ -17,6 +17,8 @@
 #include <windows.h>
 #include <commdlg.h>
 #include "platform/desktop/CCGLViewImpl-desktop.h"
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+#include "MacFileDialog.h"
 #endif
 
 USING_NS_CC;
@@ -2032,7 +2034,7 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
 }
 
 void MapEditor::saveMap() {
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
     // A never-saved map has no path yet, so "Save" behaves like "Save As" the
     // first time — same convention as a typical document editor.
     if (currentFilePath.empty()) {
@@ -2066,6 +2068,19 @@ void MapEditor::saveMapAs() {
         isDirty = false;
     }
     setStatus(ok ? StringUtils::format("Saved %s", path.c_str()) : "Save failed");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    std::string path = macShowSaveDialog("map.json");
+    if (path.empty()) {
+        setStatus("Save cancelled");
+        return;
+    }
+    std::string json = serialize();
+    bool ok = FileUtils::getInstance()->writeStringToFile(json, path);
+    if (ok) {
+        currentFilePath = path;
+        isDirty = false;
+    }
+    setStatus(ok ? StringUtils::format("Saved %s", path.c_str()) : "Save failed");
 #else
     saveMap();
 #endif
@@ -2074,6 +2089,19 @@ void MapEditor::saveMapAs() {
 void MapEditor::loadMap() {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
     std::string path = win32ShowOpenDialog();
+    if (path.empty()) {
+        setStatus("Load cancelled");
+        return;
+    }
+    std::string json = FileUtils::getInstance()->getStringFromFile(path);
+    bool ok = deserialize(json);
+    if (ok) {
+        currentFilePath = path;
+        isDirty = false;
+    }
+    setStatus(ok ? StringUtils::format("Loaded %s", path.c_str()) : "Load failed (corrupt file)");
+#elif (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    std::string path = macShowOpenDialog();
     if (path.empty()) {
         setStatus("Load cancelled");
         return;

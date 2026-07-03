@@ -71,6 +71,7 @@
 		EC91843F26BE81CF00E63225 /* Laser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E126BE81CE00E63225 /* Laser.cpp */; };
 		EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
 		EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
+		676C6B636DCD40B48839842B /* MacFileDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */; };
 		EC91844026BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844126BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844226BE81CF00E63225 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E626BE81CE00E63225 /* HeroPage.cpp */; };
@@ -325,6 +326,8 @@
 		EC91840326BE81CF00E63225 /* HudLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HudLayer.cpp; sourceTree = "<group>"; };
 		EC9185AA26BE81CF00E63225 /* MapEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapEditor.cpp; sourceTree = "<group>"; };
 		EC9185AB26BE81CF00E63225 /* MapEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapEditor.h; sourceTree = "<group>"; };
+		62B1185A43384EDAB08151C7 /* MacFileDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacFileDialog.h; sourceTree = "<group>"; };
+		BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MacFileDialog.mm; sourceTree = "<group>"; };
 		EC91840426BE81CF00E63225 /* GameSharing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameSharing.cpp; sourceTree = "<group>"; };
 		EC91840526BE81CF00E63225 /* EventPopup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventPopup.cpp; sourceTree = "<group>"; };
 		EC91840626BE81CF00E63225 /* LegendDaryButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendDaryButton.h; sourceTree = "<group>"; };
@@ -647,6 +650,8 @@
 				EC91840926BE81CF00E63225 /* MultiplayLobby.h */,
 					EC9185AA26BE81CF00E63225 /* MapEditor.cpp */,
 					EC9185AB26BE81CF00E63225 /* MapEditor.h */,
+					62B1185A43384EDAB08151C7 /* MacFileDialog.h */,
+					BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */,
 				EC91840B26BE81CF00E63225 /* MultiplayManager.cpp */,
 				EC91840C26BE81CF00E63225 /* MultiplayManager.h */,
 				EC9183D526BE81CE00E63225 /* NativeInterface.h */,
@@ -1034,6 +1039,7 @@
 				EC91843126BE81CF00E63225 /* MultiplayLobby.cpp in Sources */,
 				EC91846526BE81CF00E63225 /* AppDelegate.cpp in Sources */,
 					EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */,
+				676C6B636DCD40B48839842B /* MacFileDialog.mm in Sources */,
 				EC91846126BE81CF00E63225 /* Inventory.cpp in Sources */,
 				EC91842726BE81CF00E63225 /* GameManager.cpp in Sources */,
 				EC91845D26BE81CF00E63225 /* GameSharing.cpp in Sources */,

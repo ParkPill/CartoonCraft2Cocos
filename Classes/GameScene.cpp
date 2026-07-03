@@ -427,6 +427,25 @@ void GameScene::updateUnitMoveNew(float dt) {
   }
 
   for (auto unit : enemyArray) {
+    if (!unit->isInShuttle && unit->pendingShuttle) {
+      EnemyBase *shuttle = (EnemyBase *)unit->pendingShuttle;
+      if (!shuttle || shuttle->isDead || shuttle->energy <= 0) {
+        unit->pendingShuttle = nullptr;
+      } else {
+        float dist = unit->getPosition().distance(shuttle->getPosition());
+        if (dist <= TILE_SIZE * 3 && isShuttleAdjacentToLand(shuttle)) {
+          unit->pendingShuttle = nullptr;
+          if (loadUnitToShuttle(shuttle, unit)) {
+            refreshShuttleCargoPanel();
+          }
+        }
+      }
+    }
+    if (unit->isInShuttle) {
+      if (unit->myShuttle)
+        unit->setPosition(unit->myShuttle->getPosition());
+      continue;
+    }
     if (unit->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH) {
       unit->restingTime -= dt;
       if (unit->restingTime < 0) {
@@ -5778,6 +5797,258 @@ void GameScene::resetWaterPathState() {
   for (auto u : enemyArray) markBuilding(u);
 }
 
+// Generic 4-connected flood fill: assigns an incrementing region ID to every
+// tile where `passable(x,y)` holds. outIds is sized w x h, -1 = ungrouped.
+// Returns the number of regions found.
+template <typename Pred>
+static int floodFillRegions(int w, int h, Pred passable,
+                             std::vector<std::vector<int>> &outIds) {
+  outIds.assign(w, std::vector<int>(h, -1));
+  int nextId = 0;
+  std::vector<std::pair<int, int>> stack;
+  static const int dx[] = {1, -1, 0, 0};
+  static const int dy[] = {0, 0, 1, -1};
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      if (outIds[i][j] != -1 || !passable(i, j)) continue;
+      int id = nextId++;
+      stack.clear();
+      stack.push_back(std::make_pair(i, j));
+      outIds[i][j] = id;
+      while (!stack.empty()) {
+        int cx = stack.back().first, cy = stack.back().second;
+        stack.pop_back();
+        for (int k = 0; k < 4; k++) {
+          int nx = cx + dx[k], ny = cy + dy[k];
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          if (outIds[nx][ny] != -1 || !passable(nx, ny)) continue;
+          outIds[nx][ny] = id;
+          stack.push_back(std::make_pair(nx, ny));
+        }
+      }
+    }
+  }
+  return nextId;
+}
+
+// Labels every land tile with an island ID and every water tile with a water-
+// region ID (both via floodFillRegions above), then records which water
+// regions border which islands. Terrain-only (soilLayer/stageLayer) so the
+// result is stable regardless of buildings/units placed later.
+void GameScene::computeIslandRegions() {
+  islandRegionsComputed = true;
+  landIslandId.clear();
+  waterRegionId.clear();
+  islandBorderWaterRegions.clear();
+  if (theMap == nullptr) return;
+
+  int w = (int)mapSize.width, h = (int)mapSize.height;
+  if (w <= 0 || h <= 0) return;
+
+  floodFillRegions(w, h, [&](int x, int y) {
+    return !isSoilBlock(getTileGIDAt(soilLayer, Vec2(x, y)));
+  }, landIslandId);
+
+  floodFillRegions(w, h, [&](int x, int y) {
+    return isWaterTileAt(x, y);
+  }, waterRegionId);
+
+  static const int dx[] = {1, -1, 0, 0};
+  static const int dy[] = {0, 0, 1, -1};
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int island = landIslandId[i][j];
+      if (island < 0) continue;
+      for (int k = 0; k < 4; k++) {
+        int nx = i + dx[k], ny = j + dy[k];
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        int wr = waterRegionId[nx][ny];
+        if (wr >= 0) islandBorderWaterRegions[island].insert(wr);
+      }
+    }
+  }
+}
+
+int GameScene::getIslandIdAt(cocos2d::Vec2 worldPos) {
+  if (!islandRegionsComputed) computeIslandRegions();
+  if (landIslandId.empty()) return -1;
+  Vec2 t = getCoordinateFromPosition(worldPos);
+  int x = (int)t.x, y = (int)t.y;
+  if (x < 0 || y < 0 || x >= (int)landIslandId.size() || y >= (int)landIslandId[0].size())
+    return -1;
+  return landIslandId[x][y];
+}
+
+bool GameScene::isSameIsland(cocos2d::Vec2 worldPosA, cocos2d::Vec2 worldPosB) {
+  int a = getIslandIdAt(worldPosA);
+  int b = getIslandIdAt(worldPosB);
+  return a >= 0 && a == b;
+}
+
+bool GameScene::isSingleShuttleHopAway(cocos2d::Vec2 worldPosA, cocos2d::Vec2 worldPosB) {
+  int a = getIslandIdAt(worldPosA);
+  int b = getIslandIdAt(worldPosB);
+  if (a < 0 || b < 0 || a == b) return false;
+  auto itA = islandBorderWaterRegions.find(a);
+  auto itB = islandBorderWaterRegions.find(b);
+  if (itA == islandBorderWaterRegions.end() || itB == islandBorderWaterRegions.end())
+    return false;
+  for (int wr : itA->second)
+    if (itB->second.count(wr)) return true;
+  return false;
+}
+
+cocos2d::Vec2 GameScene::findCoastalDropPoint(cocos2d::Vec2 worldTarget) {
+  if (!islandRegionsComputed) computeIslandRegions();
+  int targetIsland = getIslandIdAt(worldTarget);
+  if (targetIsland < 0 || landIslandId.empty()) return Vec2::ZERO;
+
+  int w = (int)landIslandId.size(), h = (int)landIslandId[0].size();
+  Vec2 targetTile = getCoordinateFromPosition(worldTarget);
+  static const int dx[] = {1, -1, 0, 0};
+  static const int dy[] = {0, 0, 1, -1};
+
+  Vec2 best = Vec2::ZERO;
+  float bestD = FLT_MAX;
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      if (landIslandId[i][j] != targetIsland) continue;
+      for (int k = 0; k < 4; k++) {
+        int nx = i + dx[k], ny = j + dy[k];
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        if (waterRegionId[nx][ny] < 0) continue;
+        float d = ((float)nx - targetTile.x) * ((float)nx - targetTile.x) +
+                  ((float)ny - targetTile.y) * ((float)ny - targetTile.y);
+        if (d < bestD) {
+          bestD = d;
+          best = getPositionFromTileCoordinate(nx, ny);
+        }
+      }
+    }
+  }
+  return best;
+}
+
+// Finds a same-side Shuttle with cargo room and sends `unit` to board it
+// (reusing the existing pendingShuttle "walk over, auto-board" pump). Marks
+// the Shuttle as auto-ferrying toward finalWorldTarget's island so
+// updateShuttleFerries() picks up sailing/unloading once boarding completes.
+bool GameScene::beginShuttleFerry(Movable *unit, cocos2d::Vec2 finalWorldTarget) {
+  if (unit == nullptr || unit->isInShuttle || unit->pendingShuttle != nullptr)
+    return false;
+
+  int cols, rows;
+  getCargoSize(unit->unitType, cols, rows);
+
+  auto &army = unit->isEnemy ? enemyArray : heroArray;
+  EnemyBase *bestShuttle = nullptr;
+  float bestD = FLT_MAX;
+  for (auto *u : army) {
+    if (!u || u->energy <= 0) continue;
+    if (u->unitType != UNIT_HUMAN_SHUTTLE && u->unitType != UNIT_ORC_SHUTTLE) continue;
+    // Don't hijack a Shuttle that's already ferrying passengers somewhere else.
+    if (u->isAutoFerrying && u->autoFerryDropTarget != finalWorldTarget) continue;
+    int outCol, outRow;
+    if (!findCargoSlot(u, cols, rows, outCol, outRow)) continue;
+    float d = unit->getPosition().distanceSquared(u->getPosition());
+    if (d < bestD) { bestD = d; bestShuttle = u; }
+  }
+  if (!bestShuttle) return false;
+
+  unit->pendingShuttle = bestShuttle;
+  unit->needsFerryToTarget = true;
+  unit->ferryFinalTarget = finalWorldTarget;
+  unit->moveToPos = Vec2::ZERO;
+  unit->moveFlagPos = bestShuttle->getPosition();
+  unit->target = nullptr;
+  unit->unitAct = UNIT_ACT_MOVE;
+  unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+
+  bestShuttle->isAutoFerrying = true;
+  bestShuttle->autoFerryDropTarget = finalWorldTarget;
+  return true;
+}
+
+void GameScene::updateShuttleFerries() {
+  // Passengers whose ferry stalled (e.g. lost a boarding race to another
+  // unit) still have needsFerryToTarget set but no Shuttle assigned - retry.
+  auto retryPending = [&](Vector<EnemyBase *> &army) {
+    for (auto *u : army) {
+      if (!u || u->energy <= 0) continue;
+      if (!u->needsFerryToTarget || u->isInShuttle || u->pendingShuttle) continue;
+      beginShuttleFerry(u, u->ferryFinalTarget);
+    }
+  };
+  retryPending(heroArray);
+  retryPending(enemyArray);
+
+  auto driveShuttles = [&](Vector<EnemyBase *> &army) {
+    // Snapshot: a completed ferry calls unloadShuttle(), which can mutate
+    // shuttleCargo/positions of other units the outer loop hasn't reached yet.
+    std::vector<EnemyBase *> snap(army.begin(), army.end());
+    for (auto *shuttle : snap) {
+      if (!shuttle || shuttle->energy <= 0) continue;
+      if (shuttle->unitType != UNIT_HUMAN_SHUTTLE && shuttle->unitType != UNIT_ORC_SHUTTLE) continue;
+      if (!shuttle->isAutoFerrying) continue;
+
+      bool hasFerryPassenger = false;
+      for (auto &slot : shuttle->shuttleCargo) {
+        EnemyBase *pax = (EnemyBase *)slot.unit;
+        if (pax && pax->needsFerryToTarget) { hasFerryPassenger = true; break; }
+      }
+      if (!hasFerryPassenger) continue; // still waiting for boarding
+
+      if (shuttle->unitAct != UNIT_ACT_MOVE) {
+        // Not yet sailing for this ferry - issue the order.
+        Vec2 drop = findCoastalDropPoint(shuttle->autoFerryDropTarget);
+        if (drop == Vec2::ZERO) {
+          // No reachable coast found (shouldn't happen once
+          // isSingleShuttleHopAway already passed) - abandon rather than
+          // strand the passengers forever.
+          for (auto &slot : shuttle->shuttleCargo) {
+            EnemyBase *pax = (EnemyBase *)slot.unit;
+            if (pax) pax->needsFerryToTarget = false;
+          }
+          shuttle->isAutoFerrying = false;
+          continue;
+        }
+        shuttle->moveToPos = Vec2::ZERO;
+        shuttle->moveFlagPos = drop;
+        shuttle->target = nullptr;
+        shuttle->unitAct = UNIT_ACT_MOVE;
+        shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+        continue;
+      }
+
+      // Already sailing - check arrival.
+      float dist = shuttle->getPosition().distance(shuttle->moveFlagPos);
+      if (dist <= TILE_SIZE * 1.5f && isShuttleAdjacentToLand(shuttle)) {
+        std::vector<std::pair<EnemyBase *, Vec2>> toResume;
+        for (auto &slot : shuttle->shuttleCargo) {
+          EnemyBase *pax = (EnemyBase *)slot.unit;
+          if (pax && pax->needsFerryToTarget)
+            toResume.push_back(std::make_pair(pax, pax->ferryFinalTarget));
+        }
+        unloadShuttle(shuttle);
+        shuttle->isAutoFerrying = false;
+        shuttle->autoFerryDropTarget = Vec2::ZERO;
+        shuttle->unitAct = UNIT_ACT_NONE;
+        shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+        shuttle->moveToPos = Vec2::ZERO;
+        shuttle->moveFlagPos = Vec2::ZERO;
+        for (auto &pr : toResume) {
+          EnemyBase *pax = pr.first;
+          if (!pax || pax->energy <= 0) continue;
+          pax->needsFerryToTarget = false;
+          moveAndAttackTo(pax, pr.second);
+        }
+      }
+    }
+  };
+  driveShuttles(heroArray);
+  driveShuttles(enemyArray);
+}
+
 void GameScene::createTrap(EnemyBase *enemy, cocos2d::Vec2 pos) {
   enemy->setPosition(pos);
   enemy->ap = getHeroMaxHP(0) / 4;
@@ -8263,6 +8534,7 @@ void GameScene::oneSecUpdate(float dt) {
   }
 
   updateEnemyAI();
+  if (!isMultiplay) updateShuttleFerries();
 }
 void GameScene::halfSecUpdate(float dt) {
   fogUpdateTimer -= dt;
@@ -14783,10 +15055,11 @@ int GameScene::getOilPriceForUnit(int index) {
   }
   return 0;
 }
-EnemyBase *GameScene::getNearestOilDepot(cocos2d::Vec2 pos) {
+EnemyBase *GameScene::getNearestOilDepot(cocos2d::Vec2 pos, bool isEnemy) {
   long minDistance = 20000000;
   EnemyBase *nearest = nullptr;
-  for (auto unit : heroArray) {
+  auto &army = isEnemy ? enemyArray : heroArray;
+  for (auto unit : army) {
     if (unit->unitType != UNIT_HUMAN_SHIPYARD &&
         unit->unitType != UNIT_HUMAN_OIL_REFINERY &&
         unit->unitType != UNIT_ORC_SHIPYARD &&
@@ -15463,6 +15736,13 @@ void GameScene::applyResearch(int type) {
 
 static const int kEAIMaxWorkersPerHQ = 10;
 static const int kEAIMaxUnitsPerType = 10;
+// Two OilShips per OilSpot - one can be shuttling to/from the depot while
+// the other loads at the extractor, keeping oil actually flowing.
+static const int kEAIShipsPerExtractor = 2;
+// Shipyard fleet composition caps.
+static const int kEAIMaxShuttles = 3;      // cheap transport - a few are enough
+static const int kEAIMaxShips = 10;        // main naval workhorse
+static const int kEAIMaxBattleShips = 5;   // priciest unit - keep the fleet affordable
 
 void GameScene::addEnemyGold(int amount) {
   enemyGold += amount;
@@ -15472,6 +15752,11 @@ void GameScene::addEnemyGold(int amount) {
 void GameScene::addEnemyLumber(int amount) {
   enemyLumber += amount;
   if (enemyLumber < 0) enemyLumber = 0;
+}
+
+void GameScene::addEnemyOil(int amount) {
+  enemyOil += amount;
+  if (enemyOil < 0) enemyOil = 0;
 }
 
 // Recount enemy food from buildings/units (called each AI tick).
@@ -15538,6 +15823,47 @@ bool GameScene::enemyAIFindBuildTile(Vec2 nearPos, int w, int h,
           }
           if (tooClose) continue;
         }
+        outBx = bx;
+        outBy = by;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Water-building variant of enemyAIIsTileFree: the footprint must be open
+// water (soilLayer marks water tiles - see isWaterTileAt) and not deco-blocked.
+bool GameScene::enemyAIIsWaterTileFree(int bx, int by, int w, int h) {
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int tx = bx + i;
+      int ty = by - j - 1;
+      if (tx < 1 || ty < 1 ||
+          tx >= (int)mapSize.width  - 1 ||
+          ty >= (int)mapSize.height - 1) return false;
+      Vec2 coord(tx, ty);
+      if (!isSoilBlock(getTileGIDAt(soilLayer, coord))) return false;
+      if (decoLayer && isDecoBlock(getTileGIDAt(decoLayer, coord))) return false;
+    }
+  }
+  return true;
+}
+
+// Spiral search around nearPos for a free water placement tile (Shipyard).
+bool GameScene::enemyAIFindWaterBuildTile(Vec2 nearPos, int w, int h,
+                                          int &outBx, int &outBy) {
+  Vec2 coord = getCoordinateFromPosition(nearPos);
+  int cx = (int)coord.x;
+  int cy = (int)coord.y;
+
+  for (int radius = 1; radius <= 30; radius++) {
+    for (int dy = -radius; dy <= radius; dy++) {
+      for (int dx = -radius; dx <= radius; dx++) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) continue;
+        int bx = cx + dx;
+        int by = cy + dy + h;
+        if (!enemyAIIsWaterTileFree(bx, by, w, h)) continue;
         outBx = bx;
         outBy = by;
         return true;
@@ -15616,6 +15942,102 @@ void GameScene::enemyAIManageWorkers() {
   }
 }
 
+// ── Ship management (OilShip) ─────────────────────────────────────────────────
+
+// Assign idle enemy OilShips to an OilExtractor: reuse a completed extractor
+// that has no ship working it yet, or claim the nearest unclaimed OilSpot and
+// build a new extractor there (mirrors enemyAICheckBuildings' instant-build
+// pattern - no travel/construction time, same as every other AI building).
+void GameScene::enemyAIManageShips() {
+  if (!mapHasWater) return;
+
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  std::vector<EnemyBase *> idleOilShips;
+  for (auto *u : snap) {
+    if (u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (u->unitType != UNIT_HUMAN_OIL_SHIP && u->unitType != UNIT_ORC_OIL_SHIP) continue;
+    if (u->isGatheringOil || u->isCarryingOil) continue;
+    idleOilShips.push_back(u);
+  }
+  if (idleOilShips.empty()) return;
+
+  bool isOrc = false;
+  for (auto *u : snap)
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+
+  int extractorType = isOrc ? UNIT_ORC_OIL_EXTRACTOR : UNIT_HUMAN_OIL_EXTRACTOR;
+  const char *extractorSprite = isOrc ? "orcOilExtractor.png" : "humanOilExtractor.png";
+  Vec2 extractorSize = GM->getBuildingOccupySize(extractorType);
+  int ew = (int)extractorSize.x, eh = (int)extractorSize.y;
+  int gCost = getGoldPriceForUnit(extractorType);
+  int lCost = getLumberPriceForUnit(extractorType);
+
+  for (auto *ship : idleOilShips) {
+    // Prefer a completed enemy extractor that isn't fully staffed yet.
+    EnemyBase *bestExtractor = nullptr;
+    float bestD = FLT_MAX;
+    for (auto *u : snap) {
+      if (u->unitType != extractorType || !u->isBuildingComplete || u->energy <= 0) continue;
+      int assigned = 0;
+      for (auto *s2 : snap) {
+        if (s2 == ship) continue;
+        if (s2->unitType != UNIT_HUMAN_OIL_SHIP && s2->unitType != UNIT_ORC_OIL_SHIP) continue;
+        if ((s2->isGatheringOil || s2->isCarryingOil) && s2->currentOilExtractor == u) {
+          assigned++;
+        }
+      }
+      if (assigned >= kEAIShipsPerExtractor) continue;
+      float d = ship->getPosition().distanceSquared(u->getPosition());
+      if (d < bestD) { bestD = d; bestExtractor = u; }
+    }
+    if (bestExtractor) {
+      setOilShipToExtractor(ship, bestExtractor);
+      continue;
+    }
+
+    // No free extractor - claim the nearest OilSpot and build one there.
+    if (enemyGold < gCost || enemyLumber < lCost) continue;
+
+    // Try oil spots nearest-first; skip ones already tried this pass so a
+    // build failure (e.g. spot already occupied) falls through to the next.
+    std::vector<EnemyBase *> tried;
+    while (true) {
+      EnemyBase *nearestSpot = nullptr;
+      float bestSpotD = FLT_MAX;
+      for (auto *m : mutualArray) {
+        if (m->unitType != UNIT_OIL_SPOT || m->energy <= 0) continue;
+        bool alreadyTried = false;
+        for (auto *t : tried) if (t == m) { alreadyTried = true; break; }
+        if (alreadyTried) continue;
+        float d = ship->getPosition().distanceSquared(m->getPosition());
+        if (d < bestSpotD) { bestSpotD = d; nearestSpot = m; }
+      }
+      if (!nearestSpot) break;
+      tried.push_back(nearestSpot);
+
+      Vec2 spotCoord = getCoordinateFromPosition(nearestSpot->getPosition());
+      int sx = (int)spotCoord.x, sy = (int)spotCoord.y;
+      EnemyBase *extractor = nullptr;
+      for (int oy = 0; oy < eh && !extractor; oy++) {
+        for (int ox = 0; ox < ew && !extractor; ox++) {
+          int bx = sx - ox;
+          int by = sy + eh - oy;
+          extractor = buildTheBuilding(extractorType, bx, by, ew, eh,
+                                       extractorSprite, WHICH_SIDE_ENEMY, true);
+        }
+      }
+      if (extractor) {
+        addEnemyGold(-gCost);
+        addEnemyLumber(-lCost);
+        setAfterBuildingProcess(extractor);
+        setOilShipToExtractor(ship, extractor);
+        break;
+      }
+    }
+  }
+}
+
 // ── Building management ───────────────────────────────────────────────────────
 
 struct EAIBuildDef {
@@ -15625,18 +16047,20 @@ struct EAIBuildDef {
 };
 
 static const EAIBuildDef kHumanBuildList[] = {
-  {UNIT_FARM,       "farm.png",        -1},
-  {UNIT_BARRACKS,   "barracks.png",    -1},
-  {UNIT_LUMBERMILL, "lumberMill.png",  -1},
-  {UNIT_FACTORY,    "factory.png",     UNIT_LUMBERMILL},
-  {UNIT_AIRPORT,    "airport.png",     UNIT_LUMBERMILL},
+  {UNIT_FARM,           "farm.png",         -1},
+  {UNIT_BARRACKS,       "barracks.png",     -1},
+  {UNIT_LUMBERMILL,     "lumberMill.png",   -1},
+  {UNIT_FACTORY,        "factory.png",      UNIT_LUMBERMILL},
+  {UNIT_AIRPORT,        "airport.png",      UNIT_LUMBERMILL},
+  {UNIT_HUMAN_SHIPYARD, "humanShipyard.png",-1},
 };
 static const EAIBuildDef kOrcBuildList[] = {
-  {UNIT_BARBECUE,        "barbecue.png",   -1},
-  {UNIT_ORC_BUNKER,      "bunker.png",     -1},
-  {UNIT_ORC_BARRACKS,    "axeport.png",    -1},
-  {UNIT_ORC_TROLL_HOUSE, "statueHouse.png",UNIT_ORC_BARRACKS},
-  {UNIT_TEMPLE,          "alter.png",      UNIT_ORC_BARRACKS},
+  {UNIT_BARBECUE,        "barbecue.png",    -1},
+  {UNIT_ORC_BUNKER,      "bunker.png",      -1},
+  {UNIT_ORC_BARRACKS,    "axeport.png",     -1},
+  {UNIT_ORC_TROLL_HOUSE, "statueHouse.png", UNIT_ORC_BARRACKS},
+  {UNIT_TEMPLE,          "alter.png",       UNIT_ORC_BARRACKS},
+  {UNIT_ORC_SHIPYARD,    "orcShipyard.png", -1},
 };
 
 void GameScene::enemyAICheckBuildings() {
@@ -15649,7 +16073,9 @@ void GameScene::enemyAICheckBuildings() {
   }
 
   const EAIBuildDef *buildList     = isOrc ? kOrcBuildList : kHumanBuildList;
-  const int          buildListSize = 5;
+  const int          buildListSize = isOrc
+      ? (int)(sizeof(kOrcBuildList)   / sizeof(kOrcBuildList[0]))
+      : (int)(sizeof(kHumanBuildList) / sizeof(kHumanBuildList[0]));
   const float        BASE_RADIUS_SQ = (22.0f * TILE_SIZE) * (22.0f * TILE_SIZE);
 
   // Collect completed HQs.
@@ -15719,6 +16145,9 @@ void GameScene::enemyAICheckBuildings() {
     if (!pick) {
       for (int i = 0; i < buildListSize; i++) {
         const EAIBuildDef &def = buildList[i];
+        bool isShipyardDef = (def.unitType == UNIT_HUMAN_SHIPYARD ||
+                              def.unitType == UNIT_ORC_SHIPYARD);
+        if (isShipyardDef && !mapHasWater) continue;
         if (countNear(def.unitType, hqPos) > 0) continue;
         if (def.prereqType != -1 && countNear(def.prereqType, hqPos) == 0) continue;
         pick = &def;
@@ -15732,10 +16161,15 @@ void GameScene::enemyAICheckBuildings() {
     int lCost = getLumberPriceForUnit(pick->unitType);
     if (enemyGold < gCost || enemyLumber < lCost) continue;
 
+    bool isShipyardPick = (pick->unitType == UNIT_HUMAN_SHIPYARD ||
+                           pick->unitType == UNIT_ORC_SHIPYARD);
     Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
     int w = (int)sz.x, h = (int)sz.y;
     int bx, by;
-    if (!enemyAIFindBuildTile(hqPos, w, h, bx, by, false)) continue;
+    bool foundTile = isShipyardPick
+        ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
+        : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
+    if (!foundTile) continue;
 
     EnemyBase *bld = buildTheBuilding(pick->unitType, bx, by, w, h,
                                       pick->sprite, WHICH_SIDE_ENEMY, true);
@@ -15754,17 +16188,37 @@ struct EAIProdEntry {
 };
 
 static const EAIProdEntry kHumanProd[] = {
-  {UNIT_BARRACKS, {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
-  {UNIT_FACTORY,  {UNIT_CATAPULT,  -1, -1, -1}},
-  {UNIT_AIRPORT,  {UNIT_HELICOPTER,-1, -1, -1}},
+  {UNIT_BARRACKS,       {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
+  {UNIT_FACTORY,        {UNIT_CATAPULT,  -1, -1, -1}},
+  {UNIT_AIRPORT,        {UNIT_HELICOPTER,-1, -1, -1}},
+  // Priority order: OilShip (economy) > Shuttle (cheap utility) >
+  // Ship (main workhorse) > BattleShip (priciest, capped low).
+  {UNIT_HUMAN_SHIPYARD, {UNIT_HUMAN_OIL_SHIP, UNIT_HUMAN_SHUTTLE,
+                         UNIT_HUMAN_SHIP, UNIT_HUMAN_BATTLE_SHIP}},
   {-1, {-1,-1,-1,-1}},
 };
 static const EAIProdEntry kOrcProd[] = {
   {UNIT_ORC_BARRACKS,    {UNIT_ORC_AXE,  UNIT_ORC_SPEAR, -1, -1}},
   {UNIT_ORC_TROLL_HOUSE, {UNIT_TROLL,    -1, -1, -1}},
   {UNIT_TEMPLE,          {UNIT_GOBLIN,   UNIT_GOBLIN_BOMB, -1, -1}},
+  {UNIT_ORC_SHIPYARD,    {UNIT_ORC_OIL_SHIP, UNIT_ORC_SHUTTLE,
+                         UNIT_ORC_SHIP, UNIT_ORC_BATTLE_SHIP}},
   {-1, {-1,-1,-1,-1}},
 };
+
+// Per-unit-type population cap for AI production, overriding the generic
+// kEAIMaxUnitsPerType for units that need their own ceiling.
+static int enemyAIUnitCap(int uType, int oilSpotCount) {
+  if (uType == UNIT_HUMAN_OIL_SHIP || uType == UNIT_ORC_OIL_SHIP)
+    return oilSpotCount * kEAIShipsPerExtractor;
+  if (uType == UNIT_HUMAN_SHUTTLE || uType == UNIT_ORC_SHUTTLE)
+    return kEAIMaxShuttles;
+  if (uType == UNIT_HUMAN_SHIP || uType == UNIT_ORC_SHIP)
+    return kEAIMaxShips;
+  if (uType == UNIT_HUMAN_BATTLE_SHIP || uType == UNIT_ORC_BATTLE_SHIP)
+    return kEAIMaxBattleShips;
+  return kEAIMaxUnitsPerType;
+}
 
 void GameScene::enemyAITrainUnits() {
   enemyAITrainTimer += 1.0f;
@@ -15791,10 +16245,24 @@ void GameScene::enemyAITrainUnits() {
     if (u->unitType == UNIT_CASTLE && u->isBuilding && u->isBuildingComplete && u->energy > 0)
       hqCount++;
 
+  // Cap live OilShips at kEAIShipsPerExtractor per OilSpot still on the map,
+  // so the AI doesn't keep pouring gold into ships it has nowhere to put to work.
+  int oilSpotCount = 0;
+  for (auto *m : mutualArray)
+    if (m->unitType == UNIT_OIL_SPOT && m->energy > 0) oilSpotCount++;
+
   for (auto *bld : snap) {
     if (!bld->isBuilding || !bld->isBuildingComplete || bld->energy <= 0) continue;
 
     Vec2 spawnPos = bld->getApproachingPoint(bld->getPosition());
+    bool isShipyardBld = (bld->unitType == UNIT_HUMAN_SHIPYARD ||
+                          bld->unitType == UNIT_ORC_SHIPYARD);
+    if (isShipyardBld) {
+      Vec2 emptyTile = findEmptyWaterSpawnTile(
+          (int)bld->buildingStartCoordinate.x, (int)bld->buildingStartCoordinate.y,
+          (int)bld->buildingOccupySize.width, (int)bld->buildingOccupySize.height);
+      if (emptyTile.x >= 0) spawnPos = emptyTile;
+    }
 
     // Castle → workers
     if (bld->unitType == UNIT_CASTLE) {
@@ -15822,7 +16290,8 @@ void GameScene::enemyAITrainUnits() {
       if (prodTable[pi].buildType != bld->unitType) continue;
       for (int ui = 0; ui < 4 && prodTable[pi].units[ui] != -1; ui++) {
         int uType = prodTable[pi].units[ui];
-        if (counts[uType] >= kEAIMaxUnitsPerType) continue;
+        int cap = enemyAIUnitCap(uType, oilSpotCount);
+        if (counts[uType] >= cap) continue;
         int gCost = getGoldPriceForUnit(uType);
         int lCost = getLumberPriceForUnit(uType);
         int fCost = GM->getFoodUseForUnit(uType);
@@ -15868,6 +16337,7 @@ void GameScene::updateEnemyAI() {
 
   enemyAIUpdateFood();
   enemyAIManageWorkers();
+  enemyAIManageShips();
   enemyAITrainUnits();
 
   enemyAIBuildTimer += 1.0f;

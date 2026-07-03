@@ -596,6 +596,16 @@ public:
     Movable* myShuttle = nullptr;
     Movable* pendingShuttle = nullptr;
     bool isInShuttle = false;
+
+    // Auto-ferry (island-crossing attack-move via Shuttle).
+    // On a passenger: set when its attack-move target is unreachable by land
+    // because it's on another island, and a Shuttle ferry was started for it.
+    bool needsFerryToTarget = false;
+    cocos2d::Vec2 ferryFinalTarget = cocos2d::Vec2::ZERO;
+    // On a Shuttle: set while it's auto-sailing a ferry passenger to the
+    // island nearest autoFerryDropTarget, so it knows to auto-unload on arrival.
+    bool isAutoFerrying = false;
+    cocos2d::Vec2 autoFerryDropTarget = cocos2d::Vec2::ZERO;
 };
 
 #endif

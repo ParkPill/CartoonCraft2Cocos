@@ -2984,6 +2984,16 @@ void Movable::moveNew(float dt){// movenew start
                     if(targetMoveTilePos == attackFlagTilePos){
                         failedAttackFlagPos = attackFlagPos;
                         attackFlagPos = Vec2::ZERO;
+                        // Attack-move failed to path - if that's because the
+                        // target is a single water-crossing away on another
+                        // island, ferry across via Shuttle instead of just
+                        // cancelling the order. Two-or-more-crossing routes
+                        // (through an intermediate island) aren't handled yet.
+                        if (!needsFerryToTarget &&
+                            !WORLD->isSameIsland(getPosition(), failedAttackFlagPos) &&
+                            WORLD->isSingleShuttleHopAway(getPosition(), failedAttackFlagPos)) {
+                            WORLD->beginShuttleFerry(this, failedAttackFlagPos);
+                        }
                     }
                 }
             }
@@ -3595,7 +3605,9 @@ void Movable::move(float dt){
                 }
             }
             if (atDepot) {
-                if (!isEnemy) {
+                if (isEnemy) {
+                    WORLD->addEnemyOil(oilCarryAmount);
+                } else {
                     WORLD->addOil(oilCarryAmount);
                 }
                 isCarryingOil = false;
@@ -3631,7 +3643,8 @@ void Movable::move(float dt){
                     // Compute carry amount: base 40, +30% if any OilRefinery exists
                     int baseAmount = 40;
                     bool hasRefinery = false;
-                    for (auto unit : WORLD->heroArray) {
+                    auto &army = isEnemy ? WORLD->enemyArray : WORLD->heroArray;
+                    for (auto unit : army) {
                         if (unit && (unit->unitType == UNIT_HUMAN_OIL_REFINERY ||
                                     unit->unitType == UNIT_ORC_OIL_REFINERY)) {
                             hasRefinery = true;
@@ -3645,7 +3658,7 @@ void Movable::move(float dt){
                     this->untouchable = false;
                     this->attackType = ATTACK_TYPE_NEAR;
                     unitName = strmake("%sOil", getName().c_str());
-                    EnemyBase* depot = WORLD->getNearestOilDepot(getPosition());
+                    EnemyBase* depot = WORLD->getNearestOilDepot(getPosition(), isEnemy);
                     if (depot != nullptr) {
                         returningPlace = depot;
                         // Navigate like workers returning to castle

@@ -458,6 +458,38 @@ public:
   void hideShuttleCargoPanel();
   void refreshShuttleCargoPanel();
   EnemyBase *shuttlePanelTarget = nullptr;
+
+  // Island/water-region geography (for cross-island attack-move via Shuttle).
+  // Computed once, lazily, from static terrain only (soilLayer/stageLayer) -
+  // not from mutable building occupancy - so region IDs stay stable for the
+  // life of the map.
+  bool islandRegionsComputed = false;
+  std::vector<std::vector<int>> landIslandId;   // [tileX][tileY], -1 = water
+  std::vector<std::vector<int>> waterRegionId;  // [tileX][tileY], -1 = land
+  std::map<int, std::set<int>> islandBorderWaterRegions; // islandId -> bordering waterRegionIds
+  void computeIslandRegions();
+  int getIslandIdAt(cocos2d::Vec2 worldPos);
+  bool isSameIsland(cocos2d::Vec2 worldPosA, cocos2d::Vec2 worldPosB);
+  // True if posA/posB are on different islands that share at least one
+  // connected body of water, i.e. a single Shuttle voyage can bridge them.
+  // False if they're already on the same island, or if bridging them would
+  // require passing through an intermediate island (2+ crossings) - that
+  // case is intentionally not handled yet.
+  bool isSingleShuttleHopAway(cocos2d::Vec2 worldPosA, cocos2d::Vec2 worldPosB);
+  // Nearest water tile bordering worldTarget's island (a valid Shuttle
+  // drop-off coast for reaching worldTarget). Vec2::ZERO if none found.
+  cocos2d::Vec2 findCoastalDropPoint(cocos2d::Vec2 worldTarget);
+
+  // Auto-ferry: called when a ground unit's attack-move target turned out to
+  // be unreachable by land because it's a single water-crossing away. Finds
+  // a same-side Shuttle with room, sends the unit to board it, and marks the
+  // Shuttle to auto-sail to the target's island once boarded. Returns false
+  // (no state changed) if no usable Shuttle exists.
+  bool beginShuttleFerry(Movable *unit, cocos2d::Vec2 finalWorldTarget);
+  // Per-second: advances in-progress auto-ferries (sail once a passenger has
+  // boarded, auto-unload on arrival, then resume each passenger's original
+  // attack-move order).
+  void updateShuttleFerries();
   bool isHighWay(int index);
   bool isOneWay(int index);
   bool isFregile(int index);
@@ -1062,6 +1094,7 @@ public:
   int oil = 0;
   int enemyGold = 1000;
   int enemyLumber = 1000;
+  int enemyOil = 0;
   int enemyFoodInUse = 0;
   int enemyFoodMax = 0;
   float enemyAIBuildTimer = 0.0f;
@@ -1079,20 +1112,24 @@ public:
   void addOil(int amount);
   void addEnemyGold(int amount);
   void addEnemyLumber(int amount);
+  void addEnemyOil(int amount);
   void updateEnemyAI();
   void enemyAIUpdateFood();
   void enemyAIManageWorkers();
+  void enemyAIManageShips();
   void enemyAICheckBuildings();
   void enemyAITrainUnits();
   bool enemyAIIsTileFree(int bx, int by, int w, int h);
   bool enemyAIFindBuildTile(cocos2d::Vec2 nearPos, int w, int h, int &outBx, int &outBy, bool avoidMines = false);
+  bool enemyAIIsWaterTileFree(int bx, int by, int w, int h);
+  bool enemyAIFindWaterBuildTile(cocos2d::Vec2 nearPos, int w, int h, int &outBx, int &outBy);
   void updateFoodInUse();
   void addFoodMax(int amount);
   int getGoldPriceForUnit(int index);
   int getLumberPriceForUnit(int index);
   int getOilPriceForUnit(int index);
   int getFoodGive(int index);
-  EnemyBase *getNearestOilDepot(cocos2d::Vec2 pos);
+  EnemyBase *getNearestOilDepot(cocos2d::Vec2 pos, bool isEnemy = false);
   bool gatherOilWithSelectedOilShip(EnemyBase *extractor);
   void setOilShipToExtractor(EnemyBase *ship, EnemyBase *extractor);
   void startResearch(EnemyBase *foundry, int type);
