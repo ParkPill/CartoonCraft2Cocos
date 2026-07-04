@@ -15897,6 +15897,22 @@ void GameScene::applyResearch(int type) {
 
 static const int kEAIMaxWorkersPerHQ = 10;
 static const int kEAIMaxUnitsPerType = 10;
+// Worker/army food prioritization (see enemyAITrainUnits).
+// Target food set aside for the combat army (excluding workers). The food
+// building count below is derived from this so the AI can actually field an
+// army instead of drowning in workers.
+static const int kEAIArmyFoodBudget = 50;
+// Desired steady-state worker headcount per HQ (each worker eats 1 food).
+static const int kEAITargetWorkers = 10;
+// Below this many workers per HQ the economy is still bootstrapping and the HQ
+// may spend freely on workers. At or above it, worker training must leave
+// headroom for combat units (below).
+static const int kEAIBootstrapWorkersPerHQ = 6;
+// Once bootstrapped, the HQ only trains another worker while free food headroom
+// exceeds this and gold exceeds the reserve, so combat buildings win contested
+// resources. Combat training ignores these.
+static const int kEAIWorkerFoodReserve = 8;
+static const int kEAIWorkerGoldReserve = 300;
 // Two OilShips per OilSpot - one can be shuttling to/from the depot while
 // the other loads at the extractor, keeping oil actually flowing.
 static const int kEAIShipsPerExtractor = 2;
@@ -15913,7 +15929,16 @@ static const int kEAIBuildGap = 2;
 // (Farm/Barbecue) needs to scale with population - one only ever grants a
 // fixed +6/+7 food, so the AI would hit its food cap permanently once that
 // single building existed and never train another unit again.
-static const int kEAIMaxFoodBuildingsPerHQ = 4;
+//
+// Derived from kEAIArmyFoodBudget so the AI can support workers + a real army.
+// Goal per HQ: HQ food (6) + foodBuildings*perBuildingFood
+//              >= kEAITargetWorkers*1 (worker food) + kEAIArmyFoodBudget = 60.
+//   Human: Farm = +7  -> 6 + 8*7 = 62 >= 60  (needs 8)
+//   Orc:   Barbecue = +6 -> 6 + 9*6 = 60 >= 60 (needs 9)
+// A single shared cap must satisfy the worst case (Orc), so use 9. That still
+// stays under the enemyFoodMax hard cap of 100 (Human 9 farms = 69, Orc 9
+// barbecues = 60).
+static const int kEAIMaxFoodBuildingsPerHQ = 9;
 
 void GameScene::addEnemyGold(int amount) {
   enemyGold += amount;
@@ -16548,8 +16573,16 @@ void GameScene::enemyAITrainUnits() {
 
     // Castle / HQ → workers
     if (bld->unitType == UNIT_CASTLE || bld->unitType == UNIT_ORC_HQ) {
-      int targetWorkers = hqCount * kEAIMaxWorkersPerHQ;
+      int targetWorkers = hqCount * kEAITargetWorkers;
       if (counts[workerType] >= targetWorkers) continue;
+      // Prioritization: bootstrap the economy freely up to the bootstrap
+      // threshold, then reserve food/gold headroom for combat units so workers
+      // don't win every contested resource (the HQ usually iterates first).
+      int bootstrapWorkers = hqCount * kEAIBootstrapWorkersPerHQ;
+      if (counts[workerType] >= bootstrapWorkers) {
+        if ((enemyFoodMax - enemyFoodInUse) <= kEAIWorkerFoodReserve) continue;
+        if (enemyGold <= kEAIWorkerGoldReserve) continue;
+      }
       int gCost = getGoldPriceForUnit(workerType);
       int lCost = getLumberPriceForUnit(workerType);
       int oCost = getOilPriceForUnit(workerType);
@@ -16653,6 +16686,14 @@ void GameScene::updateEnemyAI() {
   enemyAIBuildTimer += 1.0f;
   if (enemyAIBuildTimer >= 60.0f) {
     enemyAIBuildTimer = 0.0f;
+    // Once-per-minute food status (enemyAIUpdateFood ran earlier this tick).
+    int workerCnt = 0;
+    for (auto *u : enemyArray)
+      if (u && u->energy > 0 && !u->isBuilding &&
+          (u->unitType == UNIT_WORKER || u->unitType == UNIT_GOBLIN_WORKER))
+        workerCnt++;
+    log("enemyAI[food]: %d/%d (workers %d)",
+        enemyFoodInUse, enemyFoodMax, workerCnt);
     enemyAICheckBuildings();
   }
 }
