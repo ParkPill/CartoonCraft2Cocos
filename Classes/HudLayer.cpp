@@ -6,6 +6,8 @@
 //
 //
 #include "HudLayer.h"
+#include <algorithm>
+#include <cctype>
 #include "GameManager.h"
 #include "GameScene.h"
 #include "LegendDaryButton.h"
@@ -271,6 +273,24 @@ bool HudLayer::init() {
   lbl->setPosition(Vec2(0, y + 100));
 
   priceInfo->setVisible(false);
+
+  // test now
+  enemyResourceTooltip = Node::create();
+  this->addChild(enemyResourceTooltip, 1000);
+  ImageView *tooltipBack = ImageView::create("uiBoxSmall.png");
+  tooltipBack->setName("imgTooltipBack");
+  tooltipBack->setScale9Enabled(true);
+  tooltipBack->setContentSize(cocos2d::Size(420, 90));
+  tooltipBack->setAnchorPoint(Vec2(0, 0));
+  tooltipBack->setOpacity(200);
+  enemyResourceTooltip->addChild(tooltipBack);
+  PPLabel *lblTooltip = PPLabel::create("", 32, Color3B::WHITE, false, true,
+                                        TextHAlignment::LEFT, false);
+  lblTooltip->setName("lblEnemyResourceTooltip");
+  lblTooltip->setAnchorPoint(Vec2(0, 0.5));
+  lblTooltip->setPosition(Vec2(20, 45));
+  enemyResourceTooltip->addChild(lblTooltip);
+  enemyResourceTooltip->setVisible(false);
 
   if (isRaid) {
     Node *ndBottom = CSLoader::createNode("BottomUnitBar.csb");
@@ -2617,6 +2637,19 @@ void HudLayer::showPriceInfo(std::string msg, int gold, int lumber, int food) {
   priceInfo->getChildByName("sptFood")->setVisible(food > 0);
 }
 void HudLayer::hidePriceInfo() { priceInfo->setVisible(false); }
+
+// test now
+void HudLayer::showEnemyResourceTooltip(cocos2d::Vec2 pos, int gold,
+                                        int lumber) {
+  enemyResourceTooltip->setVisible(true);
+  enemyResourceTooltip->setPosition(pos + Vec2(20, 20));
+  PPLabel *lbl = (PPLabel *)enemyResourceTooltip->getChildByName(
+      "lblEnemyResourceTooltip");
+  lbl->setString(strmake("Gold %d  Lumber %d", gold, lumber));
+}
+void HudLayer::hideEnemyResourceTooltip() {
+  enemyResourceTooltip->setVisible(false);
+}
 Label *HudLayer::getLabel(std::string txt, int fontSize) {
   Label *lbl = Label::createWithSystemFont(txt, "Thonburi", fontSize);
   lbl->enableShadow();
@@ -3372,6 +3405,21 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
   }
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
   if (WORLD != nullptr && WORLD->usesPcRtsControls()) {
+    // While the chat box is open, swallow every key except Escape (cancel)
+    // and Enter (submit). Typed characters reach the TextField through the
+    // IME/char path, not here; GLFW's char callback never fires for Enter,
+    // so TextField never auto-detaches on it and we must do it ourselves.
+    if (isChatInputActive) {
+      if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
+        cancelChatInput();
+      } else if (keyCode == EventKeyboard::KeyCode::KEY_RETURN ||
+                 keyCode == EventKeyboard::KeyCode::KEY_KP_ENTER ||
+                 keyCode == EventKeyboard::KeyCode::KEY_ENTER) {
+        chatInputField->didNotSelectSelf();
+      }
+      return;
+    }
+
     // Arrow key map scroll
     if (keyCode == EventKeyboard::KeyCode::KEY_UP_ARROW ||
         keyCode == EventKeyboard::KeyCode::KEY_DPAD_UP) {
@@ -3442,13 +3490,18 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
       }
     }
 
-    // Enter: confirm disassemble
+    // Enter: confirm disassemble, otherwise open the chat input box
     if (keyCode == EventKeyboard::KeyCode::KEY_RETURN ||
         keyCode == EventKeyboard::KeyCode::KEY_KP_ENTER ||
         keyCode == EventKeyboard::KeyCode::KEY_ENTER) {
       Node *confirmBtn = this->getChildByName("btnDisassembleConfirm");
       if (confirmBtn != nullptr && confirmBtn->getPositionY() > 0) {
         onDisassembleConfirmClick();
+        return;
+      }
+      Node *menuPopup = this->getChildByName("menuPopup");
+      if (menuPopup == nullptr) {
+        openChatInput();
         return;
       }
     }
@@ -3588,6 +3641,107 @@ void HudLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
   //    CCLOG("Key with keycode %d pressed", keyCode);
 }
 void HudLayer::tryResultOK() {}
+void HudLayer::openChatInput() {
+  const float boxWidth = 620;
+  const float boxHeight = 40;
+  Vec2 boxPos(size.width / 2 - boxWidth / 2, size.height / 4 - boxHeight / 2);
+
+  if (chatInputField == nullptr) {
+    chatInputBg = DrawNode::create();
+    chatInputBg->drawSolidRect(Vec2(0, 0), Vec2(boxWidth, boxHeight),
+                                Color4F(0, 0, 0, 0.5f));
+    chatInputBg->setPosition(boxPos);
+    this->addChild(chatInputBg, 500);
+
+    chatInputField = TextField::create("", LM->getLocalizedFont(), 26);
+    chatInputField->setAnchorPoint(Vec2(0, 0));
+    chatInputField->setPosition(boxPos + Vec2(10, 8));
+    chatInputField->setTouchAreaEnabled(true);
+    chatInputField->setTouchSize(Size(600, 36));
+    chatInputField->setMaxLength(100);
+    chatInputField->setMaxLengthEnabled(true);
+    chatInputField->addEventListener(
+        [this](Ref *, TextField::EventType type) {
+          if (type == TextField::EventType::DETACH_WITH_IME) {
+            finalizeChatInput();
+          }
+        });
+    this->addChild(chatInputField, 501);
+  }
+  chatInputField->setString("");
+  chatInputBg->setVisible(true);
+  chatInputField->setVisible(true);
+  isChatInputActive = true;
+  chatInputField->attachWithIME();
+}
+void HudLayer::finalizeChatInput() {
+  if (!isChatInputActive) {
+    return;
+  }
+  isChatInputActive = false;
+  chatInputBg->setVisible(false);
+  chatInputField->setVisible(false);
+  std::string msg = GameManager::trim_copy(chatInputField->getString());
+  if (msg.size() == 0) {
+    return;
+  }
+  std::string lowerMsg = msg;
+  std::transform(lowerMsg.begin(), lowerMsg.end(), lowerMsg.begin(), ::tolower);
+  if (lowerMsg == "whiteout") {
+    // Cheat code: permanently reveal the whole map, same flag STAGE_PVP
+    // battles start with (see GameScene::updateFog's blackSheepWell check).
+    if (WORLD != nullptr) {
+      WORLD->blackSheepWell = true;
+    }
+    addChatMessage("Cheat enabled: Whiteout");
+    return;
+  }
+  std::string name = UDGetStr(KEY_NAME);
+  addChatMessage(name.size() > 0 ? strmake("%s: %s", name.c_str(), msg.c_str())
+                                  : msg);
+}
+void HudLayer::cancelChatInput() {
+  if (!isChatInputActive) {
+    return;
+  }
+  chatInputField->setString("");
+  chatInputField->didNotSelectSelf();
+}
+void HudLayer::addChatMessage(const std::string &msg) {
+  const float lineHeight = 30;
+  const size_t maxLines = 6;
+
+  for (auto *lbl : chatLogLines) {
+    lbl->runAction(MoveBy::create(0.15f, Vec2(0, lineHeight)));
+  }
+
+  // y=470 clears the minimap, whose backing box top edge sits at y=445
+  // (see GameScene::miniMapStartPos / miniMapFrameHeight in GameScene.cpp).
+  Label *lbl = LM->getLocalizedLabel(msg.c_str(), Color4B::WHITE, 24);
+  lbl->setAnchorPoint(Vec2(0, 0));
+  lbl->setPosition(Vec2(30, 470));
+  lbl->enableOutline(Color4B::BLACK, 2);
+  lbl->setOpacity(0);
+  this->addChild(lbl, 500);
+  lbl->runAction(Sequence::create(
+      FadeIn::create(0.1f), DelayTime::create(8.0f), FadeOut::create(1.0f),
+      CallFunc::create([this, lbl]() {
+        auto it = std::find(chatLogLines.begin(), chatLogLines.end(), lbl);
+        if (it != chatLogLines.end()) {
+          chatLogLines.erase(it);
+        }
+        lbl->removeFromParent();
+      }),
+      nullptr));
+
+  chatLogLines.push_back(lbl);
+  if (chatLogLines.size() > maxLines) {
+    Label *oldest = chatLogLines.front();
+    chatLogLines.erase(chatLogLines.begin());
+    oldest->stopAllActions();
+    oldest->removeFromParent();
+  }
+}
 void HudLayer::showTyping() {
   lblTyping = Label::createWithSystemFont(
       "", GameManager::getInstance()->getFont(FONT_VISITOR), 30);

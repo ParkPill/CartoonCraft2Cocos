@@ -71,6 +71,8 @@ Scene *GameScene::scene(int stage, int mode, bool multiplay) {
   if (mode == GAME_MODE_PVP6 || mode == GAME_MODE_PVP12 || layer->isMultitest) {
     layer->blackSheepWell = true;
   }
+  // test now
+  layer->blackSheepWell = true;
   layer->gameMode = mode;
   scene->addChild(layer);
   layer->stageIndex = stage;
@@ -3280,7 +3282,7 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
         unit->canFindTarget = true;
         setOccupy(pos + Vec2(-50, 0) * imageScale, 2, 2, true, unit);
       } else if (unitType == UNIT_ORC_HQ || unitType == UNIT_ZOMBIE_HQ) {
-        setOccupy(pos - Vec2(150, -50) * imageScale, 4, 3, true, unit);
+        setOccupy(pos - Vec2(150, -100) * imageScale, 4, 3, true, unit);
       } else if (unitType == UNIT_FACTORY) {
         setOccupy(pos - Vec2(100, -100) * imageScale, 3, 3, true, unit);
         unit->startProductSchedule();
@@ -9758,6 +9760,16 @@ void GameScene::addListener() {
         HUD->draw->drawRect(touchBeganPos, pos, Color4F::GREEN);
       }
     }
+
+    // test now
+    if (HUD != nullptr && GM->currentStageIndex != STAGE_LOBBY) {
+      EnemyBase *hoveredEnemyBuilding = getEnemyBuildingAtMapPos(pos);
+      if (hoveredEnemyBuilding != nullptr) {
+        HUD->showEnemyResourceTooltip(pos, enemyGold, enemyLumber);
+      } else {
+        HUD->hideEnemyResourceTooltip();
+      }
+    }
   };
   mouseListener->onMouseUp = [this](EventMouse *evt) {
     win32LastMouseViewPos = evt->getLocationInView();
@@ -10405,6 +10417,7 @@ void GameScene::doClick(cocos2d::Vec2 pos) {
             unit->unitType == UNIT_GOBLIN_WORKER) {
           if (unit->isCarryingTree &&
               (selectedUnit->unitType == UNIT_CASTLE ||
+               selectedUnit->unitType == UNIT_ORC_HQ ||
                selectedUnit->unitType == UNIT_LUMBERMILL)) {
             unit->returningPlace = selectedUnit;
             unit->moveToTarget(selectedUnit);
@@ -10418,7 +10431,8 @@ void GameScene::doClick(cocos2d::Vec2 pos) {
                                selectedUnit->unitID);
             }
           } else if (unit->isCarryingGold &&
-                     (selectedUnit->unitType == UNIT_CASTLE)) {
+                     (selectedUnit->unitType == UNIT_CASTLE ||
+                      selectedUnit->unitType == UNIT_ORC_HQ)) {
             unit->returningPlace = selectedUnit;
             unit->unitAct = UNIT_ACT_GATHER_GOLD;
             unit->moveToTarget(selectedUnit);
@@ -10862,6 +10876,32 @@ EnemyBase *GameScene::getHeroBuildingAtMapPos(Vec2 mapPos) {
   return found;
 }
 
+// test now
+EnemyBase *GameScene::getEnemyBuildingAtMapPos(Vec2 mapPos) {
+  EnemyBase *found = nullptr;
+  int zOrder = -9999999;
+  for (auto unit : enemyArray) {
+    if (!unit || unit == nullptr || !unit->isBuilding ||
+        !unit->isBuildingComplete) {
+      continue;
+    }
+    if (unit->unitType != UNIT_CASTLE && unit->unitType != UNIT_ORC_HQ) {
+      continue;
+    }
+    Vec2 buildingPos = getPositionFromTileCoordinate(
+        unit->buildingStartCoordinate.x, unit->buildingStartCoordinate.y);
+    float height = unit->buildingOccupySize.height * TILE_SIZE;
+    cocos2d::Rect theRect =
+        cocos2d::Rect(buildingPos.x, buildingPos.y - height,
+                      unit->buildingOccupySize.width * TILE_SIZE, height);
+    if (theRect.containsPoint(mapPos) && unit->getLocalZOrder() > zOrder) {
+      found = unit;
+      zOrder = unit->getLocalZOrder();
+    }
+  }
+  return found;
+}
+
 bool GameScene::tryDeliverCarriedResourcesAt(Vec2 mapPos) {
   EnemyBase *building = getHeroBuildingAtMapPos(mapPos);
   if (building == nullptr || selectedArray.size() == 0) {
@@ -10880,6 +10920,7 @@ bool GameScene::tryDeliverCarriedResourcesAt(Vec2 mapPos) {
       continue;
     }
     if (unit->isCarryingTree && (building->unitType == UNIT_CASTLE ||
+                                 building->unitType == UNIT_ORC_HQ ||
                                  building->unitType == UNIT_LUMBERMILL)) {
       unit->returningPlace = building;
       unit->moveToTarget(building);
@@ -10889,7 +10930,8 @@ bool GameScene::tryDeliverCarriedResourcesAt(Vec2 mapPos) {
         MM->returnLumber(Value(unit->unitID).asString(), building->unitID);
       }
       handled = true;
-    } else if (unit->isCarryingGold && building->unitType == UNIT_CASTLE) {
+    } else if (unit->isCarryingGold && (building->unitType == UNIT_CASTLE ||
+                                        building->unitType == UNIT_ORC_HQ)) {
       unit->returningPlace = building;
       unit->unitAct = UNIT_ACT_GATHER_GOLD;
       unit->moveToTarget(building);
@@ -11226,7 +11268,11 @@ EnemyBase *GameScene::buildTheBuilding(int index, int x, int y, int width,
   blockSending = false;
   unit->isBuildingComplete = false;
   setOccupy(pos, width, height, true, unit);
-  unit->setRotation(180);
+  // Worker-driven construction (Movable::moveNew) resets rotation to 0 right
+  // after this call returns - the enemy AI's instant-build callers don't go
+  // through that path, so leaving this at 180 left every AI-built building
+  // upside-down.
+  unit->setRotation(0);
   unit->retain();
 
   addGold(-price);
@@ -13210,6 +13256,47 @@ bool GameScene::isShipTileBlocked(int tileX, int tileY, Movable *self) {
   return false;
 }
 
+void GameScene::fleeShipFromAttacker(Movable *unit, Movable *attacker) {
+  if (unit == nullptr || attacker == nullptr) return;
+  if (unit->unitType != UNIT_HUMAN_OIL_SHIP && unit->unitType != UNIT_ORC_OIL_SHIP &&
+      unit->unitType != UNIT_HUMAN_SHUTTLE && unit->unitType != UNIT_ORC_SHUTTLE) {
+    return;
+  }
+  Vec2 tile = getCoordinateFromPosition(unit->getPosition());
+  int tx = (int)tile.x, ty = (int)tile.y;
+
+  Vec2 away = unit->getPosition() - attacker->getPosition();
+  if (away.lengthSquared() < 0.001f) away = Vec2(1, 0);
+  away.normalize();
+
+  // Tile-grid neighbors, ordered so ties prefer the purely-opposite direction
+  // first. Tile y grows downward (see getPositionFromTileCoordinate), so a
+  // neighbor's world-space direction is (dx, -dy).
+  static const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+  static const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+
+  int bestIdx = -1;
+  float bestDot = -2.0f;
+  for (int i = 0; i < 8; i++) {
+    int nx = tx + dx[i], ny = ty + dy[i];
+    if (nx < 0 || ny < 0 || nx >= (int)mapSize.width || ny >= (int)mapSize.height)
+      continue;
+    if (!isWaterTileAt(nx, ny) || isShipTileBlocked(nx, ny, unit))
+      continue;
+    Vec2 worldDir = Vec2((float)dx[i], -(float)dy[i]).getNormalized();
+    float dot = worldDir.dot(away);
+    if (dot > bestDot) {
+      bestDot = dot;
+      bestIdx = i;
+    }
+  }
+  if (bestIdx < 0) return;
+
+  Vec2 newPos = getPositionFromTileCoordinate(tx + dx[bestIdx], ty + dy[bestIdx]);
+  unit->setPosition(newPos);
+  if (unit->spine) unit->spine->setPosition(newPos);
+}
+
 bool GameScene::isShuttleAdjacentToLand(EnemyBase *shuttle) {
   Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
   int tx = (int)tile.x, ty = (int)tile.y;
@@ -15100,7 +15187,7 @@ EnemyBase *GameScene::getNearestCastle(cocos2d::Vec2 pos, bool isEnemy) {
   if (isEnemy) {
     for (auto unit : enemyArray) {
       distance = unit->getPosition().distanceSquared(pos);
-      if (unit->unitType == UNIT_CASTLE) {
+      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_ORC_HQ) {
         if (distance < minDistance) {
           minDistance = distance;
           nearest = unit;
@@ -15110,7 +15197,7 @@ EnemyBase *GameScene::getNearestCastle(cocos2d::Vec2 pos, bool isEnemy) {
   } else {
     for (auto unit : heroArray) {
       distance = unit->getPosition().distanceSquared(pos);
-      if (unit->unitType == UNIT_CASTLE) {
+      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_ORC_HQ) {
         if (distance < minDistance) {
           minDistance = distance;
           nearest = unit;
@@ -15127,7 +15214,8 @@ EnemyBase *GameScene::getNearestLumberTank(cocos2d::Vec2 pos, bool isEnemy) {
   if (isEnemy) {
     for (auto unit : enemyArray) {
       distance = unit->getPosition().distanceSquared(pos);
-      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_LUMBERMILL) {
+      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_ORC_HQ ||
+          unit->unitType == UNIT_LUMBERMILL) {
         if (distance < minDistance) {
           minDistance = distance;
           nearest = unit;
@@ -15137,7 +15225,8 @@ EnemyBase *GameScene::getNearestLumberTank(cocos2d::Vec2 pos, bool isEnemy) {
   } else {
     for (auto unit : heroArray) {
       distance = unit->getPosition().distanceSquared(pos);
-      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_LUMBERMILL) {
+      if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_ORC_HQ ||
+          unit->unitType == UNIT_LUMBERMILL) {
         if (distance < minDistance) {
           minDistance = distance;
           nearest = unit;
@@ -15507,7 +15596,10 @@ bool GameScene::canAttack(Movable *attacker, Movable *target) {
     return true;
   }
   bool can = true;
-  if (attacker->attackType == ATTACK_TYPE_NEAR && target->isFlying) {
+  if (attacker->unitType == UNIT_HUMAN_OIL_SHIP ||
+      attacker->unitType == UNIT_ORC_OIL_SHIP) {
+    can = false;
+  } else if (attacker->attackType == ATTACK_TYPE_NEAR && target->isFlying) {
     can = false;
   } else if (target->unitType == UNIT_TREE_FOR_BATTLE &&
              attacker->unitAct != UNIT_WIZARD) {
@@ -15743,6 +15835,16 @@ static const int kEAIShipsPerExtractor = 2;
 static const int kEAIMaxShuttles = 3;      // cheap transport - a few are enough
 static const int kEAIMaxShips = 10;        // main naval workhorse
 static const int kEAIMaxBattleShips = 5;   // priciest unit - keep the fleet affordable
+// Extra tiles of empty space required around a building footprint (and the
+// HQ's own footprint) before the AI will place something there, so bases
+// spread out instead of packing buildings edge-to-edge.
+static const int kEAIBuildGap = 2;
+// Every other entry in kHumanBuildList/kOrcBuildList is capped at one per HQ
+// (see the "already have one nearby" skip below), but the food building
+// (Farm/Barbecue) needs to scale with population - one only ever grants a
+// fixed +6/+7 food, so the AI would hit its food cap permanently once that
+// single building existed and never train another unit again.
+static const int kEAIMaxFoodBuildingsPerHQ = 4;
 
 void GameScene::addEnemyGold(int amount) {
   enemyGold += amount;
@@ -15766,7 +15868,7 @@ void GameScene::enemyAIUpdateFood() {
   for (auto *u : enemyArray) {
     if (!u || u->energy <= 0) continue;
     if (u->isBuilding && u->isBuildingComplete) {
-      if (u->unitType == UNIT_CASTLE)   foodMax += 6;
+      if (u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) foodMax += 6;
       else if (u->unitType == UNIT_FARM)      foodMax += 7;
       else if (u->unitType == UNIT_BARBECUE)  foodMax += 6;
     } else if (!u->isBuilding) {
@@ -15778,10 +15880,12 @@ void GameScene::enemyAIUpdateFood() {
 }
 
 // Check whether the building footprint (same coord convention as buildTheBuilding)
-// is fully clear of deco/soil blocks.
+// is fully clear of deco/soil blocks. Also requires a kEAIBuildGap-tile margin
+// around the footprint to be clear of *other buildings* (deco blocks) - not of
+// terrain - so the AI spreads buildings out instead of butting them together.
 bool GameScene::enemyAIIsTileFree(int bx, int by, int w, int h) {
-  for (int j = 0; j < h; j++) {
-    for (int i = 0; i < w; i++) {
+  for (int j = -kEAIBuildGap; j < h + kEAIBuildGap; j++) {
+    for (int i = -kEAIBuildGap; i < w + kEAIBuildGap; i++) {
       int tx = bx + i;
       int ty = by - j - 1;
       if (tx < 1 || ty < 1 ||
@@ -15789,7 +15893,9 @@ bool GameScene::enemyAIIsTileFree(int bx, int by, int w, int h) {
           ty >= (int)mapSize.height - 1) return false;
       Vec2 coord(tx, ty);
       if (decoLayer && isDecoBlock(getTileGIDAt(decoLayer, coord))) return false;
-      if (soilLayer && isSoilBlock(getTileGIDAt(soilLayer, coord))) return false;
+      bool inFootprint = i >= 0 && i < w && j >= 0 && j < h;
+      if (inFootprint && soilLayer && isSoilBlock(getTileGIDAt(soilLayer, coord)))
+        return false;
     }
   }
   return true;
@@ -15884,8 +15990,8 @@ void GameScene::enemyAIManageWorkers() {
   // Collect enemy HQs.
   std::vector<EnemyBase *> hqs;
   for (auto *u : snap) {
-    if (u->unitType == UNIT_CASTLE && u->isBuilding &&
-        u->isBuildingComplete && u->energy > 0)
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
       hqs.push_back(u);
   }
   if (hqs.empty()) return;
@@ -16081,8 +16187,8 @@ void GameScene::enemyAICheckBuildings() {
   // Collect completed HQs.
   std::vector<EnemyBase *> hqs;
   for (auto *u : snap) {
-    if (u->unitType == UNIT_CASTLE && u->isBuilding &&
-        u->isBuildingComplete && u->energy > 0)
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
       hqs.push_back(u);
   }
 
@@ -16098,17 +16204,27 @@ void GameScene::enemyAICheckBuildings() {
         break;
       }
     }
-    if (!hasWorker) return;
+    if (!hasWorker) {
+      log("enemyAI[build]: no HQ and no worker found - AI is stuck");
+      return;
+    }
 
     int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
     int gCost  = getGoldPriceForUnit(hqType);
     int lCost  = getLumberPriceForUnit(hqType);
-    if (enemyGold < gCost || enemyLumber < lCost) return;
+    if (enemyGold < gCost || enemyLumber < lCost) {
+      log("enemyAI[build]: no HQ - waiting on resources for HQ (have %d/%d, need %d/%d)",
+          enemyGold, enemyLumber, gCost, lCost);
+      return;
+    }
 
     Vec2 sz = GM->getBuildingOccupySize(hqType);
     int w = (int)sz.x, h = (int)sz.y;
     int bx, by;
-    if (!enemyAIFindBuildTile(workerPos, w, h, bx, by, true)) return;
+    if (!enemyAIFindBuildTile(workerPos, w, h, bx, by, true)) {
+      log("enemyAI[build]: no HQ - could not find a free tile near worker");
+      return;
+    }
 
     const char *spr = isOrc ? "hq.png" : "castle.png";
     EnemyBase *bld = buildTheBuilding(hqType, bx, by, w, h, spr, WHICH_SIDE_ENEMY, true);
@@ -16116,6 +16232,9 @@ void GameScene::enemyAICheckBuildings() {
       addEnemyGold(-gCost);
       addEnemyLumber(-lCost);
       setAfterBuildingProcess(bld);
+      log("enemyAI[build]: built HQ at tile (%d,%d)", bx, by);
+    } else {
+      log("enemyAI[build]: buildTheBuilding rejected HQ placement at tile (%d,%d)", bx, by);
     }
     return;
   }
@@ -16137,7 +16256,7 @@ void GameScene::enemyAICheckBuildings() {
 
     if (foodShort) {
       int foodType = isOrc ? UNIT_BARBECUE : UNIT_FARM;
-      if (countNear(foodType, hqPos) == 0)
+      if (countNear(foodType, hqPos) < kEAIMaxFoodBuildingsPerHQ)
         for (int i = 0; i < buildListSize; i++)
           if (buildList[i].unitType == foodType) { pick = &buildList[i]; break; }
     }
@@ -16155,11 +16274,19 @@ void GameScene::enemyAICheckBuildings() {
       }
     }
 
-    if (!pick) continue;
+    if (!pick) {
+      log("enemyAI[build]: HQ at (%.0f,%.0f) has nothing left to build in its list",
+          hqPos.x, hqPos.y);
+      continue;
+    }
 
     int gCost = getGoldPriceForUnit(pick->unitType);
     int lCost = getLumberPriceForUnit(pick->unitType);
-    if (enemyGold < gCost || enemyLumber < lCost) continue;
+    if (enemyGold < gCost || enemyLumber < lCost) {
+      log("enemyAI[build]: waiting on resources for unitType %d (have %d/%d, need %d/%d)",
+          pick->unitType, enemyGold, enemyLumber, gCost, lCost);
+      continue;
+    }
 
     bool isShipyardPick = (pick->unitType == UNIT_HUMAN_SHIPYARD ||
                            pick->unitType == UNIT_ORC_SHIPYARD);
@@ -16169,14 +16296,23 @@ void GameScene::enemyAICheckBuildings() {
     bool foundTile = isShipyardPick
         ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
         : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
-    if (!foundTile) continue;
+    if (!foundTile) {
+      log("enemyAI[build]: could not find a free tile for unitType %d near HQ (%.0f,%.0f)",
+          pick->unitType, hqPos.x, hqPos.y);
+      continue;
+    }
 
     EnemyBase *bld = buildTheBuilding(pick->unitType, bx, by, w, h,
                                       pick->sprite, WHICH_SIDE_ENEMY, true);
-    if (!bld) continue;
+    if (!bld) {
+      log("enemyAI[build]: buildTheBuilding rejected unitType %d at tile (%d,%d)",
+          pick->unitType, bx, by);
+      continue;
+    }
     addEnemyGold(-gCost);
     addEnemyLumber(-lCost);
     setAfterBuildingProcess(bld);
+    log("enemyAI[build]: built unitType %d at tile (%d,%d)", pick->unitType, bx, by);
   }
 }
 
@@ -16242,7 +16378,8 @@ void GameScene::enemyAITrainUnits() {
   // Count HQs to set worker target.
   int hqCount = 0;
   for (auto *u : snap)
-    if (u->unitType == UNIT_CASTLE && u->isBuilding && u->isBuildingComplete && u->energy > 0)
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
       hqCount++;
 
   // Cap live OilShips at kEAIShipsPerExtractor per OilSpot still on the map,
@@ -16264,8 +16401,8 @@ void GameScene::enemyAITrainUnits() {
       if (emptyTile.x >= 0) spawnPos = emptyTile;
     }
 
-    // Castle → workers
-    if (bld->unitType == UNIT_CASTLE) {
+    // Castle / HQ → workers
+    if (bld->unitType == UNIT_CASTLE || bld->unitType == UNIT_ORC_HQ) {
       int targetWorkers = hqCount * kEAIMaxWorkersPerHQ;
       if (counts[workerType] >= targetWorkers) continue;
       int gCost = getGoldPriceForUnit(workerType);
@@ -16296,7 +16433,11 @@ void GameScene::enemyAITrainUnits() {
         int lCost = getLumberPriceForUnit(uType);
         int fCost = GM->getFoodUseForUnit(uType);
         if (enemyGold < gCost || enemyLumber < lCost) continue;
-        if (enemyFoodInUse + fCost > enemyFoodMax) continue;
+        if (enemyFoodInUse + fCost > enemyFoodMax) {
+          log("enemyAI[train]: unitType %d blocked by food cap (%d/%d, needs %d more)",
+              uType, enemyFoodInUse, enemyFoodMax, fCost);
+          continue;
+        }
         EnemyBase *u = createUnit(uType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
                                   spawnPos, GM->getUnitName(uType), 1,
                                   getSpriteNameForUnit(uType).c_str());
@@ -16333,7 +16474,14 @@ void GameScene::updateEnemyAI() {
   bool hasEnemyBuilding = false;
   for (auto *u : enemyArray)
     if (u->isBuilding && u->energy > 0) { hasEnemyBuilding = true; break; }
-  if (!hasEnemyBuilding) return;
+  if (!hasEnemyBuilding) {
+    static bool loggedNoBuilding = false;
+    if (!loggedNoBuilding) {
+      loggedNoBuilding = true;
+      log("enemyAI: no enemy building found at all - AI will not run until one exists");
+    }
+    return;
+  }
 
   enemyAIUpdateFood();
   enemyAIManageWorkers();

@@ -1,0 +1,1105 @@
+ENEMY AI REVIEW REQUEST — "Cartoon Craft" (Cocos2d-x 3.x, C++)
+=================================================================
+
+Context for the reviewing model
+--------------------------------
+This is a real-time-strategy game written in C++ on top of Cocos2d-x 3.x.
+All gameplay code lives in one very large file, Classes/GameScene.cpp
+(the main scene class is `GameScene`, ~16,500 lines). The single-player
+"enemy" (AI opponent) does NOT run a general reasoning model — it is a
+hand-written, rule-based control loop that runs once per second and
+manages economy, construction, and unit production for the AI side only.
+Combat/targeting for both the player's units and the AI's units is
+handled by a separate, shared movement/combat update (`updateUnitMoveNew`)
+that is NOT AI-specific.
+
+This document is a self-contained summary + full source dump of every
+function that makes up the enemy AI, plus a short list of bugs we already
+found and fixed while debugging it. We are asking a second model (you,
+Fable 5) to review this system end-to-end for additional bugs, bad
+assumptions, balance problems, or missing logic that our own review may
+have missed — especially anything that could cause the AI to silently
+stop expanding/producing after a while, feel too easy/passive, or behave
+inconsistently between the Human and Orc race.
+
+Two races share this same AI code:
+  - Human race: HQ = UNIT_CASTLE, worker = UNIT_WORKER
+  - Orc race:   HQ = UNIT_ORC_HQ (converted to UNIT_CASTLE once construction
+                completes — see setAfterBuildingProcess below), worker =
+                UNIT_GOBLIN_WORKER
+
+The AI never uses pathing/travel time to construct buildings: it has its
+own "instant build" helper (`buildTheBuilding`) that places a finished (or
+under-construction) building directly on the map without a worker
+walking to the site. This is different from how the human player builds
+(a worker is sent to a spot and physically constructs it over time via
+`Movable::moveNew` / `setWorkerToBuild`).
+
+High-level call graph
+----------------------
+GameScene::oneSecUpdate(dt)          // runs every ~1 real second
+  -> GameScene::updateEnemyAI()
+       -> GameScene::enemyAIUpdateFood()
+       -> GameScene::enemyAIManageWorkers()
+       -> GameScene::enemyAIManageShips()
+       -> GameScene::enemyAITrainUnits()      // gated to run every 30s internally
+       -> GameScene::enemyAICheckBuildings()  // gated to run every 60s internally
+
+Separately, every frame:
+GameScene::updateUnitMoveNew(dt)
+  -> for each unit in `enemyArray`: find target hero, forceAttack, unit->moveNew(dt)
+  (this is the AI's only "combat AI" — it is reactive target-acquisition,
+  not part of the economy/build AI described above)
+
+State variables (Classes/GameScene.h, ~line 1098-1106)
+--------------------------------------------------------
+  int   enemyGold          = 1000;   // AI's own gold pool, separate from the player's `gold`
+  int   enemyLumber        = 1000;   // AI's own lumber pool, separate from the player's `lumber`
+  int   enemyOil           = 0;
+  int   enemyFoodInUse     = 0;
+  int   enemyFoodMax       = 0;
+  float enemyAIBuildTimer  = 0.0f;   // accumulates dt, triggers enemyAICheckBuildings at 60s
+  float enemyAITrainTimer  = 0.0f;   // accumulates dt, triggers enemyAITrainUnits at 30s
+  bool  mapHasWater        = false;  // computed once, gates shipyard/oil logic
+  bool  enemyAIInitialized = false;  // one-time init flag
+
+IMPORTANT: `enemyGold`/`enemyLumber` are a SINGLE pool shared by every
+enemy HQ on the map. If a map ever has more than one enemy base (multiple
+HQs), they currently draw from and compete for the exact same gold/lumber
+number. This has not been tested with multi-HQ maps and may or may not be
+intended.
+
+Full source of the enemy AI (current state, Classes/GameScene.cpp)
+=====================================================================
+
+--- constants ---------------------------------------------------------
+
+static const int kEAIMaxWorkersPerHQ = 10;
+static const int kEAIMaxUnitsPerType = 10;
+// Two OilShips per OilSpot - one can be shuttling to/from the depot while
+// the other loads at the extractor, keeping oil actually flowing.
+static const int kEAIShipsPerExtractor = 2;
+// Shipyard fleet composition caps.
+static const int kEAIMaxShuttles = 3;      // cheap transport - a few are enough
+static const int kEAIMaxShips = 10;        // main naval workhorse
+static const int kEAIMaxBattleShips = 5;   // priciest unit - keep the fleet affordable
+// Extra tiles of empty space required around a building footprint (and the
+// HQ's own footprint) before the AI will place something there, so bases
+// spread out instead of packing buildings edge-to-edge.
+static const int kEAIBuildGap = 2;
+// Every other entry in kHumanBuildList/kOrcBuildList is capped at one per HQ
+// (see the "already have one nearby" skip below), but the food building
+// (Farm/Barbecue) needs to scale with population - one only ever grants a
+// fixed +6/+7 food, so the AI would hit its food cap permanently once that
+// single building existed and never train another unit again.
+static const int kEAIMaxFoodBuildingsPerHQ = 4;
+
+--- resource pool helpers ----------------------------------------------
+
+void GameScene::addEnemyGold(int amount) {
+  enemyGold += amount;
+  if (enemyGold < 0) enemyGold = 0;
+}
+
+void GameScene::addEnemyLumber(int amount) {
+  enemyLumber += amount;
+  if (enemyLumber < 0) enemyLumber = 0;
+}
+
+void GameScene::addEnemyOil(int amount) {
+  enemyOil += amount;
+  if (enemyOil < 0) enemyOil = 0;
+}
+
+--- food accounting (recomputed from scratch every tick) ---------------
+
+// Recount enemy food from buildings/units (called each AI tick).
+void GameScene::enemyAIUpdateFood() {
+  int foodMax = 0;
+  int foodUse = 0;
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0) continue;
+    if (u->isBuilding && u->isBuildingComplete) {
+      if (u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) foodMax += 6;
+      else if (u->unitType == UNIT_FARM)      foodMax += 7;
+      else if (u->unitType == UNIT_BARBECUE)  foodMax += 6;
+    } else if (!u->isBuilding) {
+      foodUse += GM->getFoodUseForUnit(u->unitType);
+    }
+  }
+  enemyFoodMax  = std::min(foodMax, 100);
+  enemyFoodInUse = foodUse;
+}
+
+--- tile-search helpers for instant building placement ------------------
+
+// Check whether the building footprint (same coord convention as buildTheBuilding)
+// is fully clear of deco/soil blocks. Also requires a kEAIBuildGap-tile margin
+// around the footprint to be clear of *other buildings* (deco blocks) - not of
+// terrain - so the AI spreads buildings out instead of butting them together.
+bool GameScene::enemyAIIsTileFree(int bx, int by, int w, int h) {
+  for (int j = -kEAIBuildGap; j < h + kEAIBuildGap; j++) {
+    for (int i = -kEAIBuildGap; i < w + kEAIBuildGap; i++) {
+      int tx = bx + i;
+      int ty = by - j - 1;
+      if (tx < 1 || ty < 1 ||
+          tx >= (int)mapSize.width  - 1 ||
+          ty >= (int)mapSize.height - 1) return false;
+      Vec2 coord(tx, ty);
+      if (decoLayer && isDecoBlock(getTileGIDAt(decoLayer, coord))) return false;
+      bool inFootprint = i >= 0 && i < w && j >= 0 && j < h;
+      if (inFootprint && soilLayer && isSoilBlock(getTileGIDAt(soilLayer, coord)))
+        return false;
+    }
+  }
+  return true;
+}
+
+// Spiral search around nearPos for a free placement tile.
+// avoidMines=true keeps the spot at least 6 tiles away from any mine.
+bool GameScene::enemyAIFindBuildTile(Vec2 nearPos, int w, int h,
+                                     int &outBx, int &outBy, bool avoidMines) {
+  Vec2 coord = getCoordinateFromPosition(nearPos);
+  int cx = (int)coord.x;
+  int cy = (int)coord.y;
+
+  for (int radius = 3; radius <= 22; radius++) {
+    for (int dy = -radius; dy <= radius; dy++) {
+      for (int dx = -radius; dx <= radius; dx++) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) continue;
+        // Footprint bottom row starts at cy+dy; buildTheBuilding uses by-h as bottom row
+        int bx = cx + dx;
+        int by = cy + dy + h;
+        if (!enemyAIIsTileFree(bx, by, w, h)) continue;
+        if (avoidMines) {
+          Vec2 worldPos = getPositionFromTileCoordinate(bx + w / 2, by - h / 2);
+          bool tooClose = false;
+          for (auto *m : mutualArray) {
+            if (m->unitType != UNIT_MINE) continue;
+            if (worldPos.distance(m->getPosition()) < 6.0f * TILE_SIZE) {
+              tooClose = true;
+              break;
+            }
+          }
+          if (tooClose) continue;
+        }
+        outBx = bx;
+        outBy = by;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Water-building variant of enemyAIIsTileFree: the footprint must be open
+// water (soilLayer marks water tiles - see isWaterTileAt) and not deco-blocked.
+bool GameScene::enemyAIIsWaterTileFree(int bx, int by, int w, int h) {
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      int tx = bx + i;
+      int ty = by - j - 1;
+      if (tx < 1 || ty < 1 ||
+          tx >= (int)mapSize.width  - 1 ||
+          ty >= (int)mapSize.height - 1) return false;
+      Vec2 coord(tx, ty);
+      if (!isSoilBlock(getTileGIDAt(soilLayer, coord))) return false;
+      if (decoLayer && isDecoBlock(getTileGIDAt(decoLayer, coord))) return false;
+    }
+  }
+  return true;
+}
+
+// Spiral search around nearPos for a free water placement tile (Shipyard).
+bool GameScene::enemyAIFindWaterBuildTile(Vec2 nearPos, int w, int h,
+                                          int &outBx, int &outBy) {
+  Vec2 coord = getCoordinateFromPosition(nearPos);
+  int cx = (int)coord.x;
+  int cy = (int)coord.y;
+
+  for (int radius = 1; radius <= 30; radius++) {
+    for (int dy = -radius; dy <= radius; dy++) {
+      for (int dx = -radius; dx <= radius; dx++) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) continue;
+        int bx = cx + dx;
+        int by = cy + dy + h;
+        if (!enemyAIIsWaterTileFree(bx, by, w, h)) continue;
+        outBx = bx;
+        outBy = by;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+--- worker management (called every 1s) ---------------------------------
+
+void GameScene::enemyAIManageWorkers() {
+  const float HQ_RADIUS_SQ = (28.0f * TILE_SIZE) * (28.0f * TILE_SIZE);
+
+  // Snapshot to avoid iterator invalidation if units spawn/die during iteration.
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  // Collect enemy HQs.
+  std::vector<EnemyBase *> hqs;
+  for (auto *u : snap) {
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
+      hqs.push_back(u);
+  }
+  if (hqs.empty()) return;
+
+  for (auto *hq : hqs) {
+    Vec2 hqPos = hq->getPosition();
+
+    std::vector<EnemyBase *> nearWorkers;
+    for (auto *u : snap) {
+      if (u->isBuilding || u->energy <= 0) continue;
+      if (u->unitType != UNIT_WORKER && u->unitType != UNIT_GOBLIN_WORKER) continue;
+      if (!u->isEnemy) continue;
+      if (hqPos.distanceSquared(u->getPosition()) > HQ_RADIUS_SQ) continue;
+      nearWorkers.push_back(u);
+    }
+
+    int goldWorkers = 0, woodWorkers = 0;
+    std::vector<EnemyBase *> idleWorkers;
+    for (auto *w : nearWorkers) {
+      if (w->isGatheringGold || w->unitAct == UNIT_ACT_GATHER_GOLD) goldWorkers++;
+      else if (w->isGatheringTree || w->unitAct == UNIT_ACT_GATHER_TREE) woodWorkers++;
+      else if (!w->isGoingToBuild && w->unitAct == UNIT_ACT_NONE) idleWorkers.push_back(w);
+    }
+
+    for (auto *worker : idleWorkers) {
+      if ((int)nearWorkers.size() > kEAIMaxWorkersPerHQ) break;
+
+      // Assign returning place so deposits work.
+      EnemyBase *tank = getNearestLumberTank(worker->getPosition(), true);
+      if (tank) worker->returningPlace = tank;
+
+      bool sendToGold = (goldWorkers <= woodWorkers);
+      if (sendToGold) {
+        EnemyBase *nearest = nullptr;
+        float minD = FLT_MAX;
+        for (auto *m : mutualArray) {
+          if (m->unitType != UNIT_MINE || m->energy <= 0) continue;
+          float d = worker->getPosition().distanceSquared(m->getPosition());
+          if (d < minD) { minD = d; nearest = m; }
+        }
+        if (nearest) { setWorkerToMine(worker, nearest); goldWorkers++; }
+      } else {
+        EnemyBase *nearest = nullptr;
+        float minD = FLT_MAX;
+        for (auto *m : mutualArray) {
+          if ((m->unitType != UNIT_TREE && m->unitType != UNIT_TREE_FOR_BATTLE) ||
+              m->energy <= 0) continue;
+          float d = worker->getPosition().distanceSquared(m->getPosition());
+          if (d < minD) { minD = d; nearest = m; }
+        }
+        if (nearest) { setWorkerToTree(worker, nearest); woodWorkers++; }
+      }
+    }
+  }
+}
+
+NOTE on where enemyGold/enemyLumber actually get incremented: this
+function only *assigns* idle workers to a mine or tree. The actual
+deposit happens inside Movable::moveNew() (the active per-frame movement
+function — there is a second, legacy function `Movable::move()` that is
+NOT called anywhere active, see `updateUnitMove` vs `updateUnitMoveNew`
+in GameScene.cpp — updateUnitMoveNew/moveNew is the live path). The
+relevant snippet from Movable::moveNew():
+
+    if (isGatheringGold) {
+        if (returningPlace != nullptr && isCarryingGold &&
+            returningPlace->getBoundingBoxForIntersect().intersectsRect(getBoundingBoxForIntersect())){
+            if (!isEnemy) {
+                WORLD->addGold(40);
+            } else {
+                WORLD->addEnemyGold(40);
+            }
+            ...
+    if (isGatheringTree) {
+        ... else if (returningPlace != nullptr && isGatheringTree && isCarryingTree &&
+                     returningPlace->getBoundingBoxForIntersect().intersectsRect(getBoundingBoxForIntersect())){
+            ...
+            if (!isEnemy) {
+                WORLD->addLumber(40);
+            } else {
+                WORLD->addEnemyLumber(40);
+            }
+
+So each successful gold/lumber trip nets the AI +40 to its pool. This
+looked correct in review, but is worth a second look — in particular
+whether `returningPlace` can ever end up null or stale for an enemy
+worker (e.g. after its assigned Lumbermill/Castle/HQ is destroyed
+mid-trip), which would silently strand a worker carrying resources
+forever without crediting them.
+
+--- oil ship / oil extractor management (called every 1s) ----------------
+
+// Assign idle enemy OilShips to an OilExtractor: reuse a completed extractor
+// that has no ship working it yet, or claim the nearest unclaimed OilSpot and
+// build a new extractor there (mirrors enemyAICheckBuildings' instant-build
+// pattern - no travel/construction time, same as every other AI building).
+void GameScene::enemyAIManageShips() {
+  if (!mapHasWater) return;
+
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  std::vector<EnemyBase *> idleOilShips;
+  for (auto *u : snap) {
+    if (u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (u->unitType != UNIT_HUMAN_OIL_SHIP && u->unitType != UNIT_ORC_OIL_SHIP) continue;
+    if (u->isGatheringOil || u->isCarryingOil) continue;
+    idleOilShips.push_back(u);
+  }
+  if (idleOilShips.empty()) return;
+
+  bool isOrc = false;
+  for (auto *u : snap)
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+
+  int extractorType = isOrc ? UNIT_ORC_OIL_EXTRACTOR : UNIT_HUMAN_OIL_EXTRACTOR;
+  const char *extractorSprite = isOrc ? "orcOilExtractor.png" : "humanOilExtractor.png";
+  Vec2 extractorSize = GM->getBuildingOccupySize(extractorType);
+  int ew = (int)extractorSize.x, eh = (int)extractorSize.y;
+  int gCost = getGoldPriceForUnit(extractorType);
+  int lCost = getLumberPriceForUnit(extractorType);
+
+  for (auto *ship : idleOilShips) {
+    // Prefer a completed enemy extractor that isn't fully staffed yet.
+    EnemyBase *bestExtractor = nullptr;
+    float bestD = FLT_MAX;
+    for (auto *u : snap) {
+      if (u->unitType != extractorType || !u->isBuildingComplete || u->energy <= 0) continue;
+      int assigned = 0;
+      for (auto *s2 : snap) {
+        if (s2 == ship) continue;
+        if (s2->unitType != UNIT_HUMAN_OIL_SHIP && s2->unitType != UNIT_ORC_OIL_SHIP) continue;
+        if ((s2->isGatheringOil || s2->isCarryingOil) && s2->currentOilExtractor == u) {
+          assigned++;
+        }
+      }
+      if (assigned >= kEAIShipsPerExtractor) continue;
+      float d = ship->getPosition().distanceSquared(u->getPosition());
+      if (d < bestD) { bestD = d; bestExtractor = u; }
+    }
+    if (bestExtractor) {
+      setOilShipToExtractor(ship, bestExtractor);
+      continue;
+    }
+
+    // No free extractor - claim the nearest OilSpot and build one there.
+    if (enemyGold < gCost || enemyLumber < lCost) continue;
+
+    // Try oil spots nearest-first; skip ones already tried this pass so a
+    // build failure (e.g. spot already occupied) falls through to the next.
+    std::vector<EnemyBase *> tried;
+    while (true) {
+      EnemyBase *nearestSpot = nullptr;
+      float bestSpotD = FLT_MAX;
+      for (auto *m : mutualArray) {
+        if (m->unitType != UNIT_OIL_SPOT || m->energy <= 0) continue;
+        bool alreadyTried = false;
+        for (auto *t : tried) if (t == m) { alreadyTried = true; break; }
+        if (alreadyTried) continue;
+        float d = ship->getPosition().distanceSquared(m->getPosition());
+        if (d < bestSpotD) { bestSpotD = d; nearestSpot = m; }
+      }
+      if (!nearestSpot) break;
+      tried.push_back(nearestSpot);
+
+      Vec2 spotCoord = getCoordinateFromPosition(nearestSpot->getPosition());
+      int sx = (int)spotCoord.x, sy = (int)spotCoord.y;
+      EnemyBase *extractor = nullptr;
+      for (int oy = 0; oy < eh && !extractor; oy++) {
+        for (int ox = 0; ox < ew && !extractor; ox++) {
+          int bx = sx - ox;
+          int by = sy + eh - oy;
+          extractor = buildTheBuilding(extractorType, bx, by, ew, eh,
+                                       extractorSprite, WHICH_SIDE_ENEMY, true);
+        }
+      }
+      if (extractor) {
+        addEnemyGold(-gCost);
+        addEnemyLumber(-lCost);
+        setAfterBuildingProcess(extractor);
+        setOilShipToExtractor(ship, extractor);
+        break;
+      }
+    }
+  }
+}
+
+NOTE: this function is O(idleShips * enemyArray * enemyArray) in the
+worst case (nested loops recomputing "how many ships are already assigned
+to this extractor" from scratch for every candidate extractor, for every
+idle ship). Probably fine at current unit-count scales, but worth flagging
+for a scale/performance review.
+
+--- building construction (enemyAICheckBuildings runs every 60s) ---------
+
+struct EAIBuildDef {
+  int unitType;
+  const char *sprite;
+  int prereqType; // -1 = none
+};
+
+static const EAIBuildDef kHumanBuildList[] = {
+  {UNIT_FARM,           "farm.png",         -1},
+  {UNIT_BARRACKS,       "barracks.png",     -1},
+  {UNIT_LUMBERMILL,     "lumberMill.png",   -1},
+  {UNIT_FACTORY,        "factory.png",      UNIT_LUMBERMILL},
+  {UNIT_AIRPORT,        "airport.png",      UNIT_LUMBERMILL},
+  {UNIT_HUMAN_SHIPYARD, "humanShipyard.png",-1},
+};
+static const EAIBuildDef kOrcBuildList[] = {
+  {UNIT_BARBECUE,        "barbecue.png",    -1},
+  {UNIT_ORC_BUNKER,      "bunker.png",      -1},
+  {UNIT_ORC_BARRACKS,    "axeport.png",     -1},
+  {UNIT_ORC_TROLL_HOUSE, "statueHouse.png", UNIT_ORC_BARRACKS},
+  {UNIT_TEMPLE,          "alter.png",       UNIT_ORC_BARRACKS},
+  {UNIT_ORC_SHIPYARD,    "orcShipyard.png", -1},
+};
+
+void GameScene::enemyAICheckBuildings() {
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  // Detect race from any orc unit already in the enemy array.
+  bool isOrc = false;
+  for (auto *u : snap) {
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+  }
+
+  const EAIBuildDef *buildList     = isOrc ? kOrcBuildList : kHumanBuildList;
+  const int          buildListSize = isOrc
+      ? (int)(sizeof(kOrcBuildList)   / sizeof(kOrcBuildList[0]))
+      : (int)(sizeof(kHumanBuildList) / sizeof(kHumanBuildList[0]));
+  const float        BASE_RADIUS_SQ = (22.0f * TILE_SIZE) * (22.0f * TILE_SIZE);
+
+  // Collect completed HQs.
+  std::vector<EnemyBase *> hqs;
+  for (auto *u : snap) {
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
+      hqs.push_back(u);
+  }
+
+  // If workers exist but no HQ, build one first.
+  if (hqs.empty()) {
+    bool hasWorker = false;
+    Vec2 workerPos;
+    for (auto *u : snap) {
+      if (!u->isBuilding && u->energy > 0 && u->isEnemy &&
+          (u->unitType == UNIT_WORKER || u->unitType == UNIT_GOBLIN_WORKER)) {
+        hasWorker = true;
+        workerPos = u->getPosition();
+        break;
+      }
+    }
+    if (!hasWorker) {
+      log("enemyAI[build]: no HQ and no worker found - AI is stuck");
+      return;
+    }
+
+    int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
+    int gCost  = getGoldPriceForUnit(hqType);
+    int lCost  = getLumberPriceForUnit(hqType);
+    if (enemyGold < gCost || enemyLumber < lCost) {
+      log("enemyAI[build]: no HQ - waiting on resources for HQ (have %d/%d, need %d/%d)",
+          enemyGold, enemyLumber, gCost, lCost);
+      return;
+    }
+
+    Vec2 sz = GM->getBuildingOccupySize(hqType);
+    int w = (int)sz.x, h = (int)sz.y;
+    int bx, by;
+    if (!enemyAIFindBuildTile(workerPos, w, h, bx, by, true)) {
+      log("enemyAI[build]: no HQ - could not find a free tile near worker");
+      return;
+    }
+
+    const char *spr = isOrc ? "hq.png" : "castle.png";
+    EnemyBase *bld = buildTheBuilding(hqType, bx, by, w, h, spr, WHICH_SIDE_ENEMY, true);
+    if (bld) {
+      addEnemyGold(-gCost);
+      addEnemyLumber(-lCost);
+      setAfterBuildingProcess(bld);
+      log("enemyAI[build]: built HQ at tile (%d,%d)", bx, by);
+    } else {
+      log("enemyAI[build]: buildTheBuilding rejected HQ placement at tile (%d,%d)", bx, by);
+    }
+    return;
+  }
+
+  bool foodShort = (enemyFoodMax > 0 && enemyFoodInUse >= enemyFoodMax - 4);
+
+  auto countNear = [&](int type, Vec2 hqPos) {
+    int n = 0;
+    for (auto *u : snap)
+      if (u->unitType == type && u->isBuilding && u->energy > 0 &&
+          hqPos.distanceSquared(u->getPosition()) < BASE_RADIUS_SQ) n++;
+    return n;
+  };
+
+  for (auto *hq : hqs) {
+    Vec2 hqPos = hq->getPosition();
+
+    const EAIBuildDef *pick = nullptr;
+
+    if (foodShort) {
+      int foodType = isOrc ? UNIT_BARBECUE : UNIT_FARM;
+      if (countNear(foodType, hqPos) < kEAIMaxFoodBuildingsPerHQ)
+        for (int i = 0; i < buildListSize; i++)
+          if (buildList[i].unitType == foodType) { pick = &buildList[i]; break; }
+    }
+
+    if (!pick) {
+      for (int i = 0; i < buildListSize; i++) {
+        const EAIBuildDef &def = buildList[i];
+        bool isShipyardDef = (def.unitType == UNIT_HUMAN_SHIPYARD ||
+                              def.unitType == UNIT_ORC_SHIPYARD);
+        if (isShipyardDef && !mapHasWater) continue;
+        if (countNear(def.unitType, hqPos) > 0) continue;
+        if (def.prereqType != -1 && countNear(def.prereqType, hqPos) == 0) continue;
+        pick = &def;
+        break;
+      }
+    }
+
+    if (!pick) {
+      log("enemyAI[build]: HQ at (%.0f,%.0f) has nothing left to build in its list",
+          hqPos.x, hqPos.y);
+      continue;
+    }
+
+    int gCost = getGoldPriceForUnit(pick->unitType);
+    int lCost = getLumberPriceForUnit(pick->unitType);
+    if (enemyGold < gCost || enemyLumber < lCost) {
+      log("enemyAI[build]: waiting on resources for unitType %d (have %d/%d, need %d/%d)",
+          pick->unitType, enemyGold, enemyLumber, gCost, lCost);
+      continue;
+    }
+
+    bool isShipyardPick = (pick->unitType == UNIT_HUMAN_SHIPYARD ||
+                           pick->unitType == UNIT_ORC_SHIPYARD);
+    Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
+    int w = (int)sz.x, h = (int)sz.y;
+    int bx, by;
+    bool foundTile = isShipyardPick
+        ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
+        : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
+    if (!foundTile) {
+      log("enemyAI[build]: could not find a free tile for unitType %d near HQ (%.0f,%.0f)",
+          pick->unitType, hqPos.x, hqPos.y);
+      continue;
+    }
+
+    EnemyBase *bld = buildTheBuilding(pick->unitType, bx, by, w, h,
+                                      pick->sprite, WHICH_SIDE_ENEMY, true);
+    if (!bld) {
+      log("enemyAI[build]: buildTheBuilding rejected unitType %d at tile (%d,%d)",
+          pick->unitType, bx, by);
+      continue;
+    }
+    addEnemyGold(-gCost);
+    addEnemyLumber(-lCost);
+    setAfterBuildingProcess(bld);
+    log("enemyAI[build]: built unitType %d at tile (%d,%d)", pick->unitType, bx, by);
+  }
+}
+
+IMPORTANT LIMITATION: for each HQ, this function only ever picks and
+attempts ONE building per call (per 60-second tick). If that one pick
+fails (no resources, no free tile), the function moves on to the next HQ
+and does not try a second candidate from the list this tick. So a single
+stuck building type (e.g. can't find a tile) can stall an entire 60-second
+cycle for that HQ even if a different, buildable item exists further down
+the list.
+
+Every entry in kHumanBuildList/kOrcBuildList other than the food building
+is a strict "build at most 1 of this per HQ, forever" — there is currently
+no logic to ever build a second Barracks/Factory/Airport/etc. even after
+long game times or large gold stockpiles. Only the food building was
+special-cased (kEAIMaxFoodBuildingsPerHQ) after we found the AI could get
+permanently population-capped. The same "only ever one" ceiling likely
+also under-utilizes gold/lumber once the base is fully built out — all
+resource income after that point has nowhere to go except unit training
+(enemyAITrainUnits), which has its own low per-unit-type caps (see below).
+
+--- unit training (enemyAITrainUnits runs every 30s) ---------------------
+
+struct EAIProdEntry {
+  int buildType;
+  int units[4]; // -1 terminates
+};
+
+static const EAIProdEntry kHumanProd[] = {
+  {UNIT_BARRACKS,       {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
+  {UNIT_FACTORY,        {UNIT_CATAPULT,  -1, -1, -1}},
+  {UNIT_AIRPORT,        {UNIT_HELICOPTER,-1, -1, -1}},
+  // Priority order: OilShip (economy) > Shuttle (cheap utility) >
+  // Ship (main workhorse) > BattleShip (priciest, capped low).
+  {UNIT_HUMAN_SHIPYARD, {UNIT_HUMAN_OIL_SHIP, UNIT_HUMAN_SHUTTLE,
+                         UNIT_HUMAN_SHIP, UNIT_HUMAN_BATTLE_SHIP}},
+  {-1, {-1,-1,-1,-1}},
+};
+static const EAIProdEntry kOrcProd[] = {
+  {UNIT_ORC_BARRACKS,    {UNIT_ORC_AXE,  UNIT_ORC_SPEAR, -1, -1}},
+  {UNIT_ORC_TROLL_HOUSE, {UNIT_TROLL,    -1, -1, -1}},
+  {UNIT_TEMPLE,          {UNIT_GOBLIN,   UNIT_GOBLIN_BOMB, -1, -1}},
+  {UNIT_ORC_SHIPYARD,    {UNIT_ORC_OIL_SHIP, UNIT_ORC_SHUTTLE,
+                         UNIT_ORC_SHIP, UNIT_ORC_BATTLE_SHIP}},
+  {-1, {-1,-1,-1,-1}},
+};
+
+// Per-unit-type population cap for AI production, overriding the generic
+// kEAIMaxUnitsPerType for units that need their own ceiling.
+static int enemyAIUnitCap(int uType, int oilSpotCount) {
+  if (uType == UNIT_HUMAN_OIL_SHIP || uType == UNIT_ORC_OIL_SHIP)
+    return oilSpotCount * kEAIShipsPerExtractor;
+  if (uType == UNIT_HUMAN_SHUTTLE || uType == UNIT_ORC_SHUTTLE)
+    return kEAIMaxShuttles;
+  if (uType == UNIT_HUMAN_SHIP || uType == UNIT_ORC_SHIP)
+    return kEAIMaxShips;
+  if (uType == UNIT_HUMAN_BATTLE_SHIP || uType == UNIT_ORC_BATTLE_SHIP)
+    return kEAIMaxBattleShips;
+  return kEAIMaxUnitsPerType;   // = 10, applies to SWORDMAN/ARCHER/CATAPULT/
+                                // HELICOPTER/ORC_AXE/ORC_SPEAR/TROLL/GOBLIN/
+                                // GOBLIN_BOMB - i.e. ALL basic combat units
+                                // share the flat cap of 10 *per unit type*,
+                                // not a shared army-size cap.
+}
+
+void GameScene::enemyAITrainUnits() {
+  enemyAITrainTimer += 1.0f;
+  if (enemyAITrainTimer < 30.0f) return;
+  enemyAITrainTimer = 0.0f;
+
+  std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
+
+  bool isOrc = false;
+  for (auto *u : snap)
+    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+
+  const EAIProdEntry *prodTable = isOrc ? kOrcProd : kHumanProd;
+  int workerType = isOrc ? UNIT_GOBLIN_WORKER : UNIT_WORKER;
+
+  // Count existing non-building enemy units by type.
+  std::map<int, int> counts;
+  for (auto *u : snap)
+    if (!u->isBuilding && u->energy > 0) counts[u->unitType]++;
+
+  // Count HQs to set worker target.
+  int hqCount = 0;
+  for (auto *u : snap)
+    if ((u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0)
+      hqCount++;
+
+  // Cap live OilShips at kEAIShipsPerExtractor per OilSpot still on the map,
+  // so the AI doesn't keep pouring gold into ships it has nowhere to put to work.
+  int oilSpotCount = 0;
+  for (auto *m : mutualArray)
+    if (m->unitType == UNIT_OIL_SPOT && m->energy > 0) oilSpotCount++;
+
+  for (auto *bld : snap) {
+    if (!bld->isBuilding || !bld->isBuildingComplete || bld->energy <= 0) continue;
+
+    Vec2 spawnPos = bld->getApproachingPoint(bld->getPosition());
+    bool isShipyardBld = (bld->unitType == UNIT_HUMAN_SHIPYARD ||
+                          bld->unitType == UNIT_ORC_SHIPYARD);
+    if (isShipyardBld) {
+      Vec2 emptyTile = findEmptyWaterSpawnTile(
+          (int)bld->buildingStartCoordinate.x, (int)bld->buildingStartCoordinate.y,
+          (int)bld->buildingOccupySize.width, (int)bld->buildingOccupySize.height);
+      if (emptyTile.x >= 0) spawnPos = emptyTile;
+    }
+
+    // Castle / HQ → workers
+    if (bld->unitType == UNIT_CASTLE || bld->unitType == UNIT_ORC_HQ) {
+      int targetWorkers = hqCount * kEAIMaxWorkersPerHQ;
+      if (counts[workerType] >= targetWorkers) continue;
+      int gCost = getGoldPriceForUnit(workerType);
+      int lCost = getLumberPriceForUnit(workerType);
+      int fCost = GM->getFoodUseForUnit(workerType);
+      if (enemyGold < gCost || enemyLumber < lCost) continue;
+      if (enemyFoodInUse + fCost > enemyFoodMax) continue;
+      EnemyBase *u = createUnit(workerType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
+                                spawnPos, GM->getUnitName(workerType), 1,
+                                getSpriteNameForUnit(workerType).c_str());
+      if (u) {
+        addEnemyGold(-gCost);
+        addEnemyLumber(-lCost);
+        enemyFoodInUse += fCost;
+        counts[workerType]++;
+      }
+      continue;
+    }
+
+    // Combat buildings
+    for (int pi = 0; prodTable[pi].buildType != -1; pi++) {
+      if (prodTable[pi].buildType != bld->unitType) continue;
+      for (int ui = 0; ui < 4 && prodTable[pi].units[ui] != -1; ui++) {
+        int uType = prodTable[pi].units[ui];
+        int cap = enemyAIUnitCap(uType, oilSpotCount);
+        if (counts[uType] >= cap) continue;
+        int gCost = getGoldPriceForUnit(uType);
+        int lCost = getLumberPriceForUnit(uType);
+        int fCost = GM->getFoodUseForUnit(uType);
+        if (enemyGold < gCost || enemyLumber < lCost) continue;
+        if (enemyFoodInUse + fCost > enemyFoodMax) {
+          log("enemyAI[train]: unitType %d blocked by food cap (%d/%d, needs %d more)",
+              uType, enemyFoodInUse, enemyFoodMax, fCost);
+          continue;
+        }
+        EnemyBase *u = createUnit(uType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
+                                  spawnPos, GM->getUnitName(uType), 1,
+                                  getSpriteNameForUnit(uType).c_str());
+        if (u) {
+          addEnemyGold(-gCost);
+          addEnemyLumber(-lCost);
+          enemyFoodInUse += fCost;
+          counts[uType]++;
+        }
+        break; // one unit type per building per training tick
+      }
+      break;
+    }
+  }
+}
+
+IMPORTANT LIMITATIONS to flag:
+1. Workers and combat units compete for the exact same enemyGold/
+   enemyLumber/enemyFoodMax pool with NO prioritization between them.
+   Whichever building happens to come first in `enemyArray` iteration
+   order that tick "wins" the available resources/food headroom for
+   that tick. Because the HQ (which trains workers) is usually created
+   very early and stays early in the array, workers are likely to
+   consistently win this race over combat unit buildings, especially
+   early-to-mid game, which is exactly the bug the user just reported
+   (workers/food ate the entire population cap before combat units got
+   a turn). Even with the food-building fix, this ordering bias is not
+   fixed - it's just less severe because there's more total headroom now.
+2. `enemyAIUnitCap` gives a flat cap of 10 for EVERY basic combat unit
+   type independently (10 Swordmen AND 10 Archers AND 10 Catapults AND
+   10 Helicopters could theoretically coexist = 40 land/air units, plus
+   up to 10 workers per HQ, all bounded only by `enemyFoodMax` which
+   itself is capped at 100 total). Given the AI never builds more than
+   one of each production building, actually reaching those caps depends
+   entirely on gold/lumber income scaling with only a few workers -
+   worth checking whether the AI ever meaningfully approaches these caps
+   in a real match or plateaus much earlier for economy reasons.
+3. "One unit type per building per training tick" (the `break` after a
+   successful or attempted train inside the inner loop) means a Barracks
+   that produces both UNIT_SWORDMAN and UNIT_ARCHER will only ever
+   consider SWORDMAN until `counts[SWORDMAN] >= cap` (10), and only then
+   fall through to ARCHER. So the AI will mass 10 Swordmen before EVER
+   producing its first Archer. Same pattern for every other multi-unit
+   production entry (ORC_AXE before ORC_SPEAR, GOBLIN before
+   GOBLIN_BOMB, OilShip before Shuttle before Ship before BattleShip).
+   This produces very homogeneous, sequential armies rather than a mixed
+   composition, and may be worth revisiting.
+4. Race detection (`isOrc`) is a heuristic: it scans the enemy unit list
+   for ANY unit matching `isOrcTypeUnit()` every single time any of these
+   three functions run, rather than storing the race once. Edge case:
+   `setAfterBuildingProcess` (below) renames a completed UNIT_ORC_HQ to
+   UNIT_CASTLE, and `isOrcTypeUnit()` does NOT match UNIT_CASTLE. So if
+   an Orc base's only surviving units at some instant were its completed
+   HQ (now typed UNIT_CASTLE) with zero goblin workers/other orc units
+   alive (e.g. right after the last worker died and before a new one is
+   trained), `isOrc` would evaluate to false that tick, and the AI would
+   momentarily treat a beaten-down Orc base as Human (wrong build list /
+   production table / worker type) until an orc-typed unit exists again.
+   Likely rare, but a real race-condition-like bug worth checking.
+
+--- helper functions the above code depends on -----------------------
+
+bool GameScene::isOrcTypeUnit(int unitType) {
+  return unitType == UNIT_GOBLIN_WORKER || unitType == UNIT_GOBLIN ||
+         unitType == UNIT_GOBLIN_BOMB || unitType == UNIT_ORC_AXE ||
+         unitType == UNIT_ORC_SPEAR || unitType == UNIT_TROLL ||
+         unitType == UNIT_ORC_HQ || unitType == UNIT_ORC_BUNKER ||
+         unitType == UNIT_ORC_BARRACKS || unitType == UNIT_BARBECUE ||
+         unitType == UNIT_TEMPLE || unitType == UNIT_ORC_TROLL_HOUSE ||
+         unitType == UNIT_ORC_SHIPYARD || unitType == UNIT_ORC_SHUTTLE ||
+         unitType == UNIT_ORC_SHIP || unitType == UNIT_ORC_BATTLE_SHIP ||
+         unitType == UNIT_ORC_OIL_SHIP || unitType == UNIT_ORC_OIL_EXTRACTOR ||
+         unitType == UNIT_ORC_OIL_REFINERY || unitType == UNIT_ORC_FOUNDRY;
+}
+
+EnemyBase *GameScene::buildTheBuilding(int index, int x, int y, int width,
+                                        int height, std::string spriteName,
+                                        int whichSide, bool isFree) {
+  bool isPlaceReady = true;
+  bool isShipyard = (index == UNIT_HUMAN_SHIPYARD || index == UNIT_ORC_SHIPYARD);
+  bool isWaterBuilding = isShipyard ||
+      index == UNIT_HUMAN_OIL_EXTRACTOR || index == UNIT_ORC_OIL_EXTRACTOR ||
+      index == UNIT_HUMAN_OIL_REFINERY  || index == UNIT_ORC_OIL_REFINERY  ||
+      index == UNIT_HUMAN_FOUNDRY       || index == UNIT_ORC_FOUNDRY;
+  Vec2 pos;
+  for (int j = 0; j < height; j++) {
+    for (int i = 0; i < width; i++) {
+      pos = Vec2(x + i, y - j - 1);
+      bool isBlock;
+      if (isWaterBuilding) {
+        isBlock = !isSoilBlock(getTileGIDAt(soilLayer, pos)) ||
+                  isDecoBlock(getTileGIDAt(decoLayer, pos));
+      } else {
+        isBlock = isDecoBlock(getTileGIDAt(decoLayer, pos)) ||
+                  isSoilBlock(getTileGIDAt(soilLayer, pos));
+      }
+      if (isBlock) {
+        isPlaceReady = false;
+      }
+    }
+  }
+  int price = this->getGoldPriceForUnit(index);
+  int lumberPrice = getLumberPriceForUnit(index);
+  if (isFree) {
+    price = 0;
+    lumberPrice = 0;
+  }
+  if (price > gold || !isPlaceReady) {
+    return nullptr;
+  }
+  if (lumberPrice > lumber) {
+    return nullptr;
+  }
+
+  // OilExtractor must be placed on an OilSpot
+  if (index == UNIT_HUMAN_OIL_EXTRACTOR || index == UNIT_ORC_OIL_EXTRACTOR) {
+    bool hasOilSpot = false;
+    for (auto mutual : mutualArray) {
+      if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT) continue;
+      Vec2 st = getCoordinateFromPosition(mutual->getPosition());
+      if ((int)st.x >= x && (int)st.x < x + width &&
+          (int)st.y >= y - height && (int)st.y < y) {
+        hasOilSpot = true;
+        break;
+      }
+    }
+    if (!hasOilSpot) return nullptr;
+  }
+
+  pos = getPositionFromTileCoordinate(x, y - height);
+  blockSending = true;
+  EnemyBase *unit =
+      createUnit(index, whichSide, ITS_BUILDING,
+                 pos + Vec2(width * TILE_SIZE / 2 - TILE_SIZE / 2,
+                            -(height - 1) * TILE_SIZE + height * TILE_SIZE / 2 -
+                                TILE_SIZE / 2),
+                 spriteName.substr(0, spriteName.size() - 4), 1, spriteName);
+  blockSending = false;
+  unit->isBuildingComplete = false;
+  setOccupy(pos, width, height, true, unit);
+  unit->setRotation(0);   // <- was setRotation(180) before our fix, see below
+  unit->retain();
+
+  addGold(-price);
+  addLumber(-lumberPrice);
+  return unit;
+}
+
+void GameScene::setAfterBuildingProcess(Movable *unit) {
+  unit->stopAllActions();
+  unit->setSpriteFrame(getSpriteNameForUnit(unit->unitType));
+  unit->isBuildingComplete = true;
+
+  addDecoToBuilding(unit);
+  if (unit->unitType == UNIT_WATCHERTOWER ||
+      unit->unitType == UNIT_ORC_BUNKER || unit->unitType == UNIT_ORC_HQ) {
+    unit->canFindTarget = true;
+  }
+  if (unit->unitType == UNIT_ORC_HQ) {
+    unit->unitType = UNIT_CASTLE;   // <- see isOrc race-detection edge case above
+  }
+  if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_BARRACKS ||
+      unit->unitType == UNIT_AIRPORT || unit->unitType == UNIT_FACTORY ||
+      unit->unitType == UNIT_ORC_HQ || unit->unitType == UNIT_ORC_BARRACKS ||
+      unit->unitType == UNIT_ORC_TROLL_HOUSE || unit->unitType == UNIT_TEMPLE ||
+      unit->unitType == UNIT_HUMAN_SHIPYARD ||
+      unit->unitType == UNIT_ORC_SHIPYARD ||
+      unit->unitType == UNIT_HUMAN_FOUNDRY ||
+      unit->unitType == UNIT_ORC_FOUNDRY) {
+    unit->startProductSchedule();
+  }
+  updateFoodMaxState();
+  resetPathState();
+  updateMiniMapForNonMoving();
+}
+
+Note: `unit->unitType == UNIT_ORC_HQ` in the `startProductSchedule()`
+condition right after the line above is dead code — the previous line
+just unconditionally rewrote UNIT_ORC_HQ to UNIT_CASTLE, so that branch
+of the OR can never be true. Cosmetic, not a functional bug (UNIT_CASTLE
+is already in the same condition), but worth cleaning up or double
+checking there isn't a missed intent here.
+
+--- entry point (called once per second from GameScene::oneSecUpdate) ---
+
+void GameScene::updateEnemyAI() {
+  if (isMultiplay) return;
+
+  // One-time init: detect whether the map has any water tiles.
+  if (!enemyAIInitialized) {
+    enemyAIInitialized = true;
+    mapHasWater = false;
+    for (int j = 0; j < (int)mapSize.height && !mapHasWater; j++)
+      for (int i = 0; i < (int)mapSize.width && !mapHasWater; i++)
+        if (isWaterTileAt(i, j)) mapHasWater = true;
+    enemyGold   = 1000;
+    enemyLumber = 1000;
+  }
+
+  // Only run when the enemy side has at least one building.
+  bool hasEnemyBuilding = false;
+  for (auto *u : enemyArray)
+    if (u->isBuilding && u->energy > 0) { hasEnemyBuilding = true; break; }
+  if (!hasEnemyBuilding) {
+    static bool loggedNoBuilding = false;
+    if (!loggedNoBuilding) {
+      loggedNoBuilding = true;
+      log("enemyAI: no enemy building found at all - AI will not run until one exists");
+    }
+    return;
+  }
+
+  enemyAIUpdateFood();
+  enemyAIManageWorkers();
+  enemyAIManageShips();
+  enemyAITrainUnits();
+
+  enemyAIBuildTimer += 1.0f;
+  if (enemyAIBuildTimer >= 60.0f) {
+    enemyAIBuildTimer = 0.0f;
+    enemyAICheckBuildings();
+  }
+}
+
+Combat behavior for enemy units (separate system, runs every frame)
+----------------------------------------------------------------------
+Not part of the economy/build AI above, but it is the only other "AI"
+behavior enemy units have, and the user may want it reviewed too.
+From GameScene::updateUnitMoveNew(dt), the enemy-side loop:
+
+  for (auto unit : enemyArray) {
+    ... shuttle-cargo handling (irrelevant here) ...
+    if (unit->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH) {
+      unit->restingTime -= dt;
+      if (unit->restingTime < 0) {
+        unit->unitAct = UNIT_ACT_NONE;
+        unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+      }
+    } else if (unit->unitAct == UNIT_ACT_NONE || unit->unitAct == UNIT_ACT_ATTACK_DDANG) {
+      if (unit->unitType == UNIT_HUMAN_SHUTTLE || unit->unitType == UNIT_ORC_SHUTTLE) {
+        unit->target = nullptr;
+      } else {
+        unit->target = findTargetHero(unit);
+      }
+      if (unit->unreachableTarget == unit->target) {
+        unit->target = nullptr;
+        unit->unreachableTarget = nullptr;
+      }
+      if (unit->target == nullptr) {
+        if (unit->unitAct == UNIT_ACT_NONE) {
+          unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
+          unit->restingTime = 3;
+        }
+      } else {
+        Vector<EnemyBase *> list;
+        list.pushBack(unit);
+        Vec2 attackDdangPos = unit->attackDdangPos;
+        forceAttack(list, (EnemyBase *)unit->target);
+        unit->attackDdangPos = attackDdangPos;
+        list.clear();
+        unit->canRevengeAttack = true;
+      }
+    }
+    if (!isMultiplay) {
+      if (unit->wantToEli) {
+        if (unit->unitActDetail == UNIT_ACT_DETAIL_IDLE && unit->unitAct == UNIT_ACT_NONE) {
+          attackNearHero((EnemyBase *)unit);
+        }
+      }
+    }
+    unit->moveNew(dt);
+  }
+
+This is a simple "if idle, look for the nearest hero unit/building via
+findTargetHero() and attack-move to it; if none found, rest 3 seconds
+and look again" loop. Every idle enemy unit does this independently -
+there is no coordinated attack timing, no defense-vs-offense role
+assignment, and workers are also subject to this loop (though
+`enemyAIManageWorkers` keeps most of them busy with `unitAct !=
+UNIT_ACT_NONE`, so in practice idle workers may or may not aggro
+depending on timing). Whether combat units ever mass up before attacking,
+or trickle out one at a time as soon as they're built (probably the
+latter, since there is no rally/hold logic anywhere in this code), seems
+worth checking.
+
+Bugs already found and fixed in this review session (for reference)
+-----------------------------------------------------------------------
+1. AI-built buildings rendered upside-down: `buildTheBuilding()` set
+   `unit->setRotation(180)` unconditionally. The normal player/worker
+   construction path (Movable.cpp, right after calling buildTheBuilding)
+   immediately resets it to `setRotation(0)`, but the enemy AI's direct
+   "instant build" call sites (enemyAICheckBuildings, the HQ-build
+   branch, enemyAIManageShips' oil extractor branch) never did. Fixed by
+   changing the line inside buildTheBuilding to setRotation(0) directly,
+   since it was always being immediately overwritten anyway on every
+   path that did reset it.
+2. AI buildings clustered edge-to-edge around the HQ: enemyAIIsTileFree
+   only checked the exact building footprint for being clear, so the
+   spiral search in enemyAIFindBuildTile always picked the closest
+   available tile with zero spacing requirement. Fixed by adding a
+   kEAIBuildGap (2 tile) margin requirement around each footprint that
+   must also be clear of other buildings (deco-layer blocks), which also
+   naturally pushes buildings away from the HQ's own footprint.
+3. Population/food cap permanently stuck at HQ+1 food building: the
+   general "build at most 1 of each type per HQ" rule in
+   enemyAICheckBuildings was also applied to the food building
+   (Farm/Barbecue), so once one was built the AI would never build a
+   second, capping enemyFoodMax at 12-13 total (HQ 6 + Farm 7, or HQ 6 +
+   Barbecue 6) forever. Combined with the worker-training loop competing
+   for the same food pool, this could exhaust the entire food budget on
+   workers alone, leaving no headroom to ever train combat units - this
+   was reported directly by the user as "only 1 Orc Axe unit ever got
+   trained, then nothing else". Fixed by introducing
+   kEAIMaxFoodBuildingsPerHQ = 4 and changing the food-building repeat
+   condition from `countNear(...) == 0` to `countNear(...) < 4`.
+4. Added diagnostic `log(...)` calls at every "silently gave up" branch
+   in enemyAICheckBuildings/updateEnemyAI/enemyAITrainUnits (visible in
+   the Debug build's Output window), since none of these failure paths
+   previously left any trace, which made all of the above very hard to
+   diagnose from black-box play-testing alone.
+
+What we'd like a second opinion on
+--------------------------------------
+- Anything above flagged as an "IMPORTANT LIMITATION" or "NOTE" - are
+  any of these likely to be the actual cause of the AI feeling weak,
+  passive, or stalling out in real games, beyond what we already fixed?
+- The resource/food contention between worker training and combat unit
+  training (point 1 in the training limitations) - worth adding explicit
+  prioritization (e.g. reserve some food/gold for combat production once
+  a minimum worker count is reached)?
+- The "one building per type per HQ forever" rule for non-food buildings
+  - intentional design (small, fixed base) or should more production
+    buildings (extra Barracks, etc.) be allowed once economy scales up?
+- The sequential unit-type training within a single production building
+  (point 3) - should this be round-robin/weighted instead of "max out
+  type A, then move to type B"?
+- The isOrc race-detection edge case (point 4) - is it worth caching the
+  enemy race once at init instead of re-deriving it by scanning units
+  every tick?
+- Any other correctness issues in the code as pasted above that we did
+  not call out.
+
+Relevant files
+------------------
+- Classes/GameScene.cpp - all functions above live here
+- Classes/GameScene.h   - member variable declarations (enemyGold, etc.)
+- Classes/Movable.cpp   - Movable::moveNew() worker gather/deposit logic,
+                          Movable::move() is legacy/dead code (not called)
+- Classes/GameManager.cpp - getFoodUseForUnit(), getBuildingOccupySize()

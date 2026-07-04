@@ -462,7 +462,18 @@ public:
     void handlePcControlGroupAssign(int groupIndex);
     void handlePcControlGroupRecall(int groupIndex, bool addToSelection);
 #endif
-    
+
+    // In-game chat (StarCraft-style): Enter opens the input box, typing goes into
+    // it, Enter sends it and it rises up from the bottom-left like a chat log.
+    ui::TextField* chatInputField = nullptr;
+    DrawNode* chatInputBg = nullptr;
+    bool isChatInputActive = false;
+    std::vector<Label*> chatLogLines;
+    void openChatInput();
+    void finalizeChatInput();
+    void cancelChatInput();
+    void addChatMessage(const std::string& msg);
+
     Node* selectedInventorySlot = nullptr;
     Node* abcLayer = nullptr;
     Node* selectedAbcOption = nullptr;
@@ -584,6 +595,11 @@ public:
     Node* priceInfo = nullptr;
     void showPriceInfo(std::string msg, int gold, int lumber, int food);
     void hidePriceInfo();
+
+    // test now
+    Node* enemyResourceTooltip = nullptr;
+    void showEnemyResourceTooltip(cocos2d::Vec2 pos, int gold, int lumber);
+    void hideEnemyResourceTooltip();
     
     bool tutorialEnded = false;
     Node* tutorialNode = nullptr;

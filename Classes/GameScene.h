@@ -445,6 +445,7 @@ public:
   bool isWaterTileAt(int tileX, int tileY);
   bool isShipTileBlocked(int tileX, int tileY, Movable *self);
   cocos2d::Vec2 findEmptyWaterSpawnTile(int shipyardTileX, int shipyardTileY, int shipyardW, int shipyardH);
+  void fleeShipFromAttacker(Movable *unit, Movable *attacker);
   std::set<std::pair<int, int>> shipOccupiedTiles;
   // Shuttle cargo system
   bool isShuttleAdjacentToLand(EnemyBase *shuttle);
@@ -971,6 +972,8 @@ public:
                                          bool markAsUserMoved = true);
   void confirmBuildingPlacement();
   EnemyBase *getHeroBuildingAtMapPos(cocos2d::Vec2 mapPos);
+  // test now
+  EnemyBase *getEnemyBuildingAtMapPos(cocos2d::Vec2 mapPos);
   bool tryDeliverCarriedResourcesAt(cocos2d::Vec2 mapPos);
   bool tryClickBuildProgressIcon(const cocos2d::Vec2 &glPos);
   void checkGameSchedule();

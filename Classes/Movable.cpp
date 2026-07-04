@@ -1775,6 +1775,12 @@ bool Movable::getHitAndIsDead(int ap, Movable* attacker){
         ap = std::max(1, ap - armorLevel * 2);
     }
     energy -= ap;
+    if (energy > 0 && (unitType == UNIT_HUMAN_OIL_SHIP || unitType == UNIT_ORC_OIL_SHIP ||
+                       unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE)) {
+        // OilShip/Shuttle can't fight back - hop one water tile away from
+        // whatever hit them instead of just sitting there tanking more hits.
+        WORLD->fleeShipFromAttacker(this, attacker);
+    }
     if(WORLD->isMultiplay){
         if(isEnemy){
 //            if (energy <= 0) {
@@ -2283,8 +2289,8 @@ void Movable::attackTree(){
             unitName = strmake("%sWood", getName().c_str());
             if(tank != nullptr){
                 returningPlace = tank;
-//                isTemporaryFlying = true;
-                
+                isTemporaryFlying = true;
+
                 moveToTarget(tank);
                 log("tank pos: %f, %f", tank->getPositionX(), tank->getPositionY());
                 unitAct = UNIT_ACT_GATHER_TREE;
@@ -2877,7 +2883,11 @@ void Movable::moveNew(float dt){// movenew start
         unitAct == UNIT_ACT_GATHER_GOLD ||
         unitAct == UNIT_ACT_GATHER_TREE) && unitActDetail != UNIT_ACT_DETAIL_ATTACK) {
         if (isTemporaryFlying) {
-            if (!WORLD->isOccupied(WORLD->getCoordinateFromPosition(getPosition()))) {
+            // Carrying wood back to the drop-off point flies the whole way,
+            // same as carrying gold - don't let the generic stuck-recovery
+            // auto-cancel cut that short just because the current tile
+            // happens to be unblocked (see attackTree()).
+            if (!isCarryingTree && !WORLD->isOccupied(WORLD->getCoordinateFromPosition(getPosition()))) {
                 isTemporaryFlying = false;
                 moveToPos = Vec2::ZERO;
                 isRouteSet = false;
@@ -3089,7 +3099,7 @@ void Movable::moveNew(float dt){// movenew start
             isArrived = getPosition() == attackDdangPos;
         }
         
-        if (!isAlreadyArrived && isArrived && unitActDetail != UNIT_ACT_DETAIL_ATTACK && unitAct != UNIT_ACT_GATHER_GOLD){ // arrived
+        if (!isAlreadyArrived && isArrived && unitActDetail != UNIT_ACT_DETAIL_ATTACK && unitAct != UNIT_ACT_GATHER_GOLD && unitAct != UNIT_ACT_GATHER_TREE){ // arrived
             if(attackDdangPos != Vec2::ZERO){
                 attackDdangPos = Vec2::ZERO;
             }
