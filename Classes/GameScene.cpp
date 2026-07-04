@@ -11404,9 +11404,13 @@ void GameScene::setAfterBuildingProcess(Movable *unit) {
   if (unit->unitType == UNIT_ORC_HQ) {
     unit->unitType = UNIT_CASTLE;
   }
+  // Note: a UNIT_ORC_HQ was just renamed to UNIT_CASTLE a few lines above, so it
+  // is already covered by the UNIT_CASTLE case here; an explicit UNIT_ORC_HQ
+  // check would be dead code. (Both AI and player orc HQs go through that
+  // rename, so this list is behaviourally unchanged for either side.)
   if (unit->unitType == UNIT_CASTLE || unit->unitType == UNIT_BARRACKS ||
       unit->unitType == UNIT_AIRPORT || unit->unitType == UNIT_FACTORY ||
-      unit->unitType == UNIT_ORC_HQ || unit->unitType == UNIT_ORC_BARRACKS ||
+      unit->unitType == UNIT_ORC_BARRACKS ||
       unit->unitType == UNIT_ORC_TROLL_HOUSE || unit->unitType == UNIT_TEMPLE ||
       unit->unitType == UNIT_HUMAN_SHIPYARD ||
       unit->unitType == UNIT_ORC_SHIPYARD ||
@@ -16144,8 +16148,14 @@ void GameScene::enemyAIManageWorkers() {
       else if (!w->isGoingToBuild && w->unitAct == UNIT_ACT_NONE) idleWorkers.push_back(w);
     }
 
+    // Stop handing out jobs once this HQ has kEAIMaxWorkersPerHQ workers
+    // committed. assignedCount seeds from the workers already near the HQ and
+    // grows as we assign idle ones this tick. (The old guard compared the
+    // static nearWorkers.size() once - it never changed inside the loop and was
+    // off-by-one, allowing an 11th worker.)
+    int assignedCount = (int)nearWorkers.size();
     for (auto *worker : idleWorkers) {
-      if ((int)nearWorkers.size() > kEAIMaxWorkersPerHQ) break;
+      if (assignedCount >= kEAIMaxWorkersPerHQ) break;
 
       // Assign returning place so deposits work.
       EnemyBase *tank = getNearestLumberTank(worker->getPosition(), true);
@@ -16160,7 +16170,7 @@ void GameScene::enemyAIManageWorkers() {
           float d = worker->getPosition().distanceSquared(m->getPosition());
           if (d < minD) { minD = d; nearest = m; }
         }
-        if (nearest) { setWorkerToMine(worker, nearest); goldWorkers++; }
+        if (nearest) { setWorkerToMine(worker, nearest); goldWorkers++; assignedCount++; }
       } else {
         EnemyBase *nearest = nullptr;
         float minD = FLT_MAX;
@@ -16170,7 +16180,7 @@ void GameScene::enemyAIManageWorkers() {
           float d = worker->getPosition().distanceSquared(m->getPosition());
           if (d < minD) { minD = d; nearest = m; }
         }
-        if (nearest) { setWorkerToTree(worker, nearest); woodWorkers++; }
+        if (nearest) { setWorkerToTree(worker, nearest); woodWorkers++; assignedCount++; }
       }
     }
   }
@@ -16196,9 +16206,8 @@ void GameScene::enemyAIManageShips() {
   }
   if (idleOilShips.empty()) return;
 
-  bool isOrc = false;
-  for (auto *u : snap)
-    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+  // Race is detected once and cached in updateEnemyAI() (see enemyAIIsOrc).
+  bool isOrc = enemyAIIsOrc;
 
   int extractorType = isOrc ? UNIT_ORC_OIL_EXTRACTOR : UNIT_HUMAN_OIL_EXTRACTOR;
   const char *extractorSprite = isOrc ? "orcOilExtractor.png" : "humanOilExtractor.png";
@@ -16335,11 +16344,8 @@ int GameScene::enemyAINearestHQOwnerId(Vec2 pos) {
 void GameScene::enemyAICheckBuildings() {
   std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
 
-  // Detect race from any orc unit already in the enemy array.
-  bool isOrc = false;
-  for (auto *u : snap) {
-    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
-  }
+  // Race is detected once and cached in updateEnemyAI() (see enemyAIIsOrc).
+  bool isOrc = enemyAIIsOrc;
 
   const EAIBuildDef *buildList     = isOrc ? kOrcBuildList : kHumanBuildList;
   const int          buildListSize = isOrc
@@ -16567,9 +16573,8 @@ void GameScene::enemyAITrainUnits() {
 
   std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
 
-  bool isOrc = false;
-  for (auto *u : snap)
-    if (isOrcTypeUnit(u->unitType)) { isOrc = true; break; }
+  // Race is detected once and cached in updateEnemyAI() (see enemyAIIsOrc).
+  bool isOrc = enemyAIIsOrc;
 
   const EAIProdEntry *prodTable = isOrc ? kOrcProd : kHumanProd;
   int workerType = isOrc ? UNIT_GOBLIN_WORKER : UNIT_WORKER;
@@ -16636,10 +16641,22 @@ void GameScene::enemyAITrainUnits() {
       continue;
     }
 
-    // Combat buildings
+    // Combat buildings — round-robin over the building's unit list so it
+    // alternates types (e.g. Swordman/Archer) instead of massing the first
+    // affordable one. bld->aiNextTrainIndex remembers where the last tick left
+    // off; each tick we walk the whole list once starting there, skipping
+    // entries that are at cap / unaffordable / food-blocked and trying the
+    // next, then stop after the first successful training.
     for (int pi = 0; prodTable[pi].buildType != -1; pi++) {
       if (prodTable[pi].buildType != bld->unitType) continue;
-      for (int ui = 0; ui < 4 && prodTable[pi].units[ui] != -1; ui++) {
+
+      int listLen = 0;
+      while (listLen < 4 && prodTable[pi].units[listLen] != -1) listLen++;
+      if (listLen == 0) break;
+
+      int start = bld->aiNextTrainIndex % listLen;
+      for (int step = 0; step < listLen; step++) {
+        int ui = (start + step) % listLen;
         int uType = prodTable[pi].units[ui];
         int cap = enemyAIUnitCap(uType, oilSpotCount);
         if (counts[uType] >= cap) continue;
@@ -16672,8 +16689,12 @@ void GameScene::enemyAITrainUnits() {
           // and any map/trigger-spawned units are never flagged, so they keep
           // their current behavior.
           if (enemyAIIsRallyCombatType(uType)) u->isRallying = true;
+          // Advance the round-robin cursor past the type we just trained so the
+          // next tick starts with the following entry (and wraps around).
+          bld->aiNextTrainIndex = ui + 1;
+          log("enemyAI[train]: trained unitType %d", uType);
         }
-        break; // one unit type per building per training tick
+        break; // one successful training per building per tick
       }
       break;
     }
@@ -16840,6 +16861,20 @@ void GameScene::updateEnemyAI() {
       log("enemyAI: no enemy building and no enemy worker - AI will not run until one exists");
     }
     return;
+  }
+
+  // Detect the enemy race once and cache it. We reach here only after the
+  // guard above confirmed a living enemy building or worker, so enemyArray is
+  // non-empty. Detecting now (rather than re-scanning every tick) fixes a bug:
+  // a completed UNIT_ORC_HQ is renamed to UNIT_CASTLE in setAfterBuildingProcess,
+  // so an Orc base whose only living unit is its finished HQ would scan as
+  // Human. isOrcTypeUnit() already covers UNIT_ORC_HQ and UNIT_GOBLIN_WORKER.
+  if (!enemyAIRaceDetected) {
+    for (auto *u : enemyArray) {
+      if (!u) continue;
+      if (isOrcTypeUnit(u->unitType)) { enemyAIIsOrc = true; break; }
+    }
+    enemyAIRaceDetected = true;
   }
 
   enemyAIUpdateFood();

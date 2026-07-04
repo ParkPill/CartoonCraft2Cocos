@@ -1106,6 +1106,12 @@ public:
   bool enemyAIInitialized = false;
   // Monotonic counter handing out unique per-HQ ids for AI building ownership.
   int enemyAINextHQId = 1;
+  // Enemy race, detected once (the first tick enemyArray is non-empty) and
+  // cached. Re-deriving it every tick is buggy: a completed UNIT_ORC_HQ is
+  // renamed to UNIT_CASTLE, so an Orc base whose only living unit is its
+  // finished HQ would scan as Human. See updateEnemyAI().
+  bool enemyAIRaceDetected = false;
+  bool enemyAIIsOrc = false;
   // ── Enemy AI rally/wave system (single-player only) ──────────────────────
   // Where AI-trained combat units gather before attacking as a wave. Recomputed
   // each AI tick from the nearest live HQ; a bare Vec2 so it can never dangle.

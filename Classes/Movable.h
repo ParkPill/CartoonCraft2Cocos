@@ -232,6 +232,10 @@ public:
     // GameScene::enemyAICheckBuildings() to count a base's buildings by owner
     // instead of by distance (see the radius-mismatch fix there).
     int aiOwnerHQId = 0;
+    // Enemy-AI round-robin training cursor: the index into this production
+    // building's unit list at which the next training attempt starts, so a
+    // building alternates unit types instead of massing the first entry.
+    int aiNextTrainIndex = 0;
     float waterAccelX ;
     float waterMaxX ;
     float waterAccelYN;
