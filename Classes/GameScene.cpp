@@ -1576,6 +1576,75 @@ void GameScene::removeDeadUnit(EnemyBase *unit) {
     unit->ndLevelCircle = nullptr;
   }
   if (unit->isBuilding) {
+    // A destroyed building may be some unit's resource drop-off
+    // (returningPlace: HQ / lumber mill / oil depot) or an oil ship's
+    // extractor (currentOilExtractor). Unlike a fading unit corpse, a building
+    // is removeFromParent()'d immediately below, so those raw pointers dangle
+    // at once - the next moveNew()/move() intersectsRect test would deref freed
+    // memory and crash, or at best strand the gatherer forever holding
+    // resources that never get credited. Null every reference to this building
+    // and idle the referencing unit so the next AI tick reassigns it. Safe for
+    // both sides (a pointer to a freed building is never valid); this only
+    // nulls a dangling reference and un-strands the unit - it does not change
+    // player-side gather policy.
+    for (int side = 0; side < 2; side++) {
+      auto &army = (side == 0) ? heroArray : enemyArray;
+      for (auto u : army) {
+        if (u == unit)
+          continue;
+        bool idled = false;
+        if (u->returningPlace == unit) {
+          // If the worker is hidden inside a mine right now, keep the mine's
+          // miner count consistent: mirror the exit path in Movable::moveNew()
+          // (decrement the tag, restore the idle frame at zero), otherwise the
+          // mine stays on its "occupied" sprite forever.
+          if (u->isInMine && u->currentMine != nullptr) {
+            int miner = u->currentMine->getTag();
+            miner--;
+            u->currentMine->setTag(miner);
+            if (miner == 0) {
+              u->currentMine->setSpriteFrame("mine.png");
+            }
+            u->currentMine = nullptr;
+          }
+          u->returningPlace = nullptr;
+          u->isGatheringGold = false;
+          u->isGatheringTree = false;
+          u->isCarryingGold = false;
+          u->isCarryingTree = false;
+          u->isInMine = false;
+          // An oil ship's drop-off died: clear the whole oil state machine too
+          // (enemyAIManageShips() treats a ship as idle only when neither
+          // isGatheringOil nor isCarryingOil is set). Losing the extractor
+          // assignment is fine - the next tick reassigns idle ships.
+          u->currentOilExtractor = nullptr;
+          u->isGatheringOil = false;
+          u->isCarryingOil = false;
+          u->isInExtractor = false;
+          idled = true;
+        }
+        if (u->currentOilExtractor == unit) {
+          u->currentOilExtractor = nullptr;
+          u->isGatheringOil = false;
+          u->isCarryingOil = false;
+          u->isInExtractor = false;
+          // Drop the (possibly still live) depot reference as well so the
+          // reset matches a fresh dispatch: re-dispatch goes through
+          // setOilShipToExtractor()/gatherOil(), which never reads
+          // returningPlace - it is re-derived at pickup via
+          // getNearestOilDepot() in Movable::move().
+          u->returningPlace = nullptr;
+          idled = true;
+        }
+        if (idled) {
+          if (u->target == unit)
+            u->target = nullptr;
+          u->setVisible(true);
+          u->untouchable = false;
+          u->stopNew();
+        }
+      }
+    }
     setOccupy(getPositionFromTileCoordinate(unit->buildingStartCoordinate.x,
                                             unit->buildingStartCoordinate.y),
               unit->buildingOccupySize.width, unit->buildingOccupySize.height,
