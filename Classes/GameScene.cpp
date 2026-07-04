@@ -16531,15 +16531,23 @@ void GameScene::updateEnemyAI() {
     enemyLumber = 1000;
   }
 
-  // Only run when the enemy side has at least one building.
+  // Run when the enemy side has at least one living building OR at least one
+  // living enemy worker. A surviving worker lets enemyAICheckBuildings() rebuild
+  // a lost HQ, so the AI must not early-out just because every building is gone.
   bool hasEnemyBuilding = false;
-  for (auto *u : enemyArray)
-    if (u->isBuilding && u->energy > 0) { hasEnemyBuilding = true; break; }
-  if (!hasEnemyBuilding) {
+  bool hasEnemyWorker   = false;
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0) continue;
+    if (u->isBuilding) { hasEnemyBuilding = true; break; }
+    if (u->isEnemy &&
+        (u->unitType == UNIT_WORKER || u->unitType == UNIT_GOBLIN_WORKER))
+      hasEnemyWorker = true;
+  }
+  if (!hasEnemyBuilding && !hasEnemyWorker) {
     static bool loggedNoBuilding = false;
     if (!loggedNoBuilding) {
       loggedNoBuilding = true;
-      log("enemyAI: no enemy building found at all - AI will not run until one exists");
+      log("enemyAI: no enemy building and no enemy worker - AI will not run until one exists");
     }
     return;
   }
