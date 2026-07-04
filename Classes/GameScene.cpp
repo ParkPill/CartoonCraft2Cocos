@@ -16078,6 +16078,7 @@ void GameScene::enemyAIManageShips() {
   int ew = (int)extractorSize.x, eh = (int)extractorSize.y;
   int gCost = getGoldPriceForUnit(extractorType);
   int lCost = getLumberPriceForUnit(extractorType);
+  int oCost = getOilPriceForUnit(extractorType);
 
   for (auto *ship : idleOilShips) {
     // Prefer a completed enemy extractor that isn't fully staffed yet.
@@ -16103,7 +16104,7 @@ void GameScene::enemyAIManageShips() {
     }
 
     // No free extractor - claim the nearest OilSpot and build one there.
-    if (enemyGold < gCost || enemyLumber < lCost) continue;
+    if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) continue;
 
     // Try oil spots nearest-first; skip ones already tried this pass so a
     // build failure (e.g. spot already occupied) falls through to the next.
@@ -16136,6 +16137,7 @@ void GameScene::enemyAIManageShips() {
       if (extractor) {
         addEnemyGold(-gCost);
         addEnemyLumber(-lCost);
+        addEnemyOil(-oCost);
         setAfterBuildingProcess(extractor);
         // Stamp ownership (nearest HQ, or 0/ownerless if none exists yet).
         // Extractors are not counted by enemyAICheckBuildings, but keeping the
@@ -16163,6 +16165,10 @@ static const EAIBuildDef kHumanBuildList[] = {
   {UNIT_FACTORY,        "factory.png",      UNIT_LUMBERMILL},
   {UNIT_AIRPORT,        "airport.png",      UNIT_LUMBERMILL},
   {UNIT_HUMAN_SHIPYARD, "humanShipyard.png",-1},
+  // OilRefinery is the oil drop-off that grants the +30% oil-per-trip bonus
+  // (see Movable::moveNew). Needs a Shipyard first and only makes sense on
+  // water maps; placed on water like the Shipyard (see eaiIsWaterBuildType).
+  {UNIT_HUMAN_OIL_REFINERY, "humanOilRefinery.png", UNIT_HUMAN_SHIPYARD},
 };
 static const EAIBuildDef kOrcBuildList[] = {
   {UNIT_BARBECUE,        "barbecue.png",    -1},
@@ -16171,7 +16177,15 @@ static const EAIBuildDef kOrcBuildList[] = {
   {UNIT_ORC_TROLL_HOUSE, "statueHouse.png", UNIT_ORC_BARRACKS},
   {UNIT_TEMPLE,          "alter.png",       UNIT_ORC_BARRACKS},
   {UNIT_ORC_SHIPYARD,    "orcShipyard.png", -1},
+  {UNIT_ORC_OIL_REFINERY, "orcOilRefinery.png", UNIT_ORC_SHIPYARD},
 };
+
+// Buildings the AI must place on water tiles (via enemyAIFindWaterBuildTile)
+// and only on maps that have water.
+static bool eaiIsWaterBuildType(int t) {
+  return t == UNIT_HUMAN_SHIPYARD     || t == UNIT_ORC_SHIPYARD ||
+         t == UNIT_HUMAN_OIL_REFINERY || t == UNIT_ORC_OIL_REFINERY;
+}
 
 // Returns the AI owner-id of the nearest live enemy HQ to pos, assigning that
 // HQ a fresh id if it lacks one. Returns 0 when there is no live HQ (caller
@@ -16232,9 +16246,10 @@ void GameScene::enemyAICheckBuildings() {
     int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
     int gCost  = getGoldPriceForUnit(hqType);
     int lCost  = getLumberPriceForUnit(hqType);
-    if (enemyGold < gCost || enemyLumber < lCost) {
-      log("enemyAI[build]: no HQ - waiting on resources for HQ (have %d/%d, need %d/%d)",
-          enemyGold, enemyLumber, gCost, lCost);
+    int oCost  = getOilPriceForUnit(hqType);
+    if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) {
+      log("enemyAI[build]: no HQ - waiting on resources for HQ (have %d/%d/%d, need %d/%d/%d)",
+          enemyGold, enemyLumber, enemyOil, gCost, lCost, oCost);
       return;
     }
 
@@ -16251,6 +16266,7 @@ void GameScene::enemyAICheckBuildings() {
     if (bld) {
       addEnemyGold(-gCost);
       addEnemyLumber(-lCost);
+      addEnemyOil(-oCost);
       setAfterBuildingProcess(bld);
       // No other HQ exists (that is why we are here), so this HQ is its own
       // owner: give it a fresh identity now instead of waiting for the next pass.
@@ -16324,9 +16340,7 @@ void GameScene::enemyAICheckBuildings() {
     if (!pick) {
       for (int i = 0; i < buildListSize; i++) {
         const EAIBuildDef &def = buildList[i];
-        bool isShipyardDef = (def.unitType == UNIT_HUMAN_SHIPYARD ||
-                              def.unitType == UNIT_ORC_SHIPYARD);
-        if (isShipyardDef && !mapHasWater) continue;
+        if (eaiIsWaterBuildType(def.unitType) && !mapHasWater) continue;
         if (countNear(def.unitType, hq) > 0) continue;
         if (def.prereqType != -1 && countNear(def.prereqType, hq) == 0) continue;
         pick = &def;
@@ -16342,18 +16356,18 @@ void GameScene::enemyAICheckBuildings() {
 
     int gCost = getGoldPriceForUnit(pick->unitType);
     int lCost = getLumberPriceForUnit(pick->unitType);
-    if (enemyGold < gCost || enemyLumber < lCost) {
-      log("enemyAI[build]: waiting on resources for unitType %d (have %d/%d, need %d/%d)",
-          pick->unitType, enemyGold, enemyLumber, gCost, lCost);
+    int oCost = getOilPriceForUnit(pick->unitType);
+    if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) {
+      log("enemyAI[build]: waiting on resources for unitType %d (have %d/%d/%d, need %d/%d/%d)",
+          pick->unitType, enemyGold, enemyLumber, enemyOil, gCost, lCost, oCost);
       continue;
     }
 
-    bool isShipyardPick = (pick->unitType == UNIT_HUMAN_SHIPYARD ||
-                           pick->unitType == UNIT_ORC_SHIPYARD);
+    bool isWaterPick = eaiIsWaterBuildType(pick->unitType);
     Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
     int w = (int)sz.x, h = (int)sz.y;
     int bx, by;
-    bool foundTile = isShipyardPick
+    bool foundTile = isWaterPick
         ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
         : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
     if (!foundTile) {
@@ -16371,6 +16385,7 @@ void GameScene::enemyAICheckBuildings() {
     }
     addEnemyGold(-gCost);
     addEnemyLumber(-lCost);
+    addEnemyOil(-oCost);
     setAfterBuildingProcess(bld);
     bld->aiOwnerHQId = hq->aiOwnerHQId;  // stamp ownership so it counts next pass
     log("enemyAI[build]: built unitType %d at tile (%d,%d)", pick->unitType, bx, by);
@@ -16468,8 +16483,9 @@ void GameScene::enemyAITrainUnits() {
       if (counts[workerType] >= targetWorkers) continue;
       int gCost = getGoldPriceForUnit(workerType);
       int lCost = getLumberPriceForUnit(workerType);
+      int oCost = getOilPriceForUnit(workerType);
       int fCost = GM->getFoodUseForUnit(workerType);
-      if (enemyGold < gCost || enemyLumber < lCost) continue;
+      if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) continue;
       if (enemyFoodInUse + fCost > enemyFoodMax) continue;
       EnemyBase *u = createUnit(workerType, WHICH_SIDE_ENEMY, ITS_NOT_BUILDING,
                                 spawnPos, GM->getUnitName(workerType), 1,
@@ -16477,6 +16493,7 @@ void GameScene::enemyAITrainUnits() {
       if (u) {
         addEnemyGold(-gCost);
         addEnemyLumber(-lCost);
+        addEnemyOil(-oCost);
         enemyFoodInUse += fCost;
         counts[workerType]++;
       }
@@ -16492,8 +16509,14 @@ void GameScene::enemyAITrainUnits() {
         if (counts[uType] >= cap) continue;
         int gCost = getGoldPriceForUnit(uType);
         int lCost = getLumberPriceForUnit(uType);
+        int oCost = getOilPriceForUnit(uType);
         int fCost = GM->getFoodUseForUnit(uType);
-        if (enemyGold < gCost || enemyLumber < lCost) continue;
+        if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) {
+          if (enemyOil < oCost)
+            log("enemyAI[train]: unitType %d waiting on oil (%d/%d)",
+                uType, enemyOil, oCost);
+          continue;
+        }
         if (enemyFoodInUse + fCost > enemyFoodMax) {
           log("enemyAI[train]: unitType %d blocked by food cap (%d/%d, needs %d more)",
               uType, enemyFoodInUse, enemyFoodMax, fCost);
@@ -16505,6 +16528,7 @@ void GameScene::enemyAITrainUnits() {
         if (u) {
           addEnemyGold(-gCost);
           addEnemyLumber(-lCost);
+          addEnemyOil(-oCost);
           enemyFoodInUse += fCost;
           counts[uType]++;
         }
