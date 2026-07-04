@@ -1818,6 +1818,13 @@ bool Movable::getHitAndIsDead(int ap, Movable* attacker){
     }
 //    log("energy: %d, ap: %d", energy, ap);
     
+    // Single-player enemy-AI base defense: a player unit just damaged an enemy
+    // building. Flag it (cheap) so the 1s AI tick releases the rallied wave to
+    // defend the base. Multiplayer is untouched.
+    if (!WORLD->isMultiplay && isBuilding && isEnemy &&
+        attacker != nullptr && !attacker->isEnemy) {
+        WORLD->enemyAINotifyBuildingHit(attacker->getPosition());
+    }
     if (attacker != target && energy > 0 && attacker != nullptr && !attacker->untouchable) {
         if (!target || target == nullptr || canRevengeAttack || WORLD->getAttackPriority(attacker) > WORLD->getAttackPriority(target)) {
             bool canAttack = WORLD->canAttack(this, attacker);

@@ -359,6 +359,11 @@ void GameScene::move(float dt, Movable *obj, Movable *target, bool horiFirst) {
   obj->moveInterval = 0;
   obj->moveToTarget();
 }
+// A rallying enemy unit is considered "parked" once within this distance of the
+// rally point (used by updateUnitMoveNew; see enemyAIManageWaves for the rest of
+// the rally/wave constants).
+static const float kEAIRallyHoldDist = TILE_SIZE * 2.0f;
+
 void GameScene::updateUnitMoveNew(float dt) {
   for (auto unit : heroArray) {
     if (!unit->isInShuttle && unit->pendingShuttle) {
@@ -472,7 +477,24 @@ void GameScene::updateUnitMoveNew(float dt) {
       }
 
       if (unit->target == nullptr) {
-        if (unit->unitAct == UNIT_ACT_NONE) {
+        if (!isMultiplay && unit->isRallying) {
+          // Rally hold: no threat in sight. Walk back to the rally point if
+          // we've drifted from it, otherwise rest and hold. Keep revenge on so
+          // the unit still fights back locally when attacked. Crucially the
+          // unit does NOT hunt the player from here - that only happens once
+          // its wave is released (enemyAIManageWaves clears isRallying).
+          unit->canRevengeAttack = true;
+          if (enemyAIRallyPointValid &&
+              unit->getPosition().distance(enemyAIRallyPoint) > kEAIRallyHoldDist) {
+            Vector<EnemyBase *> list;
+            list.pushBack(unit);
+            moveTo(list, enemyAIRallyPoint);
+            list.clear();
+          } else if (unit->unitAct == UNIT_ACT_NONE) {
+            unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
+            unit->restingTime = 3;
+          }
+        } else if (unit->unitAct == UNIT_ACT_NONE) {
           unit->unitAct = UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH;
           unit->restingTime = 3; // 0.1f*(rand()%100);
         }
@@ -15940,6 +15962,18 @@ static const int kEAIBuildGap = 2;
 // barbecues = 60).
 static const int kEAIMaxFoodBuildingsPerHQ = 9;
 
+// ── Rally / wave system (single-player only) ──────────────────────────────────
+// AI-trained combat units gather at a rally point near their HQ and hold there
+// (still defending locally) until their combined food value crosses a threshold,
+// then they release as one attack wave. The threshold ramps so early waves are
+// small pokes and later waves are full-army pushes.
+static const int   kEAIFirstWaveFood = 8;    // food value that triggers the first wave
+static const int   kEAIWaveFoodStep  = 4;    // added to the threshold per wave released
+static const int   kEAIMaxWaveFood   = 24;   // threshold ceiling
+static const float kEAIWaveTimeout   = 180.0f; // s; release regardless of size (anti-stall)
+// How far in front of the HQ (toward the target) the rally point sits.
+static const float kEAIRallyOffset   = TILE_SIZE * 6.0f;
+
 void GameScene::addEnemyGold(int amount) {
   enemyGold += amount;
   if (enemyGold < 0) enemyGold = 0;
@@ -16633,11 +16667,141 @@ void GameScene::enemyAITrainUnits() {
           addEnemyOil(-oCost);
           enemyFoodInUse += fCost;
           counts[uType]++;
+          // AI-trained combat units gather at the rally point and hold there
+          // until their wave fires (enemyAIManageWaves). Workers/ships/shuttles
+          // and any map/trigger-spawned units are never flagged, so they keep
+          // their current behavior.
+          if (enemyAIIsRallyCombatType(uType)) u->isRallying = true;
         }
         break; // one unit type per building per training tick
       }
       break;
     }
+  }
+}
+
+// ── Rally / wave helpers (single-player only) ─────────────────────────────────
+
+bool GameScene::enemyAIIsRallyCombatType(int unitType) {
+  // Workers, oil ships and shuttles never rally - they have their own jobs.
+  if (unitType == UNIT_WORKER || unitType == UNIT_GOBLIN_WORKER) return false;
+  if (unitType == UNIT_HUMAN_OIL_SHIP || unitType == UNIT_ORC_OIL_SHIP) return false;
+  if (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE) return false;
+  return true;
+}
+
+void GameScene::enemyAINotifyBuildingHit(cocos2d::Vec2 attackerPos) {
+  // Cheap flag-set from the damage path; the 1s AI tick does the real work.
+  if (isMultiplay) return;
+  enemyAIBaseUnderAttack = true;
+  enemyAIBaseAttackerPos = attackerPos;
+}
+
+// Release every living AI-rallying unit as one attack wave. Returns the count.
+int GameScene::enemyAIReleaseWave(cocos2d::Vec2 towardPos, bool towardValid) {
+  Vector<EnemyBase *> list;
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0 || u->isBuilding || !u->isRallying) continue;
+    u->isRallying = false;
+    u->wantToEli = true;   // released wave units become persistent attackers
+    list.pushBack(u);
+  }
+  // March them out together via the existing attack flow.
+  for (auto *u : list) {
+    if (towardValid) {
+      moveAndAttackTo(u, towardPos);   // defense: converge on the attacker
+    } else {
+      attackNearHero(u);               // offense: each heads for the nearest hero
+    }
+  }
+  enemyAIRallyActive = false;
+  enemyAIRallyTimer = 0.0f;
+  return (int)list.size();
+}
+
+void GameScene::enemyAIManageWaves() {
+  // Recompute the rally point: nearest live HQ pushed toward the nearest known
+  // player building (or the map centre if none is known yet). Stored as a bare
+  // Vec2 so it can never dangle when buildings die.
+  EnemyBase *hq = nullptr;
+  for (auto *u : enemyArray) {
+    if (u && u->energy > 0 && u->isBuilding && u->isBuildingComplete &&
+        (u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ)) {
+      hq = u; break;
+    }
+  }
+  if (hq) {
+    Vec2 hqPos = hq->getPosition();
+    Vec2 targetPos = getPositionFromTileCoordinate((int)(mapSize.width / 2),
+                                                   (int)(mapSize.height / 2));
+    float best = 1e18f;
+    for (auto *h : heroArray) {
+      if (!h || h->energy <= 0 || !h->isBuilding) continue;
+      float d = hqPos.distanceSquared(h->getPosition());
+      if (d < best) { best = d; targetPos = h->getPosition(); }
+    }
+    Vec2 dir = targetPos - hqPos;
+    if (dir.lengthSquared() > 1.0f) dir.normalize(); else dir = Vec2(0, -1);
+    enemyAIRallyPoint = hqPos + dir * kEAIRallyOffset;
+    enemyAIRallyPointValid = true;
+  }
+  // else: no live HQ - keep the previous point; rallying units just hold in place.
+
+  // Sum the food of all living rallying units this tick. Iterating live units
+  // (rather than an incremental counter) means a unit that dies while rallying
+  // simply stops counting - no bookkeeping can leak or dangle.
+  int rallyFood = 0;
+  int rallyCount = 0;
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0 || u->isBuilding || !u->isRallying) continue;
+    rallyFood += GM->getFoodUseForUnit(u->unitType);
+    rallyCount++;
+  }
+
+  // Track how long the current wave has been gathering (for the safety timeout).
+  if (rallyCount > 0) {
+    if (!enemyAIRallyActive) {
+      enemyAIRallyActive = true;
+      enemyAIRallyTimer = 0.0f;
+    } else {
+      enemyAIRallyTimer += 1.0f;
+    }
+  } else {
+    enemyAIRallyActive = false;
+    enemyAIRallyTimer = 0.0f;
+  }
+
+  // 1) Base-defense override beats wave timing: an enemy building was just hit.
+  if (enemyAIBaseUnderAttack) {
+    enemyAIBaseUnderAttack = false;
+    if (rallyCount > 0) {
+      int n = enemyAIReleaseWave(enemyAIBaseAttackerPos, true);
+      enemyAIWaveCount++;
+      log("enemyAI[wave]: BASE DEFENSE - released %d units toward (%.0f,%.0f)",
+          n, enemyAIBaseAttackerPos.x, enemyAIBaseAttackerPos.y);
+    }
+    return;
+  }
+
+  if (rallyCount == 0) return;
+
+  // 2) Food threshold reached: launch a scaling wave.
+  int threshold = kEAIFirstWaveFood + enemyAIWaveCount * kEAIWaveFoodStep;
+  if (threshold > kEAIMaxWaveFood) threshold = kEAIMaxWaveFood;
+  if (rallyFood >= threshold) {
+    int n = enemyAIReleaseWave(Vec2::ZERO, false);
+    enemyAIWaveCount++;
+    log("enemyAI[wave]: released %d units (food %d >= threshold %d), wave #%d",
+        n, rallyFood, threshold, enemyAIWaveCount);
+    return;
+  }
+
+  // 3) Safety timeout: never let units sit in the rally forever.
+  if (enemyAIRallyTimer >= kEAIWaveTimeout) {
+    int n = enemyAIReleaseWave(Vec2::ZERO, false);
+    enemyAIWaveCount++;
+    log("enemyAI[wave]: SAFETY TIMEOUT - released %d units (food %d) after %.0fs",
+        n, rallyFood, enemyAIRallyTimer);
   }
 }
 
@@ -16682,6 +16846,7 @@ void GameScene::updateEnemyAI() {
   enemyAIManageWorkers();
   enemyAIManageShips();
   enemyAITrainUnits();
+  enemyAIManageWaves();
 
   enemyAIBuildTimer += 1.0f;
   if (enemyAIBuildTimer >= 60.0f) {

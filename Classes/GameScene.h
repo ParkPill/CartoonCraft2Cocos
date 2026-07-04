@@ -1106,6 +1106,23 @@ public:
   bool enemyAIInitialized = false;
   // Monotonic counter handing out unique per-HQ ids for AI building ownership.
   int enemyAINextHQId = 1;
+  // ── Enemy AI rally/wave system (single-player only) ──────────────────────
+  // Where AI-trained combat units gather before attacking as a wave. Recomputed
+  // each AI tick from the nearest live HQ; a bare Vec2 so it can never dangle.
+  cocos2d::Vec2 enemyAIRallyPoint = cocos2d::Vec2::ZERO;
+  bool  enemyAIRallyPointValid = false;
+  int   enemyAIWaveCount = 0;        // waves released so far (scales the threshold)
+  bool  enemyAIRallyActive = false;  // a wave is currently accumulating at the rally
+  float enemyAIRallyTimer = 0.0f;    // seconds since the current wave began gathering
+  bool  enemyAIBaseUnderAttack = false;      // set from the damage path, consumed by the tick
+  cocos2d::Vec2 enemyAIBaseAttackerPos = cocos2d::Vec2::ZERO;
+  void enemyAIManageWaves();
+  // Number of living AI-rallying combat units release when their wave fires,
+  // marching them at pos (attacker position for defense, else nearest hero).
+  int  enemyAIReleaseWave(cocos2d::Vec2 towardPos, bool towardValid);
+  // Called from the damage path when a player unit hits an enemy building.
+  void enemyAINotifyBuildingHit(cocos2d::Vec2 attackerPos);
+  bool enemyAIIsRallyCombatType(int unitType);
   int humanAttackLevel = 0;
   int humanDefenseLevel = 0;
   int orcAttackLevel = 0;

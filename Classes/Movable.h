@@ -497,6 +497,11 @@ public:
     cocos2d::Vec2 attackFlagTilePos = cocos2d::Vec2::ZERO;
     cocos2d::Vec2 failedAttackFlagPos = cocos2d::Vec2::ZERO;
     bool wantToEli = false;
+    // Single-player enemy-AI rally/wave system: while true the unit is an
+    // AI-trained combat unit holding at the rally point instead of independently
+    // hunting the player. Cleared when a wave is released. Multiplayer never
+    // sets this. See GameScene::enemyAIManageWaves().
+    bool isRallying = false;
     cocos2d::Vec2 targetCoordinate;
     
     int groundEffectType = GROUND_EFFECT_LIGHT;
