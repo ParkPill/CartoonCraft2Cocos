@@ -1104,6 +1104,8 @@ public:
   float enemyAITrainTimer = 0.0f;
   bool mapHasWater = false;
   bool enemyAIInitialized = false;
+  // Monotonic counter handing out unique per-HQ ids for AI building ownership.
+  int enemyAINextHQId = 1;
   int humanAttackLevel = 0;
   int humanDefenseLevel = 0;
   int orcAttackLevel = 0;
@@ -1126,6 +1128,9 @@ public:
   bool enemyAIFindBuildTile(cocos2d::Vec2 nearPos, int w, int h, int &outBx, int &outBy, bool avoidMines = false);
   bool enemyAIIsWaterTileFree(int bx, int by, int w, int h);
   bool enemyAIFindWaterBuildTile(cocos2d::Vec2 nearPos, int w, int h, int &outBx, int &outBy);
+  // Returns the AI owner-id of the nearest live enemy HQ to pos, assigning that
+  // HQ a fresh id if it lacks one. Returns 0 when there is no live HQ.
+  int enemyAINearestHQOwnerId(cocos2d::Vec2 pos);
   void updateFoodInUse();
   void addFoodMax(int amount);
   int getGoldPriceForUnit(int index);

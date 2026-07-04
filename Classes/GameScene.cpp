@@ -16137,6 +16137,10 @@ void GameScene::enemyAIManageShips() {
         addEnemyGold(-gCost);
         addEnemyLumber(-lCost);
         setAfterBuildingProcess(extractor);
+        // Stamp ownership (nearest HQ, or 0/ownerless if none exists yet).
+        // Extractors are not counted by enemyAICheckBuildings, but keeping the
+        // owner consistent lets the adopt-orphans pass treat them uniformly.
+        extractor->aiOwnerHQId = enemyAINearestHQOwnerId(extractor->getPosition());
         setOilShipToExtractor(ship, extractor);
         break;
       }
@@ -16169,6 +16173,23 @@ static const EAIBuildDef kOrcBuildList[] = {
   {UNIT_ORC_SHIPYARD,    "orcShipyard.png", -1},
 };
 
+// Returns the AI owner-id of the nearest live enemy HQ to pos, assigning that
+// HQ a fresh id if it lacks one. Returns 0 when there is no live HQ (caller
+// treats that as "ownerless").
+int GameScene::enemyAINearestHQOwnerId(Vec2 pos) {
+  EnemyBase *nearest = nullptr;
+  float bestD = FLT_MAX;
+  for (auto *u : enemyArray) {
+    if (u->unitType != UNIT_CASTLE && u->unitType != UNIT_ORC_HQ) continue;
+    if (!u->isBuilding || !u->isBuildingComplete || u->energy <= 0) continue;
+    float d = pos.distanceSquared(u->getPosition());
+    if (d < bestD) { bestD = d; nearest = u; }
+  }
+  if (!nearest) return 0;
+  if (nearest->aiOwnerHQId == 0) nearest->aiOwnerHQId = enemyAINextHQId++;
+  return nearest->aiOwnerHQId;
+}
+
 void GameScene::enemyAICheckBuildings() {
   std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
 
@@ -16182,7 +16203,6 @@ void GameScene::enemyAICheckBuildings() {
   const int          buildListSize = isOrc
       ? (int)(sizeof(kOrcBuildList)   / sizeof(kOrcBuildList[0]))
       : (int)(sizeof(kHumanBuildList) / sizeof(kHumanBuildList[0]));
-  const float        BASE_RADIUS_SQ = (22.0f * TILE_SIZE) * (22.0f * TILE_SIZE);
 
   // Collect completed HQs.
   std::vector<EnemyBase *> hqs;
@@ -16232,6 +16252,9 @@ void GameScene::enemyAICheckBuildings() {
       addEnemyGold(-gCost);
       addEnemyLumber(-lCost);
       setAfterBuildingProcess(bld);
+      // No other HQ exists (that is why we are here), so this HQ is its own
+      // owner: give it a fresh identity now instead of waiting for the next pass.
+      bld->aiOwnerHQId = enemyAINextHQId++;
       log("enemyAI[build]: built HQ at tile (%d,%d)", bx, by);
     } else {
       log("enemyAI[build]: buildTheBuilding rejected HQ placement at tile (%d,%d)", bx, by);
@@ -16241,11 +16264,48 @@ void GameScene::enemyAICheckBuildings() {
 
   bool foodShort = (enemyFoodMax > 0 && enemyFoodInUse >= enemyFoodMax - 4);
 
-  auto countNear = [&](int type, Vec2 hqPos) {
+  // ── Ownership bookkeeping (fixes the radius-mismatch duplicate-build bug) ──
+  // Each AI building remembers the unique id of the HQ that built it
+  // (aiOwnerHQId); an HQ's own aiOwnerHQId is its identity. countNear (below),
+  // the prereq check and the food-building cap all count by ownership instead
+  // of by Euclidean distance, so a building placed in the far corner of the
+  // square tile-search area still counts and never gets rebuilt every cycle.
+  //
+  // First give every live HQ a stable identity.
+  for (auto *hq : hqs)
+    if (hq->aiOwnerHQId == 0) hq->aiOwnerHQId = enemyAINextHQId++;
+
+  auto isLiveHQId = [&](int id) {
+    if (id == 0) return false;
+    for (auto *hq : hqs) if (hq->aiOwnerHQId == id) return true;
+    return false;
+  };
+
+  // Destroyed-HQ policy: when an HQ dies its buildings are orphaned. We adopt
+  // any orphaned (owner no longer alive) or never-owned (e.g. map-placed, or
+  // an oil extractor built before any HQ existed) enemy building into the
+  // nearest surviving HQ, so it resumes counting toward that HQ's caps. This
+  // keeps a captured/inherited base deduplicated rather than letting it drift
+  // ownerless and get rebuilt on top of itself.
+  for (auto *u : snap) {
+    if (!u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (u->unitType == UNIT_CASTLE || u->unitType == UNIT_ORC_HQ) continue;
+    if (isLiveHQId(u->aiOwnerHQId)) continue;
+    EnemyBase *nearest = nullptr;
+    float bestD = FLT_MAX;
+    for (auto *hq : hqs) {
+      float d = u->getPosition().distanceSquared(hq->getPosition());
+      if (d < bestD) { bestD = d; nearest = hq; }
+    }
+    if (nearest) u->aiOwnerHQId = nearest->aiOwnerHQId;
+  }
+
+  auto countNear = [&](int type, EnemyBase *hq) {
     int n = 0;
+    int ownerId = hq->aiOwnerHQId;
     for (auto *u : snap)
       if (u->unitType == type && u->isBuilding && u->energy > 0 &&
-          hqPos.distanceSquared(u->getPosition()) < BASE_RADIUS_SQ) n++;
+          u->aiOwnerHQId == ownerId) n++;
     return n;
   };
 
@@ -16256,7 +16316,7 @@ void GameScene::enemyAICheckBuildings() {
 
     if (foodShort) {
       int foodType = isOrc ? UNIT_BARBECUE : UNIT_FARM;
-      if (countNear(foodType, hqPos) < kEAIMaxFoodBuildingsPerHQ)
+      if (countNear(foodType, hq) < kEAIMaxFoodBuildingsPerHQ)
         for (int i = 0; i < buildListSize; i++)
           if (buildList[i].unitType == foodType) { pick = &buildList[i]; break; }
     }
@@ -16267,8 +16327,8 @@ void GameScene::enemyAICheckBuildings() {
         bool isShipyardDef = (def.unitType == UNIT_HUMAN_SHIPYARD ||
                               def.unitType == UNIT_ORC_SHIPYARD);
         if (isShipyardDef && !mapHasWater) continue;
-        if (countNear(def.unitType, hqPos) > 0) continue;
-        if (def.prereqType != -1 && countNear(def.prereqType, hqPos) == 0) continue;
+        if (countNear(def.unitType, hq) > 0) continue;
+        if (def.prereqType != -1 && countNear(def.prereqType, hq) == 0) continue;
         pick = &def;
         break;
       }
@@ -16312,6 +16372,7 @@ void GameScene::enemyAICheckBuildings() {
     addEnemyGold(-gCost);
     addEnemyLumber(-lCost);
     setAfterBuildingProcess(bld);
+    bld->aiOwnerHQId = hq->aiOwnerHQId;  // stamp ownership so it counts next pass
     log("enemyAI[build]: built unitType %d at tile (%d,%d)", pick->unitType, bx, by);
   }
 }

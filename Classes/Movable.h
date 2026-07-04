@@ -226,6 +226,12 @@ private:
     
 public:
     int unitID = 0;
+    // Enemy-AI building ownership. For an AI-managed enemy HQ this is its own
+    // unique identity; for any other AI-built enemy building it is the identity
+    // of the HQ that built it. 0 = ownerless / not yet assigned. Used by
+    // GameScene::enemyAICheckBuildings() to count a base's buildings by owner
+    // instead of by distance (see the radius-mismatch fix there).
+    int aiOwnerHQId = 0;
     float waterAccelX ;
     float waterMaxX ;
     float waterAccelYN;
