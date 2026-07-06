@@ -3296,6 +3296,37 @@ Node *GameManager::getNodeAtThisPoint(Vec2 pos, Node *currentNode)
     return nullptr;
 }
 
+Sprite *GameManager::createSpotFlagSprite()
+{
+    // The map editor's Flag marker: spot0~3.png live as loose files in
+    // Resources/ (not packed into a sheet/plist), so the looping animation is
+    // built from textures instead of AnimationCache sprite frames.
+    Sprite *spt = Sprite::create("spot0.png");
+    if (spt == nullptr)
+    {
+        return nullptr;
+    }
+    Vector<SpriteFrame *> frames;
+    for (int i = 0; i < 4; i++)
+    {
+        Texture2D *tex = Director::getInstance()->getTextureCache()->addImage(strmake("spot%d.png", i));
+        if (tex == nullptr)
+        {
+            continue;
+        }
+        frames.pushBack(SpriteFrame::createWithTexture(
+            tex, Rect(0, 0, tex->getContentSize().width, tex->getContentSize().height)));
+    }
+    if (frames.size() > 1)
+    {
+        Animate *animate = Animate::create(Animation::createWithSpriteFrames(frames, 0.1f));
+        RepeatForever *forever = RepeatForever::create(animate);
+        forever->setTag(ACTION_TAG_ANIMATION);
+        spt->runAction(forever);
+    }
+    return spt;
+}
+
 void GameManager::runAnimation(Sprite *spt, const char *name, bool repeat, bool deleteAfterPlay)
 {
     spt->stopAllActionsByTag(ACTION_TAG_ANIMATION);

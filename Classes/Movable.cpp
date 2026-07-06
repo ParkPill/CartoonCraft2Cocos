@@ -737,7 +737,12 @@ void Movable::onBuildComplete(){//building(float dt){
 //    buildingTimer += dt;
 //    if(buildingTimer >= buildingCompleteTime){
     log("building complete");
-    
+    if(builderBuilding == nullptr){
+        // Construction was destroyed/cancelled; the death path already
+        // restored this worker.
+        return;
+    }
+
     if (WORLD->stageIndex == 0 && HUD->tutorialIndex == 6) {
         HUD->tutorialIndex++;
         HUD->talkIndex = 0;
@@ -2663,7 +2668,16 @@ void Movable::stopNew(){
         }
         Movable* unit = WORLD->buildTheBuilding(builderBuildingIndex, builderCoordinate.x, builderCoordinate.y, builderSize.width, builderSize.height, builderSpriteName, alliSide, isFree);
         if(unit == nullptr){ // condition not met
+            if(isEnemy){
+                // The AI paid at dispatch time; the build never started.
+                WORLD->refundEnemyBuildCost(builderBuildingIndex);
+            }
             return;
+        }
+        if(isEnemy){
+            // Keep per-HQ build accounting: the dispatcher stamped this worker
+            // (see enemyAICheckBuildings), the building inherits it here.
+            unit->aiOwnerHQId = aiOwnerHQId;
         }
         // progress
 
@@ -2712,7 +2726,9 @@ void Movable::stopNew(){
                                          CallFunc::create(CC_CALLBACK_0(Movable::playTreeSound, this)),
                                          DelayTime::create(0.2f),
                                          NULL));
-        this->runAction(Sequence::create(DelayTime::create(unit->buildingCompleteTime), CallFunc::create(CC_CALLBACK_0(Movable::onBuildComplete, this)), NULL));
+        Action* buildCompleteAction = Sequence::create(DelayTime::create(unit->buildingCompleteTime), CallFunc::create(CC_CALLBACK_0(Movable::onBuildComplete, this)), NULL);
+        buildCompleteAction->setTag(ACTION_TAG_BUILD_COMPLETE);
+        this->runAction(buildCompleteAction);
         this->setVisible(false); // test
         this->isBuildingABuilding = true;
         this->attackType = ATTACK_TYPE_NONE;

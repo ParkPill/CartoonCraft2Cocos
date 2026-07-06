@@ -67,6 +67,9 @@ public:
     std::string fireAniName="";
     cocos2d::Vec2 wanderStart;
     cocos2d::Vec2 wanderEnd;
+    // Id of the map-editor object this unit was spawned from (-1 if not
+    // editor-placed). Lets trigger actions target the live unit by id.
+    int editorObjectId = -1;
     
     void hideEnergy();
     

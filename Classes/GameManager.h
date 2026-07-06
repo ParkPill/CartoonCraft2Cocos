@@ -484,6 +484,10 @@ using namespace cocos2d::ui;
 
 #define ACTION_TAG_ANIMATION 0
 #define ACTION_TAG_ROTATION 1
+// Tags the DelayTime->onBuildComplete sequence a builder runs on itself, so
+// the building-death path can stop just that action (never stopAllActions on
+// a worker that may be carrying resources).
+#define ACTION_TAG_BUILD_COMPLETE 2
 
 #define GUN_ORDINARY 0
 
@@ -1096,6 +1100,10 @@ public:
     
     void loadCSV(ValueMap& map, std::string fileName);
     void runAnimation(Sprite* spt, const char* name, bool repeat, bool deleteAfterPlay=false);
+    // The map editor's Flag marker: an animated spot flag built from the loose
+    // spot0~3.png files in Resources/. Shared by MapEditor and GameScene so the
+    // marker looks the same in the editor and at runtime.
+    Sprite* createSpotFlagSprite();
     
     
     

@@ -72,7 +72,7 @@ Scene *GameScene::scene(int stage, int mode, bool multiplay) {
     layer->blackSheepWell = true;
   }
   // test now
-  layer->blackSheepWell = true;
+  //layer->blackSheepWell = true;
   layer->gameMode = mode;
   scene->addChild(layer);
   layer->stageIndex = stage;
@@ -1564,6 +1564,13 @@ void GameScene::removeDeadUnit(EnemyBase *unit) {
     unit->myShuttle = nullptr;
   }
   unit->isDead = true;
+  // An enemy builder killed en route to a build site: the AI paid at dispatch
+  // but the building was never created - put the cost back. (Clearing the flag
+  // makes the refund single-shot even if this function re-enters.)
+  if (unit->isEnemy && unit->isGoingToBuild) {
+    unit->isGoingToBuild = false;
+    refundEnemyBuildCost(unit->builderBuildingIndex);
+  }
   if (unit->isEnemy) {
     totalKillUnit++;
     if (unit->unitType == UNIT_GOBLIN) {
@@ -1658,6 +1665,24 @@ void GameScene::removeDeadUnit(EnemyBase *unit) {
           u->returningPlace = nullptr;
           idled = true;
         }
+        if (u->builderBuilding == unit) {
+          // Never leave a dangling pointer to the freed building.
+          u->builderBuilding = nullptr;
+          if (u->isBuildingABuilding) {
+            // The construction this builder was hidden inside was destroyed:
+            // bring it back (mirror of Movable::onBuildComplete's restore).
+            // No refund - the cost was invested, same as the player.
+            u->stopActionByTag(ACTION_TAG_BUILD_COMPLETE);
+            u->removeBuildProgressIcon(); // player-side progress/cancel button
+            u->isBuildingABuilding = false;
+            u->untouchable = false;
+            u->setVisible(true);
+            if (!u->isCarryingGold && !u->isCarryingTree) {
+              u->attackType = ATTACK_TYPE_NEAR;
+            }
+            u->stopNew();
+          }
+        }
         if (idled) {
           if (u->target == unit)
             u->target = nullptr;
@@ -1692,6 +1717,7 @@ void GameScene::removeDeadUnit(EnemyBase *unit) {
   heroList.eraseObject(unit);
   enemyHeroList.eraseObject(unit);
   mutualArray.eraseObject(unit);
+  readyHeroArray.eraseObject(unit);
   MovableArray.eraseObject(unit);
   bool elli = true;
   for (auto unit : heroArray) {
@@ -2848,13 +2874,41 @@ void GameScene::setEntireMap(int stage) {
     for (int i = 0; i < mapWidth; i += FOG_SIZE) {
       Fog *fog = Fog::create();
       fogArray.pushBack(fog);
-      batch->addChild(fog, 100);
       fog->coordinate = Vec2(i, j);
       fog->setPosition(Vec2(i + FOG_SIZE / 2, j + FOG_SIZE / 2));
 
       if (GM->nextScene != STAGE_FIELD) {
         fog->setPosition(Vec2(-500, -500));
       }
+    }
+  }
+  {
+    int fogCols = (int)fogMapSize.width;
+    int fogRows = (int)fogMapSize.height;
+    int cellCount = fogCols * fogRows;
+    fogMaskPixels.assign(cellCount * 4, 0);
+    fogMaskAlpha.assign(cellCount, 255.0f);
+    fogMaskTargetAlpha.assign(cellCount, 255);
+    for (int i = 0; i < cellCount; i++) {
+      fogMaskPixels[i * 4 + 3] = 255;
+    }
+    fogMaskTexture = new Texture2D();
+    fogMaskTexture->initWithData(
+        fogMaskPixels.data(), fogMaskPixels.size(),
+        Texture2D::PixelFormat::RGBA8888, fogCols, fogRows,
+        cocos2d::Size(fogCols, fogRows));
+    Texture2D::TexParams fogTexParams = {GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE,
+                                         GL_CLAMP_TO_EDGE};
+    fogMaskTexture->setTexParameters(fogTexParams);
+    fogMaskSprite = Sprite::createWithTexture(fogMaskTexture);
+    fogMaskTexture->release();
+    fogMaskSprite->setAnchorPoint(Vec2::ZERO);
+    fogMaskSprite->setPosition(Vec2::ZERO);
+    fogMaskSprite->setScaleX(mapWidth / (float)fogCols);
+    fogMaskSprite->setScaleY(mapHeight / (float)fogRows);
+    batch->addChild(fogMaskSprite, 100);
+    if (GM->nextScene != STAGE_FIELD) {
+      fogMaskSprite->setVisible(false);
     }
   }
 
@@ -3148,7 +3202,7 @@ const int kEditorTypeToUnit[] = {
     UNIT_TEMPLE,         UNIT_BARBECUE,        UNIT_ORC_SHUTTLE,
     UNIT_ZOMBIE_ORC_AXE, UNIT_ZOMBIE_SWORDSMAN,UNIT_ZOMBIE_CASTLE,
     UNIT_ZOMBIE_HQ,      UNIT_TREE,            UNIT_MINE,
-    -1, // 33 = Flag, not a real unit
+    -1, // 33 = Flag, not a real unit (kEditorFlagTypeIndex below)
     // 34-78: heroes
     UNIT_HERO_ORC,             UNIT_HERO_GOBLIN,          UNIT_HERO_SPEARMAN,
     UNIT_HERO_LIZARDMAN,       UNIT_HERO_ARCHER,          UNIT_HERO_WEREWOLF,
@@ -3173,6 +3227,10 @@ const int kEditorTypeToUnit[] = {
     UNIT_OIL_SPOT, UNIT_HUMAN_OIL_SHIP, UNIT_ORC_OIL_SHIP,
 };
 const int kEditorTypeCount = sizeof(kEditorTypeToUnit) / sizeof(kEditorTypeToUnit[0]);
+// The Flag trigger-target marker's index in the table above. It has no UNIT_*
+// constant but is still drawn at runtime (animated spot flag, same art the
+// editor shows) - see spawnObjectsFromEditorJsonFile.
+const int kEditorFlagTypeIndex = 33;
 }
 
 TMXTiledMap *GameScene::createTMXFromEditorJsonFile(const std::string &path) {
@@ -3327,6 +3385,21 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
       editorObjectPositionsById[id] = pos;
     }
     if (unitType < 0) {
+      // The Flag marker is not a unit, but it shows at runtime with the same
+      // animated spot-flag art the editor uses - unless the editor marked it
+      // hidden ("visible": false). Hidden or not, it was already snapshotted
+      // into editorObjectPositionsById above, so triggers can still target it.
+      if (typeIndex == kEditorFlagTypeIndex) {
+        bool flagVisible = !(item.HasMember("visible") && item["visible"].IsBool()) ||
+                           item["visible"].GetBool();
+        if (flagVisible) {
+          Sprite *flag = GM->createSpotFlagSprite();
+          if (flag != nullptr) {
+            flag->setPosition(pos);
+            batch->addChild(flag, 1);
+          }
+        }
+      }
       continue;
     }
     if (unitType == UNIT_START_POINT) {
@@ -3337,10 +3410,15 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
       continue;
     }
 
+    // Editor sides: 0=Ally, 1=Enemy, 2=Neutral (joins the player on
+    // approach → READY_HERO), 3=Event (only changes hands via triggers →
+    // stays MUTUAL until a side-change action exists).
     int whichSide = WHICH_SIDE_HERO;
     if (side == 1) {
       whichSide = WHICH_SIDE_ENEMY;
-    } else if (side == 2 || side == 3) {
+    } else if (side == 2) {
+      whichSide = WHICH_SIDE_READY_HERO;
+    } else if (side == 3) {
       whichSide = WHICH_SIDE_MUTUAL;
     }
     // Trees, mines, and oil spots are always neutral resources regardless of the editor-set side.
@@ -3353,6 +3431,11 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
     EnemyBase *unit = createUnit(unitType, whichSide, building, pos,
                                  GM->getUnitName(unitType), 1,
                                  getSpriteNameForUnit(unitType));
+    if (unit != nullptr) {
+      // Remember which editor object spawned this unit so trigger actions
+      // (e.g. Talk) can find the live, possibly-moved unit by id later.
+      unit->editorObjectId = id;
+    }
     if (unit != nullptr && unit->spine != nullptr) {
       // createUnit already set unit->spine (Movable::init, based on
       // GameManager::getSpineFileName) for any hero type - this is the same
@@ -3491,6 +3574,7 @@ void GameScene::loadTriggersFromEditorJsonFile(const std::string &path) {
         if (citem.HasMember("comparison")) c.comparison = citem["comparison"].GetInt();
         if (citem.HasMember("amount")) c.amount = citem["amount"].GetInt();
         if (citem.HasMember("resourceKind")) c.resourceKind = citem["resourceKind"].GetInt();
+        if (citem.HasMember("targetObjectId")) c.targetObjectId = citem["targetObjectId"].GetInt();
         if (citem.HasMember("isRepeat")) c.isRepeat = citem["isRepeat"].GetBool();
         t.conditions.push_back(c);
       }
@@ -3529,40 +3613,169 @@ cocos2d::Vec2 GameScene::resolveTriggerTargetPosition(int targetObjectId, int ti
   return getPositionFromTileCoordinate(tileX, tileY);
 }
 
+EnemyBase *GameScene::findLiveUnitByEditorObjectId(int targetObjectId) {
+  if (targetObjectId < 0) {
+    return nullptr;
+  }
+  const Vector<EnemyBase *> *arrays[] = {&heroArray, &enemyArray,
+                                         &readyHeroArray, &mutualArray};
+  for (const Vector<EnemyBase *> *array : arrays) {
+    for (EnemyBase *unit : *array) {
+      if (unit->editorObjectId == targetObjectId && unit->energy > 0) {
+        return unit;
+      }
+    }
+  }
+  return nullptr;
+}
+
 void GameScene::clearTriggerTalkBubble() {
   if (activeTalkBubble != nullptr) {
     activeTalkBubble->removeFromParent();
     activeTalkBubble = nullptr;
   }
+  activeTalkBubbleTargetObjectId = -1;
+  activeTalkLabel = nullptr;
+  activeTalkFullText.clear();
+  activeTalkTypedChars = 0;
+  this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
+  this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
 }
 
-void GameScene::showTriggerTalkBubble(const std::string &message, const cocos2d::Vec2 &worldPos) {
+void GameScene::triggerTalkBubbleUpdate(float dt) {
+  if (activeTalkBubble == nullptr || activeTalkBubbleTargetObjectId < 0) {
+    activeTalkBubbleTargetObjectId = -1;
+    this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
+    return;
+  }
+  // Re-find the target by id every tick rather than caching a pointer - the
+  // unit may have died and been freed since last frame. If it's gone, stop
+  // following but leave the bubble at its last position until the trigger
+  // sequence dismisses it.
+  EnemyBase *target = findLiveUnitByEditorObjectId(activeTalkBubbleTargetObjectId);
+  if (target == nullptr) {
+    activeTalkBubbleTargetObjectId = -1;
+    this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
+    return;
+  }
+  activeTalkBubble->setPosition(target->getPosition());
+}
+
+void GameScene::triggerTalkTypingUpdate(float dt) {
+  if (activeTalkBubble == nullptr || activeTalkLabel == nullptr) {
+    this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
+    return;
+  }
+  activeTalkTypedChars++;
+  // Never cut a UTF-16 surrogate pair in half - if we just landed on a high
+  // surrogate, take its partner in the same tick.
+  if (activeTalkTypedChars < (int)activeTalkFullText.length()) {
+    char16_t last = activeTalkFullText[activeTalkTypedChars - 1];
+    if (last >= 0xD800 && last <= 0xDBFF) {
+      activeTalkTypedChars++;
+    }
+  }
+  if (activeTalkTypedChars >= (int)activeTalkFullText.length()) {
+    activeTalkTypedChars = (int)activeTalkFullText.length();
+    this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
+  }
+  std::string shown;
+  cocos2d::StringUtils::UTF16ToUTF8(
+      activeTalkFullText.substr(0, activeTalkTypedChars), shown);
+  activeTalkLabel->setString(shown);
+}
+
+void GameScene::showTriggerTalkBubble(const std::string &message, const cocos2d::Vec2 &worldPos,
+                                      EnemyBase *followTarget) {
   clearTriggerTalkBubble();
 
-  Label *lbl = Label::createWithSystemFont(message, "Arial", 28);
-  lbl->setAnchorPoint(Vec2(0.5f, 0.5f));
-  Size textSize = lbl->getContentSize();
-
-  const float paddingX = 24;
-  const float paddingY = 16;
-  Size bubbleSize(textSize.width + paddingX * 2, textSize.height + paddingY * 2);
-
+  // Same balloon construction as showTalkText: a scale-9 talkBoxFrame sized
+  // to the text, with a talkBoxPointer tail hanging down toward the speaker.
   Node *bubble = Node::create();
-  // Float above the target's head, same general idea as the dead/unused
-  // addTalkBalloon's "questState" marker (npc bounding box + an offset) -
-  // but this one carries real text, not a static icon.
-  bubble->setPosition(worldPos + Vec2(0, 90));
+  bubble->setPosition(worldPos);
 
-  DrawNode *bg = DrawNode::create();
-  Vec2 half(bubbleSize.width / 2, bubbleSize.height / 2);
-  bg->drawSolidRect(-half, half, Color4F(0, 0, 0, 0.75f));
-  bubble->addChild(bg);
+  ImageView *box =
+      ImageView::create("talkBoxFrame.png", ImageView::TextureResType::PLIST);
+  cocos2d::Size minBoxSize = box->getContentSize();
+  float splitPadding = 10;
+  box->setCapInsets(
+      cocos2d::Rect(splitPadding, splitPadding,
+                    box->getContentSize().width - splitPadding * 2,
+                    box->getContentSize().height - splitPadding * 2));
+  box->setScale9Enabled(true);
+  box->setAnchorPoint(Vec2(0.5f, 0));
 
-  lbl->setPosition(Vec2::ZERO);
-  bubble->addChild(lbl, 1);
+  Label *lbl = LanguageManager::getInstance()->getLocalizedLabel();
+  lbl->setScale(imageScale);
+  lbl->setTextColor(Color4B::BLACK);
+  lbl->setString(message);
+
+  // Same sizing rule as showTalkText: wrap long lines, then pad the frame.
+  // The full message is measured up front so the balloon opens at its final
+  // size - the typewriter reveal below only changes the label's string, never
+  // the balloon's size.
+  const float maxTextWidth = 620;
+  cocos2d::Size textSize(lbl->getContentSize().width * lbl->getScale(),
+                         lbl->getContentSize().height * lbl->getScale());
+  if (textSize.width > maxTextWidth) {
+    lbl->setWidth(maxTextWidth / lbl->getScale());
+    textSize = cocos2d::Size(lbl->getContentSize().width * lbl->getScale(),
+                             lbl->getContentSize().height * lbl->getScale());
+  }
+  // Freeze the label at the full-text layout (tiny slack so the exact-fit
+  // width can't spuriously wrap) and pin the text to the top-left, so
+  // already-typed characters keep their place while the rest appears.
+  lbl->setDimensions(lbl->getContentSize().width + 2,
+                     lbl->getContentSize().height);
+  lbl->setHorizontalAlignment(TextHAlignment::LEFT);
+  lbl->setVerticalAlignment(TextVAlignment::TOP);
+  const float paddingX = 44;
+  const float paddingY = 28;
+  cocos2d::Size boxSize(textSize.width + paddingX, textSize.height + paddingY);
+  // Keep short one-word messages from squashing the scale-9 frame below its
+  // source-texture size, which would make the corners overlap.
+  boxSize.width = std::max(boxSize.width, minBoxSize.width);
+  boxSize.height = std::max(boxSize.height, minBoxSize.height);
+  box->setContentSize(boxSize);
+  lbl->setPosition(Vec2(box->getContentSize().width / 2,
+                        box->getContentSize().height / 2));
+  box->addChild(lbl);
+
+  // Typewriter reveal: keep the full message aside as UTF-16 (so multi-byte
+  // Korean characters appear whole, never as split UTF-8 fragments), start
+  // the label empty, and let triggerTalkTypingUpdate add one character per
+  // tick. If the conversion somehow fails, the label just keeps the full
+  // message it already has.
+  activeTalkLabel = lbl;
+  activeTalkFullText.clear();
+  activeTalkTypedChars = 0;
+  if (cocos2d::StringUtils::UTF8ToUTF16(message, activeTalkFullText) &&
+      !activeTalkFullText.empty()) {
+    lbl->setString("");
+    this->schedule(schedule_selector(GameScene::triggerTalkTypingUpdate),
+                   0.035f);
+  }
+
+  Sprite *pointer = Sprite::createWithSpriteFrameName("talkBoxPointer.png");
+  pointer->setAnchorPoint(Vec2(0.5f, 1));
+
+  // Float above the target's head like the old black box did (+90); the tail
+  // overlaps the box's bottom edge the same way showTalkText places it.
+  box->setPosition(Vec2(0, 90));
+  pointer->setPosition(box->getPosition() + Vec2(0, 18) * imageScale);
+  bubble->addChild(box);
+  bubble->addChild(pointer, 1);
 
   batch->addChild(bubble, 100000); // draw above units, same spirit as Fog's z-order
   activeTalkBubble = bubble;
+
+  // If the speaker is a live unit, follow it while the bubble is on screen
+  // instead of staying pinned to where the unit was when the trigger fired.
+  if (followTarget != nullptr && followTarget->editorObjectId >= 0) {
+    bubble->setPosition(followTarget->getPosition());
+    activeTalkBubbleTargetObjectId = followTarget->editorObjectId;
+    this->schedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
+  }
 }
 
 bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c) {
@@ -3587,7 +3800,9 @@ bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c) {
       const Vector<EnemyBase *> *array = &heroArray;
       if (c.unitSide == 1) {
         array = &enemyArray;
-      } else if (c.unitSide == 2 || c.unitSide == 3) {
+      } else if (c.unitSide == 2) {
+        array = &readyHeroArray;
+      } else if (c.unitSide == 3) {
         array = &mutualArray;
       }
       int wantUnitType = -1;
@@ -3609,6 +3824,51 @@ bool GameScene::evaluateTriggerCondition(const RuntimeTriggerCondition &c) {
       if (c.comparison == 0) return value >= c.amount;
       if (c.comparison == 1) return value <= c.amount;
       return value == c.amount;
+    }
+    case 5: { // UnitArrives - a living, movable unit of the side/type is
+              // within `amount` tiles of the targeted placed object (flag).
+      if (c.targetObjectId < 0) {
+        return false;
+      }
+      // Flags never move, but the target can also be a placed unit - follow
+      // its live position while it's alive, falling back to the placement
+      // snapshot (same rule as resolveTriggerTargetPosition).
+      Vec2 center;
+      EnemyBase *liveTarget = findLiveUnitByEditorObjectId(c.targetObjectId);
+      if (liveTarget != nullptr) {
+        center = liveTarget->getPosition();
+      } else {
+        auto it = editorObjectPositionsById.find(c.targetObjectId);
+        if (it == editorObjectPositionsById.end()) {
+          return false;
+        }
+        center = it->second;
+      }
+      const Vector<EnemyBase *> *array = &heroArray;
+      if (c.unitSide == 1) {
+        array = &enemyArray;
+      } else if (c.unitSide == 2) {
+        array = &readyHeroArray;
+      } else if (c.unitSide == 3) {
+        array = &mutualArray;
+      }
+      int wantUnitType = -1;
+      if (c.unitTypeIndex >= 0 && c.unitTypeIndex < kEditorTypeCount) {
+        wantUnitType = kEditorTypeToUnit[c.unitTypeIndex];
+      }
+      float range = std::max(1, c.amount) * TILE_SIZE;
+      float rangeSq = range * range;
+      for (EnemyBase *unit : *array) {
+        if (unit->energy <= 0) continue;
+        // "Arrives" implies movement - a building placed near the flag
+        // shouldn't satisfy it.
+        if (unit->isBuilding) continue;
+        if (wantUnitType >= 0 && unit->unitType != wantUnitType) continue;
+        if (unit->getPosition().distanceSquared(center) <= rangeSq) {
+          return true;
+        }
+      }
+      return false;
     }
     default:
       return false;
@@ -3639,7 +3899,9 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       int whichSide = WHICH_SIDE_HERO;
       if (a.unitSide == 1) {
         whichSide = WHICH_SIDE_ENEMY;
-      } else if (a.unitSide == 2 || a.unitSide == 3) {
+      } else if (a.unitSide == 2) {
+        whichSide = WHICH_SIDE_READY_HERO;
+      } else if (a.unitSide == 3) {
         whichSide = WHICH_SIDE_MUTUAL;
       }
       Vec2 basePos = resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY);
@@ -3663,7 +3925,9 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       Vector<EnemyBase *> *array = &heroArray;
       if (a.unitSide == 1) {
         array = &enemyArray;
-      } else if (a.unitSide == 2 || a.unitSide == 3) {
+      } else if (a.unitSide == 2) {
+        array = &readyHeroArray;
+      } else if (a.unitSide == 3) {
         array = &mutualArray;
       }
       int wantUnitType = -1;
@@ -3713,8 +3977,14 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       break;
     }
     case 8: { // Talk
+      // Prefer the live unit spawned from the targeted editor object so the
+      // bubble tracks it as it moves; fall back to the static placement
+      // position (Flag targets, dead units, bare tile coordinates).
+      EnemyBase *speaker = findLiveUnitByEditorObjectId(a.targetObjectId);
       Vec2 targetPos = resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY);
-      showTriggerTalkBubble(a.message, targetPos);
+      // The authored message is usually a language-sheet key; getText falls
+      // back to returning the raw string when it isn't one.
+      showTriggerTalkBubble(LM->getText(a.message), targetPos, speaker);
       break;
     }
     case 9: { // RevealFog
@@ -3746,7 +4016,8 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a, bool flipOut
       Vector<EnemyBase *> *srcArray = &heroArray;
       Vector<EnemyBase *> *tgtArray = &enemyArray;
       if (a.unitSide == 1) { srcArray = &enemyArray; tgtArray = &heroArray; }
-      else if (a.unitSide == 2 || a.unitSide == 3) { srcArray = &mutualArray; tgtArray = &enemyArray; }
+      else if (a.unitSide == 2) { srcArray = &readyHeroArray; tgtArray = &enemyArray; }
+      else if (a.unitSide == 3) { srcArray = &mutualArray; tgtArray = &enemyArray; }
       int wantUnitType = -1;
       if (a.unitTypeIndex >= 0 && a.unitTypeIndex < kEditorTypeCount) {
         wantUnitType = kEditorTypeToUnit[a.unitTypeIndex];
@@ -3798,13 +4069,22 @@ void GameScene::runTriggerActions(const RuntimeTrigger &t) {
   // clear single-player meaning for "the neutral side's victory" yet.
   bool flipOutcome = t.sides[1] && !t.sides[0];
   Vector<FiniteTimeAction *> steps;
-  for (const RuntimeTriggerAction &a : t.actions) {
+  for (size_t i = 0; i < t.actions.size(); i++) {
+    const RuntimeTriggerAction &a = t.actions[i];
     RuntimeTriggerAction actionCopy = a;
     steps.pushBack(CallFunc::create([this, actionCopy, flipOutcome]() {
       executeTriggerAction(actionCopy, flipOutcome);
     }));
     if (a.type == 6) { // Wait
       steps.pushBack(DelayTime::create(std::max(0.0f, a.waitSeconds)));
+    } else if (a.type == 8) { // Talk
+      // A Talk bubble lives until the next step starts. Without an explicit
+      // Wait right after it, the next step (or the end-of-sequence cleanup)
+      // would clear it in the same frame - give it a default 3s on screen.
+      bool nextIsWait = (i + 1 < t.actions.size()) && t.actions[i + 1].type == 6;
+      if (!nextIsWait) {
+        steps.pushBack(DelayTime::create(3.0f));
+      }
     }
   }
   // End-of-sequence cleanup in case the last action was a Talk - otherwise
@@ -8630,6 +8910,7 @@ void GameScene::oneSecUpdate(float dt) {
   if (!isMultiplay) updateShuttleFerries();
 }
 void GameScene::halfSecUpdate(float dt) {
+  stepFogMaskFade(dt);
   fogUpdateTimer -= dt;
   if (fogUpdateTimer < 0) {
     fogUpdateTimer = 0.5f;
@@ -8788,6 +9069,7 @@ void GameScene::updateFog() {
       fog->setVisible(false);
       fog->appliedState = FOG_SEEN_NOW;
     }
+    updateFogMaskTargets();
   } else {
     processNewFogState();
   }
@@ -8860,6 +9142,70 @@ void GameScene::processNewFogState() {
       fog->setOpacity(150);
       fog->appliedState = FOG_SEEN_NOT_NOW;
     }
+  }
+  updateFogMaskTargets();
+}
+void GameScene::updateFogMaskTargets() {
+  if (fogMaskTargetAlpha.empty()) {
+    return;
+  }
+  int cellCount = (int)fogMaskTargetAlpha.size();
+  int index = 0;
+  for (auto fog : fogArray) {
+    if (index >= cellCount) {
+      break;
+    }
+    unsigned char alpha;
+    switch (fog->appliedState) {
+    case FOG_SEEN_NOW:
+      alpha = 0;
+      break;
+    case FOG_SEEN_LITTLE:
+      alpha = 100;
+      break;
+    case FOG_SEEN_NOT_NOW:
+      alpha = 150;
+      break;
+    default:
+      alpha = 255;
+      break;
+    }
+    fogMaskTargetAlpha[index] = alpha;
+    index++;
+  }
+}
+void GameScene::stepFogMaskFade(float dt) {
+  if (fogMaskTexture == nullptr || fogMaskAlpha.empty()) {
+    return;
+  }
+  const float fadeSpeed = 600.0f; // alpha per second, full fade in ~0.4s
+  float step = fadeSpeed * dt;
+  int fogCols = (int)fogMapSize.width;
+  int fogRows = (int)fogMapSize.height;
+  bool changed = false;
+  for (int i = 0; i < (int)fogMaskAlpha.size(); i++) {
+    float target = fogMaskTargetAlpha[i];
+    float current = fogMaskAlpha[i];
+    if (current == target) {
+      continue;
+    }
+    if (current < target) {
+      current = MIN(current + step, target);
+    } else {
+      current = MAX(current - step, target);
+    }
+    fogMaskAlpha[i] = current;
+    int x = i % fogCols;
+    int y = i / fogCols;
+    // texture row 0 is drawn at the top of the sprite; cell row 0 is the
+    // bottom of the map
+    fogMaskPixels[((fogRows - 1 - y) * fogCols + x) * 4 + 3] =
+        (unsigned char)current;
+    changed = true;
+  }
+  if (changed) {
+    fogMaskTexture->updateWithData(fogMaskPixels.data(), 0, 0, fogCols,
+                                   fogRows);
   }
 }
 void GameScene::coinMagnet() {}
@@ -9994,8 +10340,11 @@ void GameScene::addListener() {
 }
 void GameScene::setWorkerToBuild(EnemyBase *worker, int buildingIndex, int x,
                                   int y) {
-  buildingTemplateSize = GM->getBuildingOccupySize(buildingIndex);
-  worker->builderSize = buildingTemplateSize;
+  // Local size - the enemy AI dispatches builds from its own tick, and writing
+  // the shared buildingTemplateSize member here would corrupt a player
+  // placement in progress.
+  cocos2d::Size bSize = GM->getBuildingOccupySize(buildingIndex);
+  worker->builderSize = bSize;
   worker->builderBuildingIndex = buildingIndex;
   worker->builderCoordinate = Vec2(x, y);
   worker->builderSpriteName = getSpriteNameForUnit(buildingIndex);
@@ -10005,8 +10354,8 @@ void GameScene::setWorkerToBuild(EnemyBase *worker, int buildingIndex, int x,
     // OilShip is a water unit: move directly to the build location
     pos = getPositionFromTileCoordinate(worker->builderCoordinate.x,
                                         worker->builderCoordinate.y) +
-          Vec2(buildingTemplateSize.width * TILE_SIZE / 2,
-               buildingTemplateSize.height * TILE_SIZE / 2);
+          Vec2(bSize.width * TILE_SIZE / 2,
+               bSize.height * TILE_SIZE / 2);
   } else if (buildingIndex == UNIT_HUMAN_SHIPYARD || buildingIndex == UNIT_ORC_SHIPYARD ||
              buildingIndex == UNIT_HUMAN_OIL_REFINERY || buildingIndex == UNIT_ORC_OIL_REFINERY ||
              buildingIndex == UNIT_HUMAN_FOUNDRY || buildingIndex == UNIT_ORC_FOUNDRY) {
@@ -10014,8 +10363,8 @@ void GameScene::setWorkerToBuild(EnemyBase *worker, int buildingIndex, int x,
     // the water center (workers cannot path through water tiles).
     int cx = x;
     int cy = y;
-    int w  = (int)buildingTemplateSize.width;
-    int h  = (int)buildingTemplateSize.height;
+    int w  = (int)bSize.width;
+    int h  = (int)bSize.height;
     Vec2 workerTile = getCoordinateFromPosition(worker->getPosition());
     Vec2 bestTile   = Vec2(-1, -1);
     float minDist   = FLT_MAX;
@@ -10046,8 +10395,8 @@ void GameScene::setWorkerToBuild(EnemyBase *worker, int buildingIndex, int x,
   } else {
     pos = this->getPositionFromTileCoordinate(worker->builderCoordinate.x,
                                                worker->builderCoordinate.y) +
-          Vec2(buildingTemplateSize.width * TILE_SIZE / 2,
-               buildingTemplateSize.height * TILE_SIZE / 2);
+          Vec2(bSize.width * TILE_SIZE / 2,
+               bSize.height * TILE_SIZE / 2);
   }
 
   Vector<EnemyBase *> list;
@@ -10145,6 +10494,12 @@ void GameScene::moveScreen(cocos2d::Vec2 pos) {
         size.height * miniMapScale / layerScale);
     viewRect = cocos2d::Rect(-pos / layerScale, size / layerScale);
   }
+  // Refresh culling the same frame the camera moves so nothing pops in after a
+  // scroll or a teleport (minimap click / centering). moveScreen() is only
+  // called while the camera is actually moving, so this is free when stationary
+  // (the once-per-second oneSecUpdate pass still covers units that move on a
+  // stationary camera).
+  checkVisibilityForInScreen();
 }
 void GameScene::checkVisibilityForInScreen() {
   if (gameMode == GAME_MODE_NORMAL || gameMode == GAME_MODE_HARD) {
@@ -15703,10 +16058,14 @@ bool GameScene::canAttack(Movable *attacker, Movable *target) {
   return can;
 }
 bool GameScene::isInScreen(cocos2d::Vec2 pos) {
-  return cocos2d::Rect(-(getPositionX() + 150) / layerScale,
-                       -(getPositionY() + 150) / layerScale,
-                       (size.width + 200) / layerScale,
-                       (size.height + 200) / layerScale)
+  // Generous, symmetric margin (CULLING_MARGIN pts on every side) so units are
+  // already visible before their area scrolls fully on screen. Combined with the
+  // immediate refresh in moveScreen(), this hides the culling from the player.
+  const float CULLING_MARGIN = 300;
+  return cocos2d::Rect(-(getPositionX() + CULLING_MARGIN) / layerScale,
+                       -(getPositionY() + CULLING_MARGIN) / layerScale,
+                       (size.width + CULLING_MARGIN * 2) / layerScale,
+                       (size.height + CULLING_MARGIN * 2) / layerScale)
       .containsPoint(pos);
 }
 void GameScene::revengeAttack(Movable *attackee, Movable *attacker) {
@@ -15993,6 +16352,15 @@ void GameScene::addEnemyOil(int amount) {
   if (enemyOil < 0) enemyOil = 0;
 }
 
+// Refund the enemy-side cost of a building order that was paid at dispatch but
+// whose construction never started (placement failed on arrival, or the
+// dispatched builder died en route).
+void GameScene::refundEnemyBuildCost(int unitType) {
+  addEnemyGold(getGoldPriceForUnit(unitType));
+  addEnemyLumber(getLumberPriceForUnit(unitType));
+  addEnemyOil(getOilPriceForUnit(unitType));
+}
+
 // Recount enemy food from buildings/units (called each AI tick).
 void GameScene::enemyAIUpdateFood() {
   int foodMax = 0;
@@ -16145,7 +16513,11 @@ void GameScene::enemyAIManageWorkers() {
     for (auto *w : nearWorkers) {
       if (w->isGatheringGold || w->unitAct == UNIT_ACT_GATHER_GOLD) goldWorkers++;
       else if (w->isGatheringTree || w->unitAct == UNIT_ACT_GATHER_TREE) woodWorkers++;
-      else if (!w->isGoingToBuild && w->unitAct == UNIT_ACT_NONE) idleWorkers.push_back(w);
+      // A builder hidden inside a construction has unitAct == UNIT_ACT_NONE
+      // but must never be handed a gathering job; it still counts toward
+      // assignedCount below (busy, not dead).
+      else if (!w->isGoingToBuild && !w->isBuildingABuilding &&
+               w->unitAct == UNIT_ACT_NONE) idleWorkers.push_back(w);
     }
 
     // Stop handing out jobs once this HQ has kEAIMaxWorkersPerHQ workers
@@ -16190,8 +16562,9 @@ void GameScene::enemyAIManageWorkers() {
 
 // Assign idle enemy OilShips to an OilExtractor: reuse a completed extractor
 // that has no ship working it yet, or claim the nearest unclaimed OilSpot and
-// build a new extractor there (mirrors enemyAICheckBuildings' instant-build
-// pattern - no travel/construction time, same as every other AI building).
+// dispatch the ship to build a new extractor there through the same
+// worker-driven construction the player uses (travel + build time; the ship
+// hides inside the site and reappears on completion).
 void GameScene::enemyAIManageShips() {
   if (!mapHasWater) return;
 
@@ -16202,6 +16575,7 @@ void GameScene::enemyAIManageShips() {
     if (u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
     if (u->unitType != UNIT_HUMAN_OIL_SHIP && u->unitType != UNIT_ORC_OIL_SHIP) continue;
     if (u->isGatheringOil || u->isCarryingOil) continue;
+    if (u->isGoingToBuild || u->isBuildingABuilding) continue;
     idleOilShips.push_back(u);
   }
   if (idleOilShips.empty()) return;
@@ -16210,12 +16584,28 @@ void GameScene::enemyAIManageShips() {
   bool isOrc = enemyAIIsOrc;
 
   int extractorType = isOrc ? UNIT_ORC_OIL_EXTRACTOR : UNIT_HUMAN_OIL_EXTRACTOR;
-  const char *extractorSprite = isOrc ? "orcOilExtractor.png" : "humanOilExtractor.png";
   Vec2 extractorSize = GM->getBuildingOccupySize(extractorType);
   int ew = (int)extractorSize.x, eh = (int)extractorSize.y;
   int gCost = getGoldPriceForUnit(extractorType);
   int lCost = getLumberPriceForUnit(extractorType);
   int oCost = getOilPriceForUnit(extractorType);
+
+  // A spot is claimed while some ship is walking to it (or building on it):
+  // its planned footprint (builderCoordinate convention matches
+  // buildTheBuilding) covers the spot tile. A finished/started extractor on
+  // the spot needs no check here - its setOccupy deco blocks fail the
+  // tile-free test below.
+  auto isSpotClaimed = [&](int sx, int sy) {
+    for (auto *u : snap) {
+      if (u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+      if (!u->isGoingToBuild && !u->isBuildingABuilding) continue;
+      if (u->builderBuildingIndex != extractorType) continue;
+      int bx = (int)u->builderCoordinate.x;
+      int by = (int)u->builderCoordinate.y;
+      if (sx >= bx && sx < bx + ew && sy >= by - eh && sy < by) return true;
+    }
+    return false;
+  };
 
   for (auto *ship : idleOilShips) {
     // Prefer a completed enemy extractor that isn't fully staffed yet.
@@ -16240,11 +16630,13 @@ void GameScene::enemyAIManageShips() {
       continue;
     }
 
-    // No free extractor - claim the nearest OilSpot and build one there.
+    // No free extractor - claim the nearest OilSpot and send this ship to
+    // build one there. Once it completes, the ship goes idle and a later pass
+    // assigns it (or another ship) to the finished extractor.
     if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) continue;
 
     // Try oil spots nearest-first; skip ones already tried this pass so a
-    // build failure (e.g. spot already occupied) falls through to the next.
+    // blocked spot falls through to the next.
     std::vector<EnemyBase *> tried;
     while (true) {
       EnemyBase *nearestSpot = nullptr;
@@ -16262,27 +16654,30 @@ void GameScene::enemyAIManageShips() {
 
       Vec2 spotCoord = getCoordinateFromPosition(nearestSpot->getPosition());
       int sx = (int)spotCoord.x, sy = (int)spotCoord.y;
-      EnemyBase *extractor = nullptr;
-      for (int oy = 0; oy < eh && !extractor; oy++) {
-        for (int ox = 0; ox < ew && !extractor; ox++) {
-          int bx = sx - ox;
-          int by = sy + eh - oy;
-          extractor = buildTheBuilding(extractorType, bx, by, ew, eh,
-                                       extractorSprite, WHICH_SIDE_ENEMY, true);
+      if (isSpotClaimed(sx, sy)) continue;
+
+      // Find a placement whose footprint covers the spot and is free water.
+      // buildTheBuilding re-validates on arrival; a failure there refunds
+      // (see Movable::stopNew).
+      int bx = -1, by = -1;
+      for (int oy = 0; oy < eh && bx < 0; oy++) {
+        for (int ox = 0; ox < ew && bx < 0; ox++) {
+          int tx = sx - ox;
+          int ty = sy + eh - oy;
+          if (enemyAIIsWaterTileFree(tx, ty, ew, eh)) { bx = tx; by = ty; }
         }
       }
-      if (extractor) {
-        addEnemyGold(-gCost);
-        addEnemyLumber(-lCost);
-        addEnemyOil(-oCost);
-        setAfterBuildingProcess(extractor);
-        // Stamp ownership (nearest HQ, or 0/ownerless if none exists yet).
-        // Extractors are not counted by enemyAICheckBuildings, but keeping the
-        // owner consistent lets the adopt-orphans pass treat them uniformly.
-        extractor->aiOwnerHQId = enemyAINearestHQOwnerId(extractor->getPosition());
-        setOilShipToExtractor(ship, extractor);
-        break;
-      }
+      if (bx < 0) continue;
+
+      addEnemyGold(-gCost);
+      addEnemyLumber(-lCost);
+      addEnemyOil(-oCost);
+      // Stamp ownership (nearest HQ, or 0/ownerless if none exists yet);
+      // Movable::stopNew() copies it onto the extractor on arrival.
+      ship->aiOwnerHQId = enemyAINearestHQOwnerId(getPositionFromTileCoordinate(bx, by));
+      setWorkerToBuild(ship, extractorType, bx, by);
+      log("enemyAI[build]: dispatched OilShip to build extractor at tile (%d,%d)", bx, by);
+      break;
     }
   }
 }
@@ -16341,6 +16736,44 @@ int GameScene::enemyAINearestHQOwnerId(Vec2 pos) {
   return nearest->aiOwnerHQId;
 }
 
+// Pick an enemy worker to dispatch to a build site: prefer an idle worker,
+// else the nearest gatherer (enemyAIManageWorkers refills gathering jobs).
+// Workers already committed to a construction, or hidden inside a mine, are
+// never picked. Returns nullptr when no worker is available.
+EnemyBase *GameScene::enemyAIFindBuilderWorker(Vec2 nearPos) {
+  EnemyBase *bestIdle = nullptr;
+  EnemyBase *bestBusy = nullptr;
+  float bestIdleD = FLT_MAX, bestBusyD = FLT_MAX;
+  for (auto *u : enemyArray) {
+    if (u == nullptr || u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (u->unitType != UNIT_WORKER && u->unitType != UNIT_GOBLIN_WORKER) continue;
+    if (u->isGoingToBuild || u->isBuildingABuilding || u->isInMine) continue;
+    float d = nearPos.distanceSquared(u->getPosition());
+    if (u->unitAct == UNIT_ACT_NONE) {
+      if (d < bestIdleD) { bestIdleD = d; bestIdle = u; }
+    } else {
+      if (d < bestBusyD) { bestBusyD = d; bestBusy = u; }
+    }
+  }
+  return bestIdle != nullptr ? bestIdle : bestBusy;
+}
+
+// Count enemy builders dispatched to build unitType and still walking there
+// (the building itself does not exist yet). Once the builder arrives, the
+// incomplete building exists and is counted like any other live building, so
+// isBuildingABuilding is deliberately excluded here. ownerHQId -1 = any owner.
+int GameScene::enemyAICountPendingBuilds(int unitType, int ownerHQId) {
+  int n = 0;
+  for (auto *u : enemyArray) {
+    if (u == nullptr || u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (!u->isGoingToBuild) continue;
+    if (u->builderBuildingIndex != unitType) continue;
+    if (ownerHQId != -1 && u->aiOwnerHQId != ownerHQId) continue;
+    n++;
+  }
+  return n;
+}
+
 void GameScene::enemyAICheckBuildings() {
   std::vector<EnemyBase *> snap(enemyArray.begin(), enemyArray.end());
 
@@ -16362,6 +16795,17 @@ void GameScene::enemyAICheckBuildings() {
 
   // If workers exist but no HQ, build one first.
   if (hqs.empty()) {
+    int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
+
+    // A rebuild may already be underway: a worker walking to the site, or a
+    // construction in progress (hqs above only lists *completed* HQs).
+    if (enemyAICountPendingBuilds(hqType, -1) > 0) return;
+    for (auto *u : snap)
+      if (u->unitType == hqType && u->isBuilding && !u->isBuildingComplete &&
+          u->energy > 0) return;
+
+    // Anchor the search on any surviving worker; the build tile is then found
+    // near whichever worker actually gets dispatched.
     bool hasWorker = false;
     Vec2 workerPos;
     for (auto *u : snap) {
@@ -16376,8 +16820,12 @@ void GameScene::enemyAICheckBuildings() {
       log("enemyAI[build]: no HQ and no worker found - AI is stuck");
       return;
     }
+    EnemyBase *worker = enemyAIFindBuilderWorker(workerPos);
+    if (worker == nullptr) {
+      log("enemyAI[build]: no HQ - every worker is busy building; waiting");
+      return;
+    }
 
-    int hqType = isOrc ? UNIT_ORC_HQ : UNIT_CASTLE;
     int gCost  = getGoldPriceForUnit(hqType);
     int lCost  = getLumberPriceForUnit(hqType);
     int oCost  = getOilPriceForUnit(hqType);
@@ -16390,25 +16838,20 @@ void GameScene::enemyAICheckBuildings() {
     Vec2 sz = GM->getBuildingOccupySize(hqType);
     int w = (int)sz.x, h = (int)sz.y;
     int bx, by;
-    if (!enemyAIFindBuildTile(workerPos, w, h, bx, by, true)) {
+    if (!enemyAIFindBuildTile(worker->getPosition(), w, h, bx, by, true)) {
       log("enemyAI[build]: no HQ - could not find a free tile near worker");
       return;
     }
 
-    const char *spr = isOrc ? "hq.png" : "castle.png";
-    EnemyBase *bld = buildTheBuilding(hqType, bx, by, w, h, spr, WHICH_SIDE_ENEMY, true);
-    if (bld) {
-      addEnemyGold(-gCost);
-      addEnemyLumber(-lCost);
-      addEnemyOil(-oCost);
-      setAfterBuildingProcess(bld);
-      // No other HQ exists (that is why we are here), so this HQ is its own
-      // owner: give it a fresh identity now instead of waiting for the next pass.
-      bld->aiOwnerHQId = enemyAINextHQId++;
-      log("enemyAI[build]: built HQ at tile (%d,%d)", bx, by);
-    } else {
-      log("enemyAI[build]: buildTheBuilding rejected HQ placement at tile (%d,%d)", bx, by);
-    }
+    addEnemyGold(-gCost);
+    addEnemyLumber(-lCost);
+    addEnemyOil(-oCost);
+    // No other HQ exists (that is why we are here), so the new HQ will be its
+    // own owner: stamp the builder with a fresh identity now;
+    // Movable::stopNew() copies it onto the building on arrival.
+    worker->aiOwnerHQId = enemyAINextHQId++;
+    setWorkerToBuild(worker, hqType, bx, by);
+    log("enemyAI[build]: dispatched worker to build HQ at tile (%d,%d)", bx, by);
     return;
   }
 
@@ -16450,12 +16893,41 @@ void GameScene::enemyAICheckBuildings() {
     if (nearest) u->aiOwnerHQId = nearest->aiOwnerHQId;
   }
 
+  // Pending build orders re-home the same way: a builder dispatched by a
+  // now-dead HQ adopts the nearest survivor so its order keeps counting
+  // toward that HQ's caps (Movable::stopNew copies the stamp to the building).
+  for (auto *u : snap) {
+    if (u->isBuilding || u->energy <= 0 || !u->isEnemy) continue;
+    if (!u->isGoingToBuild) continue;
+    if (isLiveHQId(u->aiOwnerHQId)) continue;
+    EnemyBase *nearest = nullptr;
+    float bestD = FLT_MAX;
+    for (auto *hq : hqs) {
+      float d = u->getPosition().distanceSquared(hq->getPosition());
+      if (d < bestD) { bestD = d; nearest = hq; }
+    }
+    if (nearest) u->aiOwnerHQId = nearest->aiOwnerHQId;
+  }
+
   auto countNear = [&](int type, EnemyBase *hq) {
     int n = 0;
     int ownerId = hq->aiOwnerHQId;
     for (auto *u : snap)
       if (u->unitType == type && u->isBuilding && u->energy > 0 &&
           u->aiOwnerHQId == ownerId) n++;
+    // A builder still walking to its site counts too, or the next pass would
+    // order the same building again before the site exists.
+    n += enemyAICountPendingBuilds(type, ownerId);
+    return n;
+  };
+  // Prerequisites must be satisfied by a *finished* building - a construction
+  // site does not unlock anything, same rule the player plays under.
+  auto countNearCompleted = [&](int type, EnemyBase *hq) {
+    int n = 0;
+    int ownerId = hq->aiOwnerHQId;
+    for (auto *u : snap)
+      if (u->unitType == type && u->isBuilding && u->isBuildingComplete &&
+          u->energy > 0 && u->aiOwnerHQId == ownerId) n++;
     return n;
   };
 
@@ -16476,7 +16948,7 @@ void GameScene::enemyAICheckBuildings() {
         const EAIBuildDef &def = buildList[i];
         if (eaiIsWaterBuildType(def.unitType) && !mapHasWater) continue;
         if (countNear(def.unitType, hq) > 0) continue;
-        if (def.prereqType != -1 && countNear(def.prereqType, hq) == 0) continue;
+        if (def.prereqType != -1 && countNearCompleted(def.prereqType, hq) == 0) continue;
         pick = &def;
         break;
       }
@@ -16510,19 +16982,21 @@ void GameScene::enemyAICheckBuildings() {
       continue;
     }
 
-    EnemyBase *bld = buildTheBuilding(pick->unitType, bx, by, w, h,
-                                      pick->sprite, WHICH_SIDE_ENEMY, true);
-    if (!bld) {
-      log("enemyAI[build]: buildTheBuilding rejected unitType %d at tile (%d,%d)",
-          pick->unitType, bx, by);
+    EnemyBase *worker =
+        enemyAIFindBuilderWorker(getPositionFromTileCoordinate(bx, by));
+    if (worker == nullptr) {
+      log("enemyAI[build]: no available worker to build unitType %d", pick->unitType);
       continue;
     }
     addEnemyGold(-gCost);
     addEnemyLumber(-lCost);
     addEnemyOil(-oCost);
-    setAfterBuildingProcess(bld);
-    bld->aiOwnerHQId = hq->aiOwnerHQId;  // stamp ownership so it counts next pass
-    log("enemyAI[build]: built unitType %d at tile (%d,%d)", pick->unitType, bx, by);
+    // Stamp ownership on the builder; Movable::stopNew() copies it onto the
+    // building on arrival so it counts toward this HQ's caps next pass.
+    worker->aiOwnerHQId = hq->aiOwnerHQId;
+    setWorkerToBuild(worker, pick->unitType, bx, by);
+    log("enemyAI[build]: dispatched worker to build unitType %d at tile (%d,%d)",
+        pick->unitType, bx, by);
   }
 }
 

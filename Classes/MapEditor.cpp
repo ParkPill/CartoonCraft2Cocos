@@ -8,6 +8,7 @@
 #include <editor-support/spine/spine-cocos2dx.h>
 #include <editor-support/spine/SkeletonAnimation.h>
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
@@ -39,9 +40,11 @@ namespace {
 
     const char* const BTN_SKIN_NORMAL = "btnGray.png";
     const char* const BTN_SKIN_SELECTED = "btnGreen.png";
-    // btnGray.png/btnGreen.png are 267x236 with a thick hand-drawn border; this
-    // inset keeps the border/corner art intact while 9-slice-stretching the middle.
-    const Rect BTN_SKIN_CAP_INSETS(50, 50, 167, 136);
+    // btnGray.png/btnGreen.png are 267x236 with a thick hand-drawn border.
+    // 24pt insets (vs. the art's full ~50pt border) are sized so the editor's
+    // many ~48pt-tall buttons can render the corner/border art undistorted —
+    // a 9-slice needs (top+bottom inset) <= button height to avoid squashing.
+    const Rect BTN_SKIN_CAP_INSETS(24, 24, 219, 188);
 
     // HelloWorld::createUnit renders units/trees at native sprite size (scaleX=1,
     // no extra reduction) — e.g. tree2_0.png is 75x75 against a 50px tile, deliberately
@@ -130,7 +133,10 @@ namespace {
         // Not a gameplay unit — a placeable location marker. Trigger actions can
         // target a flag (or any other placed object) by id instead of typing raw
         // tile coordinates; see TriggerAction::targetObjectId.
-        {"Flag", "redFlag0.png", MapEditor::RACE_NEUTRAL, -1, "Trigger target marker only - not a unit, no HP"},
+        // spot0.png is a loose file in Resources/ (not a packed sheet frame) -
+        // createIconButton falls back to file loading, and spawnObjectAt
+        // swaps in the animated version via GM->createSpotFlagSprite().
+        {"Flag", "spot0.png", MapEditor::RACE_NEUTRAL, -1, "Trigger target marker only - not a unit, no HP. Edit it to show/hide the flag art in-game"},
         // Heroes — Spine-animated gacha units (Movable.h UNIT_HERO_*). HP/ATT
         // scale with Level instead of a flat baseHp; see ObjectTypeDef comments
         // and GameManager::getSpineFileName/getHeroSpine, which this mirrors.
@@ -140,15 +146,17 @@ namespace {
         {"Hero Spearman", "spearMan", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Lizardman", "lizard", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Archer", "archer", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
-        {"Hero Werewolf", "werewolf", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
+        // werewolf/bear/lion skeletons have no "default" skin - their single
+        // skin must be set by name (mirrors GameManager::getHeroSpine).
+        {"Hero Werewolf", "werewolf", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "werewolf"},
         {"Hero Monk", "monk", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Fighter", "fighter", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
-        {"Hero Bear", "bear", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
+        {"Hero Bear", "bear", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "bear"},
         {"Hero Healer", "healer", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Knight", "knight", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Elf Swordsman", "elfSwordMan", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Assassin", "assassin", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
-        {"Hero Lion", "lion", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
+        {"Hero Lion", "lion", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "lion"},
         {"Hero Wizard", "wizard", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Tanker", "tanker", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Skeleton", "skeleton", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
@@ -210,7 +218,7 @@ namespace {
         "Neutral - only changes hands via a trigger/event"
     };
 
-    const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource"};
+    const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource", "Unit Arrives"};
     const char* const kTriggerActionTypeNames[] = {
         "Display Message", "Create Unit", "Remove Unit", "Set Switch",
         "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog",
@@ -297,8 +305,14 @@ namespace {
         Scale9Sprite* normal = makeButtonSkin(BTN_SKIN_NORMAL, Size(size, size));
         Scale9Sprite* selected = makeButtonSkin(BTN_SKIN_SELECTED, Size(size, size));
 
-        Sprite* iconNormal = Sprite::createWithSpriteFrameName(spriteFrameName);
-        Sprite* iconSelected = Sprite::createWithSpriteFrameName(spriteFrameName);
+        // Most icons come from the packed sheets, but a few (the Flag marker's
+        // spot0.png) are loose files in Resources/ - fall back to file loading
+        // when the name isn't a cached sprite frame.
+        bool isSheetFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(spriteFrameName) != nullptr;
+        Sprite* iconNormal = isSheetFrame ? Sprite::createWithSpriteFrameName(spriteFrameName)
+                                          : Sprite::create(spriteFrameName);
+        Sprite* iconSelected = isSheetFrame ? Sprite::createWithSpriteFrameName(spriteFrameName)
+                                            : Sprite::create(spriteFrameName);
         float maxIconSize = size * 0.7f;
         float iconScale = std::min(maxIconSize / iconNormal->getContentSize().width,
                                     maxIconSize / iconNormal->getContentSize().height);
@@ -321,8 +335,20 @@ namespace {
     spine::SkeletonAnimation* createHeroSpine(const std::string& spineBase, const std::string& spineSkin) {
         spine::SkeletonAnimation* spt = spine::SkeletonAnimation::createWithJsonFile(
             StringUtils::format("%s.json", spineBase.c_str()), StringUtils::format("%s.atlas", spineBase.c_str()), 1);
+        bool skinApplied = false;
         if (!spineSkin.empty()) {
-            spt->setSkin(spineSkin);
+            skinApplied = spt->setSkin(spineSkin);
+        }
+        if (!skinApplied) {
+            // Skeletons exported without a "default" skin (werewolf/bear/lion)
+            // render nothing until a skin is attached, and setSkin with a name
+            // the skeleton doesn't have (the crazy_* variants - those skins
+            // aren't in the current exports) is a silent no-op. Either way,
+            // attach the skeleton's first named skin so the unit is visible.
+            spSkeleton* skeleton = spt->getSkeleton();
+            if (!skeleton->data->defaultSkin && skeleton->data->skinsCount > 0) {
+                spt->setSkin(skeleton->data->skins[0]->name);
+            }
         }
         spt->setAnimation(0, "idle", true);
         // Force one pose update so getBoundingBox() (used by callers to fit the
@@ -435,6 +461,7 @@ bool MapEditor::init() {
     setupUnitPropertiesBar();
     setupPaletteTooltip();
     setupTriggerToolsRow();
+    setupMoveToolsRow();
     setupMainTabs();
     setupModalDimmer();
     setupNewMapPanel();
@@ -481,6 +508,7 @@ void MapEditor::buildMap(int width, int height) {
         objectRoot = nullptr;
     }
     placedObjects.clear();
+    clearSelection();
     nextObjectId = 1;
     triggers.clear();
     selectedTriggerIndex = -1;
@@ -680,7 +708,7 @@ Color3B MapEditor::colorForSide(int side) const {
     }
 }
 
-Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id, int level) {
+Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id, int level, bool visible) {
     Vec2 pos = Vec2(x * MAP_TILE_SIZE + MAP_TILE_SIZE / 2.0f, -(y * MAP_TILE_SIZE) - MAP_TILE_SIZE / 2.0f);
     const ObjectTypeDef& def = kObjectTypes[typeIndex];
     Node* spt;
@@ -688,6 +716,10 @@ Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, in
         spine::SkeletonAnimation* hero = createHeroSpine(def.spriteFrame, def.spineSkin);
         hero->setScale(0.5f); // matches real in-game hero scale, Movable.cpp
         spt = hero;
+    } else if (strcmp(def.name, "Flag") == 0) {
+        Sprite* regular = GM->createSpotFlagSprite();
+        regular->setScale(OBJECT_SPRITE_SCALE);
+        spt = regular;
     } else {
         Sprite* regular = Sprite::createWithSpriteFrameName(def.spriteFrame);
         regular->setScale(OBJECT_SPRITE_SCALE);
@@ -695,6 +727,9 @@ Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, in
     }
     spt->setPosition(pos);
     spt->setColor(colorForSide(side));
+    // Runtime-hidden flags stay visible in the editor (they must remain
+    // clickable/editable) but render dimmed so the setting is obvious.
+    spt->setOpacity(visible ? 255 : 110);
     objectRoot->addChild(spt);
 
     if (id < 0) {
@@ -712,6 +747,7 @@ Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, in
     obj.hp = hp;
     obj.id = id;
     obj.level = std::max(1, level);
+    obj.visible = visible;
     placedObjects.push_back(obj);
     return spt;
 }
@@ -764,6 +800,7 @@ void MapEditor::eraseObjectAt(const Vec2& worldPos) {
     int oldSide = placedObjects[idx].side;
     int oldHp = placedObjects[idx].hp;
     int oldLevel = placedObjects[idx].level;
+    bool oldVisible = placedObjects[idx].visible;
     removeObjectAtIndex(idx);
 
     if (strokeActive && currentStroke.type == ACTION_OBJECT) {
@@ -775,6 +812,7 @@ void MapEditor::eraseObjectAt(const Vec2& worldPos) {
         change.oldSide = oldSide;
         change.oldHp = oldHp;
         change.oldLevel = oldLevel;
+        change.oldVisible = oldVisible;
         change.hasObject = false;
         change.newType = -1;
         change.newSide = -1;
@@ -801,6 +839,494 @@ void MapEditor::clearAllObjects() {
         obj.sprite->removeFromParent();
     }
     placedObjects.clear();
+}
+
+bool MapEditor::isValidMoveTarget(int objectIndex, int x, int y) const {
+    if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+        return false;
+    }
+    int occupant = findObjectAt(x, y);
+    if (occupant >= 0 && occupant != objectIndex) {
+        return false;
+    }
+    const PlacedObject& obj = placedObjects[objectIndex];
+    if (kObjectTypes[obj.typeIndex].requiresWater && terrainAt(x, y) != TERRAIN_WATER) {
+        return false;
+    }
+    return true;
+}
+
+bool MapEditor::isValidGroupMoveTarget(int objectIndex, int x, int y,
+                                       const std::vector<int>& group) const {
+    if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+        return false;
+    }
+    int occupant = findObjectAt(x, y);
+    if (occupant >= 0 && occupant != objectIndex) {
+        // A cell being vacated by another member of the same drag counts as
+        // free - every member shifts by the same tile delta, so two members
+        // can never land on the same cell.
+        if (std::find(group.begin(), group.end(), occupant) == group.end()) {
+            return false;
+        }
+    }
+    const PlacedObject& obj = placedObjects[objectIndex];
+    if (kObjectTypes[obj.typeIndex].requiresWater && terrainAt(x, y) != TERRAIN_WATER) {
+        return false;
+    }
+    return true;
+}
+
+int MapEditor::objectIndexById(int id) const {
+    for (size_t i = 0; i < placedObjects.size(); i++) {
+        if (placedObjects[i].id == id) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+bool MapEditor::isObjectIdSelected(int id) const {
+    return std::find(selectedObjectIds.begin(), selectedObjectIds.end(), id) != selectedObjectIds.end();
+}
+
+void MapEditor::clearSelection() {
+    selectedObjectIds.clear();
+    if (selectionOverlay) {
+        selectionOverlay->clear();
+    }
+}
+
+void MapEditor::refreshSelectionOverlay() {
+    if (!selectionOverlay) {
+        selectionOverlay = DrawNode::create();
+        mapRoot->addChild(selectionOverlay, 2); // above objectRoot (z=1)
+    }
+    selectionOverlay->clear();
+    // Draw a box around each still-existing selected object; prune ids whose
+    // object is gone (erased in the Units tab, removed by undo, ...).
+    std::vector<int> alive;
+    alive.reserve(selectedObjectIds.size());
+    for (int id : selectedObjectIds) {
+        int idx = objectIndexById(id);
+        if (idx < 0) {
+            continue;
+        }
+        alive.push_back(id);
+        const PlacedObject& obj = placedObjects[idx];
+        Rect bb = obj.sprite->getBoundingBox();
+        if (bb.size.width < 8 || bb.size.height < 8) {
+            // Hero spine nodes can report a degenerate box - fall back to the
+            // sprite position so the highlight still lands on the unit even
+            // mid-drag (tileX/tileY only update on drop).
+            Vec2 p = obj.sprite->getPosition();
+            bb = Rect(p.x - MAP_TILE_SIZE / 2.0f, p.y - MAP_TILE_SIZE / 2.0f,
+                      MAP_TILE_SIZE, MAP_TILE_SIZE);
+        }
+        selectionOverlay->drawRect(bb.origin, bb.origin + bb.size,
+                                   Color4F(0.25f, 1.0f, 0.35f, 0.9f));
+    }
+    if (alive.size() != selectedObjectIds.size()) {
+        selectedObjectIds = alive;
+    }
+}
+
+void MapEditor::beginBandSelect(const Vec2& worldPos, bool additive) {
+    isBandSelecting = true;
+    bandSelectAdditive = additive;
+    bandSelectStartPos = worldPos;
+    if (!bandSelectRect) {
+        bandSelectRect = DrawNode::create();
+        this->addChild(bandSelectRect, 9); // below the toolbar UI (z >= 10)
+    }
+    bandSelectRect->clear();
+    bandSelectRect->setVisible(true);
+}
+
+void MapEditor::updateBandSelect(const Vec2& worldPos) {
+    if (!isBandSelecting || !bandSelectRect) {
+        return;
+    }
+    Vec2 lo(std::min(bandSelectStartPos.x, worldPos.x), std::min(bandSelectStartPos.y, worldPos.y));
+    Vec2 hi(std::max(bandSelectStartPos.x, worldPos.x), std::max(bandSelectStartPos.y, worldPos.y));
+    bandSelectRect->clear();
+    bandSelectRect->drawSolidRect(lo, hi, Color4F(0.25f, 1.0f, 0.35f, 0.10f));
+    bandSelectRect->drawRect(lo, hi, Color4F(0.25f, 1.0f, 0.35f, 0.9f));
+}
+
+void MapEditor::endBandSelect(const Vec2& worldPos) {
+    if (!isBandSelecting) {
+        return;
+    }
+    isBandSelecting = false;
+    if (bandSelectRect) {
+        bandSelectRect->clear();
+        bandSelectRect->setVisible(false);
+    }
+    // A no-drag click on empty ground clears the selection (unless Shift-held,
+    // which means "I'm adding, don't wipe what I have").
+    if (worldPos.distance(bandSelectStartPos) < 8.0f) {
+        if (!bandSelectAdditive) {
+            clearSelection();
+        }
+        return;
+    }
+    Vec2 a = mapRoot->convertToNodeSpace(bandSelectStartPos);
+    Vec2 b = mapRoot->convertToNodeSpace(worldPos);
+    Rect band(std::min(a.x, b.x), std::min(a.y, b.y), fabsf(b.x - a.x), fabsf(b.y - a.y));
+    if (!bandSelectAdditive) {
+        selectedObjectIds.clear();
+    }
+    for (const PlacedObject& obj : placedObjects) {
+        if (!band.intersectsRect(obj.sprite->getBoundingBox())) {
+            continue;
+        }
+        if (!isObjectIdSelected(obj.id)) {
+            selectedObjectIds.push_back(obj.id);
+        }
+    }
+    refreshSelectionOverlay();
+    setStatus(StringUtils::format("%d unit(s) selected", static_cast<int>(selectedObjectIds.size())));
+}
+
+void MapEditor::selectAllOfSameType(int objectIndex) {
+    if (objectIndex < 0 || objectIndex >= static_cast<int>(placedObjects.size())) {
+        return;
+    }
+    const PlacedObject& ref = placedObjects[objectIndex];
+    selectedObjectIds.clear();
+    for (const PlacedObject& obj : placedObjects) {
+        if (obj.typeIndex == ref.typeIndex && obj.side == ref.side) {
+            selectedObjectIds.push_back(obj.id);
+        }
+    }
+    refreshSelectionOverlay();
+    setStatus(StringUtils::format("Selected all %s: %d unit(s)",
+                                  kObjectTypes[ref.typeIndex].name,
+                                  static_cast<int>(selectedObjectIds.size())));
+}
+
+bool MapEditor::handleSelectionClick(int objectIndex) {
+    int id = placedObjects[objectIndex].id;
+    long long nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    bool isDoubleClick = (id == lastClickedObjectId) && (nowMs - lastObjectClickMs < 400);
+    lastObjectClickMs = nowMs;
+    lastClickedObjectId = id;
+
+    if (isDoubleClick) {
+        selectAllOfSameType(objectIndex);
+        // Reset so a triple-click reads as a fresh click on a selected unit
+        // (which opens the batch editor) instead of another double-click.
+        lastClickedObjectId = -1;
+        movePressOpensPanel = false;
+        return true;
+    }
+    if (shiftDown) {
+        // Shift+click toggles membership, RTS-style.
+        auto it = std::find(selectedObjectIds.begin(), selectedObjectIds.end(), id);
+        if (it != selectedObjectIds.end()) {
+            selectedObjectIds.erase(it);
+        } else {
+            selectedObjectIds.push_back(id);
+        }
+        refreshSelectionOverlay();
+        setStatus(StringUtils::format("%d unit(s) selected", static_cast<int>(selectedObjectIds.size())));
+        movePressOpensPanel = false;
+        return true;
+    }
+    if (!isObjectIdSelected(id)) {
+        // First click on an unselected unit only selects it; clicking it
+        // again (or any other selected unit) opens the property editor.
+        selectedObjectIds.assign(1, id);
+        refreshSelectionOverlay();
+        setStatus(StringUtils::format("%s (ID %d) selected - click again to edit",
+                                      kObjectTypes[placedObjects[objectIndex].typeIndex].name, id));
+        movePressOpensPanel = false;
+    } else {
+        movePressOpensPanel = true;
+    }
+    return false;
+}
+
+void MapEditor::beginMoveDrag(const Vec2& worldPos) {
+    movingObjectIndex = findObjectAtWorldPos(worldPos);
+    moveDragStarted = false;
+    moveDragStartPos = worldPos;
+    groupDragIndices.clear();
+    groupDragOrigSpritePositions.clear();
+    if (movingObjectIndex >= 0) {
+        moveDragOrigSpritePos = placedObjects[movingObjectIndex].sprite->getPosition();
+        // Grabbing a unit that is part of a multi-selection drags the whole
+        // selection together; grabbing anything else drags just that unit.
+        if (selectedObjectIds.size() > 1 &&
+            isObjectIdSelected(placedObjects[movingObjectIndex].id)) {
+            for (int id : selectedObjectIds) {
+                int idx = objectIndexById(id);
+                if (idx >= 0) {
+                    groupDragIndices.push_back(idx);
+                    groupDragOrigSpritePositions.push_back(placedObjects[idx].sprite->getPosition());
+                }
+            }
+        }
+    }
+}
+
+void MapEditor::updateMoveDrag(const Vec2& worldPos) {
+    if (movingObjectIndex < 0) {
+        return;
+    }
+    // Don't commit to a drag until the cursor clearly travels — a plain click
+    // must survive small hand jitter so it still opens the property editor.
+    constexpr float kDragThreshold = 12.0f;
+    if (!moveDragStarted && worldPos.distance(moveDragStartPos) < kDragThreshold) {
+        return;
+    }
+    moveDragStarted = true;
+
+    PlacedObject& obj = placedObjects[movingObjectIndex];
+    int x, y;
+    bool inMap = worldToCell(worldPos, x, y);
+
+    if (!groupDragIndices.empty()) {
+        // Group preview: every member keeps its original tile offset from the
+        // grabbed unit; per-member red tint for cells that would reject the
+        // drop. tileX/tileY stay untouched until the drop commits, so the
+        // occupancy checks below still see the original layout.
+        if (inMap) {
+            int dTx = x - obj.tileX;
+            int dTy = y - obj.tileY;
+            Vec2 spriteDelta(dTx * MAP_TILE_SIZE, -dTy * MAP_TILE_SIZE);
+            for (size_t i = 0; i < groupDragIndices.size(); i++) {
+                PlacedObject& member = placedObjects[groupDragIndices[i]];
+                member.sprite->setPosition(groupDragOrigSpritePositions[i] + spriteDelta);
+                bool ok = isValidGroupMoveTarget(groupDragIndices[i],
+                                                 member.tileX + dTx, member.tileY + dTy,
+                                                 groupDragIndices);
+                member.sprite->setColor(ok ? colorForSide(member.side) : Color3B(255, 60, 60));
+            }
+        } else {
+            Vec2 freeDelta = mapRoot->convertToNodeSpace(worldPos) - moveDragOrigSpritePos;
+            for (size_t i = 0; i < groupDragIndices.size(); i++) {
+                PlacedObject& member = placedObjects[groupDragIndices[i]];
+                member.sprite->setPosition(groupDragOrigSpritePositions[i] + freeDelta);
+                member.sprite->setColor(Color3B(255, 60, 60));
+            }
+        }
+        refreshSelectionOverlay();
+        return;
+    }
+
+    if (inMap && isValidMoveTarget(movingObjectIndex, x, y)) {
+        // Legal drop cell: preview by snapping to its center, normal tint.
+        obj.sprite->setPosition(Vec2(x * MAP_TILE_SIZE + MAP_TILE_SIZE / 2.0f,
+                                     -(y * MAP_TILE_SIZE) - MAP_TILE_SIZE / 2.0f));
+        obj.sprite->setColor(colorForSide(obj.side));
+    } else {
+        // Illegal (out of bounds / occupied / wrong terrain): follow the cursor
+        // and tint red so the user sees the drop would be rejected.
+        obj.sprite->setPosition(mapRoot->convertToNodeSpace(worldPos));
+        obj.sprite->setColor(Color3B(255, 60, 60));
+    }
+    refreshSelectionOverlay();
+}
+
+void MapEditor::endMoveDrag(const Vec2& worldPos) {
+    int idx = movingObjectIndex;
+    movingObjectIndex = -1;
+    std::vector<int> group = groupDragIndices;
+    std::vector<Vec2> groupOrig = groupDragOrigSpritePositions;
+    groupDragIndices.clear();
+    groupDragOrigSpritePositions.clear();
+    if (idx < 0) {
+        return;
+    }
+
+    if (!moveDragStarted) {
+        // Plain click: inspect/edit, same as the Trigger tab. Only opens when
+        // the pressed unit was already selected (movePressOpensPanel; the
+        // touch path always sets it, keeping the old tap-to-edit behavior).
+        if (movePressOpensPanel) {
+            if (selectedObjectIds.size() > 1 && isObjectIdSelected(placedObjects[idx].id)) {
+                openEditUnitPanelForSelection();
+            } else {
+                openEditUnitPanel(idx);
+            }
+        }
+        return;
+    }
+    moveDragStarted = false;
+
+    if (!group.empty()) {
+        // ---- group drop ----
+        auto revertAll = [&]() {
+            for (size_t i = 0; i < group.size(); i++) {
+                PlacedObject& member = placedObjects[group[i]];
+                member.sprite->setPosition(groupOrig[i]);
+                member.sprite->setColor(colorForSide(member.side));
+            }
+            refreshSelectionOverlay();
+        };
+        PlacedObject& anchor = placedObjects[idx];
+        int x, y;
+        if (!worldToCell(worldPos, x, y) || (x == anchor.tileX && y == anchor.tileY)) {
+            revertAll();
+            return;
+        }
+        int dTx = x - anchor.tileX;
+        int dTy = y - anchor.tileY;
+        for (int gi : group) {
+            const PlacedObject& member = placedObjects[gi];
+            if (!isValidGroupMoveTarget(gi, member.tileX + dTx, member.tileY + dTy, group)) {
+                revertAll();
+                setStatus("Cannot move there");
+                return;
+            }
+        }
+
+        // One undo step for the whole formation: all vacates first, then all
+        // arrivals. Together with the id-guard in applyObjectChange this
+        // replays safely even when one member's destination is another
+        // member's source cell.
+        beginStroke(ACTION_OBJECT);
+        for (int gi : group) {
+            const PlacedObject& member = placedObjects[gi];
+            ObjectCellChange from;
+            from.x = member.tileX;
+            from.y = member.tileY;
+            from.hadObject = true;
+            from.oldType = member.typeIndex;
+            from.oldSide = member.side;
+            from.oldHp = member.hp;
+            from.oldLevel = member.level;
+            from.oldVisible = member.visible;
+            from.hasObject = false;
+            from.newType = -1;
+            from.newSide = -1;
+            from.newHp = -1;
+            from.newLevel = 1;
+            from.id = member.id;
+            currentStroke.objectChanges.push_back(from);
+        }
+        for (int gi : group) {
+            const PlacedObject& member = placedObjects[gi];
+            ObjectCellChange to;
+            to.x = member.tileX + dTx;
+            to.y = member.tileY + dTy;
+            to.hadObject = false;
+            to.oldType = -1;
+            to.oldSide = -1;
+            to.oldHp = -1;
+            to.oldLevel = 1;
+            to.hasObject = true;
+            to.newType = member.typeIndex;
+            to.newSide = member.side;
+            to.newHp = member.hp;
+            to.newLevel = member.level;
+            to.newVisible = member.visible;
+            to.id = member.id;
+            currentStroke.objectChanges.push_back(to);
+        }
+        endStroke();
+
+        for (int gi : group) {
+            PlacedObject& member = placedObjects[gi];
+            member.tileX += dTx;
+            member.tileY += dTy;
+            member.sprite->setPosition(Vec2(member.tileX * MAP_TILE_SIZE + MAP_TILE_SIZE / 2.0f,
+                                            -(member.tileY * MAP_TILE_SIZE) - MAP_TILE_SIZE / 2.0f));
+            member.sprite->setColor(colorForSide(member.side));
+        }
+        refreshSelectionOverlay();
+        setStatus(StringUtils::format("Moved %d units", static_cast<int>(group.size())));
+        return;
+    }
+
+    PlacedObject& obj = placedObjects[idx];
+    obj.sprite->setColor(colorForSide(obj.side));
+
+    int x, y;
+    bool inMap = worldToCell(worldPos, x, y);
+    if (!inMap || (x == obj.tileX && y == obj.tileY)) {
+        obj.sprite->setPosition(moveDragOrigSpritePos);
+        refreshSelectionOverlay();
+        return;
+    }
+    if (!isValidMoveTarget(idx, x, y)) {
+        obj.sprite->setPosition(moveDragOrigSpritePos);
+        refreshSelectionOverlay();
+        setStatus("Cannot move there");
+        return;
+    }
+
+    // Record the move as one undo step: the source cell loses the object and
+    // the destination gains it, both carrying the object's id so undo/redo
+    // preserves identity (trigger targetObjectId references stay valid).
+    beginStroke(ACTION_OBJECT);
+    ObjectCellChange from;
+    from.x = obj.tileX;
+    from.y = obj.tileY;
+    from.hadObject = true;
+    from.oldType = obj.typeIndex;
+    from.oldSide = obj.side;
+    from.oldHp = obj.hp;
+    from.oldLevel = obj.level;
+    from.oldVisible = obj.visible;
+    from.hasObject = false;
+    from.newType = -1;
+    from.newSide = -1;
+    from.newHp = -1;
+    from.newLevel = 1;
+    from.id = obj.id;
+    currentStroke.objectChanges.push_back(from);
+    ObjectCellChange to;
+    to.x = x;
+    to.y = y;
+    to.hadObject = false;
+    to.oldType = -1;
+    to.oldSide = -1;
+    to.oldHp = -1;
+    to.oldLevel = 1;
+    to.hasObject = true;
+    to.newType = obj.typeIndex;
+    to.newSide = obj.side;
+    to.newHp = obj.hp;
+    to.newLevel = obj.level;
+    to.newVisible = obj.visible;
+    to.id = obj.id;
+    currentStroke.objectChanges.push_back(to);
+    endStroke();
+
+    obj.tileX = x;
+    obj.tileY = y;
+    obj.sprite->setPosition(Vec2(x * MAP_TILE_SIZE + MAP_TILE_SIZE / 2.0f,
+                                 -(y * MAP_TILE_SIZE) - MAP_TILE_SIZE / 2.0f));
+    refreshSelectionOverlay();
+    setStatus(StringUtils::format("Moved %s to (%d, %d)", kObjectTypes[obj.typeIndex].name, x, y));
+}
+
+void MapEditor::cancelMoveDrag() {
+    if (movingObjectIndex < 0) {
+        groupDragIndices.clear();
+        groupDragOrigSpritePositions.clear();
+        return;
+    }
+    if (!groupDragIndices.empty()) {
+        for (size_t i = 0; i < groupDragIndices.size(); i++) {
+            PlacedObject& member = placedObjects[groupDragIndices[i]];
+            member.sprite->setPosition(groupDragOrigSpritePositions[i]);
+            member.sprite->setColor(colorForSide(member.side));
+        }
+    } else {
+        PlacedObject& obj = placedObjects[movingObjectIndex];
+        obj.sprite->setPosition(moveDragOrigSpritePos);
+        obj.sprite->setColor(colorForSide(obj.side));
+    }
+    movingObjectIndex = -1;
+    moveDragStarted = false;
+    groupDragIndices.clear();
+    groupDragOrigSpritePositions.clear();
+    refreshSelectionOverlay();
 }
 
 void MapEditor::beginStroke(ActionType type) {
@@ -837,15 +1363,23 @@ void MapEditor::applyObjectChange(const ObjectCellChange& change, bool useNew) {
     int side = useNew ? change.newSide : change.oldSide;
     int hp = useNew ? change.newHp : change.oldHp;
     int level = useNew ? change.newLevel : change.oldLevel;
+    bool visible = useNew ? change.newVisible : change.oldVisible;
     int idx = findObjectAt(change.x, change.y);
 
     if (shouldHave) {
         if (idx >= 0) {
             removeObjectAtIndex(idx);
         }
-        spawnObjectAt(change.x, change.y, type, side, hp, -1, level);
+        spawnObjectAt(change.x, change.y, type, side, hp, change.id, level, visible);
     } else if (idx >= 0) {
-        removeObjectAtIndex(idx);
+        // Identity guard for replayed group moves: when one member's source is
+        // another member's destination, this cell can transiently hold a
+        // *different* unit than the one this change recorded - removing it
+        // here would delete a unit an earlier change just respawned. Changes
+        // without an id (paint/erase strokes) keep the old cell-based behavior.
+        if (change.id < 0 || placedObjects[idx].id == change.id) {
+            removeObjectAtIndex(idx);
+        }
     }
 }
 
@@ -859,6 +1393,9 @@ void MapEditor::undo() {
     if (undoStack.empty()) {
         return;
     }
+    // Undo re-spawns objects and shifts placedObjects indices, so a move drag
+    // in progress (Ctrl+Z while the mouse button is held) must let go first.
+    cancelMoveDrag();
     UndoAction action = undoStack.back();
     undoStack.pop_back();
 
@@ -874,6 +1411,7 @@ void MapEditor::undo() {
 
     redoStack.push_back(action);
     isDirty = true;
+    refreshSelectionOverlay(); // selected objects may have moved or vanished
     setStatus("Undo");
 }
 
@@ -881,6 +1419,8 @@ void MapEditor::redo() {
     if (redoStack.empty()) {
         return;
     }
+    cancelMoveDrag(); // same index-invalidation concern as undo()
+
     UndoAction action = redoStack.back();
     redoStack.pop_back();
 
@@ -896,6 +1436,7 @@ void MapEditor::redo() {
 
     undoStack.push_back(action);
     isDirty = true;
+    refreshSelectionOverlay(); // selected objects may have moved or vanished
     setStatus("Redo");
 }
 
@@ -1308,40 +1849,58 @@ Rect MapEditor::paletteSlotWorldRect(int slot) const {
     return Rect(worldOrigin.x, worldOrigin.y, worldTopRight.x - worldOrigin.x, worldTopRight.y - worldOrigin.y);
 }
 
-void MapEditor::updatePaletteTooltip(const Vec2& worldPos) {
+void MapEditor::updateHoverTooltip(const Vec2& worldPos) {
     if (!paletteTooltip) {
         return;
     }
-    if (currentMainTab != TAB_UNITS || isAnyModalOpen()) {
+    // Hide while any drag/paint/pan interaction is in flight — a tooltip
+    // popping up mid-stroke is distracting and can sit on stale data.
+    if (isAnyModalOpen() || isPainting || isPanning || isBandSelecting || movingObjectIndex >= 0) {
         paletteTooltip->setVisible(false);
         return;
     }
-    for (size_t slot = 0; slot < currentRaceUnitIndices.size(); slot++) {
-        Rect rect = paletteSlotWorldRect(static_cast<int>(slot));
-        if (!rect.containsPoint(worldPos)) {
-            continue;
+    if (currentMainTab == TAB_UNITS) {
+        for (size_t slot = 0; slot < currentRaceUnitIndices.size(); slot++) {
+            Rect rect = paletteSlotWorldRect(static_cast<int>(slot));
+            if (!rect.containsPoint(worldPos)) {
+                continue;
+            }
+            showHoverTooltip(paletteTooltipText(currentRaceUnitIndices[slot]),
+                             Vec2(rect.origin.x, rect.getMaxY()));
+            return;
         }
-        paletteTooltipLabel->setString(paletteTooltipText(currentRaceUnitIndices[slot]));
-
-        const float paddingX = 12;
-        const float paddingY = 10;
-        Size textSize = paletteTooltipLabel->getContentSize();
-        Size bgSize(textSize.width + paddingX * 2, textSize.height + paddingY * 2);
-
-        paletteTooltipBg->clear();
-        paletteTooltipBg->drawSolidRect(Vec2::ZERO, Vec2(bgSize.width, bgSize.height), Color4F(0, 0, 0, 0.85f));
-        paletteTooltipLabel->setPosition(Vec2(paddingX, bgSize.height - paddingY));
-
-        Size visibleSize = Director::getInstance()->getVisibleSize();
-        Vec2 pos(rect.origin.x, rect.getMaxY() + 8);
-        pos.x = std::max(4.0f, std::min(pos.x, visibleSize.width - bgSize.width - 4.0f));
-        pos.y = std::min(pos.y, visibleSize.height - bgSize.height - 4.0f);
-
-        paletteTooltip->setPosition(pos);
-        paletteTooltip->setVisible(true);
+    }
+    int objectIndex = findObjectAtWorldPos(worldPos);
+    if (objectIndex >= 0) {
+        const PlacedObject& obj = placedObjects[objectIndex];
+        std::string text = StringUtils::format("%s\nID: %d", kObjectTypes[obj.typeIndex].name, obj.id);
+        Rect box = obj.sprite->getBoundingBox(); // mapRoot space
+        Vec2 anchor = mapRoot->convertToWorldSpace(Vec2(box.getMinX(), box.getMaxY()));
+        showHoverTooltip(text, anchor);
         return;
     }
     paletteTooltip->setVisible(false);
+}
+
+void MapEditor::showHoverTooltip(const std::string& text, const Vec2& anchorWorldPos) {
+    paletteTooltipLabel->setString(text);
+
+    const float paddingX = 12;
+    const float paddingY = 10;
+    Size textSize = paletteTooltipLabel->getContentSize();
+    Size bgSize(textSize.width + paddingX * 2, textSize.height + paddingY * 2);
+
+    paletteTooltipBg->clear();
+    paletteTooltipBg->drawSolidRect(Vec2::ZERO, Vec2(bgSize.width, bgSize.height), Color4F(0, 0, 0, 0.85f));
+    paletteTooltipLabel->setPosition(Vec2(paddingX, bgSize.height - paddingY));
+
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 pos(anchorWorldPos.x, anchorWorldPos.y + 8);
+    pos.x = std::max(4.0f, std::min(pos.x, visibleSize.width - bgSize.width - 4.0f));
+    pos.y = std::max(4.0f, std::min(pos.y, visibleSize.height - bgSize.height - 4.0f));
+
+    paletteTooltip->setPosition(pos);
+    paletteTooltip->setVisible(true);
 }
 
 void MapEditor::setupTriggerToolsRow() {
@@ -1364,11 +1923,25 @@ void MapEditor::setupTriggerToolsRow() {
     triggerToolsRow->addChild(hintLabel);
 }
 
+void MapEditor::setupMoveToolsRow() {
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+
+    moveToolsRow = Node::create();
+    this->addChild(moveToolsRow, 10);
+
+    Label* hintLabel = LM->getLocalizedLabel(
+        "Drag a placed unit to move it to another tile. A plain click opens its property editor.",
+        Color4B::WHITE, 20);
+    hintLabel->setAnchorPoint(Vec2(0, 0.5f));
+    hintLabel->setPosition(Vec2(20, visibleSize.height - 105));
+    moveToolsRow->addChild(hintLabel);
+}
+
 void MapEditor::setupMainTabs() {
     Size visibleSize = Director::getInstance()->getVisibleSize();
 
-    const char* const kMainTabNames[] = {"Terrain", "Units", "Trigger"};
-    const int kMainTabCount = 3;
+    const char* const kMainTabNames[] = {"Terrain", "Units", "Trigger", "Move"};
+    const int kMainTabCount = 4;
     const float tabW = 150;
     const float tabH = 56;
 
@@ -1394,17 +1967,30 @@ void MapEditor::selectMainTab(int tab) {
     terrainToolsRow->setVisible(tab == TAB_TERRAIN);
     unitToolsRow->setVisible(tab == TAB_UNITS);
     triggerToolsRow->setVisible(tab == TAB_TRIGGER);
+    moveToolsRow->setVisible(tab == TAB_MOVE);
     if (paletteTooltip) {
         paletteTooltip->setVisible(false);
     }
 
     // Switching into Terrain/Units implies "I want to use this tool" — arm it,
-    // matching the existing per-race tab behavior. Trigger has no default tool
-    // (Open Trigger Editor isn't a placement tool; Flag must be picked explicitly).
+    // matching the existing per-race tab behavior. Trigger and Move have no
+    // default tool to arm (they act on already-placed units, not the palette).
     if (tab == TAB_TERRAIN) {
         selectBrush(currentBrush);
     } else if (tab == TAB_UNITS) {
         selectRace(currentRaceTab);
+    }
+
+    // The multi-selection only means something in the Trigger/Move tabs (it
+    // survives switching between those two); drop it elsewhere so the overlay
+    // doesn't linger over terrain painting.
+    if (tab != TAB_TRIGGER && tab != TAB_MOVE) {
+        clearSelection();
+    }
+    isBandSelecting = false;
+    if (bandSelectRect) {
+        bandSelectRect->clear();
+        bandSelectRect->setVisible(false);
     }
 }
 
@@ -1657,6 +2243,30 @@ void MapEditor::setupEditUnitPanel() {
     rowEditLevel->addChild(tfEditLevel);
     watchTextFieldFocus(tfEditLevel);
 
+    // Flags only: shown in place of HP (a Flag has none). Controls whether
+    // the flag art is rendered at runtime; hidden flags remain trigger targets.
+    rowEditVisible = Node::create();
+    editUnitPanel->addChild(rowEditVisible);
+
+    Label* visibleLabel = LM->getLocalizedLabel("Visible:", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 22);
+    visibleLabel->setAnchorPoint(Vec2(0, 0.5f));
+    visibleLabel->setPosition(Vec2(40, panelHeight - 165));
+    rowEditVisible->addChild(visibleLabel);
+
+    const char* kVisibleNames[] = {"Show", "Hide"};
+    Vector<MenuItem*> visibleItems;
+    editVisibleButtonBgs.assign(2, nullptr);
+    for (int v = 0; v < 2; v++) {
+        Scale9Sprite* bg = nullptr;
+        MenuItemSprite* item = createTextButton(kVisibleNames[v], sideBtnW, sideBtnH, [this, v](Ref*) { selectEditVisible(v); }, &bg);
+        item->setPosition(Vec2(v * (sideBtnW + 8), 0));
+        visibleItems.pushBack(item);
+        editVisibleButtonBgs[v] = bg;
+    }
+    Menu* visibleMenu = Menu::createWithArray(visibleItems);
+    visibleMenu->setPosition(Vec2(200, panelHeight - 165));
+    rowEditVisible->addChild(visibleMenu);
+
     const float confirmBtnW = 150;
     const float confirmBtnH = 56;
     MenuItemSprite* itemApply = createTextButton("Apply", confirmBtnW, confirmBtnH, [this](Ref*) { onConfirmEditUnit(); });
@@ -1673,6 +2283,7 @@ void MapEditor::openEditUnitPanel(int objectIndex) {
         return;
     }
     editingObjectIndex = objectIndex;
+    editingObjectIds.assign(1, placedObjects[objectIndex].id);
     const PlacedObject& obj = placedObjects[objectIndex];
 
     editUnitTitle->setString(StringUtils::format("Edit Unit: %s (ID %d)", kObjectTypes[obj.typeIndex].name, obj.id));
@@ -1685,8 +2296,11 @@ void MapEditor::openEditUnitPanel(int objectIndex) {
     }
 
     bool isHero = kObjectTypes[obj.typeIndex].isHero;
-    rowEditHp->setVisible(!isHero);
+    bool isFlag = strcmp(kObjectTypes[obj.typeIndex].name, "Flag") == 0;
+    rowEditHp->setVisible(!isHero && !isFlag);
     rowEditLevel->setVisible(isHero);
+    rowEditVisible->setVisible(isFlag);
+    selectEditVisible(obj.visible ? 0 : 1);
     tfEditLevel->setString(StringUtils::format("%d", obj.level));
 
     editUnitPanel->setVisible(true);
@@ -1698,7 +2312,56 @@ void MapEditor::closeEditUnitPanel() {
     editUnitPanel->setVisible(false);
     isEditUnitPanelOpen = false;
     editingObjectIndex = -1;
+    editingObjectIds.clear();
     setModalDimmerVisible(false);
+}
+
+void MapEditor::openEditUnitPanelForSelection() {
+    // Prune the selection to objects that still exist before deciding
+    // between the classic single editor and the batch editor.
+    std::vector<int> ids;
+    for (int id : selectedObjectIds) {
+        if (objectIndexById(id) >= 0) {
+            ids.push_back(id);
+        }
+    }
+    if (ids.empty()) {
+        return;
+    }
+    if (ids.size() == 1) {
+        openEditUnitPanel(objectIndexById(ids[0]));
+        return;
+    }
+
+    editingObjectIds = ids;
+    editingObjectIndex = objectIndexById(ids[0]);
+
+    bool anyHero = false;
+    bool anyNonHero = false;
+    for (int id : ids) {
+        const PlacedObject& obj = placedObjects[objectIndexById(id)];
+        if (kObjectTypes[obj.typeIndex].isHero) {
+            anyHero = true;
+        } else {
+            anyNonHero = true;
+        }
+    }
+
+    editUnitTitle->setString(StringUtils::format("Edit %d Units", static_cast<int>(ids.size())));
+    selectEditSide(placedObjects[editingObjectIndex].side);
+    // Batch sentinel: a field left as "keep" (or empty / non-numeric) means
+    // "don't touch that property on any unit"; a typed value applies to all.
+    tfEditHp->setString("keep");
+    tfEditLevel->setString("");
+    tfEditLevel->setPlaceHolder("keep");
+    rowEditHp->setVisible(anyNonHero);
+    rowEditLevel->setVisible(anyHero);
+    // Flag visibility is a single-object edit only - no batch "keep" semantics.
+    rowEditVisible->setVisible(false);
+
+    editUnitPanel->setVisible(true);
+    isEditUnitPanelOpen = true;
+    setModalDimmerVisible(true);
 }
 
 void MapEditor::selectEditSide(int side) {
@@ -1706,33 +2369,70 @@ void MapEditor::selectEditSide(int side) {
     highlightGroup(editSideButtonBgs, editPanelSide);
 }
 
+void MapEditor::selectEditVisible(int visibleIdx) {
+    editPanelVisible = visibleIdx;
+    highlightGroup(editVisibleButtonBgs, editPanelVisible);
+}
+
 void MapEditor::onConfirmEditUnit() {
-    if (editingObjectIndex < 0 || editingObjectIndex >= static_cast<int>(placedObjects.size())) {
+    // Resolve the edited ids back to live objects (units can vanish between
+    // opening the panel and Apply only via code paths that close it first,
+    // but stay defensive - ids are the source of truth, not indices).
+    std::vector<int> indices;
+    for (int id : editingObjectIds) {
+        int idx = objectIndexById(id);
+        if (idx >= 0) {
+            indices.push_back(idx);
+        }
+    }
+    if (indices.empty()) {
         closeEditUnitPanel();
         return;
     }
-    PlacedObject& obj = placedObjects[editingObjectIndex];
+    bool batch = indices.size() > 1;
 
     std::string hpText = tfEditHp->getString();
-    int hp = (hpText.empty() || hpText == "default") ? -1 : atoi(hpText.c_str());
-    if (hp <= 0) {
-        hp = -1;
-    }
-    // Untouched, the field just displays this unit's base HP (not an explicit
-    // override) — keep storing the -1 sentinel so future balance changes to
-    // the unit's base HP still apply to it.
-    if (hp == defaultHpForType(obj.typeIndex)) {
-        hp = -1;
+    // Batch mode: "keep"/empty leaves each unit's HP alone. Single mode keeps
+    // the original semantics where an emptied field resets to the default.
+    bool applyHp = !batch || (!hpText.empty() && hpText != "keep");
+    int hpParsed = (hpText.empty() || hpText == "default" || hpText == "keep") ? -1 : atoi(hpText.c_str());
+    if (hpParsed <= 0) {
+        hpParsed = -1;
     }
 
-    obj.side = editPanelSide;
-    obj.hp = hp;
-    if (kObjectTypes[obj.typeIndex].isHero) {
-        obj.level = std::max(1, atoi(tfEditLevel->getString().c_str()));
+    int levelParsed = atoi(tfEditLevel->getString().c_str());
+    bool applyLevel = !batch || levelParsed >= 1; // "keep"/empty parses to 0
+
+    for (int idx : indices) {
+        PlacedObject& obj = placedObjects[idx];
+        obj.side = editPanelSide;
+        if (!batch && strcmp(kObjectTypes[obj.typeIndex].name, "Flag") == 0) {
+            obj.visible = (editPanelVisible == 0);
+            obj.sprite->setOpacity(obj.visible ? 255 : 110);
+        }
+        if (kObjectTypes[obj.typeIndex].isHero) {
+            if (applyLevel) {
+                obj.level = std::max(1, levelParsed);
+            }
+        } else if (applyHp) {
+            int hp = hpParsed;
+            // Untouched, the field just displays this unit's base HP (not an
+            // explicit override) — keep storing the -1 sentinel so future
+            // balance changes to the unit's base HP still apply to it.
+            if (hp == defaultHpForType(obj.typeIndex)) {
+                hp = -1;
+            }
+            obj.hp = hp;
+        }
+        obj.sprite->setColor(colorForSide(obj.side));
     }
-    obj.sprite->setColor(colorForSide(obj.side));
     isDirty = true;
-    setStatus(StringUtils::format("Updated %s at (%d,%d)", kObjectTypes[obj.typeIndex].name, obj.tileX, obj.tileY));
+    if (batch) {
+        setStatus(StringUtils::format("Updated %d units", static_cast<int>(indices.size())));
+    } else {
+        const PlacedObject& obj = placedObjects[indices[0]];
+        setStatus(StringUtils::format("Updated %s at (%d,%d)", kObjectTypes[obj.typeIndex].name, obj.tileX, obj.tileY));
+    }
     closeEditUnitPanel();
 }
 
@@ -1779,6 +2479,12 @@ std::string MapEditor::serialize() const {
         writer.Int(obj.id);
         writer.Key("level");
         writer.Int(obj.level);
+        // Written only when hidden - absent means visible, so files saved
+        // before this key existed load unchanged.
+        if (!obj.visible) {
+            writer.Key("visible");
+            writer.Bool(false);
+        }
         writer.EndObject();
     }
     writer.EndArray();
@@ -1819,6 +2525,8 @@ std::string MapEditor::serialize() const {
             writer.Int(c.amount);
             writer.Key("resourceKind");
             writer.Int(c.resourceKind);
+            writer.Key("targetObjectId");
+            writer.Int(c.targetObjectId);
             writer.Key("isRepeat");
             writer.Bool(c.isRepeat);
             writer.EndObject();
@@ -1921,7 +2629,8 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
             int hp = item.HasMember("hp") ? item["hp"].GetInt() : -1;
             int id = item.HasMember("id") ? item["id"].GetInt() : -1;
             int level = item.HasMember("level") ? item["level"].GetInt() : 1;
-            spawnObjectAt(x, y, typeIndex, side, hp, id, level);
+            bool visible = !(item.HasMember("visible") && item["visible"].IsBool()) || item["visible"].GetBool();
+            spawnObjectAt(x, y, typeIndex, side, hp, id, level, visible);
         }
     }
 
@@ -1973,6 +2682,9 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     }
                     if (citem.HasMember("resourceKind")) {
                         c.resourceKind = static_cast<TriggerResourceKind>(citem["resourceKind"].GetInt());
+                    }
+                    if (citem.HasMember("targetObjectId")) {
+                        c.targetObjectId = citem["targetObjectId"].GetInt();
                     }
                     if (citem.HasMember("isRepeat")) {
                         c.isRepeat = citem["isRepeat"].GetBool();
@@ -2151,14 +2863,19 @@ Node* MapEditor::addCycleRow(Node* parent, const std::string& title, float x, fl
     row->addChild(titleLbl);
 
     const float arrowSize = 34;
+    // Taller click target than the 34pt glyph box; rows are spaced 50pt apart
+    // so 44pt still clears neighboring rows. Width must stay = arrowSize: the
+    // horizontal layout below (and the target-overlay math in
+    // setupActionEditPanel) is derived from it.
+    const float arrowTouchH = 44;
     const float valueWidth = 260;
     const float leftX = 180;
     const float valueX = leftX + arrowSize / 2 + 10 + valueWidth / 2;
     const float rightX = valueX + valueWidth / 2 + 10 + arrowSize / 2;
 
-    MenuItemSprite* leftBtn = createTextButton("<", arrowSize, arrowSize, [onCycle](Ref*) { onCycle(-1); });
+    MenuItemSprite* leftBtn = createTextButton("<", arrowSize, arrowTouchH, [onCycle](Ref*) { onCycle(-1); });
     leftBtn->setPosition(Vec2(leftX, 0));
-    MenuItemSprite* rightBtn = createTextButton(">", arrowSize, arrowSize, [onCycle](Ref*) { onCycle(1); });
+    MenuItemSprite* rightBtn = createTextButton(">", arrowSize, arrowTouchH, [onCycle](Ref*) { onCycle(1); });
     rightBtn->setPosition(Vec2(rightX, 0));
     Menu* menu = Menu::create(leftBtn, rightBtn, nullptr);
     menu->setPosition(Vec2::ZERO);
@@ -2234,7 +2951,7 @@ void MapEditor::setupTriggerPanel() {
     panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.08f, 0.08f, 0.08f, 0.95f));
     triggerPanel->addChild(panelBg);
 
-    Label* title = LM->getLocalizedLabel("Trigger Editor", Color4B::WHITE, 30);
+    Label* title = LM->getLocalizedLabel("Trigger Editor", Color4B::WHITE, 28);
     title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
     triggerPanel->addChild(title);
 
@@ -2253,11 +2970,14 @@ void MapEditor::setupTriggerPanel() {
     listHeader->setPosition(Vec2(listX, panelHeight - 80));
     triggerPanel->addChild(listHeader);
 
-    MenuItemSprite* itemAddTrigger = createTextButton("+ Add", 90, 44, [this](Ref*) { addTrigger(); });
-    itemAddTrigger->setPosition(Vec2(listX + listWidth - 135, panelHeight - 80));
-    MenuItemSprite* itemDeleteTrigger = createTextButton("Delete", 90, 44, [this](Ref*) { deleteSelectedTrigger(); });
-    itemDeleteTrigger->setPosition(Vec2(listX + listWidth - 45, panelHeight - 80));
-    Menu* listBtnMenu = Menu::create(itemAddTrigger, itemDeleteTrigger, nullptr);
+    MenuItemSprite* itemAddTrigger = createTextButton("+ Add", 80, 44, [this](Ref*) { addTrigger(); });
+    itemAddTrigger->setPosition(Vec2(listX + listWidth - 175, panelHeight - 80));
+    MenuItemSprite* itemCopyTrigger = createTextButton("Copy", 80, 44, [this](Ref*) { duplicateSelectedTrigger(); });
+    itemCopyTrigger->setPosition(Vec2(listX + listWidth - 90, panelHeight - 80));
+    MenuItemSprite* itemDeleteTrigger = createTextButton("Delete", 80, 44, [this](Ref*) { deleteSelectedTrigger(); });
+    // 20pt clear of "Copy" so the destructive button isn't flush against it.
+    itemDeleteTrigger->setPosition(Vec2(listX + listWidth + 10, panelHeight - 80));
+    Menu* listBtnMenu = Menu::create(itemAddTrigger, itemCopyTrigger, itemDeleteTrigger, nullptr);
     listBtnMenu->setPosition(Vec2::ZERO);
     triggerPanel->addChild(listBtnMenu);
 
@@ -2400,6 +3120,8 @@ void MapEditor::selectTrigger(int index) {
         triggers[selectedTriggerIndex].name = tfTriggerName->getString();
     }
     selectedTriggerIndex = (index >= 0 && index < static_cast<int>(triggers.size())) ? index : -1;
+    conditionListScroll = 0;
+    actionListScroll = 0;
     refreshTriggerList();
     refreshTriggerDetail();
 }
@@ -2410,6 +3132,21 @@ void MapEditor::addTrigger() {
     triggers.push_back(t);
     isDirty = true;
     selectTrigger(static_cast<int>(triggers.size()) - 1);
+}
+
+void MapEditor::duplicateSelectedTrigger() {
+    if (selectedTriggerIndex < 0 || selectedTriggerIndex >= static_cast<int>(triggers.size())) {
+        return;
+    }
+    // Sync any pending name edit into the source trigger before copying it.
+    if (tfTriggerName) {
+        triggers[selectedTriggerIndex].name = tfTriggerName->getString();
+    }
+    Trigger copy = triggers[selectedTriggerIndex];
+    copy.name += " Copy";
+    triggers.insert(triggers.begin() + selectedTriggerIndex + 1, copy);
+    isDirty = true;
+    selectTrigger(selectedTriggerIndex + 1);
 }
 
 void MapEditor::deleteSelectedTrigger() {
@@ -2467,6 +3204,12 @@ std::string MapEditor::describeCondition(const TriggerCondition& c) const {
             break;
         case COND_RESOURCE:
             base = StringUtils::format("%s is %s %d", kResourceKindNames[c.resourceKind], kComparisonNames[c.comparison], c.amount);
+            break;
+        case COND_UNIT_ARRIVES:
+            base = StringUtils::format("%s %s arrives at %s (range %d)", kSideNames[c.unitSide],
+                                        unitTypeCycleName(c.unitTypeIndex).c_str(),
+                                        c.targetObjectId >= 0 ? describeTargetObject(c.targetObjectId).c_str() : "(no target)",
+                                        c.amount);
             break;
         default:
             base = "Unknown condition";
@@ -2540,40 +3283,117 @@ void MapEditor::refreshTriggerDetail() {
     const float rowH = 40;
     const float rowWidth = 760;
 
-    for (size_t i = 0; i < t.conditions.size(); i++) {
-        int idx = static_cast<int>(i);
-        float y = -static_cast<float>(i) * rowH - rowH / 2;
+    // Overflow guard, same windowing idea as the target dropdown: only a
+    // limited number of row slots fit before each list runs into what sits
+    // below it (conditions: the Actions section 280pt down; actions: the
+    // panel bottom). Longer lists render a shifting window whose first and
+    // last slots become Up/Down scroll buttons.
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    const float panelHeight = visibleSize.height - 80; // matches setupTriggerPanel
+    const int maxCondSlots = 7; // (520 - 240) / rowH
+    const int maxActSlots = std::max(3, static_cast<int>((panelHeight - 560 - 20) / rowH));
+
+    auto makeScrollItem = [this](const char* text, bool enabled, float y, const std::function<void()>& onClick) {
+        Color4B col = enabled ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
+        MenuItemLabel* item = MenuItemLabel::create(LM->getLocalizedLabel(text, col, 18),
+                                                    [onClick](Ref*) { onClick(); });
+        item->setEnabled(enabled);
+        item->setPosition(Vec2(120, y));
+        return item;
+    };
+
+    int condTotal = static_cast<int>(t.conditions.size());
+    bool condNeedsScroll = condTotal > maxCondSlots;
+    int condShown = condNeedsScroll ? maxCondSlots - 2 : condTotal;
+    conditionListScroll = std::max(0, std::min(conditionListScroll, condTotal - condShown));
+
+    Vector<MenuItem*> condScrollItems;
+    int condSlot = 0;
+    if (condNeedsScroll) {
+        condScrollItems.pushBack(makeScrollItem("^ Up", conditionListScroll > 0,
+                                                -static_cast<float>(condSlot++) * rowH - rowH / 2, [this]() {
+            --conditionListScroll;
+            // Deferred: rebuilding removes the menu that is mid-dispatch (same
+            // reason the target dropdown defers its own rebuild).
+            this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "cond_scroll");
+        }));
+    }
+    for (int i = conditionListScroll; i < conditionListScroll + condShown; i++, condSlot++) {
+        int idx = i;
+        float y = -static_cast<float>(condSlot) * rowH - rowH / 2;
 
         Label* lbl = LM->getLocalizedLabel(describeCondition(t.conditions[i]).c_str(), Color4B::WHITE, 20);
         lbl->setAnchorPoint(Vec2(0, 0.5f));
         lbl->setPosition(Vec2(0, y));
         conditionListContainer->addChild(lbl);
 
-        MenuItemSprite* itemEdit = createTextButton("Edit", 70, rowH - 6, [this, idx](Ref*) { openConditionEditPanel(idx); });
+        MenuItemSprite* itemEdit = createTextButton("Edit", 70, rowH - 2, [this, idx](Ref*) { openConditionEditPanel(idx); });
         itemEdit->setPosition(Vec2(rowWidth - 90, y));
-        MenuItemSprite* itemDel = createTextButton("X", 40, rowH - 6, [this, idx](Ref*) { deleteConditionAtIndex(idx); });
+        MenuItemSprite* itemDel = createTextButton("X", 44, rowH - 2, [this, idx](Ref*) { deleteConditionAtIndex(idx); });
         itemDel->setPosition(Vec2(rowWidth - 20, y));
         Menu* menu = Menu::create(itemEdit, itemDel, nullptr);
         menu->setPosition(Vec2::ZERO);
         conditionListContainer->addChild(menu);
     }
+    if (condNeedsScroll) {
+        condScrollItems.pushBack(makeScrollItem("v Down", conditionListScroll + condShown < condTotal,
+                                                -static_cast<float>(condSlot) * rowH - rowH / 2, [this]() {
+            ++conditionListScroll;
+            this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "cond_scroll");
+        }));
+        Menu* condScrollMenu = Menu::createWithArray(condScrollItems);
+        condScrollMenu->setPosition(Vec2::ZERO);
+        conditionListContainer->addChild(condScrollMenu);
+    }
 
-    for (size_t i = 0; i < t.actions.size(); i++) {
-        int idx = static_cast<int>(i);
-        float y = -static_cast<float>(i) * rowH - rowH / 2;
+    int actTotal = static_cast<int>(t.actions.size());
+    bool actNeedsScroll = actTotal > maxActSlots;
+    int actShown = actNeedsScroll ? maxActSlots - 2 : actTotal;
+    actionListScroll = std::max(0, std::min(actionListScroll, actTotal - actShown));
+
+    Vector<MenuItem*> actScrollItems;
+    int actSlot = 0;
+    if (actNeedsScroll) {
+        actScrollItems.pushBack(makeScrollItem("^ Up", actionListScroll > 0,
+                                               -static_cast<float>(actSlot++) * rowH - rowH / 2, [this]() {
+            --actionListScroll;
+            this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "act_scroll");
+        }));
+    }
+    for (int i = actionListScroll; i < actionListScroll + actShown; i++, actSlot++) {
+        int idx = i;
+        float y = -static_cast<float>(actSlot) * rowH - rowH / 2;
 
         Label* lbl = LM->getLocalizedLabel(describeAction(t.actions[i]).c_str(), Color4B::WHITE, 20);
         lbl->setAnchorPoint(Vec2(0, 0.5f));
         lbl->setPosition(Vec2(0, y));
+        // Long descriptions (Talk lines especially) must not run under the
+        // Copy/Edit/X buttons on the right - shrink to fit the free space.
+        const float maxLblW = rowWidth - 210;
+        if (lbl->getContentSize().width > maxLblW) {
+            lbl->setScale(maxLblW / lbl->getContentSize().width);
+        }
         actionListContainer->addChild(lbl);
 
-        MenuItemSprite* itemEdit = createTextButton("Edit", 70, rowH - 6, [this, idx](Ref*) { openActionEditPanel(idx); });
+        MenuItemSprite* itemCopy = createTextButton("Copy", 70, rowH - 2, [this, idx](Ref*) { duplicateActionAtIndex(idx); });
+        itemCopy->setPosition(Vec2(rowWidth - 165, y));
+        MenuItemSprite* itemEdit = createTextButton("Edit", 70, rowH - 2, [this, idx](Ref*) { openActionEditPanel(idx); });
         itemEdit->setPosition(Vec2(rowWidth - 90, y));
-        MenuItemSprite* itemDel = createTextButton("X", 40, rowH - 6, [this, idx](Ref*) { deleteActionAtIndex(idx); });
+        MenuItemSprite* itemDel = createTextButton("X", 44, rowH - 2, [this, idx](Ref*) { deleteActionAtIndex(idx); });
         itemDel->setPosition(Vec2(rowWidth - 20, y));
-        Menu* menu = Menu::create(itemEdit, itemDel, nullptr);
+        Menu* menu = Menu::create(itemCopy, itemEdit, itemDel, nullptr);
         menu->setPosition(Vec2::ZERO);
         actionListContainer->addChild(menu);
+    }
+    if (actNeedsScroll) {
+        actScrollItems.pushBack(makeScrollItem("v Down", actionListScroll + actShown < actTotal,
+                                               -static_cast<float>(actSlot) * rowH - rowH / 2, [this]() {
+            ++actionListScroll;
+            this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "act_scroll");
+        }));
+        Menu* actScrollMenu = Menu::createWithArray(actScrollItems);
+        actScrollMenu->setPosition(Vec2::ZERO);
+        actionListContainer->addChild(actScrollMenu);
     }
 }
 
@@ -2603,6 +3423,22 @@ void MapEditor::deleteActionAtIndex(int index) {
     refreshTriggerDetail();
 }
 
+void MapEditor::duplicateActionAtIndex(int index) {
+    if (selectedTriggerIndex < 0) {
+        return;
+    }
+    Trigger& t = triggers[selectedTriggerIndex];
+    if (index < 0 || index >= static_cast<int>(t.actions.size())) {
+        return;
+    }
+    // Copy first - inserting a reference to the vector's own element would
+    // read through a dangling reference if the insert reallocates.
+    TriggerAction copy = t.actions[index];
+    t.actions.insert(t.actions.begin() + index + 1, copy);
+    isDirty = true;
+    refreshTriggerDetail();
+}
+
 std::vector<std::pair<int, std::string>> MapEditor::buildTargetList() const {
     std::vector<std::pair<int, std::string>> list;
     list.push_back({-1, "Manual (Tile X/Y)"});
@@ -2613,15 +3449,22 @@ std::vector<std::pair<int, std::string>> MapEditor::buildTargetList() const {
     return list;
 }
 
-void MapEditor::openTargetDropdown() {
+void MapEditor::openTargetDropdown(bool forCondition) {
     if (isTargetDropdownOpen) {
         closeTargetDropdown();
         return;
     }
+    isTargetDropdownForCondition = forCondition;
     targetDropdownList = buildTargetList();
+    if (forCondition) {
+        // Conditions have no tile-coordinate fallback - entry 0's id is still
+        // -1 ("not set"), only the label changes.
+        targetDropdownList[0].second = "(none)";
+    }
+    int currentId = forCondition ? conditionDraft.targetObjectId : actionDraft.targetObjectId;
     targetDropdownScroll = 0;
     for (int i = 0; i < (int)targetDropdownList.size(); i++) {
-        if (targetDropdownList[i].first == actionDraft.targetObjectId) {
+        if (targetDropdownList[i].first == currentId) {
             targetDropdownScroll = std::max(0, i - 4);
             break;
         }
@@ -2639,8 +3482,13 @@ void MapEditor::closeTargetDropdown() {
 }
 
 void MapEditor::selectTargetObject(int id) {
-    actionDraft.targetObjectId = id;
-    refreshActionEditPanel();
+    if (isTargetDropdownForCondition) {
+        conditionDraft.targetObjectId = id;
+        refreshConditionEditPanel();
+    } else {
+        actionDraft.targetObjectId = id;
+        refreshActionEditPanel();
+    }
     closeTargetDropdown();
 }
 
@@ -2649,7 +3497,8 @@ void MapEditor::rebuildTargetDropdown() {
         targetDropdown->removeFromParent();
         targetDropdown = nullptr;
     }
-    if (!isTargetDropdownOpen || !actionEditPanel || !actionEditPanel->isVisible()) return;
+    Node* host = isTargetDropdownForCondition ? conditionEditPanel : actionEditPanel;
+    if (!isTargetDropdownOpen || !host || !host->isVisible()) return;
 
     const int kMaxVis = 8;
     const float itemH = 36.0f;
@@ -2661,11 +3510,21 @@ void MapEditor::rebuildTargetDropdown() {
     int visCount = std::min(total - targetDropdownScroll, kMaxVis);
     float dropH = padV * 2 + visCount * itemH + (needScroll ? scrollBtnH * 2.0f : 0.0f);
 
-    // Determine panel-relative y of the active "At:" row center
-    // actionEditPanel height=560, groupY=400 (panelH-160)
-    const float panelH = 560.0f;
-    const float groupY = panelH - 160.0f;
-    float atRowPanelY = (actionDraft.type == TACT_CREATE_UNIT) ? (groupY - 100.0f) : groupY;
+    // Determine panel-relative y of the active "At:" row center.
+    // actionEditPanel height=560, conditionEditPanel height=520; both lay out
+    // their per-type rows starting at groupY = panelH - 160 (see the setup
+    // functions).
+    float panelH;
+    float atRowPanelY;
+    if (isTargetDropdownForCondition) {
+        panelH = 520.0f;
+        // Unit Arrives is the only condition with an "At:" row, at -100.
+        atRowPanelY = (panelH - 160.0f) - 100.0f;
+    } else {
+        panelH = 560.0f;
+        const float groupY = panelH - 160.0f;
+        atRowPanelY = (actionDraft.type == TACT_CREATE_UNIT) ? (groupY - 100.0f) : groupY;
+    }
 
     // Try below the "At:" row; if it clips the panel bottom, show above instead
     float dropBottom = atRowPanelY - 22.0f - dropH;
@@ -2677,7 +3536,7 @@ void MapEditor::rebuildTargetDropdown() {
 
     targetDropdown = Node::create();
     targetDropdown->setPosition(Vec2(180.0f, dropBottom));
-    actionEditPanel->addChild(targetDropdown, 10);
+    host->addChild(targetDropdown, 10);
 
     DrawNode* bg = DrawNode::create();
     bg->drawSolidRect(Vec2::ZERO, Vec2(dropW, dropH), Color4F(0.07f, 0.07f, 0.13f, 0.97f));
@@ -2691,8 +3550,9 @@ void MapEditor::rebuildTargetDropdown() {
         Color4B col = canUp ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
         MenuItemLabel* upBtn = MenuItemLabel::create(
             LM->getLocalizedLabel("^ Up", col, 18),
-            [this](Ref*) {
-                if (targetDropdownScroll > 0) --targetDropdownScroll;
+            [this, kMaxVis](Ref*) {
+                // Page up: jump a full window of items, not a single row.
+                targetDropdownScroll = std::max(0, targetDropdownScroll - kMaxVis);
                 this->scheduleOnce([this](float){ rebuildTargetDropdown(); }, 0.0f, "dd_scroll");
             }
         );
@@ -2701,12 +3561,13 @@ void MapEditor::rebuildTargetDropdown() {
         items.pushBack(upBtn);
     }
 
+    int currentId = isTargetDropdownForCondition ? conditionDraft.targetObjectId : actionDraft.targetObjectId;
     float curY = dropH - padV - (needScroll ? scrollBtnH : 0.0f) - itemH / 2;
     for (int i = 0; i < visCount; i++) {
         int idx = targetDropdownScroll + i;
         int capturedId = targetDropdownList[idx].first;
         std::string text = targetDropdownList[idx].second;
-        bool isCurrent = (capturedId == actionDraft.targetObjectId);
+        bool isCurrent = (capturedId == currentId);
         Color4B col = isCurrent ? Color4B(100, 230, 100, 255) : Color4B::WHITE;
         Label* lbl = LM->getLocalizedLabel(text.c_str(), col, 20);
         MenuItemLabel* item = MenuItemLabel::create(lbl, [this, capturedId](Ref*) {
@@ -2723,8 +3584,11 @@ void MapEditor::rebuildTargetDropdown() {
         Color4B col = canDown ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
         MenuItemLabel* downBtn = MenuItemLabel::create(
             LM->getLocalizedLabel("v Down", col, 18),
-            [this, total](Ref*) {
-                if (targetDropdownScroll + 8 < total) ++targetDropdownScroll;
+            [this, total, kMaxVis](Ref*) {
+                // Page down: jump a full window, clamped so the last window
+                // stays flush with the end of the list.
+                targetDropdownScroll = std::min(std::max(0, total - kMaxVis),
+                                                targetDropdownScroll + kMaxVis);
                 this->scheduleOnce([this](float){ rebuildTargetDropdown(); }, 0.0f, "dd_scroll");
             }
         );
@@ -2789,6 +3653,31 @@ void MapEditor::setupConditionEditPanel() {
     addCycleRow(rowCondResource, "Comparison:", 30, -50, &lblCondResourceComparison, [this](int dir) { cycleConditionResourceComparison(dir); });
     addTextFieldRow(rowCondResource, "Amount:", 30, -100, 150, "0", &tfCondResourceAmount);
 
+    rowCondUnitArrives = Node::create();
+    rowCondUnitArrives->setPosition(Vec2(0, groupY));
+    conditionEditPanel->addChild(rowCondUnitArrives);
+    addCycleRow(rowCondUnitArrives, "Side:", 30, 0, &lblCondArriveSide, [this](int dir) { cycleConditionSide(dir); });
+    addCycleRow(rowCondUnitArrives, "Unit Type:", 30, -50, &lblCondArriveUnitType, [this](int dir) { cycleConditionUnitType(dir); });
+    // Same transparent click-overlay pattern as the action panel's "At:" rows
+    // (see addTargetOverlay in setupActionEditPanel): clicking the value text
+    // opens the shared target dropdown, in condition mode.
+    {
+        Node* atRow = addCycleRow(rowCondUnitArrives, "At:", 30, -100, &lblCondArriveTarget, [this](int dir) { cycleConditionArriveTarget(dir); });
+        const float arrowSz = 34.0f, valW = 260.0f, leftX = 180.0f;
+        const float valX = leftX + arrowSz / 2 + 10 + valW / 2;
+        Scale9Sprite* n = makeButtonSkin(BTN_SKIN_NORMAL, Size(valW, arrowSz + 4));
+        n->setOpacity(0);
+        Scale9Sprite* s = makeButtonSkin(BTN_SKIN_SELECTED, Size(valW, arrowSz + 4));
+        MenuItemSprite* btn = MenuItemSprite::create(n, s, [this](Ref*) {
+            this->scheduleOnce([this](float){ openTargetDropdown(true); }, 0.0f, "dd_open");
+        });
+        btn->setPosition(Vec2(valX, 0));
+        Menu* m = Menu::create(btn, nullptr);
+        m->setPosition(Vec2::ZERO);
+        atRow->addChild(m);
+    }
+    addTextFieldRow(rowCondUnitArrives, "Range (tiles):", 30, -150, 150, "2", &tfCondArriveRange);
+
     Scale9Sprite* isRepeatBg = nullptr;
     MenuItemSprite* itemIsRepeat = createTextButton("Is Repeat", 160, 50,
                                                     [this](Ref*) { toggleConditionIsRepeat(); }, &isRepeatBg);
@@ -2811,6 +3700,10 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     if (selectedTriggerIndex < 0) {
         return;
     }
+    // The two sub-panels occupy the same screen area at z=25 — never both open.
+    if (isActionEditPanelOpen) {
+        closeActionEditPanel();
+    }
     editingConditionIndex = conditionIndex;
     const Trigger& t = triggers[selectedTriggerIndex];
     if (conditionIndex >= 0 && conditionIndex < static_cast<int>(t.conditions.size())) {
@@ -2822,6 +3715,7 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     tfCondElapsedSeconds->setString(StringUtils::format("%d", conditionDraft.elapsedSeconds));
     tfCondUnitAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     tfCondResourceAmount->setString(StringUtils::format("%d", conditionDraft.amount));
+    tfCondArriveRange->setString(StringUtils::format("%d", std::max(1, conditionDraft.amount)));
     refreshConditionEditPanel();
 
     conditionEditPanel->setVisible(true);
@@ -2831,6 +3725,9 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
 }
 
 void MapEditor::closeConditionEditPanel() {
+    if (isTargetDropdownForCondition) {
+        closeTargetDropdown();
+    }
     conditionEditPanel->setVisible(false);
     isConditionEditPanelOpen = false;
     setModalDimmerVisible(isTriggerPanelOpen);
@@ -2838,6 +3735,9 @@ void MapEditor::closeConditionEditPanel() {
 }
 
 void MapEditor::cycleConditionType(int dir) {
+    if (isTargetDropdownForCondition) {
+        closeTargetDropdown();
+    }
     conditionDraft.type = static_cast<TriggerConditionType>(cyclicAdd(conditionDraft.type, dir, 0, COND_TYPE_COUNT - 1));
     refreshConditionEditPanel();
 }
@@ -2877,6 +3777,11 @@ void MapEditor::cycleConditionSwitchState(int dir) {
     refreshConditionEditPanel();
 }
 
+void MapEditor::cycleConditionArriveTarget(int dir) {
+    conditionDraft.targetObjectId = cycleTargetObjectId(conditionDraft.targetObjectId, dir);
+    refreshConditionEditPanel();
+}
+
 void MapEditor::toggleConditionIsRepeat() {
     conditionDraft.isRepeat = !conditionDraft.isRepeat;
     if (condIsRepeatBg) {
@@ -2891,6 +3796,7 @@ void MapEditor::refreshConditionEditPanel() {
     rowCondSwitch->setVisible(conditionDraft.type == COND_SWITCH);
     rowCondUnitCount->setVisible(conditionDraft.type == COND_UNIT_COUNT);
     rowCondResource->setVisible(conditionDraft.type == COND_RESOURCE);
+    rowCondUnitArrives->setVisible(conditionDraft.type == COND_UNIT_ARRIVES);
 
     lblCondSwitchIndex->setString(StringUtils::format("%d", conditionDraft.switchIndex + 1));
     lblCondSwitchState->setString(kSwitchStateNames[conditionDraft.switchState]);
@@ -2899,6 +3805,11 @@ void MapEditor::refreshConditionEditPanel() {
     lblCondComparison->setString(kComparisonNames[conditionDraft.comparison]);
     lblCondResource->setString(kResourceKindNames[conditionDraft.resourceKind]);
     lblCondResourceComparison->setString(kComparisonNames[conditionDraft.comparison]);
+    lblCondArriveSide->setString(kSideNames[conditionDraft.unitSide]);
+    lblCondArriveUnitType->setString(unitTypeCycleName(conditionDraft.unitTypeIndex));
+    lblCondArriveTarget->setString(conditionDraft.targetObjectId >= 0
+                                       ? describeTargetObject(conditionDraft.targetObjectId)
+                                       : "(pick a flag/unit)");
     if (condIsRepeatBg) {
         condIsRepeatBg->setColor(conditionDraft.isRepeat ? Color3B(255, 221, 120) : Color3B::WHITE);
     }
@@ -2916,6 +3827,8 @@ void MapEditor::onConfirmCondition() {
         c.amount = std::max(0, atoi(tfCondUnitAmount->getString().c_str()));
     } else if (c.type == COND_RESOURCE) {
         c.amount = std::max(0, atoi(tfCondResourceAmount->getString().c_str()));
+    } else if (c.type == COND_UNIT_ARRIVES) {
+        c.amount = std::max(1, atoi(tfCondArriveRange->getString().c_str()));
     }
 
     Trigger& t = triggers[selectedTriggerIndex];
@@ -3044,6 +3957,10 @@ void MapEditor::setupActionEditPanel() {
 void MapEditor::openActionEditPanel(int actionIndex) {
     if (selectedTriggerIndex < 0) {
         return;
+    }
+    // The two sub-panels occupy the same screen area at z=25 — never both open.
+    if (isConditionEditPanelOpen) {
+        closeConditionEditPanel();
     }
     editingActionIndex = actionIndex;
     const Trigger& t = triggers[selectedTriggerIndex];
@@ -3370,12 +4287,29 @@ void MapEditor::setupInput() {
 
         int button = static_cast<int>(evt->getMouseButton());
         if (button == 0) {
-            if (currentMainTab == TAB_TRIGGER) {
-                // The Trigger tab only lets you inspect/edit placed units (e.g. to
-                // read a unit's id for a trigger target) — it never paints or places.
+            if (currentMainTab == TAB_MOVE || currentMainTab == TAB_TRIGGER) {
+                // RTS-style selection on both tabs: drag on empty ground = band
+                // select (Shift adds), click = select, double-click = select all
+                // of the same type+side, click a selected unit = open the
+                // (batch) property editor. The Move tab additionally drags the
+                // grabbed unit - or the whole selection - to a new cell.
                 int existingIdx = findObjectAtWorldPos(pos);
-                if (existingIdx >= 0) {
-                    openEditUnitPanel(existingIdx);
+                if (existingIdx < 0) {
+                    beginBandSelect(pos, shiftDown);
+                    return;
+                }
+                if (handleSelectionClick(existingIdx)) {
+                    return; // double-click / shift-toggle consumed the press
+                }
+                if (currentMainTab == TAB_MOVE) {
+                    beginMoveDrag(pos);
+                } else if (movePressOpensPanel) {
+                    // Trigger tab has no dragging - open the editor right away.
+                    if (selectedObjectIds.size() > 1) {
+                        openEditUnitPanelForSelection();
+                    } else {
+                        openEditUnitPanel(existingIdx);
+                    }
                 }
                 return;
             }
@@ -3404,11 +4338,15 @@ void MapEditor::setupInput() {
     };
     mouseListener->onMouseMove = [this](EventMouse* evt) {
         Vec2 pos = win32MouseWorldPos(evt);
-        updatePaletteTooltip(pos);
+        updateHoverTooltip(pos);
         if (isAnyModalOpen()) {
             return;
         }
-        if (isPainting && currentTool == TOOL_TERRAIN) {
+        if (isBandSelecting) {
+            updateBandSelect(pos);
+        } else if (movingObjectIndex >= 0) {
+            updateMoveDrag(pos);
+        } else if (isPainting && currentTool == TOOL_TERRAIN) {
             paintAtWorldPos(pos);
         } else if (isPainting && currentTool == TOOL_OBJECT) {
             objectToolAtWorldPos(pos);
@@ -3420,6 +4358,12 @@ void MapEditor::setupInput() {
     mouseListener->onMouseUp = [this](EventMouse* evt) {
         int button = static_cast<int>(evt->getMouseButton());
         if (button == 0) {
+            if (isBandSelecting) {
+                endBandSelect(win32MouseWorldPos(evt));
+            }
+            if (movingObjectIndex >= 0) {
+                endMoveDrag(win32MouseWorldPos(evt));
+            }
             if (isPainting) {
                 endStroke();
             }
@@ -3443,6 +4387,14 @@ void MapEditor::setupInput() {
             return false;
         }
         Vec2 pos = touch->getLocation();
+        if (currentMainTab == TAB_MOVE) {
+            // Drag moves the unit; endMoveDrag() turns a no-drag release
+            // into an inspect/edit tap (same panel as the Trigger tab).
+            // Touch has no multi-select - always allow the tap-to-edit path.
+            movePressOpensPanel = true;
+            beginMoveDrag(pos);
+            return true;
+        }
         if (currentMainTab == TAB_TRIGGER) {
             // The Trigger tab only lets you inspect/edit placed units (e.g. to
             // read a unit's id for a trigger target) — it never paints or places.
@@ -3463,6 +4415,15 @@ void MapEditor::setupInput() {
         return true;
     };
     touchListener->onTouchMoved = [this](Touch* touch, Event*) {
+        if (currentMainTab == TAB_MOVE) {
+            updateMoveDrag(touch->getLocation());
+            return;
+        }
+        if (currentMainTab == TAB_TRIGGER) {
+            // Trigger tab never paints — without this guard a drag that began
+            // as an inspect-tap would fall through and paint terrain/objects.
+            return;
+        }
         if (currentTool == TOOL_TERRAIN) {
             paintAtWorldPos(touch->getLocation());
         } else {
@@ -3470,6 +4431,10 @@ void MapEditor::setupInput() {
         }
     };
     touchListener->onTouchEnded = [this](Touch* touch, Event*) {
+        if (currentMainTab == TAB_MOVE) {
+            endMoveDrag(touch->getLocation());
+            return;
+        }
         endStroke();
     };
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(touchListener, this);

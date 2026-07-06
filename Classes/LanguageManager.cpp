@@ -125,7 +125,7 @@ std::string LanguageManager::getText(std::string textId){
     return str;
 }
 void LanguageManager::loadLanguageSheet(){
-    std::string fileName = "Cartoon Craft Language Sheet - language.csv";
+    std::string fileName = "Cartoon Craft Language Sheet - language2.csv";
     std::string csvStr = FileUtils::getInstance()->getStringFromFile(fileName);
     
     // change , to ` between " and " that is automatically created when , exists in the value

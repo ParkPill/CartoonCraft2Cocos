@@ -273,15 +273,17 @@ protected:
   // Field meanings match MapEditor's enums exactly - see the JSON shape
   // documented above createTMXFromEditorJsonFile's definition.
   struct RuntimeTriggerCondition {
-    int type = 0;            // 0 Always,1 ElapsedTime,2 Switch,3 UnitCount,4 Resource
+    int type = 0;            // 0 Always,1 ElapsedTime,2 Switch,3 UnitCount,4 Resource,
+                             // 5 UnitArrives (side/type unit within `amount` tiles of targetObjectId)
     int elapsedSeconds = 30;
     int switchIndex = 0;
     int switchState = 0;     // 0 Set,1 Cleared
     int unitSide = 0;        // 0 Ally,1 Enemy,2 NeutralApproach,3 NeutralEvent
     int unitTypeIndex = -1;  // -1 = Any
     int comparison = 0;      // 0 AtLeast,1 AtMost,2 Exactly
-    int amount = 1;
+    int amount = 1;          // UnitArrives: range in tiles
     int resourceKind = 0;    // 0 Gold,1 Tree
+    int targetObjectId = -1; // UnitArrives: placed object id to watch (-1 = never true)
     bool isRepeat = false;   // ElapsedTime: true = repeating; false = fire once
     float elapsedTimeLastFired = 0.0f; // runtime only: gameTimer value at last fire (for isRepeat reset)
   };
@@ -327,6 +329,18 @@ protected:
   // all triggers - a second Talk firing concurrently from a different
   // trigger will replace it, see runTriggerActions).
   cocos2d::Node *activeTalkBubble = nullptr;
+  // Editor object id of the unit the bubble follows while visible (-1 = fixed
+  // position, e.g. the target was a Flag or a bare tile coordinate). Stored as
+  // an id rather than a pointer so a unit that dies mid-Talk can't leave a
+  // dangling reference - triggerTalkBubbleUpdate re-finds it every tick.
+  int activeTalkBubbleTargetObjectId = -1;
+  // Typewriter reveal state for the active Talk bubble. The full message is
+  // kept as UTF-16 so the per-character reveal can't split a multi-byte
+  // (Korean) UTF-8 sequence; the label starts empty and gains one character
+  // per triggerTalkTypingUpdate tick while the bubble stays full-text sized.
+  cocos2d::Label *activeTalkLabel = nullptr;
+  std::u16string activeTalkFullText;
+  int activeTalkTypedChars = 0;
 
   void loadTriggersFromEditorJsonFile(const std::string &path);
   void updateTriggers();
@@ -338,7 +352,11 @@ protected:
   // Enemy-side trigger's "Victory" means the enemy won, i.e. the player lost.
   void executeTriggerAction(const RuntimeTriggerAction &a, bool flipOutcome);
   cocos2d::Vec2 resolveTriggerTargetPosition(int targetObjectId, int tileX, int tileY);
-  void showTriggerTalkBubble(const std::string &message, const cocos2d::Vec2 &worldPos);
+  EnemyBase *findLiveUnitByEditorObjectId(int targetObjectId);
+  void showTriggerTalkBubble(const std::string &message, const cocos2d::Vec2 &worldPos,
+                             EnemyBase *followTarget = nullptr);
+  void triggerTalkBubbleUpdate(float dt);
+  void triggerTalkTypingUpdate(float dt);
   void clearTriggerTalkBubble();
 
   bool intersectsRect(cocos2d::Rect srcRect, cocos2d::Rect dstRect);
@@ -1081,6 +1099,8 @@ public:
   void removeIncompleteBuilding(EnemyBase *building);
   void updateFog();
   void processNewFogState();
+  void updateFogMaskTargets();
+  void stepFogMaskFade(float dt);
   EnemyBase *getNearestCastle(cocos2d::Vec2 pos, bool isEnemy);
   EnemyBase *getNearestLumberTank(cocos2d::Vec2 pos, bool isEnemy);
   EnemyBase *getNearestTree(cocos2d::Vec2 pos, Vector<Movable *> excludeList);
@@ -1090,6 +1110,14 @@ public:
   int fogWidth = 0;
   int fogHeight = 0;
   cocos2d::Size fogMapSize;
+  // Fog is rendered as a single low-res alpha mask (1 pixel per fog cell)
+  // stretched over the map with bilinear filtering; fogArray keeps the
+  // per-cell state for minimap/visibility logic.
+  cocos2d::Sprite *fogMaskSprite = nullptr;
+  cocos2d::Texture2D *fogMaskTexture = nullptr;
+  std::vector<unsigned char> fogMaskPixels;
+  std::vector<float> fogMaskAlpha;
+  std::vector<unsigned char> fogMaskTargetAlpha;
   int mapWidth = 0;
   int mapHeight = 0;
   int gold = 0;
@@ -1154,6 +1182,9 @@ public:
   // Returns the AI owner-id of the nearest live enemy HQ to pos, assigning that
   // HQ a fresh id if it lacks one. Returns 0 when there is no live HQ.
   int enemyAINearestHQOwnerId(cocos2d::Vec2 pos);
+  EnemyBase *enemyAIFindBuilderWorker(cocos2d::Vec2 nearPos);
+  int enemyAICountPendingBuilds(int unitType, int ownerHQId);
+  void refundEnemyBuildCost(int unitType);
   void updateFoodInUse();
   void addFoodMax(int amount);
   int getGoldPriceForUnit(int index);

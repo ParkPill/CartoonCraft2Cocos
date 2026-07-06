@@ -43,13 +43,14 @@ private:
         TOOL_OBJECT = 1
     };
 
-    // The three top-level toolbar tabs. Each owns a row of controls
-    // (terrainToolsRow / unitToolsRow / triggerToolsRow) that's shown only
-    // while its tab is active; file ops (New/Save/Load) stay visible always.
+    // The four top-level toolbar tabs. Each owns a row of controls
+    // (terrainToolsRow / unitToolsRow / triggerToolsRow / moveToolsRow) that's
+    // shown only while its tab is active; file ops (New/Save/Load) stay visible always.
     enum MainTab {
         TAB_TERRAIN = 0,
         TAB_UNITS = 1,
-        TAB_TRIGGER = 2
+        TAB_TRIGGER = 2,
+        TAB_MOVE = 3
     };
 
     enum ActionType {
@@ -81,6 +82,10 @@ private:
         int hp; // -1 = use the unit's default HP
         int id; // stable unique id, assigned on placement and kept across save/load
         int level; // heroes only - HP/ATT scale with level; ignored by regular units
+        // Flag markers only: whether the flag art is shown at runtime. Hidden
+        // flags still exist as trigger targets; the editor always draws them
+        // (dimmed) so they stay clickable/editable.
+        bool visible = true;
     };
 
     // StarCraft-style trigger system: a Trigger fires its Actions once all of its
@@ -93,6 +98,10 @@ private:
         COND_SWITCH,
         COND_UNIT_COUNT,
         COND_RESOURCE,
+        // A unit of `unitSide` (optionally filtered by unitTypeIndex) is within
+        // `amount` tiles of the placed object `targetObjectId` (typically a
+        // Flag) - StarCraft's "Bring unit to location".
+        COND_UNIT_ARRIVES,
         COND_TYPE_COUNT
     };
 
@@ -159,11 +168,13 @@ private:
         int elapsedSeconds = 30;             // ELAPSED_TIME
         int switchIndex = 0;                 // SWITCH
         TriggerSwitchState switchState = SWITCH_STATE_SET; // SWITCH
-        int unitSide = SIDE_ALLY;            // UNIT_COUNT
-        int unitTypeIndex = -1;              // UNIT_COUNT; -1 = Any
+        int unitSide = SIDE_ALLY;            // UNIT_COUNT, UNIT_ARRIVES
+        int unitTypeIndex = -1;              // UNIT_COUNT, UNIT_ARRIVES; -1 = Any
         TriggerComparison comparison = CMP_AT_LEAST; // UNIT_COUNT, RESOURCE
-        int amount = 1;                      // UNIT_COUNT, RESOURCE
+        int amount = 1;                      // UNIT_COUNT, RESOURCE; UNIT_ARRIVES: range in tiles
         TriggerResourceKind resourceKind = RESOURCE_GOLD; // RESOURCE
+        int targetObjectId = -1;             // UNIT_ARRIVES: id of the placed object (flag/unit)
+                                              // whose position to watch; -1 = not set yet
         bool isRepeat = false; // only satisfied on repeated firings (trigger already fired once)
     };
 
@@ -208,6 +219,13 @@ private:
         int newSide;
         int newHp;
         int newLevel;
+        // Object id to respawn with, or -1 to assign a fresh one. Move records
+        // set it so undo/redo of a move keeps trigger targetObjectId references
+        // pointing at the same unit.
+        int id = -1;
+        // Flag runtime visibility, carried through undo/redo of moves/erases.
+        bool oldVisible = true;
+        bool newVisible = true;
     };
 
     struct UndoAction {
@@ -251,9 +269,10 @@ private:
     cocos2d::Node* rowLevel = nullptr;
     cocos2d::ui::TextField* tfLevel = nullptr;
 
-    // Hover tooltip for the Units tab palette icons (name + base HP + an
-    // optional clarifying line — see ObjectTypeDef::tooltip). Win32 only;
-    // touch platforms have no hover concept.
+    // Hover tooltip, shared by the Units tab palette icons (name + base HP +
+    // an optional clarifying line — see ObjectTypeDef::tooltip) and placed
+    // units on the map (name + id). Win32 only; touch platforms have no
+    // hover concept.
     cocos2d::Node* paletteTooltip = nullptr;
     cocos2d::DrawNode* paletteTooltipBg = nullptr;
     cocos2d::Label* paletteTooltipLabel = nullptr;
@@ -263,6 +282,37 @@ private:
     cocos2d::Node* terrainToolsRow = nullptr;
     cocos2d::Node* unitToolsRow = nullptr;
     cocos2d::Node* triggerToolsRow = nullptr;
+    cocos2d::Node* moveToolsRow = nullptr;
+
+    // Move-tab drag state. movingObjectIndex is the placedObjects index picked
+    // up on press (-1 = none). moveDragStarted flips once the cursor travels
+    // past a small threshold, distinguishing "drag = move the unit" from
+    // "plain click = open its property editor".
+    int movingObjectIndex = -1;
+    bool moveDragStarted = false;
+    cocos2d::Vec2 moveDragStartPos;
+    cocos2d::Vec2 moveDragOrigSpritePos;
+
+    // RTS-style multi-select for the Trigger/Move tabs. Stored as object ids,
+    // not placedObjects indices - indices shift on erase and undo/redo, ids
+    // are stable (moves respawn objects with the same id).
+    std::vector<int> selectedObjectIds;
+    cocos2d::DrawNode* selectionOverlay = nullptr; // child of mapRoot (map space)
+    cocos2d::DrawNode* bandSelectRect = nullptr;   // child of this (screen space)
+    bool isBandSelecting = false;
+    bool bandSelectAdditive = false; // Shift held when the band started
+    cocos2d::Vec2 bandSelectStartPos;
+    // Group-move drag: filled by beginMoveDrag when the grabbed unit is part
+    // of a multi-selection; empty = classic single-unit drag. Parallel arrays.
+    std::vector<int> groupDragIndices;
+    std::vector<cocos2d::Vec2> groupDragOrigSpritePositions;
+    // Click bookkeeping: double-click selects every unit of the same type and
+    // side; a plain click on an already-selected unit opens the (batch) editor.
+    long long lastObjectClickMs = 0;
+    int lastClickedObjectId = -1;
+    bool movePressOpensPanel = false;
+    // Every object the open edit-unit panel writes to on Apply (>1 = batch).
+    std::vector<int> editingObjectIds;
 
     cocos2d::Node* editUnitPanel = nullptr;
     bool isEditUnitPanelOpen = false;
@@ -273,6 +323,10 @@ private:
     cocos2d::ui::TextField* tfEditHp = nullptr;
     cocos2d::Node* rowEditLevel = nullptr;
     cocos2d::ui::TextField* tfEditLevel = nullptr;
+    // Flags only: Show/Hide toggle for the flag's runtime visibility.
+    cocos2d::Node* rowEditVisible = nullptr;
+    std::vector<cocos2d::ui::Scale9Sprite*> editVisibleButtonBgs;
+    int editPanelVisible = 0; // 0 = Show, 1 = Hide (button index)
     cocos2d::Label* editUnitTitle = nullptr;
 
     std::vector<UndoAction> undoStack;
@@ -283,6 +337,11 @@ private:
 
     std::vector<Trigger> triggers;
     int selectedTriggerIndex = -1;
+    // Window offsets for the condition/action lists in the trigger panel —
+    // only a limited number of rows fit, longer lists scroll (see
+    // refreshTriggerDetail). Reset whenever the trigger selection changes.
+    int conditionListScroll = 0;
+    int actionListScroll = 0;
 
     cocos2d::Node* triggerPanel = nullptr;
     bool isTriggerPanelOpen = false;
@@ -315,6 +374,11 @@ private:
     cocos2d::Label* lblCondResource = nullptr;
     cocos2d::Label* lblCondResourceComparison = nullptr;
     cocos2d::ui::TextField* tfCondResourceAmount = nullptr;
+    cocos2d::Node* rowCondUnitArrives = nullptr;
+    cocos2d::Label* lblCondArriveSide = nullptr;
+    cocos2d::Label* lblCondArriveUnitType = nullptr;
+    cocos2d::Label* lblCondArriveTarget = nullptr;
+    cocos2d::ui::TextField* tfCondArriveRange = nullptr;
 
     cocos2d::Node* actionEditPanel = nullptr;
     bool isActionEditPanelOpen = false;
@@ -369,6 +433,10 @@ private:
 
     cocos2d::Node* targetDropdown = nullptr;
     bool isTargetDropdownOpen = false;
+    // Which sub-panel the open dropdown belongs to and writes back into:
+    // false = actionEditPanel/actionDraft, true = conditionEditPanel/conditionDraft
+    // (Unit Arrives' "At:" row).
+    bool isTargetDropdownForCondition = false;
     int targetDropdownScroll = 0;
     std::vector<std::pair<int, std::string>> targetDropdownList;
 
@@ -415,7 +483,7 @@ private:
     int findObjectAt(int x, int y) const;
     int findObjectAtWorldPos(const cocos2d::Vec2& worldPos) const;
     void removeObjectAtIndex(int index);
-    cocos2d::Node* spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id = -1, int level = 1);
+    cocos2d::Node* spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id = -1, int level = 1, bool visible = true);
     void placeObjectAt(int x, int y);
     void eraseObjectAt(const cocos2d::Vec2& worldPos);
     void objectToolAtWorldPos(const cocos2d::Vec2& worldPos);
@@ -438,6 +506,25 @@ private:
     void setupMainTabs();
     void selectMainTab(int tab);
     void setupTriggerToolsRow();
+    void setupMoveToolsRow();
+    void beginMoveDrag(const cocos2d::Vec2& worldPos);
+    void updateMoveDrag(const cocos2d::Vec2& worldPos);
+    void endMoveDrag(const cocos2d::Vec2& worldPos);
+    void cancelMoveDrag();
+    bool isValidMoveTarget(int objectIndex, int x, int y) const;
+    bool isValidGroupMoveTarget(int objectIndex, int x, int y,
+                                const std::vector<int>& group) const;
+
+    int objectIndexById(int id) const;
+    bool isObjectIdSelected(int id) const;
+    void clearSelection();
+    void refreshSelectionOverlay();
+    void beginBandSelect(const cocos2d::Vec2& worldPos, bool additive);
+    void updateBandSelect(const cocos2d::Vec2& worldPos);
+    void endBandSelect(const cocos2d::Vec2& worldPos);
+    void selectAllOfSameType(int objectIndex);
+    bool handleSelectionClick(int objectIndex);
+    void openEditUnitPanelForSelection();
     void highlightGroup(std::vector<cocos2d::ui::Scale9Sprite*>& group, int activeIndex);
     void setupModalDimmer();
     void setModalDimmerVisible(bool visible);
@@ -452,7 +539,8 @@ private:
     int parsedHpOverride() const;
 
     void setupPaletteTooltip();
-    void updatePaletteTooltip(const cocos2d::Vec2& worldPos);
+    void updateHoverTooltip(const cocos2d::Vec2& worldPos);
+    void showHoverTooltip(const std::string& text, const cocos2d::Vec2& anchorWorldPos);
     cocos2d::Rect paletteSlotWorldRect(int slot) const;
     std::string paletteTooltipText(int typeIndex) const;
 
@@ -460,6 +548,7 @@ private:
     void openEditUnitPanel(int objectIndex);
     void closeEditUnitPanel();
     void selectEditSide(int side);
+    void selectEditVisible(int visibleIdx);
     void onConfirmEditUnit();
     int defaultHpForType(int typeIndex) const;
 
@@ -478,6 +567,7 @@ private:
     void refreshTriggerList();
     void selectTrigger(int index);
     void addTrigger();
+    void duplicateSelectedTrigger();
     void deleteSelectedTrigger();
     void toggleTriggerSide(int side);
     void toggleTriggerPreserve();
@@ -496,6 +586,7 @@ private:
     void cycleConditionResourceComparison(int dir);
     void cycleConditionSwitchIndex(int dir);
     void cycleConditionSwitchState(int dir);
+    void cycleConditionArriveTarget(int dir);
     void refreshConditionEditPanel();
     void toggleConditionIsRepeat();
     void onConfirmCondition();
@@ -523,8 +614,9 @@ private:
     void refreshActionEditPanel();
     void onConfirmAction();
     void deleteActionAtIndex(int index);
+    void duplicateActionAtIndex(int index);
     std::vector<std::pair<int, std::string>> buildTargetList() const;
-    void openTargetDropdown();
+    void openTargetDropdown(bool forCondition = false);
     void closeTargetDropdown();
     void selectTargetObject(int id);
     void rebuildTargetDropdown();
