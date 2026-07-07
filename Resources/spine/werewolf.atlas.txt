@@ -1,0 +1,15 @@
+werewolf.png
+size:256,128
+filter:Linear,Linear
+pma:true
+werewolf/head
+bounds:2,2,111,121
+werewolf/leftHand
+bounds:115,2,27,41
+rotate:90
+werewolf/legs
+bounds:115,86,63,37
+werewolf/righthand
+bounds:115,31,42,53
+werewolf/tail
+bounds:180,99,56,24
