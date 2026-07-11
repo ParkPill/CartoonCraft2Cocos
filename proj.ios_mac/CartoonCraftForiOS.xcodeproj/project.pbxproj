@@ -29,6 +29,7 @@
 		5087E78917EB974C00C73F5D /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5087E78817EB974C00C73F5D /* AppKit.framework */; };
 		5087E78B17EB975400C73F5D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5087E78A17EB975400C73F5D /* OpenGL.framework */; };
 		52B47A471A53D09C004E4C60 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B47A461A53D09B004E4C60 /* Security.framework */; };
+		676C6B636DCD40B48839842B /* MacFileDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */; };
 		BF1C47F01293687400B63C5D /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1C47EA1293683800B63C5D /* QuartzCore.framework */; };
 		D44C620C132DFF330009C878 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D44C620B132DFF330009C878 /* OpenAL.framework */; };
 		D44C620E132DFF430009C878 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D44C620D132DFF430009C878 /* AVFoundation.framework */; };
@@ -69,9 +70,6 @@
 		EC91843D26BE81CF00E63225 /* Node_Class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183DC26BE81CE00E63225 /* Node_Class.cpp */; };
 		EC91843E26BE81CF00E63225 /* Laser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E126BE81CE00E63225 /* Laser.cpp */; };
 		EC91843F26BE81CF00E63225 /* Laser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E126BE81CE00E63225 /* Laser.cpp */; };
-		EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
-		EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
-		676C6B636DCD40B48839842B /* MacFileDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */; };
 		EC91844026BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844126BE81CF00E63225 /* EventInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E326BE81CE00E63225 /* EventInfo.cpp */; };
 		EC91844226BE81CF00E63225 /* HeroPage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9183E626BE81CE00E63225 /* HeroPage.cpp */; };
@@ -188,6 +186,8 @@
 		EC9184DE26BE81E100E63225 /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = EC91849D26BE81E100E63225 /* fonts */; };
 		EC9184DF26BE81E100E63225 /* tilemap in Resources */ = {isa = PBXBuildFile; fileRef = EC91849E26BE81E100E63225 /* tilemap */; };
 		EC9184E026BE81E100E63225 /* tilemap in Resources */ = {isa = PBXBuildFile; fileRef = EC91849E26BE81E100E63225 /* tilemap */; };
+		EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
+		EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC9185AA26BE81CF00E63225 /* MapEditor.cpp */; };
 		EC9C38E32840BEDE009A1030 /* GameCenterHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = EC9C38E12840BEDE009A1030 /* GameCenterHelper.mm */; };
 		EC9C38E42840BEDE009A1030 /* Ios_BillingManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = EC9C38E22840BEDE009A1030 /* Ios_BillingManager.mm */; };
 		ECB812322841C38E0025C58F /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECB812312841C38E0025C58F /* StoreKit.framework */; };
@@ -261,7 +261,9 @@
 		5087E78817EB974C00C73F5D /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		5087E78A17EB975400C73F5D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		52B47A461A53D09B004E4C60 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
+		62B1185A43384EDAB08151C7 /* MacFileDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacFileDialog.h; sourceTree = "<group>"; };
 		8020752C4383490F146DB2D3 /* Pods-CartoonCraftForiOS-mobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CartoonCraftForiOS-mobile.debug.xcconfig"; path = "Target Support Files/Pods-CartoonCraftForiOS-mobile/Pods-CartoonCraftForiOS-mobile.debug.xcconfig"; sourceTree = "<group>"; };
+		BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MacFileDialog.mm; sourceTree = "<group>"; };
 		BF1C47EA1293683800B63C5D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		D44C620B132DFF330009C878 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		D44C620D132DFF430009C878 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -324,10 +326,6 @@
 		EC91840126BE81CF00E63225 /* Intro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Intro.h; sourceTree = "<group>"; };
 		EC91840226BE81CF00E63225 /* LanguageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LanguageManager.h; sourceTree = "<group>"; };
 		EC91840326BE81CF00E63225 /* HudLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HudLayer.cpp; sourceTree = "<group>"; };
-		EC9185AA26BE81CF00E63225 /* MapEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapEditor.cpp; sourceTree = "<group>"; };
-		EC9185AB26BE81CF00E63225 /* MapEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapEditor.h; sourceTree = "<group>"; };
-		62B1185A43384EDAB08151C7 /* MacFileDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacFileDialog.h; sourceTree = "<group>"; };
-		BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MacFileDialog.mm; sourceTree = "<group>"; };
 		EC91840426BE81CF00E63225 /* GameSharing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameSharing.cpp; sourceTree = "<group>"; };
 		EC91840526BE81CF00E63225 /* EventPopup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EventPopup.cpp; sourceTree = "<group>"; };
 		EC91840626BE81CF00E63225 /* LegendDaryButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LegendDaryButton.h; sourceTree = "<group>"; };
@@ -393,6 +391,8 @@
 		EC91849C26BE81E100E63225 /* CartoonCraftNV_1.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = CartoonCraftNV_1.plist; sourceTree = "<group>"; };
 		EC91849D26BE81E100E63225 /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fonts; sourceTree = "<group>"; };
 		EC91849E26BE81E100E63225 /* tilemap */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tilemap; sourceTree = "<group>"; };
+		EC9185AA26BE81CF00E63225 /* MapEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MapEditor.cpp; sourceTree = "<group>"; };
+		EC9185AB26BE81CF00E63225 /* MapEditor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapEditor.h; sourceTree = "<group>"; };
 		EC9C38E02840BEDE009A1030 /* Ios_BillingManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ios_BillingManager.h; sourceTree = "<group>"; };
 		EC9C38E12840BEDE009A1030 /* GameCenterHelper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GameCenterHelper.mm; sourceTree = "<group>"; };
 		EC9C38E22840BEDE009A1030 /* Ios_BillingManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Ios_BillingManager.mm; sourceTree = "<group>"; };
@@ -648,10 +648,10 @@
 				EC9183F226BE81CE00E63225 /* Movable.h */,
 				EC9183D626BE81CE00E63225 /* MultiplayLobby.cpp */,
 				EC91840926BE81CF00E63225 /* MultiplayLobby.h */,
-					EC9185AA26BE81CF00E63225 /* MapEditor.cpp */,
-					EC9185AB26BE81CF00E63225 /* MapEditor.h */,
-					62B1185A43384EDAB08151C7 /* MacFileDialog.h */,
-					BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */,
+				EC9185AA26BE81CF00E63225 /* MapEditor.cpp */,
+				EC9185AB26BE81CF00E63225 /* MapEditor.h */,
+				62B1185A43384EDAB08151C7 /* MacFileDialog.h */,
+				BB0AFCC44A724839B34AE3A2 /* MacFileDialog.mm */,
 				EC91840B26BE81CF00E63225 /* MultiplayManager.cpp */,
 				EC91840C26BE81CF00E63225 /* MultiplayManager.h */,
 				EC9183D526BE81CE00E63225 /* NativeInterface.h */,
@@ -992,7 +992,7 @@
 				EC91844C26BE81CF00E63225 /* Intro.cpp in Sources */,
 				EC91845C26BE81CF00E63225 /* GameSharing.cpp in Sources */,
 				EC91846426BE81CF00E63225 /* AppDelegate.cpp in Sources */,
-					EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */,
+				EC9185AC26BE81CF00E63225 /* MapEditor.cpp in Sources */,
 				EC91844E26BE81CF00E63225 /* NetworkWebSocket.cpp in Sources */,
 				1AF87B8A1F6F7822007BE51C /* main.m in Sources */,
 			);
@@ -1038,7 +1038,7 @@
 				EC91847726BE81CF00E63225 /* LanguageManager.cpp in Sources */,
 				EC91843126BE81CF00E63225 /* MultiplayLobby.cpp in Sources */,
 				EC91846526BE81CF00E63225 /* AppDelegate.cpp in Sources */,
-					EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */,
+				EC9185AD26BE81CF00E63225 /* MapEditor.cpp in Sources */,
 				676C6B636DCD40B48839842B /* MacFileDialog.mm in Sources */,
 				EC91846126BE81CF00E63225 /* Inventory.cpp in Sources */,
 				EC91842726BE81CF00E63225 /* GameManager.cpp in Sources */,
@@ -1207,7 +1207,8 @@
 					"$(_COCOS_LIB_MAC_END)",
 					"-lz",
 					"-liconv",
-					"-framework Security",
+					"-framework",
+					Security,
 				);
 				USER_HEADER_SEARCH_PATHS = "$(_COCOS_HEADER_MAC_BEGIN) $(_COCOS_HEADER_MAC_END)";
 			};
@@ -1242,7 +1243,8 @@
 					"$(_COCOS_LIB_MAC_END)",
 					"-lz",
 					"-liconv",
-					"-framework Security",
+					"-framework",
+					Security,
 				);
 				USER_HEADER_SEARCH_PATHS = "$(_COCOS_HEADER_MAC_BEGIN) $(_COCOS_HEADER_MAC_END)";
 			};
