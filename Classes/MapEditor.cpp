@@ -38,8 +38,8 @@ namespace {
     const char* const SAVE_FILE_NAME = "mapeditor_save.json";
     const int SAVE_FORMAT_VERSION = 1;
 
-    const char* const BTN_SKIN_NORMAL = "btnGray.png";
-    const char* const BTN_SKIN_SELECTED = "btnGreen.png";
+    const char* const BTN_SKIN_NORMAL = "uiBoxSmall.png";
+    const char* const BTN_SKIN_SELECTED = "uiBoxSmallBlue.png";
     // btnGray.png/btnGreen.png are 267x236 with a thick hand-drawn border.
     // 24pt insets (vs. the art's full ~50pt border) are sized so the editor's
     // many ~48pt-tall buttons can render the corner/border art undistorted —
@@ -80,6 +80,19 @@ namespace {
         // (the 3 "crazy" werewolf/bear/lion variants reuse a base skeleton
         // with a different skin instead of having their own). Empty = default skin.
         const char* spineSkin = "";
+        // True for the "crazy" werewolf/bear/lion heroes: their crazy_* skin
+        // was never actually exported (crazy_bear/crazy_lion don't exist as
+        // skins in bear.json/lion.json - renders with zero attachments, i.e.
+        // invisible; crazywerewolf's split-off skeleton file was abandoned).
+        // Kept as real roster entries rather than deleted, because every
+        // entry after them is saved by array index in map JSON (see
+        // kEditorTypeToUnit in GameScene.cpp) - existing maps already
+        // reference indices past this point (Resources/stage0_0.json,
+        // stage1_1.json both place "Camera Start"). Deleting these 3 slots
+        // would silently shift every later index and corrupt those maps, so
+        // they're excluded from the palette (rebuildObjectPaletteRow /
+        // cycleHeroPage) instead of removed from the table.
+        bool hiddenFromPalette = false;
     };
     // Roster + sprite names copied from HelloWorld::getSpriteNameForUnit /
     // GameManager::getUnitName (Movable.h UNIT_* constants). Non-placeable
@@ -147,7 +160,9 @@ namespace {
         {"Hero Lizardman", "lizard", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Archer", "archer", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         // werewolf/bear/lion skeletons have no "default" skin - their single
-        // skin must be set by name (mirrors GameManager::getHeroSpine).
+        // skin must be set by name (mirrors GameManager::getHeroSpine). The
+        // werewolf/crazywerewolf file-split experiment was abandoned; werewolf
+        // is back to its original file with skin named "werewolf".
         {"Hero Werewolf", "werewolf", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "werewolf"},
         {"Hero Monk", "monk", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Fighter", "fighter", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
@@ -164,10 +179,14 @@ namespace {
         {"Hero Ent", "ent", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Salamander", "salamander", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Undine", "undine", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
-        // The 3 "crazy" variants reuse a base skeleton with a different skin.
-        {"Hero Crazy Werewolf", "werewolf", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_werewolf"},
-        {"Hero Crazy Bear", "bear", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_bear"},
-        {"Hero Crazy Lion", "lion", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_lion"},
+        // The 3 "crazy" variants reuse a base skeleton with a different skin -
+        // one that was never actually exported, so they render with zero
+        // attachments (invisible). Hidden from the palette; see
+        // ObjectTypeDef::hiddenFromPalette for why these stay in the table
+        // instead of being deleted outright.
+        {"Hero Crazy Werewolf", "werewolf", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_werewolf", true},
+        {"Hero Crazy Bear", "bear", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_bear", true},
+        {"Hero Crazy Lion", "lion", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true, "crazy_lion", true},
         {"Hero Lady Werewolf", "werewolfFemale", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Lady Lion", "femaleLion", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
         {"Hero Lady Bear", "ladybear", MapEditor::RACE_HERO, -1, kHeroTooltip, false, true},
@@ -204,6 +223,46 @@ namespace {
             "Oil deposit on water. Place here for Oil Ship to build Oil Extractor.", true},
         {"Human Oil Ship", "humanOilShip.png", MapEditor::RACE_HUMAN, 150,
             "Builder ship - builds Oil Extractor on oil spots. Water only.", true},
+        // index 85: Orc Oil Ship. Fills the one slot where kEditorTypeToUnit
+        // (GameScene.cpp) already had UNIT_ORC_OIL_SHIP but this roster had no
+        // matching entry - the two tables index-align by position, so this must
+        // stay before the appended buildings below.
+        {"Orc Oil Ship", "orcOilShip.png", MapEditor::RACE_ORC, 150,
+            "Builder ship - builds Oil Extractor on oil spots. Water only.", true},
+        // indices 86-93: buildings that are normally worker/ship-constructed
+        // in-game (shipyards, oil extractors/refineries, foundries) plus their
+        // Orc counterparts. Added so the editor can place them and so the
+        // Building Count trigger condition can target them by type. HP mirrors
+        // GameManager::getUnitMaxHP() (Human Foundry/Oil Refinery fall through
+        // to its 60 default); requiresWater matches GameScene's
+        // isWaterBuildingType() (shipyards, extractors, refineries are on water;
+        // foundries are land buildings).
+        {"Human Shipyard", "humanShipyard.png", MapEditor::RACE_HUMAN, 2800,
+            "Builds and repairs ships. Water only.", true},
+        {"Orc Shipyard", "orcShipyard.png", MapEditor::RACE_ORC, 2800,
+            "Builds and repairs ships. Water only.", true},
+        {"Human Oil Extractor", "humanOilExtractor.png", MapEditor::RACE_HUMAN, 1500,
+            "Extracts oil from an oil spot. Water only.", true},
+        {"Orc Oil Extractor", "orcOilExtractor.png", MapEditor::RACE_ORC, 1500,
+            "Extracts oil from an oil spot. Water only.", true},
+        {"Human Foundry", "humanFoundary.png", MapEditor::RACE_HUMAN, 60,
+            "Processes ore into metal for advanced units."},
+        {"Orc Foundry", "orcFoundary.png", MapEditor::RACE_ORC, 1500,
+            "Processes ore into metal for advanced units."},
+        {"Human Oil Refinery", "humanOilRefinery.png", MapEditor::RACE_HUMAN, 60,
+            "Refines oil into fuel. Water only.", true},
+        {"Orc Oil Refinery", "orcOilRefinery.png", MapEditor::RACE_ORC, 1500,
+            "Refines oil into fuel. Water only.", true},
+        // index 94: Orc Battle Ship (UNIT_ORC_BATTLE_SHIP) - the Orc counterpart
+        // of "Human Dreadnought" (UNIT_HUMAN_BATTLE_SHIP) above. The editor had
+        // no slot for it even though it's a normal buildable Orc Shipyard unit.
+        // Appended at the end (index-aligned with kEditorTypeToUnit in
+        // GameScene.cpp) so existing maps' saved indices don't shift. Named
+        // "Dreadnought" to match its human twin and avoid colliding with the
+        // "Orc Battle Ship" label already used above for UNIT_ORC_SHIP. HP
+        // mirrors GameManager::getUnitMaxHP() = 800.
+        {"Orc Dreadnought", "orcBattleShip.png", MapEditor::RACE_ORC, 800,
+            "Heavy warship - slow, high HP, fires explosive battleCanonBall with splash damage. Water only.", true},
     };
     const int kObjectTypeCount = sizeof(kObjectTypes) / sizeof(kObjectTypes[0]);
     const int kRaceCount = 5;
@@ -218,16 +277,16 @@ namespace {
         "Neutral - only changes hands via a trigger/event"
     };
 
-    const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource", "Unit Arrives"};
+    const char* const kConditionTypeNames[] = {"Always", "Elapsed Time", "Switch", "Unit Count", "Resource", "Unit Arrives", "Building Count", "Unit Dies"};
     const char* const kTriggerActionTypeNames[] = {
         "Display Message", "Create Unit", "Remove Unit", "Set Switch",
         "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog",
-        "Order Attack"
+        "Order Attack", "Move Unit", "Lock Control"
     };
     const char* const kComparisonNames[] = {"At Least", "At Most", "Exactly"};
     const char* const kSwitchStateNames[] = {"Set", "Cleared"};
     const char* const kSwitchActionNames[] = {"Set", "Clear", "Toggle"};
-    const char* const kResourceKindNames[] = {"Gold", "Tree"};
+    const char* const kResourceKindNames[] = {"Gold", "Tree", "Oil"};
 
     // Cyclically advances value by dir, wrapping within [minInclusive, maxInclusive].
     int cyclicAdd(int value, int dir, int minInclusive, int maxInclusive) {
@@ -245,6 +304,37 @@ namespace {
             return "Any";
         }
         return kObjectTypes[unitTypeIndex].name;
+    }
+
+    // Which roster entries are buildings, mirroring GameManager::isThisBuilding()
+    // (the runtime source of truth for BuildingCount). The editor stays free of
+    // any GM dependency, so this name list is kept in sync by hand; it filters
+    // the Building Count trigger condition's Unit Type dropdown to buildings.
+    // Names must match kObjectTypes[].name exactly (same pattern as the existing
+    // strcmp(def.name, "Flag") checks). Shipyards/oil extractors/foundries are
+    // buildings at runtime too but aren't placeable in the editor, so they have
+    // no roster entry and are simply absent here.
+    bool isBuildingObjectType(int typeIndex) {
+        if (typeIndex < 0 || typeIndex >= kObjectTypeCount) {
+            return false;
+        }
+        static const char* const kBuildingNames[] = {
+            "Castle", "Farm", "Barracks", "Lumber Mill", "Watcher Tower",
+            "Factory", "Airport", "Orc HQ", "Orc Bunker", "Orc Barracks",
+            "Troll House", "Temple", "Barbecue", "Zombie Castle", "Zombie HQ",
+            "Mine", "Oil Spot",
+            // Shipyards, oil extractors/refineries, foundries (+ Orc variants).
+            "Human Shipyard", "Orc Shipyard", "Human Oil Extractor",
+            "Orc Oil Extractor", "Human Foundry", "Orc Foundry",
+            "Human Oil Refinery", "Orc Oil Refinery",
+        };
+        const char* name = kObjectTypes[typeIndex].name;
+        for (const char* b : kBuildingNames) {
+            if (strcmp(name, b) == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Corner-terrain tile table, copied from the "soil" terrain definition already
@@ -286,11 +376,11 @@ namespace {
         Scale9Sprite* normal = makeButtonSkin(BTN_SKIN_NORMAL, Size(width, height));
         Scale9Sprite* selected = makeButtonSkin(BTN_SKIN_SELECTED, Size(width, height));
 
-        Label* lblNormal = LM->getLocalizedLabel(text.c_str(), Color4B::WHITE, 24);
+        Label* lblNormal = LM->getLocalizedLabel(text.c_str(), Color4B::BLACK, 24);
         lblNormal->setPosition(Vec2(width / 2, height / 2));
         normal->addChild(lblNormal);
 
-        Label* lblSelected = LM->getLocalizedLabel(text.c_str(), Color4B::WHITE, 24);
+        Label* lblSelected = LM->getLocalizedLabel(text.c_str(), Color4B::GREEN, 24);
         lblSelected->setPosition(Vec2(width / 2, height / 2));
         selected->addChild(lblSelected);
 
@@ -460,11 +550,13 @@ bool MapEditor::init() {
     setupObjectPalette();
     setupUnitPropertiesBar();
     setupPaletteTooltip();
+    setupMouseCoordLabel();
     setupTriggerToolsRow();
     setupMoveToolsRow();
     setupMainTabs();
     setupModalDimmer();
     setupNewMapPanel();
+    setupResizeMapPanel();
     setupEditUnitPanel();
     setupTriggerPanel();
     setupConditionEditPanel();
@@ -499,10 +591,6 @@ void MapEditor::buildMap(int width, int height) {
 
     terrainGrid.assign(mapWidth * mapHeight, TERRAIN_GRASS);
 
-    if (tileBatch) {
-        tileBatch->removeFromParent();
-        tileBatch = nullptr;
-    }
     if (objectRoot) {
         objectRoot->removeFromParent();
         objectRoot = nullptr;
@@ -515,6 +603,18 @@ void MapEditor::buildMap(int width, int height) {
     currentFilePath.clear();
     isDirty = false;
     clearUndoHistory();
+
+    rebuildTileVisuals();
+
+    objectRoot = Node::create();
+    mapRoot->addChild(objectRoot, 1);
+}
+
+void MapEditor::rebuildTileVisuals() {
+    if (tileBatch) {
+        tileBatch->removeFromParent();
+        tileBatch = nullptr;
+    }
     tileSprites.assign(mapWidth * mapHeight, nullptr);
 
     // Plain Node, not SpriteBatchNode: a SpriteBatchNode child only gets its quad
@@ -534,9 +634,50 @@ void MapEditor::buildMap(int width, int height) {
             tileSprites[y * mapWidth + x] = spt;
         }
     }
+}
 
-    objectRoot = Node::create();
-    mapRoot->addChild(objectRoot, 1);
+void MapEditor::resizeMap(int newWidth, int newHeight) {
+    newWidth = std::max(MIN_MAP_SIZE, std::min(MAX_MAP_SIZE, newWidth));
+    newHeight = std::max(MIN_MAP_SIZE, std::min(MAX_MAP_SIZE, newHeight));
+    if (newWidth == mapWidth && newHeight == mapHeight) {
+        return;
+    }
+
+    std::vector<int> newTerrainGrid(newWidth * newHeight, TERRAIN_GRASS);
+    int copyWidth = std::min(mapWidth, newWidth);
+    int copyHeight = std::min(mapHeight, newHeight);
+    for (int y = 0; y < copyHeight; y++) {
+        for (int x = 0; x < copyWidth; x++) {
+            newTerrainGrid[y * newWidth + x] = terrainGrid[y * mapWidth + x];
+        }
+    }
+
+    // Objects that fall outside the new bounds can't be kept; drop them (and
+    // their sprites) rather than clamping their position into the map.
+    for (int i = static_cast<int>(placedObjects.size()) - 1; i >= 0; i--) {
+        const PlacedObject& obj = placedObjects[i];
+        if (obj.tileX >= newWidth || obj.tileY >= newHeight) {
+            if (obj.sprite) {
+                obj.sprite->removeFromParent();
+            }
+            placedObjects.erase(placedObjects.begin() + i);
+        }
+    }
+    clearSelection();
+    clearUndoHistory();
+
+    mapWidth = newWidth;
+    mapHeight = newHeight;
+    terrainGrid = std::move(newTerrainGrid);
+
+    rebuildTileVisuals();
+    for (int y = 0; y < mapHeight; y++) {
+        for (int x = 0; x < mapWidth; x++) {
+            refreshTile(x, y);
+        }
+    }
+
+    isDirty = true;
 }
 
 int MapEditor::terrainAt(int x, int y) const {
@@ -708,7 +849,8 @@ Color3B MapEditor::colorForSide(int side) const {
     }
 }
 
-Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id, int level, bool visible) {
+Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id, int level, bool visible,
+                               const std::string& alias) {
     Vec2 pos = Vec2(x * MAP_TILE_SIZE + MAP_TILE_SIZE / 2.0f, -(y * MAP_TILE_SIZE) - MAP_TILE_SIZE / 2.0f);
     const ObjectTypeDef& def = kObjectTypes[typeIndex];
     Node* spt;
@@ -748,6 +890,7 @@ Node* MapEditor::spawnObjectAt(int x, int y, int typeIndex, int side, int hp, in
     obj.id = id;
     obj.level = std::max(1, level);
     obj.visible = visible;
+    obj.alias = alias;
     placedObjects.push_back(obj);
     return spt;
 }
@@ -801,6 +944,7 @@ void MapEditor::eraseObjectAt(const Vec2& worldPos) {
     int oldHp = placedObjects[idx].hp;
     int oldLevel = placedObjects[idx].level;
     bool oldVisible = placedObjects[idx].visible;
+    std::string oldAlias = placedObjects[idx].alias;
     removeObjectAtIndex(idx);
 
     if (strokeActive && currentStroke.type == ACTION_OBJECT) {
@@ -813,6 +957,7 @@ void MapEditor::eraseObjectAt(const Vec2& worldPos) {
         change.oldHp = oldHp;
         change.oldLevel = oldLevel;
         change.oldVisible = oldVisible;
+        change.oldAlias = oldAlias;
         change.hasObject = false;
         change.newType = -1;
         change.newSide = -1;
@@ -875,6 +1020,262 @@ bool MapEditor::isValidGroupMoveTarget(int objectIndex, int x, int y,
         return false;
     }
     return true;
+}
+
+bool MapEditor::findNearestFreeCell(int typeIndex, int startX, int startY,
+                                    const std::vector<std::pair<int, int>>& claimedCells,
+                                    int& outX, int& outY) const {
+    // Chebyshev-ring spiral outward from the start cell; the first ring where
+    // a cell is in bounds, unoccupied, unclaimed by an earlier copy in the
+    // same operation, and terrain-legal for the type wins.
+    int maxRadius = std::max(mapWidth, mapHeight);
+    for (int r = 0; r <= maxRadius; r++) {
+        for (int dy = -r; dy <= r; dy++) {
+            for (int dx = -r; dx <= r; dx++) {
+                if (std::max(abs(dx), abs(dy)) != r) {
+                    continue;
+                }
+                int x = startX + dx;
+                int y = startY + dy;
+                if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+                    continue;
+                }
+                if (findObjectAt(x, y) >= 0) {
+                    continue;
+                }
+                if (std::find(claimedCells.begin(), claimedCells.end(),
+                              std::make_pair(x, y)) != claimedCells.end()) {
+                    continue;
+                }
+                if (kObjectTypes[typeIndex].requiresWater && terrainAt(x, y) != TERRAIN_WATER) {
+                    continue;
+                }
+                outX = x;
+                outY = y;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool MapEditor::spawnCopyNear(const ClipboardEntry& entry, int nearX, int nearY,
+                              std::vector<std::pair<int, int>>& claimedCells,
+                              std::vector<int>& outNewIds) {
+    int tx, ty;
+    if (!findNearestFreeCell(entry.typeIndex, nearX, nearY, claimedCells, tx, ty)) {
+        return false;
+    }
+    spawnObjectAt(tx, ty, entry.typeIndex, entry.side, entry.hp, -1, entry.level, entry.visible, entry.alias);
+    const PlacedObject& copy = placedObjects.back();
+
+    if (strokeActive && currentStroke.type == ACTION_OBJECT) {
+        ObjectCellChange change;
+        change.x = tx;
+        change.y = ty;
+        change.hadObject = false;
+        change.oldType = -1;
+        change.oldSide = -1;
+        change.oldHp = -1;
+        change.oldLevel = 1;
+        change.hasObject = true;
+        change.newType = entry.typeIndex;
+        change.newSide = entry.side;
+        change.newHp = entry.hp;
+        change.newLevel = entry.level;
+        change.newVisible = entry.visible;
+        change.newAlias = entry.alias;
+        change.id = copy.id; // redo respawns the copy under the same id
+        currentStroke.objectChanges.push_back(change);
+    }
+    claimedCells.push_back({tx, ty});
+    outNewIds.push_back(copy.id);
+    return true;
+}
+
+void MapEditor::duplicateSelection() {
+    std::vector<int> sourceIndices;
+    for (int id : selectedObjectIds) {
+        int idx = objectIndexById(id);
+        if (idx >= 0) {
+            sourceIndices.push_back(idx);
+        }
+    }
+    if (sourceIndices.empty()) {
+        setStatus("Select a unit to duplicate");
+        return;
+    }
+
+    beginStroke(ACTION_OBJECT);
+    std::vector<std::pair<int, int>> claimedCells;
+    std::vector<int> newIds;
+    int failed = 0;
+    for (int idx : sourceIndices) {
+        // By-value copy: spawnCopyNear appends to placedObjects, which can
+        // reallocate and would dangle a reference.
+        const PlacedObject src = placedObjects[idx];
+        ClipboardEntry entry;
+        entry.typeIndex = src.typeIndex;
+        entry.side = src.side;
+        entry.hp = src.hp;
+        entry.level = src.level;
+        entry.visible = src.visible;
+        entry.alias = src.alias;
+        entry.offsetX = 0;
+        entry.offsetY = 0;
+        if (!spawnCopyNear(entry, src.tileX, src.tileY, claimedCells, newIds)) {
+            failed++;
+        }
+    }
+    endStroke();
+
+    if (newIds.empty()) {
+        setStatus("No free space to duplicate into");
+        return;
+    }
+    selectedObjectIds = newIds;
+    refreshSelectionOverlay();
+    if (failed > 0) {
+        setStatus(StringUtils::format("Duplicated %d unit(s), %d had no free space",
+                                      static_cast<int>(newIds.size()), failed));
+    } else {
+        setStatus(StringUtils::format("Duplicated %d unit(s)", static_cast<int>(newIds.size())));
+    }
+}
+
+void MapEditor::deleteSelection() {
+    // A drag in progress would hold a placedObjects index that the removals
+    // below invalidate - let go first (same concern as undo/redo).
+    cancelMoveDrag();
+
+    std::vector<int> sourceIndices;
+    for (int id : selectedObjectIds) {
+        int idx = objectIndexById(id);
+        if (idx >= 0) {
+            sourceIndices.push_back(idx);
+        }
+    }
+    if (sourceIndices.empty()) {
+        setStatus("Select a unit to delete");
+        return;
+    }
+
+    beginStroke(ACTION_OBJECT);
+    // Remove from the highest index down so earlier removals don't shift the
+    // indices still waiting in the list.
+    std::sort(sourceIndices.begin(), sourceIndices.end());
+    for (auto it = sourceIndices.rbegin(); it != sourceIndices.rend(); ++it) {
+        const PlacedObject& obj = placedObjects[*it];
+        ObjectCellChange change;
+        change.x = obj.tileX;
+        change.y = obj.tileY;
+        change.hadObject = true;
+        change.oldType = obj.typeIndex;
+        change.oldSide = obj.side;
+        change.oldHp = obj.hp;
+        change.oldLevel = obj.level;
+        change.oldVisible = obj.visible;
+        change.oldAlias = obj.alias;
+        change.hasObject = false;
+        change.newType = -1;
+        change.newSide = -1;
+        change.newHp = -1;
+        change.newLevel = 1;
+        change.id = obj.id; // undo respawns under the same id, keeping trigger refs valid
+        currentStroke.objectChanges.push_back(change);
+        removeObjectAtIndex(*it);
+    }
+    endStroke();
+
+    int count = static_cast<int>(sourceIndices.size());
+    clearSelection();
+    setStatus(StringUtils::format("Deleted %d unit(s)", count));
+}
+
+void MapEditor::copySelectionToClipboard() {
+    std::vector<int> sourceIndices;
+    for (int id : selectedObjectIds) {
+        int idx = objectIndexById(id);
+        if (idx >= 0) {
+            sourceIndices.push_back(idx);
+        }
+    }
+    if (sourceIndices.empty()) {
+        setStatus("Select a unit to copy (Ctrl+C)");
+        return;
+    }
+
+    // Offsets are stored relative to the selection's bounding-box center so a
+    // paste centers the formation on the cursor cell.
+    int minX = placedObjects[sourceIndices[0]].tileX, maxX = minX;
+    int minY = placedObjects[sourceIndices[0]].tileY, maxY = minY;
+    for (int idx : sourceIndices) {
+        minX = std::min(minX, placedObjects[idx].tileX);
+        maxX = std::max(maxX, placedObjects[idx].tileX);
+        minY = std::min(minY, placedObjects[idx].tileY);
+        maxY = std::max(maxY, placedObjects[idx].tileY);
+    }
+    int anchorX = (minX + maxX) / 2;
+    int anchorY = (minY + maxY) / 2;
+
+    clipboardEntries.clear();
+    for (int idx : sourceIndices) {
+        const PlacedObject& src = placedObjects[idx];
+        ClipboardEntry entry;
+        entry.typeIndex = src.typeIndex;
+        entry.side = src.side;
+        entry.hp = src.hp;
+        entry.level = src.level;
+        entry.visible = src.visible;
+        entry.alias = src.alias;
+        entry.offsetX = src.tileX - anchorX;
+        entry.offsetY = src.tileY - anchorY;
+        clipboardEntries.push_back(entry);
+    }
+    setStatus(StringUtils::format("Copied %d unit(s) - Ctrl+V to paste at the cursor",
+                                  static_cast<int>(clipboardEntries.size())));
+}
+
+void MapEditor::pasteClipboardAtCursor() {
+    if (clipboardEntries.empty()) {
+        setStatus("Clipboard empty - Ctrl+C a selection first");
+        return;
+    }
+
+    // Anchor on the map cell under the mouse cursor, clamped into the map so
+    // pasting still works when the cursor sits over the toolbar or off-map.
+    Vec2 anchorWorld = hasMouseWorldPos ? lastMouseWorldPos
+                                        : Vec2(Director::getInstance()->getVisibleSize() / 2);
+    Vec2 local = mapRoot->convertToNodeSpace(anchorWorld);
+    int anchorX = static_cast<int>(floorf(local.x / MAP_TILE_SIZE));
+    int anchorY = static_cast<int>(floorf(-local.y / MAP_TILE_SIZE));
+    anchorX = std::max(0, std::min(anchorX, mapWidth - 1));
+    anchorY = std::max(0, std::min(anchorY, mapHeight - 1));
+
+    beginStroke(ACTION_OBJECT);
+    std::vector<std::pair<int, int>> claimedCells;
+    std::vector<int> newIds;
+    int failed = 0;
+    for (const ClipboardEntry& entry : clipboardEntries) {
+        if (!spawnCopyNear(entry, anchorX + entry.offsetX, anchorY + entry.offsetY,
+                           claimedCells, newIds)) {
+            failed++;
+        }
+    }
+    endStroke();
+
+    if (newIds.empty()) {
+        setStatus("No free space to paste into");
+        return;
+    }
+    selectedObjectIds = newIds;
+    refreshSelectionOverlay();
+    if (failed > 0) {
+        setStatus(StringUtils::format("Pasted %d unit(s), %d had no free space",
+                                      static_cast<int>(newIds.size()), failed));
+    } else {
+        setStatus(StringUtils::format("Pasted %d unit(s)", static_cast<int>(newIds.size())));
+    }
 }
 
 int MapEditor::objectIndexById(int id) const {
@@ -1200,6 +1601,7 @@ void MapEditor::endMoveDrag(const Vec2& worldPos) {
             from.oldHp = member.hp;
             from.oldLevel = member.level;
             from.oldVisible = member.visible;
+            from.oldAlias = member.alias;
             from.hasObject = false;
             from.newType = -1;
             from.newSide = -1;
@@ -1224,6 +1626,7 @@ void MapEditor::endMoveDrag(const Vec2& worldPos) {
             to.newHp = member.hp;
             to.newLevel = member.level;
             to.newVisible = member.visible;
+            to.newAlias = member.alias;
             to.id = member.id;
             currentStroke.objectChanges.push_back(to);
         }
@@ -1272,6 +1675,7 @@ void MapEditor::endMoveDrag(const Vec2& worldPos) {
     from.oldHp = obj.hp;
     from.oldLevel = obj.level;
     from.oldVisible = obj.visible;
+    from.oldAlias = obj.alias;
     from.hasObject = false;
     from.newType = -1;
     from.newSide = -1;
@@ -1293,6 +1697,7 @@ void MapEditor::endMoveDrag(const Vec2& worldPos) {
     to.newHp = obj.hp;
     to.newLevel = obj.level;
     to.newVisible = obj.visible;
+    to.newAlias = obj.alias;
     to.id = obj.id;
     currentStroke.objectChanges.push_back(to);
     endStroke();
@@ -1364,13 +1769,14 @@ void MapEditor::applyObjectChange(const ObjectCellChange& change, bool useNew) {
     int hp = useNew ? change.newHp : change.oldHp;
     int level = useNew ? change.newLevel : change.oldLevel;
     bool visible = useNew ? change.newVisible : change.oldVisible;
+    const std::string& alias = useNew ? change.newAlias : change.oldAlias;
     int idx = findObjectAt(change.x, change.y);
 
     if (shouldHave) {
         if (idx >= 0) {
             removeObjectAtIndex(idx);
         }
-        spawnObjectAt(change.x, change.y, type, side, hp, change.id, level, visible);
+        spawnObjectAt(change.x, change.y, type, side, hp, change.id, level, visible, alias);
     } else if (idx >= 0) {
         // Identity guard for replayed group moves: when one member's source is
         // another member's destination, this cell can transiently hold a
@@ -1495,7 +1901,7 @@ void MapEditor::updateToolLabel() {
 }
 
 bool MapEditor::isAnyModalOpen() const {
-    return isNewMapPanelOpen || isEditUnitPanelOpen || isTriggerPanelOpen ||
+    return isNewMapPanelOpen || isResizeMapPanelOpen || isEditUnitPanelOpen || isTriggerPanelOpen ||
            isConditionEditPanelOpen || isActionEditPanelOpen;
 }
 
@@ -1542,8 +1948,9 @@ void MapEditor::setupUI() {
     const float fileBtnH = 56;
     MenuItemSprite* itemNew = createTextButton("New", fileBtnW, fileBtnH, [this](Ref*) { showNewMapPanel(); });
     MenuItemSprite* itemSave = createTextButton("Save", fileBtnW, fileBtnH, [this](Ref*) { saveMap(); });
-    MenuItemSprite* itemSaveAs = createTextButton("Save As", fileBtnW, fileBtnH, [this](Ref*) { saveMapAs(); });
+    MenuItemSprite* itemSaveAs = createTextButton("Save As", fileBtnW + 30, fileBtnH, [this](Ref*) { saveMapAs(); });
     MenuItemSprite* itemLoad = createTextButton("Load", fileBtnW, fileBtnH, [this](Ref*) { loadMap(); });
+    MenuItemSprite* itemResize = createTextButton("Resize", fileBtnW, fileBtnH, [this](Ref*) { showResizeMapPanel(); });
     MenuItemSprite* itemRun = createTextButton("Run", fileBtnW, fileBtnH, [this](Ref*) { runMap(); });
     itemRun->getNormalImage()->setColor(Color3B(120, 220, 120));
 
@@ -1551,9 +1958,10 @@ void MapEditor::setupUI() {
     itemSave->setPosition(Vec2(120, 0));
     itemSaveAs->setPosition(Vec2(240, 0));
     itemLoad->setPosition(Vec2(360, 0));
-    itemRun->setPosition(Vec2(480, 0));
+    itemResize->setPosition(Vec2(480, 0));
+    itemRun->setPosition(Vec2(600, 0));
 
-    Menu* fileMenu = Menu::create(itemNew, itemSave, itemSaveAs, itemLoad, itemRun, nullptr);
+    Menu* fileMenu = Menu::create(itemNew, itemSave, itemSaveAs, itemLoad, itemResize, itemRun, nullptr);
     fileMenu->setPosition(Vec2(120, visibleSize.height - 285));
     this->addChild(fileMenu, 10);
 
@@ -1587,7 +1995,7 @@ void MapEditor::setupObjectPalette() {
 
     // dynamic unit icon row, rebuilt per race tab
     objectPaletteRow = Node::create();
-    objectPaletteRow->setPosition(Vec2(80, visibleSize.height - 165));
+    objectPaletteRow->setPosition(Vec2(170, visibleSize.height - 165));
     unitToolsRow->addChild(objectPaletteRow);
 
     Label* paletteLabel = LM->getLocalizedLabel("Objects:", Color4B::WHITE, 22);
@@ -1597,7 +2005,7 @@ void MapEditor::setupObjectPalette() {
 
     // Only relevant for the Heroes tab (45 entries don't fit one unscrolled
     // row) - hidden for every other race. Sits to the right of the icon row.
-    heroPageRow = addCycleRow(unitToolsRow, "Page:", 1050, visibleSize.height - 165, &lblHeroPage,
+    heroPageRow = addCycleRow(unitToolsRow, "Page:", 1140, visibleSize.height - 165, &lblHeroPage,
                               [this](int dir) { cycleHeroPage(dir); });
 
     highlightGroup(raceTabBgs, currentRaceTab);
@@ -1614,7 +2022,7 @@ void MapEditor::rebuildObjectPaletteRow() {
 
     std::vector<int> raceIndices;
     for (int i = 0; i < kObjectTypeCount; i++) {
-        if (kObjectTypes[i].race == currentRaceTab) {
+        if (kObjectTypes[i].race == currentRaceTab && !kObjectTypes[i].hiddenFromPalette) {
             raceIndices.push_back(i);
         }
     }
@@ -1664,7 +2072,7 @@ void MapEditor::rebuildObjectPaletteRow() {
 void MapEditor::cycleHeroPage(int dir) {
     int heroCount = 0;
     for (int i = 0; i < kObjectTypeCount; i++) {
-        if (kObjectTypes[i].race == RACE_HERO) {
+        if (kObjectTypes[i].race == RACE_HERO && !kObjectTypes[i].hiddenFromPalette) {
             heroCount++;
         }
     }
@@ -1740,7 +2148,7 @@ void MapEditor::setupUnitPropertiesBar() {
         sideButtonBgs[s] = bg;
     }
     Menu* sideMenu = Menu::createWithArray(sideItems);
-    sideMenu->setPosition(Vec2(110, rowY));
+    sideMenu->setPosition(Vec2(200, rowY));
     unitToolsRow->addChild(sideMenu);
     highlightGroup(sideButtonBgs, currentSide);
 
@@ -1764,7 +2172,7 @@ void MapEditor::setupUnitPropertiesBar() {
     unitToolsRow->addChild(tfHp);
     watchTextFieldFocus(tfHp);
 
-    MenuItemSprite* itemDefaultHp = createTextButton("Default HP", 130, sideBtnH, [this](Ref*) {
+    MenuItemSprite* itemDefaultHp = createTextButton("Default HP", 160, sideBtnH, [this](Ref*) {
         int baseHp = defaultHpForType(currentObjectType);
         tfHp->setString(baseHp > 0 ? StringUtils::format("%d", baseHp) : "default");
         setStatus("New placements will use the unit's default HP");
@@ -1799,6 +2207,22 @@ void MapEditor::setupUnitPropertiesBar() {
     watchTextFieldFocus(tfLevel);
 
     rowLevel->setVisible(kObjectTypes[currentObjectType].isHero);
+}
+
+void MapEditor::setupMouseCoordLabel() {
+    mouseCoordLabel = LM->getLocalizedLabel("", Color4B::WHITE, 20);
+    mouseCoordLabel->setAnchorPoint(Vec2(0, 0));
+    mouseCoordLabel->setPosition(Vec2(10, 10));
+    this->addChild(mouseCoordLabel, 50);
+}
+
+void MapEditor::updateMouseCoordLabel(const Vec2& worldPos) {
+    if (!mouseCoordLabel) {
+        return;
+    }
+    int x, y;
+    worldToCell(worldPos, x, y);
+    mouseCoordLabel->setString(StringUtils::format("(%d, %d)", x, y));
 }
 
 void MapEditor::setupPaletteTooltip() {
@@ -1874,6 +2298,9 @@ void MapEditor::updateHoverTooltip(const Vec2& worldPos) {
     if (objectIndex >= 0) {
         const PlacedObject& obj = placedObjects[objectIndex];
         std::string text = StringUtils::format("%s\nID: %d", kObjectTypes[obj.typeIndex].name, obj.id);
+        if (!obj.alias.empty()) {
+            text += "\nAlias: " + obj.alias;
+        }
         Rect box = obj.sprite->getBoundingBox(); // mapRoot space
         Vec2 anchor = mapRoot->convertToWorldSpace(Vec2(box.getMinX(), box.getMaxY()));
         showHoverTooltip(text, anchor);
@@ -1929,11 +2356,19 @@ void MapEditor::setupMoveToolsRow() {
     moveToolsRow = Node::create();
     this->addChild(moveToolsRow, 10);
 
+    MenuItemSprite* itemDuplicate = createTextButton("Duplicate", 200, 56, [this](Ref*) { duplicateSelection(); });
+    itemDuplicate->setPosition(Vec2(120, visibleSize.height - 105));
+    MenuItemSprite* itemDelete = createTextButton("Delete", 160, 56, [this](Ref*) { deleteSelection(); });
+    itemDelete->setPosition(Vec2(320, visibleSize.height - 105));
+    Menu* dupMenu = Menu::create(itemDuplicate, itemDelete, nullptr);
+    dupMenu->setPosition(Vec2::ZERO);
+    moveToolsRow->addChild(dupMenu);
+
     Label* hintLabel = LM->getLocalizedLabel(
-        "Drag a placed unit to move it to another tile. A plain click opens its property editor.",
+        "Drag a placed unit to move it; a plain click opens its property editor. Duplicate (Ctrl+C, Ctrl+V) copies the selection; Delete (Del) removes it.",
         Color4B::WHITE, 20);
     hintLabel->setAnchorPoint(Vec2(0, 0.5f));
-    hintLabel->setPosition(Vec2(20, visibleSize.height - 105));
+    hintLabel->setPosition(Vec2(20, visibleSize.height - 165));
     moveToolsRow->addChild(hintLabel);
 }
 
@@ -2140,15 +2575,139 @@ void MapEditor::onConfirmNewMap() {
         return;
     }
     buildMap(width, height);
+    addDefaultWinTrigger();
     hideNewMapPanel();
     setStatus(StringUtils::format("New map %dx%d", mapWidth, mapHeight));
+}
+
+void MapEditor::setupResizeMapPanel() {
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+
+    const float panelWidth = 420;
+    const float panelHeight = 240;
+
+    resizeMapPanel = Node::create();
+    resizeMapPanel->setPosition(Vec2(60, visibleSize.height - 170 - panelHeight));
+    resizeMapPanel->setVisible(false);
+    this->addChild(resizeMapPanel, 20);
+
+    DrawNode* panelBg = DrawNode::create();
+    panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.08f, 0.08f, 0.08f, 0.9f));
+    resizeMapPanel->addChild(panelBg);
+
+    Label* title = LM->getLocalizedLabel("Resize Map", Color4B::WHITE, 28);
+    title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
+    resizeMapPanel->addChild(title);
+
+    const float fieldBoxWidth = 160;
+    const float fieldBoxHeight = 44;
+    const float fieldBoxX = 140;
+
+    Label* lblWidth = LM->getLocalizedLabel("Width:", Color4B::WHITE, 24);
+    lblWidth->setAnchorPoint(Vec2(0, 0.5f));
+    lblWidth->setPosition(Vec2(40, panelHeight - 90));
+    resizeMapPanel->addChild(lblWidth);
+
+    DrawNode* tfWidthBg = DrawNode::create();
+    tfWidthBg->drawSolidRect(Vec2(fieldBoxX, panelHeight - 90 - fieldBoxHeight / 2),
+                              Vec2(fieldBoxX + fieldBoxWidth, panelHeight - 90 + fieldBoxHeight / 2),
+                              Color4F(1, 1, 1, 0.18f));
+    resizeMapPanel->addChild(tfWidthBg);
+
+    tfResizeWidth = TextField::create("40", "Arial", 24);
+    tfResizeWidth->setAnchorPoint(Vec2(0, 0.5f));
+    tfResizeWidth->setPosition(Vec2(fieldBoxX + 14, panelHeight - 90));
+    tfResizeWidth->setTouchAreaEnabled(true);
+    tfResizeWidth->setTouchSize(Size(fieldBoxWidth, fieldBoxHeight));
+    tfResizeWidth->setMaxLength(3);
+    tfResizeWidth->setMaxLengthEnabled(true);
+    resizeMapPanel->addChild(tfResizeWidth);
+    watchTextFieldFocus(tfResizeWidth);
+
+    Label* lblHeight = LM->getLocalizedLabel("Height:", Color4B::WHITE, 24);
+    lblHeight->setAnchorPoint(Vec2(0, 0.5f));
+    lblHeight->setPosition(Vec2(40, panelHeight - 140));
+    resizeMapPanel->addChild(lblHeight);
+
+    DrawNode* tfHeightBg = DrawNode::create();
+    tfHeightBg->drawSolidRect(Vec2(fieldBoxX, panelHeight - 140 - fieldBoxHeight / 2),
+                               Vec2(fieldBoxX + fieldBoxWidth, panelHeight - 140 + fieldBoxHeight / 2),
+                               Color4F(1, 1, 1, 0.18f));
+    resizeMapPanel->addChild(tfHeightBg);
+
+    tfResizeHeight = TextField::create("40", "Arial", 24);
+    tfResizeHeight->setAnchorPoint(Vec2(0, 0.5f));
+    tfResizeHeight->setPosition(Vec2(fieldBoxX + 14, panelHeight - 140));
+    tfResizeHeight->setTouchAreaEnabled(true);
+    tfResizeHeight->setTouchSize(Size(fieldBoxWidth, fieldBoxHeight));
+    tfResizeHeight->setMaxLength(3);
+    tfResizeHeight->setMaxLengthEnabled(true);
+    resizeMapPanel->addChild(tfResizeHeight);
+    watchTextFieldFocus(tfResizeHeight);
+
+    const float confirmBtnW = 150;
+    const float confirmBtnH = 60;
+    MenuItemSprite* itemResize = createTextButton("Resize", confirmBtnW, confirmBtnH, [this](Ref*) { onConfirmResizeMap(); });
+    MenuItemSprite* itemCancel = createTextButton("Cancel", confirmBtnW, confirmBtnH, [this](Ref*) { hideResizeMapPanel(); });
+
+    itemResize->setPosition(Vec2(125, 35));
+    itemCancel->setPosition(Vec2(295, 35));
+    Menu* confirmMenu = Menu::create(itemResize, itemCancel, nullptr);
+    confirmMenu->setPosition(Vec2::ZERO);
+    resizeMapPanel->addChild(confirmMenu);
+}
+
+void MapEditor::showResizeMapPanel() {
+    tfResizeWidth->setString(StringUtils::format("%d", mapWidth));
+    tfResizeHeight->setString(StringUtils::format("%d", mapHeight));
+    resizeMapPanel->setVisible(true);
+    isResizeMapPanelOpen = true;
+    setModalDimmerVisible(true);
+}
+
+void MapEditor::hideResizeMapPanel() {
+    resizeMapPanel->setVisible(false);
+    isResizeMapPanelOpen = false;
+    setModalDimmerVisible(false);
+}
+
+void MapEditor::onConfirmResizeMap() {
+    int width = atoi(tfResizeWidth->getString().c_str());
+    int height = atoi(tfResizeHeight->getString().c_str());
+    if (width <= 0 || height <= 0) {
+        setStatus("Invalid size");
+        return;
+    }
+    resizeMap(width, height);
+    hideResizeMapPanel();
+    setStatus(StringUtils::format("Resized to %dx%d", mapWidth, mapHeight));
+}
+
+void MapEditor::addDefaultWinTrigger() {
+    Trigger t;
+    t.name = "Win";
+    t.preserve = true;
+    t.sides[SIDE_ALLY] = true;
+
+    TriggerCondition c;
+    c.type = COND_BUILDING_COUNT;
+    c.unitSide = SIDE_ENEMY;
+    c.comparison = CMP_AT_MOST;
+    c.amount = 0;
+    t.conditions.push_back(c);
+
+    TriggerAction a;
+    a.type = TACT_VICTORY;
+    t.actions.push_back(a);
+
+    triggers.push_back(t);
 }
 
 void MapEditor::setupEditUnitPanel() {
     Size visibleSize = Director::getInstance()->getVisibleSize();
 
     const float panelWidth = 620;
-    const float panelHeight = 260;
+    const float panelHeight = 320;
 
     editUnitPanel = Node::create();
     // NOTE: centering via (visibleSize.width|height - panelSize) / 2 reliably
@@ -2267,6 +2826,30 @@ void MapEditor::setupEditUnitPanel() {
     visibleMenu->setPosition(Vec2(200, panelHeight - 165));
     rowEditVisible->addChild(visibleMenu);
 
+    // Optional language key used as the unit's display name at runtime.
+    rowEditAlias = Node::create();
+    editUnitPanel->addChild(rowEditAlias);
+
+    Label* aliasLabel = LM->getLocalizedLabel("Alias:", Color4B(panelTextColor.r, panelTextColor.g, panelTextColor.b, 255), 22);
+    aliasLabel->setAnchorPoint(Vec2(0, 0.5f));
+    aliasLabel->setPosition(Vec2(40, panelHeight - 220));
+    rowEditAlias->addChild(aliasLabel);
+
+    DrawNode* aliasBg = DrawNode::create();
+    aliasBg->drawSolidRect(Vec2(140, panelHeight - 242), Vec2(560, panelHeight - 198), Color4F(0, 0, 0, 0.12f));
+    rowEditAlias->addChild(aliasBg);
+
+    tfEditAlias = TextField::create("none", "Arial", 22);
+    tfEditAlias->setAnchorPoint(Vec2(0, 0.5f));
+    tfEditAlias->setPosition(Vec2(150, panelHeight - 220));
+    tfEditAlias->setTouchAreaEnabled(true);
+    tfEditAlias->setTouchSize(Size(420, 44));
+    tfEditAlias->setMaxLength(40);
+    tfEditAlias->setMaxLengthEnabled(true);
+    tfEditAlias->setTextColor(Color4B(60, 40, 25, 255));
+    rowEditAlias->addChild(tfEditAlias);
+    watchTextFieldFocus(tfEditAlias);
+
     const float confirmBtnW = 150;
     const float confirmBtnH = 56;
     MenuItemSprite* itemApply = createTextButton("Apply", confirmBtnW, confirmBtnH, [this](Ref*) { onConfirmEditUnit(); });
@@ -2302,6 +2885,8 @@ void MapEditor::openEditUnitPanel(int objectIndex) {
     rowEditVisible->setVisible(isFlag);
     selectEditVisible(obj.visible ? 0 : 1);
     tfEditLevel->setString(StringUtils::format("%d", obj.level));
+    rowEditAlias->setVisible(true);
+    tfEditAlias->setString(obj.alias);
 
     editUnitPanel->setVisible(true);
     isEditUnitPanelOpen = true;
@@ -2358,6 +2943,9 @@ void MapEditor::openEditUnitPanelForSelection() {
     rowEditLevel->setVisible(anyHero);
     // Flag visibility is a single-object edit only - no batch "keep" semantics.
     rowEditVisible->setVisible(false);
+    // Alias is a per-unit identifier - batch-applying one would assign the
+    // same language key to every selected unit, which is never wanted.
+    rowEditAlias->setVisible(false);
 
     editUnitPanel->setVisible(true);
     isEditUnitPanelOpen = true;
@@ -2403,9 +2991,17 @@ void MapEditor::onConfirmEditUnit() {
     int levelParsed = atoi(tfEditLevel->getString().c_str());
     bool applyLevel = !batch || levelParsed >= 1; // "keep"/empty parses to 0
 
+    std::string aliasText = tfEditAlias->getString();
+    // Stray whitespace in a language key would silently break the lookup.
+    aliasText.erase(0, aliasText.find_first_not_of(" \t"));
+    aliasText.erase(aliasText.find_last_not_of(" \t") + 1);
+
     for (int idx : indices) {
         PlacedObject& obj = placedObjects[idx];
         obj.side = editPanelSide;
+        if (!batch) {
+            obj.alias = aliasText;
+        }
         if (!batch && strcmp(kObjectTypes[obj.typeIndex].name, "Flag") == 0) {
             obj.visible = (editPanelVisible == 0);
             obj.sprite->setOpacity(obj.visible ? 255 : 110);
@@ -2485,6 +3081,12 @@ std::string MapEditor::serialize() const {
             writer.Key("visible");
             writer.Bool(false);
         }
+        // Written only when set - most units have no alias, and skipping the
+        // empty ones keeps the file from growing.
+        if (!obj.alias.empty()) {
+            writer.Key("alias");
+            writer.String(obj.alias.c_str(), static_cast<rapidjson::SizeType>(obj.alias.size()));
+        }
         writer.EndObject();
     }
     writer.EndArray();
@@ -2527,6 +3129,12 @@ std::string MapEditor::serialize() const {
             writer.Int(c.resourceKind);
             writer.Key("targetObjectId");
             writer.Int(c.targetObjectId);
+            // Written only when set - absent means "Any", so files saved
+            // before this key existed load unchanged.
+            if (c.sourceObjectId >= 0) {
+                writer.Key("sourceObjectId");
+                writer.Int(c.sourceObjectId);
+            }
             writer.Key("isRepeat");
             writer.Bool(c.isRepeat);
             writer.EndObject();
@@ -2550,6 +3158,8 @@ std::string MapEditor::serialize() const {
             writer.Int(a.tileY);
             writer.Key("targetObjectId");
             writer.Int(a.targetObjectId);
+            writer.Key("sourceObjectId");
+            writer.Int(a.sourceObjectId);
             writer.Key("count");
             writer.Int(a.count);
             writer.Key("switchIndex");
@@ -2558,8 +3168,12 @@ std::string MapEditor::serialize() const {
             writer.Int(a.switchAction);
             writer.Key("waitSeconds");
             writer.Double(a.waitSeconds);
+            writer.Key("talkSeconds");
+            writer.Double(a.talkSeconds);
             writer.Key("visionEnabled");
             writer.Bool(a.visionEnabled);
+            writer.Key("controlLocked");
+            writer.Bool(a.controlLocked);
             writer.EndObject();
         }
         writer.EndArray();
@@ -2630,7 +3244,8 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
             int id = item.HasMember("id") ? item["id"].GetInt() : -1;
             int level = item.HasMember("level") ? item["level"].GetInt() : 1;
             bool visible = !(item.HasMember("visible") && item["visible"].IsBool()) || item["visible"].GetBool();
-            spawnObjectAt(x, y, typeIndex, side, hp, id, level, visible);
+            std::string alias = (item.HasMember("alias") && item["alias"].IsString()) ? item["alias"].GetString() : "";
+            spawnObjectAt(x, y, typeIndex, side, hp, id, level, visible, alias);
         }
     }
 
@@ -2686,6 +3301,9 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     if (citem.HasMember("targetObjectId")) {
                         c.targetObjectId = citem["targetObjectId"].GetInt();
                     }
+                    if (citem.HasMember("sourceObjectId")) {
+                        c.sourceObjectId = citem["sourceObjectId"].GetInt();
+                    }
                     if (citem.HasMember("isRepeat")) {
                         c.isRepeat = citem["isRepeat"].GetBool();
                     }
@@ -2716,6 +3334,9 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     if (aitem.HasMember("targetObjectId")) {
                         a.targetObjectId = aitem["targetObjectId"].GetInt();
                     }
+                    if (aitem.HasMember("sourceObjectId")) {
+                        a.sourceObjectId = aitem["sourceObjectId"].GetInt();
+                    }
                     if (aitem.HasMember("count")) {
                         a.count = aitem["count"].GetInt();
                     }
@@ -2728,8 +3349,14 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     if (aitem.HasMember("waitSeconds")) {
                         a.waitSeconds = static_cast<float>(aitem["waitSeconds"].GetDouble());
                     }
+                    if (aitem.HasMember("talkSeconds")) {
+                        a.talkSeconds = static_cast<float>(aitem["talkSeconds"].GetDouble());
+                    }
                     if (aitem.HasMember("visionEnabled")) {
                         a.visionEnabled = aitem["visionEnabled"].GetBool();
+                    }
+                    if (aitem.HasMember("controlLocked")) {
+                        a.controlLocked = aitem["controlLocked"].GetBool();
                     }
                     t.actions.push_back(a);
                 }
@@ -2925,6 +3552,26 @@ Node* MapEditor::addTextFieldRow(Node* parent, const std::string& title, float x
         *outField = tf;
     }
     return row;
+}
+
+// Attaches a transparent-but-clickable overlay over a cycle-row's value label
+// so that clicking the text opens a scrollable dropdown (e.g. "At:"/"To:" or
+// "Unit Type:" rows) instead of only stepping one value at a time via the
+// arrows. The normal skin is opacity-0 (invisible, showing the label
+// beneath), the selected skin flashes as press feedback.
+void MapEditor::addDropdownOverlay(Node* row, const std::function<void()>& onOpen) {
+    const float arrowSz = 34.0f, valW = 260.0f, leftX = 180.0f;
+    const float valX = leftX + arrowSz / 2 + 10 + valW / 2;
+    Scale9Sprite* n = makeButtonSkin(BTN_SKIN_NORMAL, Size(valW, arrowSz + 4));
+    n->setOpacity(0);
+    Scale9Sprite* s = makeButtonSkin(BTN_SKIN_SELECTED, Size(valW, arrowSz + 4));
+    MenuItemSprite* btn = MenuItemSprite::create(n, s, [this, onOpen](Ref*) {
+        this->scheduleOnce([onOpen](float){ onOpen(); }, 0.0f, "dd_open");
+    });
+    btn->setPosition(Vec2(valX, 0));
+    Menu* m = Menu::create(btn, nullptr);
+    m->setPosition(Vec2::ZERO);
+    row->addChild(m);
 }
 
 void MapEditor::setMultiHighlight(std::vector<Scale9Sprite*>& group, const bool* states, int count) {
@@ -3206,10 +3853,56 @@ std::string MapEditor::describeCondition(const TriggerCondition& c) const {
             base = StringUtils::format("%s is %s %d", kResourceKindNames[c.resourceKind], kComparisonNames[c.comparison], c.amount);
             break;
         case COND_UNIT_ARRIVES:
-            base = StringUtils::format("%s %s arrives at %s (range %d)", kSideNames[c.unitSide],
-                                        unitTypeCycleName(c.unitTypeIndex).c_str(),
-                                        c.targetObjectId >= 0 ? describeTargetObject(c.targetObjectId).c_str() : "(no target)",
-                                        c.amount);
+            // A specific placed unit supersedes the Side/Unit Type filter.
+            if (c.sourceObjectId >= 0) {
+                base = StringUtils::format("%s arrives at %s (range %d)",
+                                            describeTargetObject(c.sourceObjectId).c_str(),
+                                            c.targetObjectId >= 0 ? describeTargetObject(c.targetObjectId).c_str() : "(no target)",
+                                            c.amount);
+            } else {
+                base = StringUtils::format("%s %s arrives at %s (range %d)", kSideNames[c.unitSide],
+                                            unitTypeCycleName(c.unitTypeIndex).c_str(),
+                                            c.targetObjectId >= 0 ? describeTargetObject(c.targetObjectId).c_str() : "(no target)",
+                                            c.amount);
+            }
+            break;
+        case COND_BUILDING_COUNT: {
+            // Player-facing objective text: the "building count format" language
+            // template with {0} = the building's (localized) name and {1} = the
+            // required number. By design the comparison (at least / at most /
+            // exactly) is not surfaced here - only the count is.
+            std::string buildingName;
+            if (c.unitTypeIndex >= 0) {
+                // Editor roster names are English (e.g. "Farm"); the language
+                // sheet keys them lower-case ("farm"). Fall back to the editor
+                // name when the sheet has no entry (e.g. "Lumber Mill").
+                std::string raw = unitTypeCycleName(c.unitTypeIndex);
+                std::string key = raw;
+                std::transform(key.begin(), key.end(), key.begin(),
+                               [](unsigned char ch) { return (ch >= 'A' && ch <= 'Z') ? ch + 32 : ch; });
+                buildingName = LM->getText(key);
+                if (buildingName == key) {
+                    buildingName = raw;
+                }
+            } else {
+                // "Any" building type - use the generic "building" word.
+                buildingName = LM->getText("building");
+            }
+            base = LM->getText("building count format");
+            const std::string values[2] = {buildingName, StringUtils::format("%d", c.amount)};
+            for (int i = 0; i < 2; i++) {
+                std::string ph = StringUtils::format("{%d}", i);
+                size_t slot = base.find(ph);
+                if (slot != std::string::npos) {
+                    base.replace(slot, ph.size(), values[i]);
+                } else {
+                    base += " " + values[i];
+                }
+            }
+            break;
+        }
+        case COND_UNIT_DIES:
+            base = StringUtils::format("%s dies", c.targetObjectId >= 0 ? describeTargetObject(c.targetObjectId).c_str() : "(no unit)");
             break;
         default:
             base = "Unknown condition";
@@ -3245,7 +3938,7 @@ std::string MapEditor::describeAction(const TriggerAction& a) const {
                                           : StringUtils::format("Center camera at (%d,%d)", a.tileX, a.tileY);
         case TACT_TALK: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
-            return StringUtils::format("Talk at %s: \"%s\"", at.c_str(), a.message.c_str());
+            return StringUtils::format("Talk at %s (%.1fs): \"%s\"", at.c_str(), a.talkSeconds, a.message.c_str());
         }
         case TACT_REVEAL_FOG: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
@@ -3253,6 +3946,13 @@ std::string MapEditor::describeAction(const TriggerAction& a) const {
         }
         case TACT_ORDER_ATTACK:
             return StringUtils::format("Order attack: %s %s -> enemy", kSideNames[a.unitSide], unitTypeCycleName(a.unitTypeIndex).c_str());
+        case TACT_MOVE_UNIT: {
+            std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
+            std::string unit = a.sourceObjectId >= 0 ? describeTargetObject(a.sourceObjectId) : "(no unit)";
+            return StringUtils::format("Move: %s -> %s", unit.c_str(), at.c_str());
+        }
+        case TACT_LOCK_CONTROL:
+            return a.controlLocked ? "Lock player control" : "Unlock player control";
         default:
             return "Unknown action";
     }
@@ -3368,20 +4068,34 @@ void MapEditor::refreshTriggerDetail() {
         lbl->setAnchorPoint(Vec2(0, 0.5f));
         lbl->setPosition(Vec2(0, y));
         // Long descriptions (Talk lines especially) must not run under the
-        // Copy/Edit/X buttons on the right - shrink to fit the free space.
-        const float maxLblW = rowWidth - 210;
+        // Up/Down/Copy/Edit/X buttons on the right - shrink to fit the free space.
+        const float maxLblW = rowWidth - 280;
         if (lbl->getContentSize().width > maxLblW) {
             lbl->setScale(maxLblW / lbl->getContentSize().width);
         }
         actionListContainer->addChild(lbl);
 
-        MenuItemSprite* itemCopy = createTextButton("Copy", 70, rowH - 2, [this, idx](Ref*) { duplicateActionAtIndex(idx); });
-        itemCopy->setPosition(Vec2(rowWidth - 165, y));
-        MenuItemSprite* itemEdit = createTextButton("Edit", 70, rowH - 2, [this, idx](Ref*) { openActionEditPanel(idx); });
-        itemEdit->setPosition(Vec2(rowWidth - 90, y));
+        Scale9Sprite* upBg = nullptr;
+        MenuItemSprite* itemUp = createTextButton("^", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, -1); }, &upBg);
+        itemUp->setPosition(Vec2(rowWidth - 246, y));
+        bool canMoveUp = idx > 0;
+        itemUp->setEnabled(canMoveUp);
+        upBg->setOpacity(canMoveUp ? 255 : 90);
+
+        Scale9Sprite* downBg = nullptr;
+        MenuItemSprite* itemDown = createTextButton("v", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, 1); }, &downBg);
+        itemDown->setPosition(Vec2(rowWidth - 210, y));
+        bool canMoveDown = idx < actTotal - 1;
+        itemDown->setEnabled(canMoveDown);
+        downBg->setOpacity(canMoveDown ? 255 : 90);
+
+        MenuItemSprite* itemCopy = createTextButton("Copy", 64, rowH - 2, [this, idx](Ref*) { duplicateActionAtIndex(idx); });
+        itemCopy->setPosition(Vec2(rowWidth - 154, y));
+        MenuItemSprite* itemEdit = createTextButton("Edit", 64, rowH - 2, [this, idx](Ref*) { openActionEditPanel(idx); });
+        itemEdit->setPosition(Vec2(rowWidth - 82, y));
         MenuItemSprite* itemDel = createTextButton("X", 44, rowH - 2, [this, idx](Ref*) { deleteActionAtIndex(idx); });
         itemDel->setPosition(Vec2(rowWidth - 20, y));
-        Menu* menu = Menu::create(itemCopy, itemEdit, itemDel, nullptr);
+        Menu* menu = Menu::create(itemUp, itemDown, itemCopy, itemEdit, itemDel, nullptr);
         menu->setPosition(Vec2::ZERO);
         actionListContainer->addChild(menu);
     }
@@ -3439,6 +4153,21 @@ void MapEditor::duplicateActionAtIndex(int index) {
     refreshTriggerDetail();
 }
 
+void MapEditor::moveActionAtIndex(int index, int dir) {
+    if (selectedTriggerIndex < 0) {
+        return;
+    }
+    Trigger& t = triggers[selectedTriggerIndex];
+    int other = index + dir;
+    if (index < 0 || index >= static_cast<int>(t.actions.size()) ||
+        other < 0 || other >= static_cast<int>(t.actions.size())) {
+        return;
+    }
+    std::swap(t.actions[index], t.actions[other]);
+    isDirty = true;
+    refreshTriggerDetail();
+}
+
 std::vector<std::pair<int, std::string>> MapEditor::buildTargetList() const {
     std::vector<std::pair<int, std::string>> list;
     list.push_back({-1, "Manual (Tile X/Y)"});
@@ -3449,19 +4178,88 @@ std::vector<std::pair<int, std::string>> MapEditor::buildTargetList() const {
     return list;
 }
 
+// "Any" (-1, only when includeAny) followed by every roster entry - the same
+// set cycleAction*UnitType/cycleConditionUnitType step through with the arrows.
+std::vector<std::pair<int, std::string>> MapEditor::buildUnitTypeList(bool includeAny, bool buildingsOnly) const {
+    std::vector<std::pair<int, std::string>> list;
+    if (includeAny) {
+        list.push_back({-1, "Any"});
+    }
+    for (int i = 0; i < kObjectTypeCount; i++) {
+        if (buildingsOnly && !isBuildingObjectType(i)) {
+            continue;
+        }
+        list.push_back({i, kObjectTypes[i].name});
+    }
+    return list;
+}
+
+int MapEditor::cycleUnitTypeIndex(int current, int dir, bool buildingsOnly) const {
+    if (!buildingsOnly) {
+        return cyclicAdd(current, dir, -1, kObjectTypeCount - 1);
+    }
+    // Ordered list of valid values: -1 (Any) followed by each building index.
+    std::vector<int> valid;
+    valid.push_back(-1);
+    for (int i = 0; i < kObjectTypeCount; i++) {
+        if (isBuildingObjectType(i)) {
+            valid.push_back(i);
+        }
+    }
+    int pos = 0;
+    for (int i = 0; i < static_cast<int>(valid.size()); i++) {
+        if (valid[i] == current) {
+            pos = i;
+            break;
+        }
+    }
+    int n = static_cast<int>(valid.size());
+    pos = ((pos + dir) % n + n) % n;
+    return valid[pos];
+}
+
 void MapEditor::openTargetDropdown(bool forCondition) {
+    openDropdown(forCondition, DROPDOWN_FIELD_TARGET);
+}
+
+void MapEditor::openUnitTypeDropdown(bool forCondition) {
+    openDropdown(forCondition, DROPDOWN_FIELD_UNIT_TYPE);
+}
+
+void MapEditor::openDropdown(bool forCondition, DropdownField field) {
     if (isTargetDropdownOpen) {
         closeTargetDropdown();
         return;
     }
     isTargetDropdownForCondition = forCondition;
-    targetDropdownList = buildTargetList();
-    if (forCondition) {
-        // Conditions have no tile-coordinate fallback - entry 0's id is still
-        // -1 ("not set"), only the label changes.
-        targetDropdownList[0].second = "(none)";
+    dropdownField = field;
+    if (field == DROPDOWN_FIELD_TARGET) {
+        targetDropdownList = buildTargetList();
+        if (forCondition) {
+            // Conditions have no tile-coordinate fallback - entry 0's id is still
+            // -1 ("not set"), only the label changes.
+            targetDropdownList[0].second = "(none)";
+        }
+    } else if (field == DROPDOWN_FIELD_MOVE_SOURCE) {
+        // Same candidate list as a target row, but entry 0 means "no unit
+        // chosen yet" rather than "fall back to manual tile X/Y".
+        targetDropdownList = buildTargetList();
+        targetDropdownList[0].second = "(Select Unit)";
+    } else if (field == DROPDOWN_FIELD_ARRIVE_UNIT) {
+        // Entry 0 (-1) means "Any unit matching Side/Unit Type", the
+        // pre-existing behavior of the Arrives condition.
+        targetDropdownList = buildTargetList();
+        targetDropdownList[0].second = "(Any)";
+    } else {
+        // Create Unit is the only field where "Any" (-1) isn't a legal value -
+        // it always creates a concrete unit type.
+        bool includeAny = !(!forCondition && actionDraft.type == TACT_CREATE_UNIT);
+        // Building Count counts buildings only, so its Unit Type list hides
+        // non-building units and heroes.
+        bool buildingsOnly = forCondition && conditionDraft.type == COND_BUILDING_COUNT;
+        targetDropdownList = buildUnitTypeList(includeAny, buildingsOnly);
     }
-    int currentId = forCondition ? conditionDraft.targetObjectId : actionDraft.targetObjectId;
+    int currentId = currentDropdownValue();
     targetDropdownScroll = 0;
     for (int i = 0; i < (int)targetDropdownList.size(); i++) {
         if (targetDropdownList[i].first == currentId) {
@@ -3481,8 +4279,35 @@ void MapEditor::closeTargetDropdown() {
     isTargetDropdownOpen = false;
 }
 
+int MapEditor::currentDropdownValue() const {
+    if (dropdownField == DROPDOWN_FIELD_UNIT_TYPE) {
+        return isTargetDropdownForCondition ? conditionDraft.unitTypeIndex : actionDraft.unitTypeIndex;
+    }
+    if (dropdownField == DROPDOWN_FIELD_MOVE_SOURCE) {
+        return actionDraft.sourceObjectId;
+    }
+    if (dropdownField == DROPDOWN_FIELD_ARRIVE_UNIT) {
+        return conditionDraft.sourceObjectId;
+    }
+    return isTargetDropdownForCondition ? conditionDraft.targetObjectId : actionDraft.targetObjectId;
+}
+
 void MapEditor::selectTargetObject(int id) {
-    if (isTargetDropdownForCondition) {
+    if (dropdownField == DROPDOWN_FIELD_UNIT_TYPE) {
+        if (isTargetDropdownForCondition) {
+            conditionDraft.unitTypeIndex = id;
+            refreshConditionEditPanel();
+        } else {
+            actionDraft.unitTypeIndex = id;
+            refreshActionEditPanel();
+        }
+    } else if (dropdownField == DROPDOWN_FIELD_MOVE_SOURCE) {
+        actionDraft.sourceObjectId = id;
+        refreshActionEditPanel();
+    } else if (dropdownField == DROPDOWN_FIELD_ARRIVE_UNIT) {
+        conditionDraft.sourceObjectId = id;
+        refreshConditionEditPanel();
+    } else if (isTargetDropdownForCondition) {
         conditionDraft.targetObjectId = id;
         refreshConditionEditPanel();
     } else {
@@ -3490,6 +4315,38 @@ void MapEditor::selectTargetObject(int id) {
         refreshActionEditPanel();
     }
     closeTargetDropdown();
+}
+
+// Panel-relative y offset (from groupY, see the setup* functions) of the row
+// the currently-open dropdown should anchor under. Every "Unit Type:" row sits
+// one slot below "Side:" in both panels, so that half is a constant; the
+// target ("At:"/"To:") row's offset instead varies per action/condition type
+// depending on how many rows precede it in that type's group.
+float MapEditor::dropdownAnchorOffsetY() const {
+    if (dropdownField == DROPDOWN_FIELD_UNIT_TYPE) {
+        return -50.0f;
+    }
+    if (dropdownField == DROPDOWN_FIELD_MOVE_SOURCE) {
+        return 0.0f; // Move's "Unit:" row is the first row in its group
+    }
+    if (dropdownField == DROPDOWN_FIELD_ARRIVE_UNIT) {
+        return -100.0f; // Arrives' "Unit:" row, below Side/Unit Type
+    }
+    if (isTargetDropdownForCondition) {
+        // Unit Arrives' "At:" row sits 150 below groupY (Side/Unit Type/Unit
+        // above it); Unit Dies' "Unit:" row is the only row in its group.
+        return conditionDraft.type == COND_UNIT_ARRIVES ? -150.0f : 0.0f;
+    }
+    switch (actionDraft.type) {
+        case TACT_CREATE_UNIT:
+            return -100.0f;
+        case TACT_MOVE_UNIT:
+            return -50.0f; // "To:" row, now below Move's "Unit:" row
+        case TACT_REVEAL_FOG:
+            return -50.0f;
+        default:
+            return 0.0f; // CENTER_CAMERA, TALK
+    }
 }
 
 void MapEditor::rebuildTargetDropdown() {
@@ -3510,21 +4367,13 @@ void MapEditor::rebuildTargetDropdown() {
     int visCount = std::min(total - targetDropdownScroll, kMaxVis);
     float dropH = padV * 2 + visCount * itemH + (needScroll ? scrollBtnH * 2.0f : 0.0f);
 
-    // Determine panel-relative y of the active "At:" row center.
+    // Determine panel-relative y of the active row's center.
     // actionEditPanel height=560, conditionEditPanel height=520; both lay out
     // their per-type rows starting at groupY = panelH - 160 (see the setup
-    // functions).
-    float panelH;
-    float atRowPanelY;
-    if (isTargetDropdownForCondition) {
-        panelH = 520.0f;
-        // Unit Arrives is the only condition with an "At:" row, at -100.
-        atRowPanelY = (panelH - 160.0f) - 100.0f;
-    } else {
-        panelH = 560.0f;
-        const float groupY = panelH - 160.0f;
-        atRowPanelY = (actionDraft.type == TACT_CREATE_UNIT) ? (groupY - 100.0f) : groupY;
-    }
+    // functions); dropdownAnchorOffsetY() gives the row's offset from groupY.
+    float panelH = isTargetDropdownForCondition ? 520.0f : 560.0f;
+    float groupY = panelH - 160.0f;
+    float atRowPanelY = groupY + dropdownAnchorOffsetY();
 
     // Try below the "At:" row; if it clips the panel bottom, show above instead
     float dropBottom = atRowPanelY - 22.0f - dropH;
@@ -3561,7 +4410,7 @@ void MapEditor::rebuildTargetDropdown() {
         items.pushBack(upBtn);
     }
 
-    int currentId = isTargetDropdownForCondition ? conditionDraft.targetObjectId : actionDraft.targetObjectId;
+    int currentId = currentDropdownValue();
     float curY = dropH - padV - (needScroll ? scrollBtnH : 0.0f) - itemH / 2;
     for (int i = 0; i < visCount; i++) {
         int idx = targetDropdownScroll + i;
@@ -3642,7 +4491,8 @@ void MapEditor::setupConditionEditPanel() {
     rowCondUnitCount->setPosition(Vec2(0, groupY));
     conditionEditPanel->addChild(rowCondUnitCount);
     addCycleRow(rowCondUnitCount, "Side:", 30, 0, &lblCondSide, [this](int dir) { cycleConditionSide(dir); });
-    addCycleRow(rowCondUnitCount, "Unit Type:", 30, -50, &lblCondUnitType, [this](int dir) { cycleConditionUnitType(dir); });
+    addDropdownOverlay(addCycleRow(rowCondUnitCount, "Unit Type:", 30, -50, &lblCondUnitType, [this](int dir) { cycleConditionUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(true); });
     addCycleRow(rowCondUnitCount, "Comparison:", 30, -100, &lblCondComparison, [this](int dir) { cycleConditionComparison(dir); });
     addTextFieldRow(rowCondUnitCount, "Amount:", 30, -150, 150, "1", &tfCondUnitAmount);
 
@@ -3657,26 +4507,32 @@ void MapEditor::setupConditionEditPanel() {
     rowCondUnitArrives->setPosition(Vec2(0, groupY));
     conditionEditPanel->addChild(rowCondUnitArrives);
     addCycleRow(rowCondUnitArrives, "Side:", 30, 0, &lblCondArriveSide, [this](int dir) { cycleConditionSide(dir); });
-    addCycleRow(rowCondUnitArrives, "Unit Type:", 30, -50, &lblCondArriveUnitType, [this](int dir) { cycleConditionUnitType(dir); });
-    // Same transparent click-overlay pattern as the action panel's "At:" rows
-    // (see addTargetOverlay in setupActionEditPanel): clicking the value text
-    // opens the shared target dropdown, in condition mode.
-    {
-        Node* atRow = addCycleRow(rowCondUnitArrives, "At:", 30, -100, &lblCondArriveTarget, [this](int dir) { cycleConditionArriveTarget(dir); });
-        const float arrowSz = 34.0f, valW = 260.0f, leftX = 180.0f;
-        const float valX = leftX + arrowSz / 2 + 10 + valW / 2;
-        Scale9Sprite* n = makeButtonSkin(BTN_SKIN_NORMAL, Size(valW, arrowSz + 4));
-        n->setOpacity(0);
-        Scale9Sprite* s = makeButtonSkin(BTN_SKIN_SELECTED, Size(valW, arrowSz + 4));
-        MenuItemSprite* btn = MenuItemSprite::create(n, s, [this](Ref*) {
-            this->scheduleOnce([this](float){ openTargetDropdown(true); }, 0.0f, "dd_open");
-        });
-        btn->setPosition(Vec2(valX, 0));
-        Menu* m = Menu::create(btn, nullptr);
-        m->setPosition(Vec2::ZERO);
-        atRow->addChild(m);
-    }
-    addTextFieldRow(rowCondUnitArrives, "Range (tiles):", 30, -150, 150, "2", &tfCondArriveRange);
+    addDropdownOverlay(addCycleRow(rowCondUnitArrives, "Unit Type:", 30, -50, &lblCondArriveUnitType, [this](int dir) { cycleConditionUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(true); });
+    // "(Any)" keeps the Side/Unit Type filter; picking a placed unit makes
+    // the condition watch that one unit only.
+    addDropdownOverlay(addCycleRow(rowCondUnitArrives, "Unit:", 30, -100, &lblCondArriveUnit, [this](int dir) { cycleConditionArriveUnit(dir); }),
+                       [this]{ openDropdown(true, DROPDOWN_FIELD_ARRIVE_UNIT); });
+    addDropdownOverlay(addCycleRow(rowCondUnitArrives, "At:", 30, -150, &lblCondArriveTarget, [this](int dir) { cycleConditionTargetObject(dir); }),
+                       [this]{ openTargetDropdown(true); });
+    addTextFieldRow(rowCondUnitArrives, "Range (tiles):", 30, -200, 150, "2", &tfCondArriveRange);
+
+    rowCondBuildingCount = Node::create();
+    rowCondBuildingCount->setPosition(Vec2(0, groupY));
+    conditionEditPanel->addChild(rowCondBuildingCount);
+    addCycleRow(rowCondBuildingCount, "Side:", 30, 0, &lblCondBuildingSide, [this](int dir) { cycleConditionSide(dir); });
+    // "(Any)" counts every building of the side; picking a type counts only
+    // buildings of that type (non-building types simply never match).
+    addDropdownOverlay(addCycleRow(rowCondBuildingCount, "Unit Type:", 30, -50, &lblCondBuildingUnitType, [this](int dir) { cycleConditionUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(true); });
+    addCycleRow(rowCondBuildingCount, "Comparison:", 30, -100, &lblCondBuildingComparison, [this](int dir) { cycleConditionComparison(dir); });
+    addTextFieldRow(rowCondBuildingCount, "Amount:", 30, -150, 150, "0", &tfCondBuildingAmount);
+
+    rowCondUnitDies = Node::create();
+    rowCondUnitDies->setPosition(Vec2(0, groupY));
+    conditionEditPanel->addChild(rowCondUnitDies);
+    addDropdownOverlay(addCycleRow(rowCondUnitDies, "Unit:", 30, 0, &lblCondDiesTarget, [this](int dir) { cycleConditionTargetObject(dir); }),
+                       [this]{ openTargetDropdown(true); });
 
     Scale9Sprite* isRepeatBg = nullptr;
     MenuItemSprite* itemIsRepeat = createTextButton("Is Repeat", 160, 50,
@@ -3716,6 +4572,7 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     tfCondUnitAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     tfCondResourceAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     tfCondArriveRange->setString(StringUtils::format("%d", std::max(1, conditionDraft.amount)));
+    tfCondBuildingAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     refreshConditionEditPanel();
 
     conditionEditPanel->setVisible(true);
@@ -3739,6 +4596,13 @@ void MapEditor::cycleConditionType(int dir) {
         closeTargetDropdown();
     }
     conditionDraft.type = static_cast<TriggerConditionType>(cyclicAdd(conditionDraft.type, dir, 0, COND_TYPE_COUNT - 1));
+    // Building Count only accepts building types - if a non-building unit was
+    // carried over from the previous type, fall back to "Any" so the row never
+    // shows a value its own dropdown can't reach.
+    if (conditionDraft.type == COND_BUILDING_COUNT &&
+        conditionDraft.unitTypeIndex >= 0 && !isBuildingObjectType(conditionDraft.unitTypeIndex)) {
+        conditionDraft.unitTypeIndex = -1;
+    }
     refreshConditionEditPanel();
 }
 
@@ -3748,7 +4612,10 @@ void MapEditor::cycleConditionSide(int dir) {
 }
 
 void MapEditor::cycleConditionUnitType(int dir) {
-    conditionDraft.unitTypeIndex = cyclicAdd(conditionDraft.unitTypeIndex, dir, -1, kObjectTypeCount - 1);
+    // Shared by the Unit Count / Unit Arrives / Building Count rows (only one is
+    // visible at a time); Building Count steps through buildings only.
+    bool buildingsOnly = (conditionDraft.type == COND_BUILDING_COUNT);
+    conditionDraft.unitTypeIndex = cycleUnitTypeIndex(conditionDraft.unitTypeIndex, dir, buildingsOnly);
     refreshConditionEditPanel();
 }
 
@@ -3777,8 +4644,13 @@ void MapEditor::cycleConditionSwitchState(int dir) {
     refreshConditionEditPanel();
 }
 
-void MapEditor::cycleConditionArriveTarget(int dir) {
+void MapEditor::cycleConditionTargetObject(int dir) {
     conditionDraft.targetObjectId = cycleTargetObjectId(conditionDraft.targetObjectId, dir);
+    refreshConditionEditPanel();
+}
+
+void MapEditor::cycleConditionArriveUnit(int dir) {
+    conditionDraft.sourceObjectId = cycleTargetObjectId(conditionDraft.sourceObjectId, dir);
     refreshConditionEditPanel();
 }
 
@@ -3797,6 +4669,8 @@ void MapEditor::refreshConditionEditPanel() {
     rowCondUnitCount->setVisible(conditionDraft.type == COND_UNIT_COUNT);
     rowCondResource->setVisible(conditionDraft.type == COND_RESOURCE);
     rowCondUnitArrives->setVisible(conditionDraft.type == COND_UNIT_ARRIVES);
+    rowCondBuildingCount->setVisible(conditionDraft.type == COND_BUILDING_COUNT);
+    rowCondUnitDies->setVisible(conditionDraft.type == COND_UNIT_DIES);
 
     lblCondSwitchIndex->setString(StringUtils::format("%d", conditionDraft.switchIndex + 1));
     lblCondSwitchState->setString(kSwitchStateNames[conditionDraft.switchState]);
@@ -3807,9 +4681,18 @@ void MapEditor::refreshConditionEditPanel() {
     lblCondResourceComparison->setString(kComparisonNames[conditionDraft.comparison]);
     lblCondArriveSide->setString(kSideNames[conditionDraft.unitSide]);
     lblCondArriveUnitType->setString(unitTypeCycleName(conditionDraft.unitTypeIndex));
+    lblCondArriveUnit->setString(conditionDraft.sourceObjectId >= 0
+                                     ? describeTargetObject(conditionDraft.sourceObjectId)
+                                     : "(Any)");
     lblCondArriveTarget->setString(conditionDraft.targetObjectId >= 0
                                        ? describeTargetObject(conditionDraft.targetObjectId)
                                        : "(pick a flag/unit)");
+    lblCondBuildingSide->setString(kSideNames[conditionDraft.unitSide]);
+    lblCondBuildingUnitType->setString(unitTypeCycleName(conditionDraft.unitTypeIndex));
+    lblCondBuildingComparison->setString(kComparisonNames[conditionDraft.comparison]);
+    lblCondDiesTarget->setString(conditionDraft.targetObjectId >= 0
+                                      ? describeTargetObject(conditionDraft.targetObjectId)
+                                      : "(none)");
     if (condIsRepeatBg) {
         condIsRepeatBg->setColor(conditionDraft.isRepeat ? Color3B(255, 221, 120) : Color3B::WHITE);
     }
@@ -3829,6 +4712,8 @@ void MapEditor::onConfirmCondition() {
         c.amount = std::max(0, atoi(tfCondResourceAmount->getString().c_str()));
     } else if (c.type == COND_UNIT_ARRIVES) {
         c.amount = std::max(1, atoi(tfCondArriveRange->getString().c_str()));
+    } else if (c.type == COND_BUILDING_COUNT) {
+        c.amount = std::max(0, atoi(tfCondBuildingAmount->getString().c_str()));
     }
 
     Trigger& t = triggers[selectedTriggerIndex];
@@ -3874,26 +4759,10 @@ void MapEditor::setupActionEditPanel() {
     rowActCreateUnit->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActCreateUnit);
     addCycleRow(rowActCreateUnit, "Side:", 30, 0, &lblActCreateSide, [this](int dir) { cycleActionCreateSide(dir); });
-    addCycleRow(rowActCreateUnit, "Unit Type:", 30, -50, &lblActCreateUnitType, [this](int dir) { cycleActionCreateUnitType(dir); });
-    // addTargetOverlay: attaches a transparent-but-clickable MenuItemSprite over the
-    // cycle-row value label so that clicking the text opens the target dropdown.
-    // The normal skin is opacity-0 (invisible, showing the label beneath), the
-    // selected skin flashes green as press feedback.
-    auto addTargetOverlay = [&](Node* row) {
-        const float arrowSz = 34.0f, valW = 260.0f, leftX = 180.0f;
-        const float valX = leftX + arrowSz / 2 + 10 + valW / 2;
-        Scale9Sprite* n = makeButtonSkin(BTN_SKIN_NORMAL, Size(valW, arrowSz + 4));
-        n->setOpacity(0);
-        Scale9Sprite* s = makeButtonSkin(BTN_SKIN_SELECTED, Size(valW, arrowSz + 4));
-        MenuItemSprite* btn = MenuItemSprite::create(n, s, [this](Ref*) {
-            this->scheduleOnce([this](float){ openTargetDropdown(); }, 0.0f, "dd_open");
-        });
-        btn->setPosition(Vec2(valX, 0));
-        Menu* m = Menu::create(btn, nullptr);
-        m->setPosition(Vec2::ZERO);
-        row->addChild(m);
-    };
-    addTargetOverlay(addCycleRow(rowActCreateUnit, "At:", 30, -100, &lblActCreateTarget, [this](int dir) { cycleActionCreateTarget(dir); }));
+    addDropdownOverlay(addCycleRow(rowActCreateUnit, "Unit Type:", 30, -50, &lblActCreateUnitType, [this](int dir) { cycleActionCreateUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(); });
+    addDropdownOverlay(addCycleRow(rowActCreateUnit, "At:", 30, -100, &lblActCreateTarget, [this](int dir) { cycleActionCreateTarget(dir); }),
+                       [this]{ openTargetDropdown(); });
     rowActCreateX = addTextFieldRow(rowActCreateUnit, "Tile X:", 30, -150, 150, "0", &tfActCreateX);
     rowActCreateY = addTextFieldRow(rowActCreateUnit, "Tile Y:", 30, -200, 150, "0", &tfActCreateY);
     addTextFieldRow(rowActCreateUnit, "Count:", 30, -250, 150, "1", &tfActCreateCount);
@@ -3902,7 +4771,8 @@ void MapEditor::setupActionEditPanel() {
     rowActRemoveUnit->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActRemoveUnit);
     addCycleRow(rowActRemoveUnit, "Side:", 30, 0, &lblActRemoveSide, [this](int dir) { cycleActionRemoveSide(dir); });
-    addCycleRow(rowActRemoveUnit, "Unit Type:", 30, -50, &lblActRemoveUnitType, [this](int dir) { cycleActionRemoveUnitType(dir); });
+    addDropdownOverlay(addCycleRow(rowActRemoveUnit, "Unit Type:", 30, -50, &lblActRemoveUnitType, [this](int dir) { cycleActionRemoveUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(); });
 
     rowActSwitch = Node::create();
     rowActSwitch->setPosition(Vec2(0, groupY));
@@ -3918,23 +4788,27 @@ void MapEditor::setupActionEditPanel() {
     rowActCamera = Node::create();
     rowActCamera->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActCamera);
-    addTargetOverlay(addCycleRow(rowActCamera, "At:", 30, 0, &lblActCameraTarget, [this](int dir) { cycleActionCameraTarget(dir); }));
+    addDropdownOverlay(addCycleRow(rowActCamera, "At:", 30, 0, &lblActCameraTarget, [this](int dir) { cycleActionCameraTarget(dir); }),
+                       [this]{ openTargetDropdown(); });
     rowActCameraX = addTextFieldRow(rowActCamera, "Tile X:", 30, -50, 150, "0", &tfActCameraX);
     rowActCameraY = addTextFieldRow(rowActCamera, "Tile Y:", 30, -100, 150, "0", &tfActCameraY);
 
     rowActTalk = Node::create();
     rowActTalk->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActTalk);
-    addTargetOverlay(addCycleRow(rowActTalk, "At:", 30, 0, &lblActTalkTarget, [this](int dir) { cycleActionTalkTarget(dir); }));
+    addDropdownOverlay(addCycleRow(rowActTalk, "At:", 30, 0, &lblActTalkTarget, [this](int dir) { cycleActionTalkTarget(dir); }),
+                       [this]{ openTargetDropdown(); });
     rowActTalkX = addTextFieldRow(rowActTalk, "Tile X:", 30, -50, 150, "0", &tfActTalkX);
     rowActTalkY = addTextFieldRow(rowActTalk, "Tile Y:", 30, -100, 150, "0", &tfActTalkY);
     addTextFieldRow(rowActTalk, "Message:", 30, -150, 300, "", &tfActTalkMessage);
+    addTextFieldRow(rowActTalk, "Duration (sec):", 30, -200, 150, "3", &tfActTalkSeconds);
 
     rowActRevealFog = Node::create();
     rowActRevealFog->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActRevealFog);
     addCycleRow(rowActRevealFog, "Vision:", 30, 0, &lblActRevealFogEnabled, [this](int dir) { cycleActionRevealFogEnabled(dir); });
-    addTargetOverlay(addCycleRow(rowActRevealFog, "At:", 30, -50, &lblActRevealFogTarget, [this](int dir) { cycleActionRevealFogTarget(dir); }));
+    addDropdownOverlay(addCycleRow(rowActRevealFog, "At:", 30, -50, &lblActRevealFogTarget, [this](int dir) { cycleActionRevealFogTarget(dir); }),
+                       [this]{ openTargetDropdown(); });
     rowActRevealFogX = addTextFieldRow(rowActRevealFog, "Tile X:", 30, -100, 150, "0", &tfActRevealFogX);
     rowActRevealFogY = addTextFieldRow(rowActRevealFog, "Tile Y:", 30, -150, 150, "0", &tfActRevealFogY);
     addTextFieldRow(rowActRevealFog, "Radius (fog):", 30, -200, 150, "5", &tfActRevealFogRadius);
@@ -3943,7 +4817,23 @@ void MapEditor::setupActionEditPanel() {
     rowActOrderAttack->setPosition(Vec2(0, groupY));
     actionEditPanel->addChild(rowActOrderAttack);
     addCycleRow(rowActOrderAttack, "Side:", 30, 0, &lblActOrderAttackSide, [this](int dir) { cycleActionOrderAttackSide(dir); });
-    addCycleRow(rowActOrderAttack, "Unit Type:", 30, -50, &lblActOrderAttackUnitType, [this](int dir) { cycleActionOrderAttackUnitType(dir); });
+    addDropdownOverlay(addCycleRow(rowActOrderAttack, "Unit Type:", 30, -50, &lblActOrderAttackUnitType, [this](int dir) { cycleActionOrderAttackUnitType(dir); }),
+                       [this]{ openUnitTypeDropdown(); });
+
+    rowActMoveUnit = Node::create();
+    rowActMoveUnit->setPosition(Vec2(0, groupY));
+    actionEditPanel->addChild(rowActMoveUnit);
+    addDropdownOverlay(addCycleRow(rowActMoveUnit, "Unit:", 30, 0, &lblActMoveUnit, [this](int dir) { cycleActionMoveSource(dir); }),
+                       [this]{ openDropdown(false, DROPDOWN_FIELD_MOVE_SOURCE); });
+    addDropdownOverlay(addCycleRow(rowActMoveUnit, "To:", 30, -50, &lblActMoveTarget, [this](int dir) { cycleActionMoveTarget(dir); }),
+                       [this]{ openTargetDropdown(); });
+    rowActMoveX = addTextFieldRow(rowActMoveUnit, "Tile X:", 30, -100, 150, "0", &tfActMoveX);
+    rowActMoveY = addTextFieldRow(rowActMoveUnit, "Tile Y:", 30, -150, 150, "0", &tfActMoveY);
+
+    rowActLockControl = Node::create();
+    rowActLockControl->setPosition(Vec2(0, groupY));
+    actionEditPanel->addChild(rowActLockControl);
+    addCycleRow(rowActLockControl, "State:", 30, 0, &lblActLockControlState, [this](int dir) { cycleActionLockControlState(dir); });
 
     MenuItemSprite* itemConfirm = createTextButton("OK", 140, 56, [this](Ref*) { onConfirmAction(); });
     MenuItemSprite* itemCancel = createTextButton("Cancel", 140, 56, [this](Ref*) { closeActionEditPanel(); });
@@ -3980,10 +4870,13 @@ void MapEditor::openActionEditPanel(int actionIndex) {
     tfActTalkX->setString(StringUtils::format("%d", actionDraft.tileX));
     tfActTalkY->setString(StringUtils::format("%d", actionDraft.tileY));
     tfActTalkMessage->setString(actionDraft.message);
+    tfActTalkSeconds->setString(StringUtils::format("%.1f", actionDraft.talkSeconds));
     int revealRadius = (actionDraft.type == TACT_REVEAL_FOG) ? std::max(1, actionDraft.count) : 5;
     tfActRevealFogX->setString(StringUtils::format("%d", actionDraft.tileX));
     tfActRevealFogY->setString(StringUtils::format("%d", actionDraft.tileY));
     tfActRevealFogRadius->setString(StringUtils::format("%d", revealRadius));
+    tfActMoveX->setString(StringUtils::format("%d", actionDraft.tileX));
+    tfActMoveY->setString(StringUtils::format("%d", actionDraft.tileY));
     refreshActionEditPanel();
 
     actionEditPanel->setVisible(true);
@@ -4103,6 +4996,21 @@ void MapEditor::cycleActionOrderAttackUnitType(int dir) {
     refreshActionEditPanel();
 }
 
+void MapEditor::cycleActionMoveSource(int dir) {
+    actionDraft.sourceObjectId = cycleTargetObjectId(actionDraft.sourceObjectId, dir);
+    refreshActionEditPanel();
+}
+
+void MapEditor::cycleActionMoveTarget(int dir) {
+    actionDraft.targetObjectId = cycleTargetObjectId(actionDraft.targetObjectId, dir);
+    refreshActionEditPanel();
+}
+
+void MapEditor::cycleActionLockControlState(int dir) {
+    actionDraft.controlLocked = !actionDraft.controlLocked;
+    refreshActionEditPanel();
+}
+
 void MapEditor::refreshActionEditPanel() {
     lblActType->setString(kTriggerActionTypeNames[actionDraft.type]);
 
@@ -4115,6 +5023,8 @@ void MapEditor::refreshActionEditPanel() {
     rowActTalk->setVisible(actionDraft.type == TACT_TALK);
     rowActRevealFog->setVisible(actionDraft.type == TACT_REVEAL_FOG);
     rowActOrderAttack->setVisible(actionDraft.type == TACT_ORDER_ATTACK);
+    rowActMoveUnit->setVisible(actionDraft.type == TACT_MOVE_UNIT);
+    rowActLockControl->setVisible(actionDraft.type == TACT_LOCK_CONTROL);
 
     bool createUsesManual = actionDraft.targetObjectId < 0;
     rowActCreateX->setVisible(createUsesManual);
@@ -4128,6 +5038,9 @@ void MapEditor::refreshActionEditPanel() {
     bool revealUsesManual = actionDraft.targetObjectId < 0;
     rowActRevealFogX->setVisible(revealUsesManual);
     rowActRevealFogY->setVisible(revealUsesManual);
+    bool moveUsesManual = actionDraft.targetObjectId < 0;
+    rowActMoveX->setVisible(moveUsesManual);
+    rowActMoveY->setVisible(moveUsesManual);
 
     lblActCreateSide->setString(kSideNames[actionDraft.unitSide]);
     int createUnitType = actionDraft.unitTypeIndex < 0 ? 0 : actionDraft.unitTypeIndex;
@@ -4143,6 +5056,9 @@ void MapEditor::refreshActionEditPanel() {
     lblActRevealFogTarget->setString(describeTargetObject(actionDraft.targetObjectId));
     lblActOrderAttackSide->setString(kSideNames[actionDraft.unitSide]);
     lblActOrderAttackUnitType->setString(unitTypeCycleName(actionDraft.unitTypeIndex));
+    lblActMoveUnit->setString(actionDraft.sourceObjectId >= 0 ? describeTargetObject(actionDraft.sourceObjectId) : "(Select Unit)");
+    lblActMoveTarget->setString(describeTargetObject(actionDraft.targetObjectId));
+    lblActLockControlState->setString(actionDraft.controlLocked ? "Locked" : "Unlocked");
 }
 
 void MapEditor::onConfirmAction() {
@@ -4173,12 +5089,18 @@ void MapEditor::onConfirmAction() {
             a.tileY = atoi(tfActTalkY->getString().c_str());
         }
         a.message = tfActTalkMessage->getString();
+        a.talkSeconds = std::max(0.0f, static_cast<float>(atof(tfActTalkSeconds->getString().c_str())));
     } else if (a.type == TACT_REVEAL_FOG) {
         if (a.targetObjectId < 0) {
             a.tileX = atoi(tfActRevealFogX->getString().c_str());
             a.tileY = atoi(tfActRevealFogY->getString().c_str());
         }
         a.count = std::max(1, atoi(tfActRevealFogRadius->getString().c_str()));
+    } else if (a.type == TACT_MOVE_UNIT) {
+        if (a.targetObjectId < 0) {
+            a.tileX = atoi(tfActMoveX->getString().c_str());
+            a.tileY = atoi(tfActMoveY->getString().c_str());
+        }
     }
 
     Trigger& t = triggers[selectedTriggerIndex];
@@ -4236,6 +5158,19 @@ void MapEditor::setupInput() {
             }
         } else if (key == EventKeyboard::KeyCode::KEY_Y && ctrlDown) {
             redo();
+        } else if (key == EventKeyboard::KeyCode::KEY_C && ctrlDown) {
+            // Clipboard only means something on the tabs that have a selection.
+            if (currentMainTab == TAB_MOVE || currentMainTab == TAB_TRIGGER) {
+                copySelectionToClipboard();
+            }
+        } else if (key == EventKeyboard::KeyCode::KEY_V && ctrlDown) {
+            if (currentMainTab == TAB_MOVE || currentMainTab == TAB_TRIGGER) {
+                pasteClipboardAtCursor();
+            }
+        } else if (key == EventKeyboard::KeyCode::KEY_DELETE) {
+            if (currentMainTab == TAB_MOVE || currentMainTab == TAB_TRIGGER) {
+                deleteSelection();
+            }
         } else if (key == EventKeyboard::KeyCode::KEY_EQUAL ||
                    key == EventKeyboard::KeyCode::KEY_KP_PLUS) {
             Vec2 center = Director::getInstance()->getVisibleSize() / 2;
@@ -4338,7 +5273,10 @@ void MapEditor::setupInput() {
     };
     mouseListener->onMouseMove = [this](EventMouse* evt) {
         Vec2 pos = win32MouseWorldPos(evt);
+        lastMouseWorldPos = pos;
+        hasMouseWorldPos = true;
         updateHoverTooltip(pos);
+        updateMouseCoordLabel(pos);
         if (isAnyModalOpen()) {
             return;
         }

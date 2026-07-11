@@ -86,6 +86,24 @@ private:
         // flags still exist as trigger targets; the editor always draws them
         // (dimmed) so they stay clickable/editable.
         bool visible = true;
+        // Optional language key for this unit's display name at runtime.
+        // Empty = none; empty aliases are not written to the save file.
+        std::string alias;
+    };
+
+    // Ctrl+C clipboard entry: a property snapshot of one copied unit plus its
+    // tile offset from the copied group's center cell, so Ctrl+V re-creates
+    // the formation around the mouse cursor. Snapshots rather than object ids,
+    // so the clipboard survives the originals being deleted.
+    struct ClipboardEntry {
+        int typeIndex;
+        int side;
+        int hp;
+        int level;
+        bool visible;
+        std::string alias;
+        int offsetX;
+        int offsetY;
     };
 
     // StarCraft-style trigger system: a Trigger fires its Actions once all of its
@@ -102,6 +120,14 @@ private:
         // `amount` tiles of the placed object `targetObjectId` (typically a
         // Flag) - StarCraft's "Bring unit to location".
         COND_UNIT_ARRIVES,
+        // Same shape as COND_UNIT_COUNT (unitSide/unitTypeIndex/comparison/
+        // amount) but only counts buildings; unitTypeIndex -1 = any building.
+        // "Destroy all enemy buildings" is Side=Enemy, Comparison=AtMost, Amount=0.
+        COND_BUILDING_COUNT,
+        // The specific placed unit `targetObjectId` has died. Appended at the
+        // end (not alongside COND_UNIT_ARRIVES) so existing saved maps' int
+        // condition-type values keep meaning what they already meant.
+        COND_UNIT_DIES,
         COND_TYPE_COUNT
     };
 
@@ -131,6 +157,16 @@ private:
         // uncontrollable ally units or triggering an enemy charge.
         // Fields used: unitSide (which side to order), unitTypeIndex (-1 = all).
         TACT_ORDER_ATTACK,
+        // Moves one specific placed unit (sourceObjectId) to a destination,
+        // same target-on-map selection as CENTER_CAMERA (targetObjectId, else
+        // tileX/tileY). Fields used: sourceObjectId, tileX/tileY/targetObjectId.
+        TACT_MOVE_UNIT,
+        // Locks or unlocks the player's own controls (camera pan/zoom, unit
+        // selection/commands) - for scripted sequences (e.g. a cutscene run
+        // via CENTER_CAMERA/TALK) where the player shouldn't be able to
+        // interfere. `controlLocked` = true locks, false unlocks; a later
+        // trigger firing this action with false is how a lock gets released.
+        TACT_LOCK_CONTROL,
         TACT_TYPE_COUNT
     };
 
@@ -157,6 +193,7 @@ private:
     enum TriggerResourceKind {
         RESOURCE_GOLD = 0,
         RESOURCE_TREE,
+        RESOURCE_OIL,
         RESOURCE_KIND_COUNT
     };
 
@@ -174,24 +211,31 @@ private:
         int amount = 1;                      // UNIT_COUNT, RESOURCE; UNIT_ARRIVES: range in tiles
         TriggerResourceKind resourceKind = RESOURCE_GOLD; // RESOURCE
         int targetObjectId = -1;             // UNIT_ARRIVES: id of the placed object (flag/unit)
-                                              // whose position to watch; -1 = not set yet
+                                              // whose position to watch; UNIT_DIES: id of the
+                                              // placed unit to watch for death; -1 = not set yet
+        int sourceObjectId = -1;             // UNIT_ARRIVES: id of the one specific placed unit
+                                              // that must arrive; -1 = Any (fall back to the
+                                              // unitSide/unitTypeIndex filter)
         bool isRepeat = false; // only satisfied on repeated firings (trigger already fired once)
     };
 
     struct TriggerAction {
         TriggerActionType type = TACT_DISPLAY_MESSAGE;
         std::string message;                 // DISPLAY_MESSAGE, TALK
-        int unitSide = SIDE_ALLY;            // CREATE_UNIT, REMOVE_UNIT
-        int unitTypeIndex = -1;              // CREATE_UNIT, REMOVE_UNIT; -1 = Any (REMOVE_UNIT only)
-        int tileX = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; used when targetObjectId < 0
-        int tileY = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; used when targetObjectId < 0
-        int targetObjectId = -1;             // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG; -1 = use tileX/tileY,
+        int unitSide = SIDE_ALLY;            // CREATE_UNIT, REMOVE_UNIT, ORDER_ATTACK
+        int unitTypeIndex = -1;              // CREATE_UNIT, REMOVE_UNIT, ORDER_ATTACK; -1 = Any (all but CREATE_UNIT)
+        int tileX = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG, MOVE_UNIT; used when targetObjectId < 0
+        int tileY = 0;                       // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG, MOVE_UNIT; used when targetObjectId < 0
+        int targetObjectId = -1;             // CREATE_UNIT, CENTER_CAMERA, TALK, REVEAL_FOG, MOVE_UNIT; -1 = use tileX/tileY,
                                               // else the id of a placed flag/unit whose position to use
+        int sourceObjectId = -1;             // MOVE_UNIT: id of the placed unit to move; -1 = not set yet
         int count = 1;                       // CREATE_UNIT; REVEAL_FOG: radius in fog tiles (default 5)
         int switchIndex = 0;                 // SET_SWITCH
         TriggerSwitchAction switchAction = SWITCH_ACTION_SET; // SET_SWITCH
         float waitSeconds = 1.0f;            // WAIT
+        float talkSeconds = 3.0f;            // TALK: seconds the speech bubble stays on screen
         bool visionEnabled = true;           // REVEAL_FOG: true = reveal, false = cancel revelation
+        bool controlLocked = true;           // LOCK_CONTROL: true = lock player controls, false = unlock
     };
 
     struct Trigger {
@@ -226,6 +270,9 @@ private:
         // Flag runtime visibility, carried through undo/redo of moves/erases.
         bool oldVisible = true;
         bool newVisible = true;
+        // Alias (language key), carried through undo/redo of moves/erases.
+        std::string oldAlias;
+        std::string newAlias;
     };
 
     struct UndoAction {
@@ -277,6 +324,10 @@ private:
     cocos2d::DrawNode* paletteTooltipBg = nullptr;
     cocos2d::Label* paletteTooltipLabel = nullptr;
 
+    // Bottom-left readout of the map cell under the mouse cursor (Win32 only).
+    // Used as a reference point when wiring up trigger actions later.
+    cocos2d::Label* mouseCoordLabel = nullptr;
+
     int currentMainTab = TAB_TERRAIN;
     std::vector<cocos2d::ui::Scale9Sprite*> mainTabBgs;
     cocos2d::Node* terrainToolsRow = nullptr;
@@ -306,6 +357,11 @@ private:
     // of a multi-selection; empty = classic single-unit drag. Parallel arrays.
     std::vector<int> groupDragIndices;
     std::vector<cocos2d::Vec2> groupDragOrigSpritePositions;
+    // Ctrl+C/Ctrl+V clipboard (Move/Trigger tabs) and the Move tab's Duplicate
+    // button. lastMouseWorldPos anchors Ctrl+V pastes near the cursor (Win32).
+    std::vector<ClipboardEntry> clipboardEntries;
+    bool hasMouseWorldPos = false;
+    cocos2d::Vec2 lastMouseWorldPos;
     // Click bookkeeping: double-click selects every unit of the same type and
     // side; a plain click on an already-selected unit opens the (batch) editor.
     long long lastObjectClickMs = 0;
@@ -323,6 +379,9 @@ private:
     cocos2d::ui::TextField* tfEditHp = nullptr;
     cocos2d::Node* rowEditLevel = nullptr;
     cocos2d::ui::TextField* tfEditLevel = nullptr;
+    // Optional language-key alias; single-unit edits only (no batch semantics).
+    cocos2d::Node* rowEditAlias = nullptr;
+    cocos2d::ui::TextField* tfEditAlias = nullptr;
     // Flags only: Show/Hide toggle for the flag's runtime visibility.
     cocos2d::Node* rowEditVisible = nullptr;
     std::vector<cocos2d::ui::Scale9Sprite*> editVisibleButtonBgs;
@@ -377,8 +436,18 @@ private:
     cocos2d::Node* rowCondUnitArrives = nullptr;
     cocos2d::Label* lblCondArriveSide = nullptr;
     cocos2d::Label* lblCondArriveUnitType = nullptr;
+    // "Unit:" row - the one specific placed unit that must arrive ("(Any)"
+    // = keep filtering by Side/Unit Type instead).
+    cocos2d::Label* lblCondArriveUnit = nullptr;
     cocos2d::Label* lblCondArriveTarget = nullptr;
     cocos2d::ui::TextField* tfCondArriveRange = nullptr;
+    cocos2d::Node* rowCondBuildingCount = nullptr;
+    cocos2d::Label* lblCondBuildingSide = nullptr;
+    cocos2d::Label* lblCondBuildingUnitType = nullptr;
+    cocos2d::Label* lblCondBuildingComparison = nullptr;
+    cocos2d::ui::TextField* tfCondBuildingAmount = nullptr;
+    cocos2d::Node* rowCondUnitDies = nullptr;
+    cocos2d::Label* lblCondDiesTarget = nullptr;
 
     cocos2d::Node* actionEditPanel = nullptr;
     bool isActionEditPanelOpen = false;
@@ -419,6 +488,7 @@ private:
     cocos2d::ui::TextField* tfActTalkX = nullptr;
     cocos2d::Node* rowActTalkY = nullptr;
     cocos2d::ui::TextField* tfActTalkY = nullptr;
+    cocos2d::ui::TextField* tfActTalkSeconds = nullptr;
     cocos2d::Node* rowActRevealFog = nullptr;
     cocos2d::Label* lblActRevealFogEnabled = nullptr;
     cocos2d::Label* lblActRevealFogTarget = nullptr;
@@ -430,13 +500,37 @@ private:
     cocos2d::Node* rowActRevealFogY = nullptr;
     cocos2d::ui::TextField* tfActRevealFogY = nullptr;
     cocos2d::ui::TextField* tfActRevealFogRadius = nullptr;
+    cocos2d::Node* rowActMoveUnit = nullptr;
+    cocos2d::Label* lblActMoveUnit = nullptr;
+    cocos2d::Label* lblActMoveTarget = nullptr;
+    cocos2d::Node* rowActMoveX = nullptr;
+    cocos2d::ui::TextField* tfActMoveX = nullptr;
+    cocos2d::Node* rowActMoveY = nullptr;
+    cocos2d::ui::TextField* tfActMoveY = nullptr;
+    cocos2d::Node* rowActLockControl = nullptr;
+    cocos2d::Label* lblActLockControlState = nullptr;
 
+    // Shared scrollable dropdown, reused for the "At:/To:" target-object rows,
+    // the "Unit Type:" rows, and Move's "Unit:" row - only one field's list is
+    // open at a time, so a single set of dropdown/list members plus a "which
+    // field" tag suffices.
+    enum DropdownField {
+        DROPDOWN_FIELD_TARGET = 0,
+        DROPDOWN_FIELD_UNIT_TYPE = 1,
+        // Move action's "Unit:" row - picks the specific placed unit to move,
+        // written to actionDraft.sourceObjectId instead of targetObjectId.
+        DROPDOWN_FIELD_MOVE_SOURCE = 2,
+        // Unit Arrives condition's "Unit:" row - picks the one specific
+        // placed unit that must arrive, written to conditionDraft.sourceObjectId.
+        DROPDOWN_FIELD_ARRIVE_UNIT = 3
+    };
     cocos2d::Node* targetDropdown = nullptr;
     bool isTargetDropdownOpen = false;
     // Which sub-panel the open dropdown belongs to and writes back into:
     // false = actionEditPanel/actionDraft, true = conditionEditPanel/conditionDraft
     // (Unit Arrives' "At:" row).
     bool isTargetDropdownForCondition = false;
+    DropdownField dropdownField = DROPDOWN_FIELD_TARGET;
     int targetDropdownScroll = 0;
     std::vector<std::pair<int, std::string>> targetDropdownList;
 
@@ -449,6 +543,13 @@ private:
     cocos2d::ui::TextField* tfWidth = nullptr;
     cocos2d::ui::TextField* tfHeight = nullptr;
     bool isNewMapPanelOpen = false;
+
+    // Resizes the currently open map in place (as opposed to New, which
+    // discards it and starts blank).
+    cocos2d::Node* resizeMapPanel = nullptr;
+    cocos2d::ui::TextField* tfResizeWidth = nullptr;
+    cocos2d::ui::TextField* tfResizeHeight = nullptr;
+    bool isResizeMapPanelOpen = false;
 
     cocos2d::EventListenerMouse* mouseListener = nullptr;
     cocos2d::EventListenerTouchOneByOne* touchListener = nullptr;
@@ -470,6 +571,15 @@ private:
     cocos2d::Vec2 panStartLayerPos;
 
     void buildMap(int width, int height);
+    // (Re)creates tileBatch/tileSprites for the current mapWidth/mapHeight,
+    // painted as plain grass. Caller is responsible for terrainGrid contents
+    // and for refreshing tiles afterward if it holds real terrain data.
+    void rebuildTileVisuals();
+    // Adds the default "Win" trigger (destroy all enemy buildings -> Victory)
+    // that every brand-new map starts with. Not called from buildMap itself,
+    // since buildMap is also the reset step deserialize() uses before loading
+    // an existing map's own triggers.
+    void addDefaultWinTrigger();
     int terrainAt(int x, int y) const;
     int cornerTerrain(int cx, int cy) const;
     int pickTileIdForCell(int x, int y) const;
@@ -483,7 +593,8 @@ private:
     int findObjectAt(int x, int y) const;
     int findObjectAtWorldPos(const cocos2d::Vec2& worldPos) const;
     void removeObjectAtIndex(int index);
-    cocos2d::Node* spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id = -1, int level = 1, bool visible = true);
+    cocos2d::Node* spawnObjectAt(int x, int y, int typeIndex, int side, int hp, int id = -1, int level = 1, bool visible = true,
+                                 const std::string& alias = std::string());
     void placeObjectAt(int x, int y);
     void eraseObjectAt(const cocos2d::Vec2& worldPos);
     void objectToolAtWorldPos(const cocos2d::Vec2& worldPos);
@@ -515,6 +626,24 @@ private:
     bool isValidGroupMoveTarget(int objectIndex, int x, int y,
                                 const std::vector<int>& group) const;
 
+    // Duplicate/copy-paste of placed units. duplicateSelection copies each
+    // selected unit into the nearest free cell beside its original (Move tab's
+    // Duplicate button); copy/paste do the same via a clipboard, with the paste
+    // anchored on the cell under the mouse cursor. All spawn as one undo step
+    // and re-select the copies so they can be dragged into place right away.
+    void duplicateSelection();
+    // Removes every selected unit as one undo step (Move tab's Delete button
+    // and the Del key on the Move/Trigger tabs).
+    void deleteSelection();
+    void copySelectionToClipboard();
+    void pasteClipboardAtCursor();
+    bool spawnCopyNear(const ClipboardEntry& entry, int nearX, int nearY,
+                       std::vector<std::pair<int, int>>& claimedCells,
+                       std::vector<int>& outNewIds);
+    bool findNearestFreeCell(int typeIndex, int startX, int startY,
+                             const std::vector<std::pair<int, int>>& claimedCells,
+                             int& outX, int& outY) const;
+
     int objectIndexById(int id) const;
     bool isObjectIdSelected(int id) const;
     void clearSelection();
@@ -534,6 +663,12 @@ private:
     void hideNewMapPanel();
     void onConfirmNewMap();
 
+    void setupResizeMapPanel();
+    void showResizeMapPanel();
+    void hideResizeMapPanel();
+    void onConfirmResizeMap();
+    void resizeMap(int newWidth, int newHeight);
+
     void setupUnitPropertiesBar();
     void selectSide(int side);
     int parsedHpOverride() const;
@@ -543,6 +678,9 @@ private:
     void showHoverTooltip(const std::string& text, const cocos2d::Vec2& anchorWorldPos);
     cocos2d::Rect paletteSlotWorldRect(int slot) const;
     std::string paletteTooltipText(int typeIndex) const;
+
+    void setupMouseCoordLabel();
+    void updateMouseCoordLabel(const cocos2d::Vec2& worldPos);
 
     void setupEditUnitPanel();
     void openEditUnitPanel(int objectIndex);
@@ -586,7 +724,8 @@ private:
     void cycleConditionResourceComparison(int dir);
     void cycleConditionSwitchIndex(int dir);
     void cycleConditionSwitchState(int dir);
-    void cycleConditionArriveTarget(int dir);
+    void cycleConditionTargetObject(int dir);
+    void cycleConditionArriveUnit(int dir);
     void refreshConditionEditPanel();
     void toggleConditionIsRepeat();
     void onConfirmCondition();
@@ -609,17 +748,32 @@ private:
     void cycleActionRevealFogTarget(int dir);
     void cycleActionOrderAttackSide(int dir);
     void cycleActionOrderAttackUnitType(int dir);
+    void cycleActionMoveSource(int dir);
+    void cycleActionMoveTarget(int dir);
+    void cycleActionLockControlState(int dir);
     int cycleTargetObjectId(int currentId, int dir) const;
     std::string describeTargetObject(int id) const;
     void refreshActionEditPanel();
     void onConfirmAction();
     void deleteActionAtIndex(int index);
     void duplicateActionAtIndex(int index);
+    void moveActionAtIndex(int index, int dir);
     std::vector<std::pair<int, std::string>> buildTargetList() const;
+    // buildingsOnly restricts the roster to building types (Building Count
+    // condition's Unit Type dropdown); false lists every unit/hero/building.
+    std::vector<std::pair<int, std::string>> buildUnitTypeList(bool includeAny, bool buildingsOnly = false) const;
+    // Cycles a unitTypeIndex through -1 (Any) plus either every type or only
+    // building types, wrapping at both ends.
+    int cycleUnitTypeIndex(int current, int dir, bool buildingsOnly) const;
     void openTargetDropdown(bool forCondition = false);
+    void openUnitTypeDropdown(bool forCondition = false);
+    void openDropdown(bool forCondition, DropdownField field);
     void closeTargetDropdown();
     void selectTargetObject(int id);
     void rebuildTargetDropdown();
+    float dropdownAnchorOffsetY() const;
+    int currentDropdownValue() const;
+    void addDropdownOverlay(cocos2d::Node* row, const std::function<void()>& onOpen);
 
     void setupInput();
     bool isAnyModalOpen() const;

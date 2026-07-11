@@ -201,8 +201,7 @@ bool HudLayer::init() {
   this->addChild(lblOil);
   lblOil->setPosition(Vec2(size.width - 500, size.height - 50));
   lblOil->setAnchorPoint(Vec2(0, 0.5));
-  Sprite *sptOil = Sprite::createWithSpriteFrameName("oilSpot.png");
-  sptOil->setScale(0.12f);
+  Sprite *sptOil = Sprite::create("oilIcon.png");
   this->addChild(sptOil);
   sptOil->setName("iconOil");
   sptOil->setPosition(lblOil->getPosition() + Vec2(-45, 0));
@@ -296,6 +295,7 @@ bool HudLayer::init() {
     Node *ndBottom = CSLoader::createNode("BottomUnitBar.csb");
     this->addChild(ndBottom, 5);
     ndBottom->setPositionX(size.width / 2);
+    ndBottom->setName("bottomUnitBar");
     bottomUnitBar = ndBottom;
     Text *lblSelectGround = (Text *)ndBottom->getChildByName("lbl");
     LM->setLocalizedString(lblSelectGround, "select ground to place soldiers");
@@ -396,6 +396,7 @@ bool HudLayer::init() {
                                false); // LM->getLocalizedLabel();
     lblTimer->setPosition(Vec2(offsetX + 125, 480));
     lblTimer->setScaleX(0.8f);
+    lblTimer->setName("lblTimer");
     this->addChild(lblTimer, 99);
     if (isRaid) {
       img->setContentSize(cocos2d::Size(440, 100));
@@ -408,6 +409,7 @@ bool HudLayer::init() {
 
     Node *ndPanel = CSLoader::createNode("RightBottomPanelForCampaign.csb");
     rightBottomPanelForCampaign = ndPanel;
+    ndPanel->setName("rightBottomPanelForCampaign");
     this->addChild(ndPanel, 99);
     offsetRight = 100;
     ndPanel->setPosition(Vec2(size.width - offsetRight, 0));
@@ -443,6 +445,7 @@ bool HudLayer::init() {
 #endif
     rightBottomPanel =
         CSLoader::createNodeWithVisibleSize("RightBottomPanel.csb");
+    rightBottomPanel->setName("rightBottomPanel");
     this->addChild(rightBottomPanel, 5);
     if (WORLD->isMultiplay) {
       btnShow->setVisible(false);
@@ -5393,6 +5396,148 @@ void HudLayer::hideBlackTopAndBottom() {
       nullptr));
   showBtns();
 }
+void HudLayer::collectCinematicUiNodes(Vector<Node *> &topNodes,
+                                       Vector<Node *> &bottomNodes) {
+  // Top strip: the resource bar (gold/lumber/oil/food) at the top edge.
+  const char *topNames[] = {"imgResourceBack", "iconGold", "iconLumber",
+                            "iconOil", "iconFood"};
+  for (const char *name : topNames) {
+    Node *node = this->getChildByName(name);
+    if (node != nullptr)
+      topNodes.pushBack(node);
+  }
+  if (lblGold != nullptr)
+    topNodes.pushBack(lblGold);
+  if (lblLumber != nullptr)
+    topNodes.pushBack(lblLumber);
+  if (lblOil != nullptr)
+    topNodes.pushBack(lblOil);
+  if (lblFood != nullptr)
+    topNodes.pushBack(lblFood);
+
+  // Bottom strip: menu/timer, minimap (drawn by GameScene onto this layer),
+  // shortcut slots and the right-bottom command panels.
+  const char *bottomNames[] = {"btnMenu",
+                               "imgTimeBack",
+                               "lblTimer",
+                               "miniMapBack",
+                               "miniMapFrame",
+                               "miniMapNonMoving",
+                               "miniMapMoving",
+                               "miniMapTerrain",
+                               "rightBottomPanel",
+                               "rightBottomPanelForCampaign",
+                               "bottomUnitBar",
+                               "deleteShortcut"};
+  for (const char *name : bottomNames) {
+    Node *node = this->getChildByName(name);
+    if (node != nullptr)
+      bottomNodes.pushBack(node);
+  }
+  for (int i = 0; i < shortcutCount; i++) {
+    Node *node = this->getChildByName(strmake("btnShortcut%d", i));
+    if (node != nullptr)
+      bottomNodes.pushBack(node);
+  }
+}
+void HudLayer::setControlLockUi(bool locked) {
+  // LockControl trigger action (GameScene trigger type 12). Locking slides
+  // the HUD strips offscreen and closes cinematic letterbox bars; unlocking
+  // slides both the HUD and the bars back.
+  const float topUiOffset = 300;    // clears the top resource bar
+  const float bottomUiOffset = 760; // clears minimap + bottom panels
+  const float letterboxHeight = 160;
+  const float slideTime = 0.5f;
+  if (locked == cinematicUiHidden)
+    return;
+  cinematicUiHidden = locked;
+
+  Vector<Node *> topNodes;
+  Vector<Node *> bottomNodes;
+  collectCinematicUiNodes(topNodes, bottomNodes);
+  if (locked) {
+    for (auto node : topNodes) {
+      node->stopAllActions();
+      if (cinematicUiRestY.find(node) == cinematicUiRestY.end())
+        cinematicUiRestY[node] = node->getPositionY();
+      node->runAction(EaseSineIn::create(MoveTo::create(
+          slideTime,
+          Vec2(node->getPositionX(), cinematicUiRestY[node] + topUiOffset))));
+    }
+    for (auto node : bottomNodes) {
+      node->stopAllActions();
+      if (cinematicUiRestY.find(node) == cinematicUiRestY.end())
+        cinematicUiRestY[node] = node->getPositionY();
+      node->runAction(EaseSineIn::create(MoveTo::create(
+          slideTime, Vec2(node->getPositionX(),
+                          cinematicUiRestY[node] - bottomUiOffset))));
+    }
+
+    float barWidth = size.width + 20;
+    if (letterboxTop == nullptr) {
+      letterboxTop = Sprite::create("whiteRect.png");
+      this->addChild(letterboxTop, 500);
+      letterboxTop->setColor(Color3B::BLACK);
+      letterboxTop->setContentSize(cocos2d::Size(barWidth, letterboxHeight));
+      letterboxTop->setAnchorPoint(Vec2(0.5f, 1));
+      letterboxTop->setPosition(
+          Vec2(size.width / 2, size.height + letterboxHeight));
+    }
+    letterboxTop->stopAllActions();
+    letterboxTop->runAction(EaseSineOut::create(
+        MoveTo::create(slideTime, Vec2(size.width / 2, size.height))));
+
+    if (letterboxBottom == nullptr) {
+      letterboxBottom = Sprite::create("whiteRect.png");
+      this->addChild(letterboxBottom, 500);
+      letterboxBottom->setColor(Color3B::BLACK);
+      letterboxBottom->setContentSize(
+          cocos2d::Size(barWidth, letterboxHeight));
+      letterboxBottom->setAnchorPoint(Vec2(0.5f, 0));
+      letterboxBottom->setPosition(Vec2(size.width / 2, -letterboxHeight));
+    }
+    letterboxBottom->stopAllActions();
+    letterboxBottom->runAction(EaseSineOut::create(
+        MoveTo::create(slideTime, Vec2(size.width / 2, 0))));
+  } else {
+    for (auto node : topNodes) {
+      auto it = cinematicUiRestY.find(node);
+      if (it == cinematicUiRestY.end())
+        continue;
+      node->stopAllActions();
+      node->runAction(EaseSineOut::create(MoveTo::create(
+          slideTime, Vec2(node->getPositionX(), it->second))));
+    }
+    for (auto node : bottomNodes) {
+      auto it = cinematicUiRestY.find(node);
+      if (it == cinematicUiRestY.end())
+        continue;
+      node->stopAllActions();
+      node->runAction(EaseSineOut::create(MoveTo::create(
+          slideTime, Vec2(node->getPositionX(), it->second))));
+    }
+
+    if (letterboxTop != nullptr) {
+      Sprite *bar = letterboxTop;
+      letterboxTop = nullptr;
+      bar->stopAllActions();
+      bar->runAction(Sequence::create(
+          EaseSineIn::create(MoveTo::create(
+              slideTime,
+              Vec2(size.width / 2, size.height + letterboxHeight))),
+          RemoveSelf::create(), nullptr));
+    }
+    if (letterboxBottom != nullptr) {
+      Sprite *bar = letterboxBottom;
+      letterboxBottom = nullptr;
+      bar->stopAllActions();
+      bar->runAction(Sequence::create(
+          EaseSineIn::create(MoveTo::create(
+              slideTime, Vec2(size.width / 2, -letterboxHeight))),
+          RemoveSelf::create(), nullptr));
+    }
+  }
+}
 void HudLayer::updateTalkBoxRope(float dt) {
   if (sptTalkBox->getContentSize().height < 257) {
     return;
@@ -6012,7 +6157,7 @@ void HudLayer::updateEnding(float dt) {
 }
 PPLabel *HudLayer::showInstanceMessage(std::string msg) {
   this->removeChildByTag(77);
-  PPLabel *lbl = PPLabel::create(msg, 60, Color3B::WHITE, true, false,
+  PPLabel *lbl = PPLabel::create(msg, 30, Color3B::WHITE, true, false,
                                  TextHAlignment::CENTER, true);
   this->addChild(lbl, 200);
   lbl->setTag(77);

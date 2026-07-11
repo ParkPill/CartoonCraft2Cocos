@@ -287,6 +287,24 @@ public:
     float oilGatheringTimer = 0;
     Movable* currentOilExtractor = nullptr;
     int oilCarryAmount = 0;
+    // Ship-vs-ship deadlock recovery: time (sec) a ship has been blocked by
+    // another ship without making progress. When it crosses a threshold the
+    // ship slides to a free neighbor tile and re-paths. See Movable::moveNew.
+    float shipBlockedTimer = 0.0f;
+    // While non-zero, the ship is sliding (at normal speed, not teleporting) to
+    // this free neighbor tile to break a jam, then re-paths to its goal.
+    cocos2d::Vec2 shipSidestepTarget = cocos2d::Vec2::ZERO;
+    // Ship no-progress watchdog. shipBlockedTimer above only catches the case
+    // where the next tile is literally occupied this frame; an oscillating jam
+    // (ships jittering back and forth without net progress) keeps resetting it
+    // and never triggers escape. This tracks the closest the ship has come to
+    // its current waypoint and how long that best has failed to improve; when
+    // it stalls past a threshold the same deadlock escape runs. Measured against
+    // the immediate waypoint (not the final goal) so routing around land isn't
+    // mistaken for a stall. See Movable::moveNew.
+    cocos2d::Vec2 shipStallDest = cocos2d::Vec2::ZERO;
+    float shipStallBestDistSq = -1.0f;
+    float shipStallTimer = 0.0f;
     void gatherOil(Movable* extractor);
     void gatherTree(Movable* tree);
     void attackTree();
