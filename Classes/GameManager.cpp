@@ -4959,6 +4959,11 @@ std::string GameManager::getSpineFileName(int unitType)
     }
     else if (unitType == UNIT_HERO_CRAZY_WEREWOLF)
     {
+        // The werewolf/crazywerewolf file-split was abandoned (crazywerewolf.*
+        // deleted) - back to sharing werewolf's file with a skin swap, same as
+        // crazy bear/lion. This unit type is excluded from the MapEditor
+        // palette and hero pick pool (never actually spawnable), so this path
+        // is effectively dead, but must not point at deleted files.
         return "werewolf";
     }
     else if (unitType == UNIT_HERO_CRAZY_LION)
@@ -5755,6 +5760,9 @@ spine::SkeletonAnimation *GameManager::getHeroSpine(int unitType)
 {
     std::string strFile = GM->getSpineFileName(unitType);
     spine::SkeletonAnimation *spChar = spine::SkeletonAnimation::createWithJsonFile(strmake("%s.json", strFile.c_str()), strmake("%s.atlas", strFile.c_str()), 1);
+    // werewolf/bear/lion skeletons have no "default" skin - their single skin
+    // must be set by name. The werewolf/crazywerewolf file-split experiment
+    // was abandoned; werewolf is back to sharing this file/skin-swap pattern.
     if (unitType == UNIT_HERO_WEREWOLF)
     {
         spChar->setSkin("werewolf");

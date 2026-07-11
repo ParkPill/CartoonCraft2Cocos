@@ -9,6 +9,6 @@
 Fog* Fog::create(){
     Fog* drop = new Fog();
     drop->initWithSpriteFrameName("fog_101.png");
-    drop->setScale(2);
+    drop->setScale(FOG_SIZE / 50.0f);
     return drop;
 }

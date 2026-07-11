@@ -12,7 +12,7 @@
 #define FOG_SEEN_NOT_NOW 1
 #define FOG_SEEN_LITTLE 2
 #define FOG_SEEN_NOW 3
-#define FOG_SIZE 100
+#define FOG_SIZE 50
 
 
 #include "cocos2d.h"

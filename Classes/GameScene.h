@@ -18,6 +18,7 @@
 #include "PPLabel.h"
 #include "cocos2d.h"
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -260,12 +261,6 @@ protected:
                           int height, int cx, int cy);
   int editorPickTileIdForCell(const std::vector<unsigned char> &grid, int width,
                               int height, int x, int y);
-  // True if the given MapEditor JSON map (path) defines a trigger with a
-  // Victory action (TACT_VICTORY=4 in MapEditor.cpp's TriggerActionType).
-  // Used by setClearCondition to know whether to fall back to the default
-  // "destroy all enemies" win condition.
-  bool editorStageHasVictoryTrigger(const std::string &path);
-
   // --- Trigger runtime interpreter -----------------------------------
   // Lightweight mirrors of MapEditor.cpp's Trigger/TriggerCondition/TriggerAction
   // (MapEditor deliberately has zero dependency on HelloWorldScene, so this
@@ -274,7 +269,9 @@ protected:
   // documented above createTMXFromEditorJsonFile's definition.
   struct RuntimeTriggerCondition {
     int type = 0;            // 0 Always,1 ElapsedTime,2 Switch,3 UnitCount,4 Resource,
-                             // 5 UnitArrives (side/type unit within `amount` tiles of targetObjectId)
+                             // 5 UnitArrives (side/type unit within `amount` tiles of targetObjectId),
+                             // 6 BuildingCount (side's building count vs `amount`; unitTypeIndex -1 = any building),
+                             // 7 UnitDies (the specific placed unit targetObjectId is no longer alive)
     int elapsedSeconds = 30;
     int switchIndex = 0;
     int switchState = 0;     // 0 Set,1 Cleared
@@ -282,26 +279,33 @@ protected:
     int unitTypeIndex = -1;  // -1 = Any
     int comparison = 0;      // 0 AtLeast,1 AtMost,2 Exactly
     int amount = 1;          // UnitArrives: range in tiles
-    int resourceKind = 0;    // 0 Gold,1 Tree
+    int resourceKind = 0;    // 0 Gold,1 Tree,2 Oil
     int targetObjectId = -1; // UnitArrives: placed object id to watch (-1 = never true)
+    int sourceObjectId = -1; // UnitArrives: the one specific placed unit that must
+                             // arrive; -1 = any unit matching unitSide/unitTypeIndex
     bool isRepeat = false;   // ElapsedTime: true = repeating; false = fire once
     float elapsedTimeLastFired = 0.0f; // runtime only: gameTimer value at last fire (for isRepeat reset)
+    bool arriveEffectActive = false; // UnitArrives, runtime only: true while currently satisfied,
+                                      // so the flag blink effect only plays on the false->true edge
   };
   struct RuntimeTriggerAction {
     int type = 0; // 0 DisplayMessage,1 CreateUnit,2 RemoveUnit,3 SetSwitch,
                   // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk,9 RevealFog,
-                  // 10 OrderAttack
+                  // 10 OrderAttack,11 MoveUnit,12 LockControl
     std::string message;
     int unitSide = 0;
     int unitTypeIndex = -1;
     int tileX = 0;
     int tileY = 0;
     int targetObjectId = -1; // -1 = use tileX/tileY, else a placed object's id
+    int sourceObjectId = -1; // MoveUnit: placed object id of the unit to move
     int count = 1;           // RevealFog: radius in fog tiles
     int switchIndex = 0;
     int switchAction = 0; // 0 Set,1 Clear,2 Toggle
     float waitSeconds = 1.0f;
+    float talkSeconds = 3.0f;  // Talk: seconds the speech bubble stays on screen
     bool visionEnabled = true; // RevealFog: true=reveal, false=cancel
+    bool controlLocked = true; // LockControl: true=lock player controls, false=unlock
   };
   // A fog region made permanently visible by a TACT_REVEAL_FOG trigger action,
   // independent of unit presence. Stored as world-space centre + fog-tile radius.
@@ -320,11 +324,32 @@ protected:
   std::vector<RuntimeTrigger> activeTriggers;
   bool triggerSwitches[16] = {false};
   std::vector<TriggerRevealedFogRegion> triggerRevealedFogRegions;
+  // Set by a TACT_LOCK_CONTROL trigger action. While true, the Win32 RTS
+  // mouse handlers (camera pan/zoom/edge-scroll, unit selection, move/attack
+  // commands, HUD command clicks - all HUD clicks route through
+  // tryHandleHudClick from within these same handlers) are ignored. A later
+  // trigger firing LOCK_CONTROL with controlLocked=false clears it.
+  bool playerControlsLocked = false;
   // Placed-object id -> world position, snapshotted once when the stage's
   // JSON loads (alongside spawnObjectsFromEditorJsonFile). Trigger actions
   // resolve targetObjectId through this - it's the *initial* placement
   // position, not a live follow of a unit that has since moved.
   std::map<int, cocos2d::Vec2> editorObjectPositionsById;
+  // Placed-object ids of Flags the editor marked hidden ("visible": false).
+  // The flag art itself is skipped for these at spawn time; the Unit Arrives
+  // blink effect must skip them too, so nothing ever shows at their spot.
+  std::set<int> hiddenFlagObjectIds;
+  // Placed-object id -> the editor "alias" (a language key naming the unit),
+  // snapshotted at load. Only ids with a non-empty alias are stored. Used to
+  // label mission objectives that reference a specific unit (e.g. "protect X").
+  std::map<int, std::string> editorObjectAliasById;
+  // Placed-object id -> its spawned unit type, snapshotted at load. Lets the
+  // mission UI fall back to the unit-type's default name when no alias is set.
+  std::map<int, int> editorObjectUnitTypeById;
+  // Placed-object ids that actually spawned as units at load. The UnitDies
+  // condition only reads ids in this set as "was alive, now gone" - a Flag
+  // or a stale id must not count as already dead at game start.
+  std::set<int> spawnedUnitEditorObjectIds;
   // The single currently-visible Talk speech bubble, if any (shared across
   // all triggers - a second Talk firing concurrently from a different
   // trigger will replace it, see runTriggerActions).
@@ -344,8 +369,25 @@ protected:
 
   void loadTriggersFromEditorJsonFile(const std::string &path);
   void updateTriggers();
-  bool evaluateTriggerCondition(const RuntimeTriggerCondition &c);
+  bool evaluateTriggerCondition(RuntimeTriggerCondition &c);
   void runTriggerActions(const RuntimeTrigger &t);
+  // Runs trigger actions[index..] one at a time (rather than as a single
+  // upfront cocos2d Sequence) so a MoveUnit step can hold up the ones after
+  // it for a variable, not-known-in-advance amount of time - see
+  // scheduleTriggerMoveWait. actions is heap-shared so it survives across the
+  // scheduled callbacks that step through it.
+  void runTriggerActionStep(std::shared_ptr<std::vector<RuntimeTriggerAction>> actions,
+                             size_t index, bool flipOutcome);
+  // Polls once per frame until the unit named by sourceObjectId reaches
+  // destPos (or dies, or a safety timeout elapses so a stuck/blocked path
+  // can't hang the trigger sequence forever), then resumes at actions[nextIndex].
+  void scheduleTriggerMoveWait(int sourceObjectId, const cocos2d::Vec2 &destPos,
+                               std::shared_ptr<std::vector<RuntimeTriggerAction>> actions,
+                               size_t nextIndex, bool flipOutcome);
+  // Unit Arrives feedback: a green blink circle (same look as a unit's own
+  // selection ring) that plays once under the target flag/object and then
+  // removes itself, so the player sees the condition trip.
+  void playFlagArriveEffect(const cocos2d::Vec2 &worldPos);
   // flipOutcome: true when this action's parent trigger represents the
   // Enemy side rather than Ally (sides[1] set, sides[0] not) - Victory/Defeat
   // are resolved from the human player's (Ally's) point of view, so an
@@ -461,7 +503,12 @@ public:
   // entries naturally relocate as ships actually move. Public so Movable.cpp
   // (a different, unrelated class) can read/update it via WORLD->.
   bool isWaterTileAt(int tileX, int tileY);
-  bool isShipTileBlocked(int tileX, int tileY, Movable *self);
+  // checkOtherShips=false skips the ship-vs-ship occupancy test and only
+  // reports water-building tiles as blocked. Oil ships pass it false so they
+  // move like workers - routed around terrain/buildings by their water A* but
+  // never blocked by (or deadlocked against) other ships. See Movable::moveNew.
+  bool isShipTileBlocked(int tileX, int tileY, Movable *self,
+                         bool checkOtherShips = true);
   cocos2d::Vec2 findEmptyWaterSpawnTile(int shipyardTileX, int shipyardTileY, int shipyardW, int shipyardH);
   void fleeShipFromAttacker(Movable *unit, Movable *attacker);
   std::set<std::pair<int, int>> shipOccupiedTiles;
@@ -831,6 +878,13 @@ public:
   bool win32LeftMouseDown = false;
   bool win32MouseOnWorkerMenu = false;
   bool win32HudButtonClicked = false;
+  // Right-mouse drag pans the camera like the map editor. A right release that
+  // never dragged past the threshold is treated as a normal RTS right-click
+  // command instead.
+  bool win32RightMouseDown = false;
+  bool win32RightDragging = false;
+  cocos2d::Vec2 win32PanStartViewPos;
+  cocos2d::Vec2 win32PanStartLayerPos;
   cocos2d::Vec2 win32LastMouseViewPos;
   bool isClickOnWorkerMenu(const cocos2d::Vec2 &glPos);
   cocos2d::ui::Button *getWorkerMenuButtonAtGlPos(const cocos2d::Vec2 &glPos);
@@ -948,6 +1002,51 @@ public:
   int clearConditionIndex = 0;
   void setClearCondition(int stage);
   bool checkClearGame();
+  // Rebuilds the bottom-right mission panel (ndMission) from the loaded
+  // triggers. Currently surfaces the "protect a specific unit" objective:
+  // a player-defeat trigger fired by that unit's death.
+  void setupMissionObjectiveUI();
+  // Returns the placed-object id of the unit a player-defeat trigger watches
+  // for death (a survival/protect objective), or -1 if there is none.
+  int findSurvivalObjectiveTargetId() const;
+  // Returns the unit side (0 Ally,1 Enemy,2/3 Neutral) whose buildings a
+  // player-victory trigger requires reduced to zero (a destroy objective),
+  // or -1 if there is none.
+  int findDestroyBuildingsObjectiveSide() const;
+  // Finds a player-victory trigger whose BuildingCount condition targets a
+  // specific building type (unitTypeIndex >= 0). Fills that unit type index
+  // and the required amount; false if there is none. The comparison
+  // (at least / at most / exactly) is not surfaced - only the number is.
+  bool findBuildingCountObjective(int &outUnitTypeIndex, int &outAmount) const;
+  // Finds a player-victory trigger requiring one specific placed unit to
+  // arrive at a placed object (UnitArrives with a Unit picked). Fills the
+  // unit's and the destination's placed-object ids; false if there is none.
+  bool findArriveObjectiveIds(int &outUnitId, int &outPlaceId) const;
+  // Finds a player-victory trigger whose Resource condition names a resource
+  // to accumulate. Fills the resource kind (0 Gold,1 Tree,2 Oil) and the
+  // target amount; false if there is none.
+  bool findResourceObjective(int &outResourceKind, int &outAmount) const;
+  // Language key naming a resource kind (0 Gold,1 Tree,2 Oil) for {0} of the
+  // "collect format" objective line.
+  const char *resourceKindNameKey(int resourceKind) const;
+  // The player's current amount of the given resource kind (0 Gold,1 Tree,
+  // 2 Oil) - {1} of the "collect format" objective line.
+  int currentResourceAmount(int resourceKind) const;
+  // Refreshes the live "collect a resource" objective line: its current
+  // amount, and a green strikethrough once the goal is reached. No-op unless
+  // setupMissionObjectiveUI found a resource objective. Called once per second
+  // from updateTriggers.
+  void updateMissionResourceObjective();
+  // Live "collect" objective state captured by setupMissionObjectiveUI:
+  int missionResourceLabelIndex = -1; // lblCondition row it occupies, -1 = none
+  int missionResourceKind = -1;       // 0 Gold,1 Tree,2 Oil
+  int missionResourceGoal = 0;        // target amount ({2} in "collect format")
+  // Maps a unit side index to its language key ("ally","enemy","neutral").
+  const char *sideLanguageKey(int side) const;
+  // Language key naming a placed object: its editor alias when set, else its
+  // unit type's default name key, else "flag" (the only non-unit marker
+  // that's ever named in an objective).
+  std::string editorObjectNameKey(int objectId) const;
   //    Vector<Text*> lblConditionArray;
   float gameTimer = 0;
 
@@ -1192,6 +1291,9 @@ public:
   int getOilPriceForUnit(int index);
   int getFoodGive(int index);
   EnemyBase *getNearestOilDepot(cocos2d::Vec2 pos, bool isEnemy = false);
+  // Water tile beside `depot` that an oil ship should aim for when returning.
+  // Falls back to the depot's generic approach point if no water tile is found.
+  cocos2d::Vec2 getOilShipReturnPoint(EnemyBase *depot, cocos2d::Vec2 fromPos);
   bool gatherOilWithSelectedOilShip(EnemyBase *extractor);
   void setOilShipToExtractor(EnemyBase *ship, EnemyBase *extractor);
   void startResearch(EnemyBase *foundry, int type);
@@ -1201,6 +1303,11 @@ public:
   bool isMapMovingByMiniMap = false;
   void moveScreen(cocos2d::Vec2 pos);
   void moveScreenToMiniMapGlPos(const cocos2d::Vec2 &glPos);
+  // Eases the camera from its current position to targetPos over duration
+  // seconds via repeated moveScreen() calls, instead of moveScreen's own
+  // instant jump - used by the CENTER_CAMERA trigger action so cutscene pans
+  // read as a pan rather than a teleport.
+  void animateScreenTo(const cocos2d::Vec2 &targetPos, float duration);
   cocos2d::Rect miniMapViewRect;
   cocos2d::Rect viewRect;
   void revengeAttack(Movable *attackee, Movable *attacker);

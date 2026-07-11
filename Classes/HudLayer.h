@@ -87,6 +87,7 @@
 #include "editor-support/cocostudio/CocoStudio.h"
 #include "AwesomeDialogBox.h"
 #include "Inventory.h"
+#include <map>
 #define INVENTORY_MAX_COUNT_FOR_SLOT 50
 #define TALK_STATE_ASKING 0
 #define TALK_STATE_QUESTIONING 1
@@ -416,6 +417,18 @@ public:
     Sprite* blackTop;
     void showBlackTopAndBottom();
     void hideBlackTopAndBottom();
+    // LockControl trigger cinematic: the top/bottom HUD strips jump offscreen
+    // and black letterbox bars close in while player control is locked; on
+    // unlock everything slides back smoothly. See setControlLockUi.
+    Sprite* letterboxTop = nullptr;
+    Sprite* letterboxBottom = nullptr;
+    bool cinematicUiHidden = false;
+    // Rest (unlocked) Y per HUD node, captured the first time it's hidden, so
+    // an interrupted slide-back can't accumulate offset drift.
+    std::map<cocos2d::Node*, float> cinematicUiRestY;
+    void setControlLockUi(bool locked);
+    void collectCinematicUiNodes(cocos2d::Vector<Node*>& topNodes,
+                                 cocos2d::Vector<Node*>& bottomNodes);
     Sprite* sptTalkBox;
     void updateTalkBoxRope(float dt);
     void onTalkBoxResizeDone();

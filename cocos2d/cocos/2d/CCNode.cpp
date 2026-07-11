@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <string>
 #include <regex>
+#include <typeinfo> // TEMP DIAGNOSTIC (running-on-dtor logging)
 
 #include "base/CCDirector.h"
 #include "base/CCScheduler.h"
@@ -40,6 +41,7 @@ THE SOFTWARE.
 #include "2d/CCCamera.h"
 #include "2d/CCActionManager.h"
 #include "2d/CCScene.h"
+#include "2d/CCSprite.h" // TEMP DIAGNOSTIC (running-on-dtor logging)
 #include "2d/CCComponent.h"
 #include "renderer/CCGLProgram.h"
 #include "renderer/CCGLProgramState.h"
@@ -188,7 +190,32 @@ Node::~Node()
     _eventDispatcher->debugCheckNodeHasNoEventListenersOnDestruction(this);
 #endif
 
-    CCASSERT(!_running, "Node still marked as running on node destruction! Was base class onExit() called in derived class onExit() implementations?");
+    // --- TEMP DIAGNOSTIC (remove after culprit is found) ---------------------
+    // Dumps which node is being destroyed while still _running, so we can find
+    // the retained/detached node that never received onExit(). See the
+    // MapEditor "Run" -> close-window assert investigation.
+    if (_running)
+    {
+        std::string texInfo;
+        if (auto* spr = dynamic_cast<Sprite*>(this))
+        {
+            if (spr->getTexture())
+                texInfo = " texture=" + spr->getTexture()->getPath();
+        }
+        CCLOG("[RUNNING-ON-DTOR] class=%s name='%s' tag=%d children=%d parent=%p pos=(%.1f,%.1f)%s",
+              typeid(*this).name(),
+              _name.c_str(),
+              (int)_tag,
+              (int)_children.size(),
+              (void*)_parent,
+              _position.x, _position.y,
+              texInfo.c_str());
+    }
+    // --- END TEMP DIAGNOSTIC -------------------------------------------------
+
+    // TEMP DIAGNOSTIC: assert disabled so every running-on-dtor node is logged
+    // in one run instead of aborting on the first. Restore after culprit found.
+    // CCASSERT(!_running, "Node still marked as running on node destruction! Was base class onExit() called in derived class onExit() implementations?");
     CC_SAFE_RELEASE(_eventDispatcher);
 
     delete[] _additionalTransform;
