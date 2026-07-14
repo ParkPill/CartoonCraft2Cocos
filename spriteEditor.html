@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Cocos2d-x Sprite Packer & Editor (Fixed)</title>
+    <style>
+        /* CSS 스타일링은 이전과 동일하게 유지 */
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            margin: 20px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            user-select: none;
+        }
+        h1 { text-align: center; color: #3498db; margin-bottom: 5px; }
+        .sub-title { text-align: center; color: #bdc3c7; margin-bottom: 20px; font-size: 14px; }
+        .container { display: flex; gap: 20px; height: calc(100vh - 120px); }
+        
+        .control-panel {
+            width: 320px;
+            background: #34495e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .drop-zone {
+            border: 3px dashed #3498db;
+            border-radius: 8px;
+            padding: 25px 10px;
+            text-align: center;
+            cursor: pointer;
+            background: #2c3e50;
+            transition: background 0.3s;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .drop-zone:hover, .drop-zone.dragover { background: #2980b9; }
+        .section-title { font-weight: bold; border-bottom: 1px solid #7f8c8d; padding-bottom: 5px; color: #2ecc71; margin-top: 5px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 13px; font-weight: bold; }
+        select, input[type="text"] {
+            width: 100%; padding: 8px; border-radius: 4px; border: none; box-sizing: border-box; background: #ecf0f1; color: #2c3e50;
+        }
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+        button {
+            width: 100%; padding: 10px; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-green { background: #2ecc71; } .btn-green:hover { background: #27ae60; }
+        .btn-blue { background: #3498db; } .btn-blue:hover { background: #2980b9; }
+        .btn-orange { background: #e67e22; } .btn-orange:hover { background: #d35400; }
+        .btn-purple { background: #9b59b6; } .btn-purple:hover { background: #8e44ad; }
+        
+        .file-list {
+            font-size: 12px; max-height: 150px; overflow-y: auto; background: #2c3e50; padding: 10px; border-radius: 4px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .file-item { display: flex; justify-content: space-between; background: #34495e; padding: 4px 6px; border-radius: 3px; }
+        .file-item .remove-btn { color: #e74c3c; cursor: pointer; font-weight: bold; }
+
+        .preview-panel {
+            flex: 1; background: #1a252f; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; position: relative;
+        }
+        .canvas-toolbar { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #bdc3c7; }
+        #canvas-container {
+            flex: 1; overflow: auto; border: 2px solid #7f8c8d; position: relative;
+            background-image: linear-gradient(45deg, #2c3e50 25%, transparent 25%), linear-gradient(-45deg, #2c3e50 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2c3e50 75%), linear-gradient(-45deg, transparent 75%, #2c3e50 75%);
+            background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; background-color: #34495e;
+        }
+        canvas { position: absolute; top: 0; left: 0; cursor: default; }
+    </style>
+</head>
+<body>
+
+    <h1>Cocos2d-x Sprite Sheet Editor (Fixed)</h1>
+    <div class="sub-title">기존 plist+png 로드, 드래그 이동, 이미지 추가 및 재정렬 도구 (최종 이미지 가이드라인 제거 버전)</div>
+    
+    <div class="container">
+        <div class="control-panel">
+            <div class="section-title">1. 파일 로드 및 추가</div>
+            <div class="drop-zone" id="drop-zone">
+                <strong>[신규 이미지 추가]</strong> PNG 파일 드래그<br>
+                <strong>[기존 데이터 로드]</strong> PLIST와 PNG를 동시에 드래그
+                <input type="file" id="file-input" multiple accept="image/png,.plist" style="display:none">
+            </div>
+            
+            <div class="form-group">
+                <label>스프라이트 목록 (<span id="file-count">0</span>)</label>
+                <div class="file-list" id="file-list">데이터 없음</div>
+            </div>
+
+            <div class="section-title">2. 아웃풋 설정</div>
+            <div class="form-group">
+                <label for="sheet-name">스프라이트 시트 이름</label>
+                <input type="text" id="sheet-name" value="spritesheet">
+            </div>
+            <div class="form-group">
+                <label for="max-size">최대 텍스처 크기 제한</label>
+                <select id="max-size">
+                    <option value="1024">1024 x 1024</option>
+                    <option value="2048" selected>2048 x 2048</option>
+                    <option value="4096">4096 x 4096</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="padding">여백 (Padding)</label>
+                <select id="padding">
+                    <option value="0">0 px</option>
+                    <option value="2" selected>2 px</option>
+                    <option value="4">4 px</option>
+                </select>
+            </div>
+
+            <div class="section-title">3. 작업 및 저장</div>
+            <div class="btn-group">
+                <button id="pack-btn" class="btn-purple">자동 재정렬 (Shelf Packing)</button>
+                <button id="download-png-btn" class="btn-blue" style="display:none;">PNG 시트 다운로드</button>
+                <button id="download-plist-btn" class="btn-orange" style="display:none;">PLIST 다운로드</button>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="canvas-toolbar">
+                <span id="status-text">💡 캔버스 내부의 스프라이트를 마우스로 드래그하여 수동으로 배치할 수 있습니다.</span>
+                <span id="canvas-size-text">Size: 0 x 0</span>
+            </div>
+            <div id="canvas-container">
+                <canvas id="sprite-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수 및 이벤트 핸들러는 이전과 동일
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const fileCountSpan = document.getElementById('file-count');
+        const packBtn = document.getElementById('pack-btn');
+        const downloadPngBtn = document.getElementById('download-png-btn');
+        const downloadPlistBtn = document.getElementById('download-plist-btn');
+        const canvas = document.getElementById('sprite-canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasSizeText = document.getElementById('canvas-size-text');
+        const statusText = document.getElementById('status-text');
+
+        let sprites = [];
+        let selectedSprite = null;
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        let canvasWidth = 512;
+        let canvasHeight = 512;
+
+        updateCanvasSize(canvasWidth, canvasHeight);
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        async function handleFiles(files) {
+            let plistFile = null;
+            let pngFiles = [];
+
+            for (let file of files) {
+                if (file.name.endsWith('.plist')) {
+                    plistFile = file;
+                } else if (file.type === 'image/png') {
+                    pngFiles.push(file);
+                }
+            }
+
+            if (plistFile && pngFiles.length === 1) {
+                statusText.innerText = "기존 스프라이트 시트 데이터를 분석하여 복원하는 중...";
+                const plistText = await plistFile.text();
+                const bigImage = await loadImageFromBlob(pngFiles[0]);
+                document.getElementById('sheet-name').value = plistFile.name.replace('.plist', '');
+                parseAndRestorePlist(plistText, bigImage);
+            } 
+            else {
+                statusText.innerText = "새로운 개별 이미지 파일들을 추가하는 중...";
+                for (let file of pngFiles) {
+                    if (sprites.some(s => s.name === file.name)) continue;
+                    const img = await loadImageFromBlob(file);
+                    sprites.push({
+                        name: file.name,
+                        img: img,
+                        x: 10, y: 10,
+                        width: img.width,
+                        height: img.height,
+                        originalW: img.width,
+                        originalH: img.height,
+                        offsetX: 0,
+                        offsetY: 0
+                    });
+                }
+                refreshUI();
+                draw();
+            }
+        }
+
+        function loadImageFromBlob(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function parseAndRestorePlist(xmlText, bigImage) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+                const rootDict = xmlDoc.getElementsByTagName('dict')[0];
+                const framesKeyNode = Array.from(rootDict.children).find(n => n.tagName === 'key' && n.textContent === 'frames');
+                const framesDictNode = framesKeyNode.nextElementSibling;
+                const children = Array.from(framesDictNode.children);
+                let currentSpriteName = "";
+                
+                for(let i=0; i<children.length; i++) {
+                    const node = children[i];
+                    if(node.tagName === 'key') {
+                        currentSpriteName = node.textContent;
+                    } else if(node.tagName === 'dict' && currentSpriteName) {
+                        const subDict = node;
+                        const keys = Array.from(subDict.getElementsByTagName('key'));
+                        let frameStr = "", offsetStr = "", sourceSizeStr = "";
+                        keys.forEach(k => {
+                            if(k.textContent === 'frame') frameStr = k.nextElementSibling.textContent;
+                            if(k.textContent === 'offset') offsetStr = k.nextElementSibling.textContent;
+                            if(k.textContent === 'sourceSize') sourceSizeStr = k.nextElementSibling.textContent;
+                        });
+
+                        const frameData = frameStr.replace(/[{}]/g, '').split(',').map(Number);
+                        const offsetData = offsetStr.replace(/[{}]/g, '').split(',').map(Number);
+                        const sourceData = sourceSizeStr.replace(/[{}]/g, '').split(',').map(Number);
+                        const sx = frameData[0], sy = frameData[1], sw = frameData[2], sh = frameData[3];
+
+                        const subCanvas = document.createElement('canvas');
+                        subCanvas.width = sw;
+                        subCanvas.height = sh;
+                        const subCtx = subCanvas.getContext('2d');
+                        subCtx.drawImage(bigImage, sx, sy, sw, sh, 0, 0, sw, sh);
+
+                        const tempImg = new Image();
+                        tempImg.src = subCanvas.toDataURL();
+
+                        sprites.push({
+                            name: currentSpriteName,
+                            img: tempImg,
+                            x: sx,
+                            y: sy,
+                            width: sw,
+                            height: sh,
+                            originalW: sourceData[0] || sw,
+                            originalH: sourceData[1] || sh,
+                            offsetX: offsetData[0] || 0,
+                            offsetY: offsetData[1] || 0
+                        });
+                        currentSpriteName = "";
+                    }
+                }
+
+                const metadataKeyNode = Array.from(rootDict.children).find(n => n.tagName === 'key' && n.textContent === 'metadata');
+                if(metadataKeyNode) {
+                    const metadataDict = metadataKeyNode.nextElementSibling;
+                    const sizeKey = Array.from(metadataDict.getElementsByTagName('key')).find(k => k.textContent === 'size');
+                    if(sizeKey) {
+                        const sizeData = sizeKey.nextElementSibling.textContent.replace(/[{}]/g, '').split(',').map(Number);
+                        canvasWidth = sizeData[0];
+                        canvasHeight = sizeData[1];
+                    }
+                }
+
+                updateCanvasSize(canvasWidth, canvasHeight);
+                refreshUI();
+                draw();
+                statusText.innerText = "기존 프로젝트 로드 완료! 요소를 드래그하거나 새 이미지를 추가할 수 있습니다.";
+            } catch (e) {
+                alert("PLIST 파일을 읽는 중 오류가 발생했습니다. 올바른 Cocos2d-x 포맷인지 확인하세요.");
+                console.error(e);
+            }
+        }
+
+        function refreshUI() {
+            fileList.innerHTML = '';
+            fileCountSpan.innerText = sprites.length;
+            if (sprites.length === 0) {
+                fileList.innerHTML = '데이터 없음';
+                downloadPngBtn.style.display = 'none';
+                downloadPlistBtn.style.display = 'none';
+                return;
+            }
+            sprites.forEach((sprite, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <span>${sprite.name} (${sprite.width}x${sprite.height})</span>
+                    <span class="remove-btn" onclick="removeSprite(${index})">X</span>
+                `;
+                fileList.appendChild(item);
+            });
+            downloadPngBtn.style.display = 'block';
+            downloadPlistBtn.style.display = 'block';
+        }
+
+        window.removeSprite = function(index) {
+            sprites.splice(index, 1);
+            refreshUI();
+            draw();
+        };
+
+        function updateCanvasSize(w, h) {
+            canvas.width = w;
+            canvas.height = h;
+            canvasSizeText.innerText = `Size: ${w} x ${h}`;
+        }
+
+        // --- 수정된 부분 ---
+        // 에디터 화면에 렌더링하는 draw 함수
+        // 여기서는 가이드라인을 그립니다.
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 가이드라인을 포함한 모든 시각 요소를 그리는 함수 호출
+            drawSpriteSheet(ctx, true);
+        }
+
+        // 공통 드로잉 로직 (에디터 캔버스, 내보내기 캔버스 둘 다 사용)
+        function drawSpriteSheet(targetCtx, withGuidelines) {
+            // 1. 순수 스프라이트 이미지 그리기
+            sprites.forEach(sprite => {
+                try {
+                    targetCtx.drawImage(sprite.img, sprite.x, sprite.y);
+                } catch(e) {
+                    targetCtx.fillStyle = "rgba(46, 204, 113, 0.5)";
+                    targetCtx.fillRect(sprite.x, sprite.y, sprite.width, sprite.height);
+                }
+
+                // 에디터용일 때만 파란색 가이드라인(테두리) 표시
+                if (withGuidelines) {
+                    targetCtx.strokeStyle = "rgba(52, 152, 219, 0.5)";
+                    targetCtx.lineWidth = 1;
+                    targetCtx.strokeRect(sprite.x, sprite.y, sprite.width, sprite.height);
+                }
+            });
+
+            // 2. 선택된 스프라이트 강조 (에디터용)
+            if (withGuidelines && selectedSprite) {
+                targetCtx.strokeStyle = "#e74c3c";
+                targetCtx.lineWidth = 2;
+                targetCtx.strokeRect(selectedSprite.x, selectedSprite.y, selectedSprite.width, selectedSprite.height);
+                targetCtx.fillStyle = "#e74c3c";
+                targetCtx.font = "11px Arial";
+                targetCtx.fillText(selectedSprite.name, selectedSprite.x, selectedSprite.y - 5);
+            }
+        }
+        // --- 수정 완료 ---
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            selectedSprite = null;
+            for (let i = sprites.length - 1; i >= 0; i--) {
+                const s = sprites[i];
+                if (mouseX >= s.x && mouseX <= s.x + s.width && mouseY >= s.y && mouseY <= s.y + s.height) {
+                    selectedSprite = s;
+                    isDragging = true;
+                    dragOffsetX = mouseX - s.x;
+                    dragOffsetY = mouseY - s.y;
+                    sprites.splice(i, 1);
+                    sprites.push(selectedSprite);
+                    break;
+                }
+            }
+            draw();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !selectedSprite) return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            selectedSprite.x = mouseX - dragOffsetX;
+            selectedSprite.y = mouseY - dragOffsetY;
+            let reqW = selectedSprite.x + selectedSprite.width;
+            let reqH = selectedSprite.y + selectedSprite.height;
+            if(reqW > canvas.width || reqH > canvas.height) {
+                let nextW = Math.max(canvas.width, reqW);
+                let nextH = Math.max(canvas.height, reqH);
+                updateCanvasSize(nextW, nextH);
+            }
+            draw();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                statusText.innerText = `[${selectedSprite.name}] 배치가 수동 변경되었습니다.`;
+            }
+        });
+
+        packBtn.addEventListener('click', () => {
+            if (sprites.length === 0) return;
+            const maxSize = parseInt(document.getElementById('max-size').value);
+            const padding = parseInt(document.getElementById('padding').value);
+            sprites.sort((a, b) => b.height - a.height);
+            let currentX = 0;
+            let currentY = 0;
+            let shelfHeight = 0;
+            let usedWidth = 0;
+            let usedHeight = 0;
+            for (let sprite of sprites) {
+                if (currentX + sprite.width > maxSize) {
+                    currentX = 0;
+                    currentY += shelfHeight + padding;
+                    shelfHeight = 0;
+                }
+                if (currentY + sprite.height > maxSize) {
+                    alert("최대 크기를 초과하여 자동 배치가 불가능합니다. 최대 크기를 늘려주세요.");
+                    return;
+                }
+                sprite.x = currentX;
+                sprite.y = currentY;
+                currentX += sprite.width + padding;
+                if (sprite.height > shelfHeight) shelfHeight = sprite.height;
+                if (currentX > usedWidth) usedWidth = currentX;
+                if (currentY + sprite.height > usedHeight) usedHeight = currentY + sprite.height;
+            }
+            canvasWidth = usedWidth;
+            canvasHeight = usedHeight;
+            updateCanvasSize(canvasWidth, canvasHeight);
+            draw();
+            statusText.innerText = "자동 정렬 알고리즘이 완벽하게 적용되었습니다.";
+        });
+
+        // --- 수정된 부분 ---
+        // PNG 내보내기 기능
+        downloadPngBtn.addEventListener('click', () => {
+            // 1. 화면에 보이지 않는 임시 캔버스 생성
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = canvas.width;
+            exportCanvas.height = canvas.height;
+            const exportCtx = exportCanvas.getContext('2d');
+
+            // 2. 임시 캔버스에 가이드라인 없이 순수 스프라이트만 렌더링
+            drawSpriteSheet(exportCtx, false); // false로 가이드라인 제거
+
+            // 3. 임시 캔버스 데이터를 다운로드
+            const sheetName = document.getElementById('sheet-name').value || 'spritesheet';
+            const link = document.createElement('a');
+            link.download = `${sheetName}.png`;
+            link.href = exportCanvas.toDataURL('image/png'); // 임시 캔버스 데이터 사용
+            link.click();
+        });
+        // --- 수정 완료 ---
+
+        downloadPlistBtn.addEventListener('click', () => {
+            if (sprites.length === 0) return;
+            const sheetName = document.getElementById('sheet-name').value || 'spritesheet';
+            let plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+ <dict>
+  <key>frames</key>
+  <dict>
+`;
+            sprites.forEach(s => {
+                plistContent += `   <key>${s.name}</key>
+   <dict>
+    <key>frame</key>
+    <string>{{${s.x},${s.y}},{${s.width},${s.height}}}</string>
+    <key>offset</key>
+    <string>{${s.offsetX},${s.offsetY}}</string>
+    <key>rotated</key>
+    <false/>
+    <key>sourceSize</key>
+    <string>{${s.originalW},${s.originalH}}</string>
+   </dict>\n`;
+            });
+            plistContent += `  </dict>
+  <key>metadata</key>
+  <dict>
+   <key>format</key>
+   <integer>2</integer>
+   <key>realTextureFileName</key>
+   <string>${sheetName}.png</string>
+   <key>size</key>
+   <string>{${canvas.width},${canvas.height}}</string>
+   <key>smartupdate</key>
+   <string>$TexturePacker:SmartUpdate:b8ef1092e4a8dcbf89bf90c1092bf987$</string>
+   <key>textureFileName</key>
+   <string>${sheetName}.png</string>
+  </dict>
+ </dict>
+</plist>`;
+            const blob = new Blob([plistContent], { type: 'text/xml;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.download = `${sheetName}.plist`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        });
+    </script>
+</body>
+</html>

@@ -160,8 +160,8 @@
 		EC9184C426BE81E100E63225 /* cartoonCraftEffect.plist in Resources */ = {isa = PBXBuildFile; fileRef = EC91849026BE81E100E63225 /* cartoonCraftEffect.plist */; };
 		EC9184C526BE81E100E63225 /* effect.ztp in Resources */ = {isa = PBXBuildFile; fileRef = EC91849126BE81E100E63225 /* effect.ztp */; };
 		EC9184C626BE81E100E63225 /* effect.ztp in Resources */ = {isa = PBXBuildFile; fileRef = EC91849126BE81E100E63225 /* effect.ztp */; };
-		EC9184C726BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv in Resources */ = {isa = PBXBuildFile; fileRef = EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv */; };
-		EC9184C826BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv in Resources */ = {isa = PBXBuildFile; fileRef = EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv */; };
+		EC9184C726BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv in Resources */ = {isa = PBXBuildFile; fileRef = EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv */; };
+		EC9184C826BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv in Resources */ = {isa = PBXBuildFile; fileRef = EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv */; };
 		EC9184C926BE81E100E63225 /* CartoonCraftNumber.plist in Resources */ = {isa = PBXBuildFile; fileRef = EC91849326BE81E100E63225 /* CartoonCraftNumber.plist */; };
 		EC9184CA26BE81E100E63225 /* CartoonCraftNumber.plist in Resources */ = {isa = PBXBuildFile; fileRef = EC91849326BE81E100E63225 /* CartoonCraftNumber.plist */; };
 		EC9184CB26BE81E100E63225 /* CartoonCraftNV.png in Resources */ = {isa = PBXBuildFile; fileRef = EC91849426BE81E100E63225 /* CartoonCraftNV.png */; };
@@ -378,7 +378,7 @@
 		EC91848F26BE81E100E63225 /* cartoonCraftLanguageSheet */ = {isa = PBXFileReference; lastKnownFileType = folder; path = cartoonCraftLanguageSheet; sourceTree = "<group>"; };
 		EC91849026BE81E100E63225 /* cartoonCraftEffect.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = cartoonCraftEffect.plist; sourceTree = "<group>"; };
 		EC91849126BE81E100E63225 /* effect.ztp */ = {isa = PBXFileReference; lastKnownFileType = file; path = effect.ztp; sourceTree = "<group>"; };
-		EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Cartoon Craft Language Sheet - language.csv"; sourceTree = "<group>"; };
+		EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Cartoon Craft Language Sheet - language2.csv"; sourceTree = "<group>"; };
 		EC91849326BE81E100E63225 /* CartoonCraftNumber.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = CartoonCraftNumber.plist; sourceTree = "<group>"; };
 		EC91849426BE81E100E63225 /* CartoonCraftNV.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CartoonCraftNV.png; sourceTree = "<group>"; };
 		EC91849526BE81E100E63225 /* CartoonCraftNumber.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CartoonCraftNumber.png; sourceTree = "<group>"; };
@@ -559,7 +559,7 @@
 			children = (
 				EC91848126BE81E000E63225 /* animations.plist */,
 				EC91848B26BE81E000E63225 /* cardBattlePlan.csv */,
-				EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv */,
+				EC91849226BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv */,
 				EC91849B26BE81E100E63225 /* cartoonCraft.plist */,
 				EC91848626BE81E000E63225 /* cartoonCraft.png */,
 				EC91849726BE81E100E63225 /* cartoonCraftBuilding.plist */,
@@ -842,7 +842,7 @@
 				EC9184B526BE81E100E63225 /* effect.png in Resources */,
 				EC9184AF26BE81E100E63225 /* cartoonCraft.png in Resources */,
 				EC9184A526BE81E100E63225 /* animations.plist in Resources */,
-				EC9184C726BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv in Resources */,
+				EC9184C726BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv in Resources */,
 				EC9184A926BE81E100E63225 /* crossPromotion in Resources */,
 				EC9184D926BE81E100E63225 /* cartoonCraft.plist in Resources */,
 				EC9184C326BE81E100E63225 /* cartoonCraftEffect.plist in Resources */,
@@ -887,7 +887,7 @@
 				EC9184C426BE81E100E63225 /* cartoonCraftEffect.plist in Resources */,
 				EC9184BA26BE81E100E63225 /* cardBattlePlan.csv in Resources */,
 				EC9184B026BE81E100E63225 /* cartoonCraft.png in Resources */,
-				EC9184C826BE81E100E63225 /* Cartoon Craft Language Sheet - language.csv in Resources */,
+				EC9184C826BE81E100E63225 /* Cartoon Craft Language Sheet - language2.csv in Resources */,
 				EC9184A426BE81E100E63225 /* shadow.png in Resources */,
 				EC9184AA26BE81E100E63225 /* crossPromotion in Resources */,
 				EC9184D626BE81E100E63225 /* CartoonCraftNV_0.png in Resources */,
@@ -1269,7 +1269,7 @@
 					"$(SRCROOT)/../cocos2d/cocos/editor-support",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -1293,7 +1293,7 @@
 					"$(SRCROOT)/../cocos2d/cocos/editor-support",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

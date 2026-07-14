@@ -447,9 +447,23 @@ namespace {
                                           : Sprite::create(spriteFrameName);
         Sprite* iconSelected = isSheetFrame ? Sprite::createWithSpriteFrameName(spriteFrameName)
                                             : Sprite::create(spriteFrameName);
+        // The frame is neither a cached sheet frame nor a loose file (e.g. a
+        // roster entry whose art was renamed/dropped from CartoonCraftNV.plist).
+        // Sprite::create then returns null - fall back to an empty transparent
+        // sprite so the palette button still renders instead of crashing the
+        // whole editor on the getContentSize() below.
+        if (iconNormal == nullptr || iconSelected == nullptr) {
+            CCLOG("MapEditor: missing icon frame '%s' - using blank placeholder", spriteFrameName.c_str());
+            if (iconNormal == nullptr) iconNormal = Sprite::create();
+            if (iconSelected == nullptr) iconSelected = Sprite::create();
+        }
         float maxIconSize = size * 0.7f;
-        float iconScale = std::min(maxIconSize / iconNormal->getContentSize().width,
-                                    maxIconSize / iconNormal->getContentSize().height);
+        float iconW = iconNormal->getContentSize().width;
+        float iconH = iconNormal->getContentSize().height;
+        // Blank placeholder has zero size; guard the divide so scale stays finite.
+        float iconScale = (iconW > 0 && iconH > 0)
+                              ? std::min(maxIconSize / iconW, maxIconSize / iconH)
+                              : 1.0f;
         iconNormal->setScale(iconScale);
         iconSelected->setScale(iconScale);
         iconNormal->setPosition(Vec2(size / 2, size / 2));

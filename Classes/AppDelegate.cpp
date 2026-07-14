@@ -104,7 +104,10 @@ bool AppDelegate::applicationDidFinishLaunching() {
   if (!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
 //    glview = GLViewImpl::createWithFullScreen("Cartoon Craft"); // test now
-      glview = GLViewImpl::create("Cartoon Craft");
+//      glview = GLViewImpl::create("Cartoon Craft");
+      float rate = 1.0f;
+      glview = GLViewImpl::createWithRect(
+          "Cartoon Craft", cocos2d::Rect(-30, 0, 1024 * rate, 768 * rate));
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) ||                             \
       (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
     float rate = 3.8f;

@@ -550,6 +550,18 @@ public:
   // mostly) land - fine to sail through, but a ship SPAWNED on one sits
   // visibly beached on the coast.
   bool isOpenWaterTileAt(int tileX, int tileY);
+  // --- Ambient sea-wave decoration -----------------------------------------
+  // Cosmetic only: sprinkles drifting wave0.png/wave1.png sprites over water
+  // tiles. Cached once (per stage load) in setStage(); spawned/paced from
+  // gravityUpdateHandler() via updateWaveEffects(). Tunables (spawn density,
+  // move distance, scale, duration) live as WAVE_* defines above
+  // updateWaveEffects()'s definition in GameScene.cpp.
+  void initWaveTiles();
+  void updateWaveEffects(float dt);
+  void spawnWaveEffect();
+  std::vector<cocos2d::Vec2> waveTileWorldPositions;
+  int activeWaveCount = 0;
+  float waveSpawnTimer = 0.0f;
   // checkOtherShips=false skips the ship-vs-ship occupancy test and only
   // reports water-building tiles as blocked. Oil ships pass it false so they
   // move like workers - routed around terrain/buildings by their water A* but

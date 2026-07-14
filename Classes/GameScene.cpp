@@ -1,4 +1,4 @@
-﻿#include "GameScene.h"
+#include "GameScene.h"
 // #include "SimpleAudioEngine.h"
 #include "BuggyServerManager.h"
 #include "Fog.h"
@@ -6207,6 +6207,8 @@ void GameScene::setStage(TMXTiledMap *tileMap) {
     }
   }
 
+  initWaveTiles();
+
   this->schedule(schedule_selector(GameScene::gravityUpdate));
   //    this->schedule(schedule_selector(GameScene::gravityUpdateForStraight));
   //    this->schedule(schedule_selector(GameScene::gravityUpdateForCustomMoving));
@@ -9574,6 +9576,7 @@ void GameScene::gravityUpdateHandler(float dt) {
   this->npcUpdate(dt);
   this->missileEffectUpdate(dt);
   this->enemyFireLoop(dt);
+  this->updateWaveEffects(dt);
   this->destructableUpdate();
   gravityUpdateForStraight(dt);
   gravityUpdateForCustomMoving(dt);
@@ -15013,6 +15016,98 @@ bool GameScene::isOpenWaterTileAt(int tileX, int tileY) {
   // tile-id 41 + the +110 water offset). +1 for the TMX firstgid.
   return getTileGIDAt(stageLayer, Vec2(tileX, tileY)) == 152;
 }
+
+// ---- Ambient sea-wave decoration tuning ----
+// Target average number of waves alive per water tile at any moment - the
+// main knob for how busy the sea looks. Raise for a livelier ocean, lower for
+// a calmer one.
+#define WAVE_PER_TILE 0.85f
+// How often (seconds) we top up the wave count toward the target above.
+#define WAVE_SPAWN_INTERVAL 0.3f
+// How many points a wave drifts horizontally over its lifetime.
+#define WAVE_MOVE_DISTANCE_MIN 50.0f
+#define WAVE_MOVE_DISTANCE_MAX 80.0f
+// How long a single wave takes to fade in, drift, and fade back out.
+#define WAVE_DURATION_MIN 1.4f
+#define WAVE_DURATION_MAX 2.2f
+#define WAVE_SCALE_MIN 0.5f
+#define WAVE_SCALE_MAX 1.0f
+
+void GameScene::initWaveTiles() {
+  waveTileWorldPositions.clear();
+  activeWaveCount = 0;
+  waveSpawnTimer = 0.0f;
+  if (theMap == nullptr) {
+    return;
+  }
+  for (int j = 0; j < (int)mapSize.height; j++) {
+    for (int i = 0; i < (int)mapSize.width; i++) {
+      if (isWaterTileAt(i, j)) {
+        waveTileWorldPositions.push_back(getPositionFromTileCoordinate(i, j));
+      }
+    }
+  }
+}
+
+void GameScene::updateWaveEffects(float dt) {
+  if (waveTileWorldPositions.empty()) {
+    return;
+  }
+  waveSpawnTimer -= dt;
+  if (waveSpawnTimer > 0) {
+    return;
+  }
+  waveSpawnTimer = WAVE_SPAWN_INTERVAL;
+
+  int targetCount = (int)(waveTileWorldPositions.size() * WAVE_PER_TILE);
+  if (activeWaveCount >= targetCount) {
+    return;
+  }
+  // Top up toward the target a few at a time rather than all at once, so
+  // spawns stay staggered instead of appearing in one big burst.
+  int spawnCount = targetCount - activeWaveCount;
+  if (spawnCount > 3) {
+    spawnCount = 3;
+  }
+  for (int i = 0; i < spawnCount; i++) {
+    spawnWaveEffect();
+  }
+}
+
+void GameScene::spawnWaveEffect() {
+  Vec2 tilePos =
+      waveTileWorldPositions[rand() % waveTileWorldPositions.size()];
+  // Jitter within the tile so waves don't all sit dead-center.
+  tilePos += Vec2(rand() % TILE_SIZE - TILE_SIZE / 2,
+                  rand() % TILE_SIZE - TILE_SIZE / 2);
+
+  Sprite *spt = Sprite::createWithSpriteFrameName(strmake("wave%d.png", rand() % 2));
+  batch->addChild(spt);
+  spt->setPosition(tilePos);
+    spt->setAnchorPoint(Vec2(0.5, 0));
+  spt->setLocalZOrder(-tilePos.y);
+  spt->setOpacity(0);
+  spt->setScale(WAVE_SCALE_MIN);
+
+  float duration = WAVE_DURATION_MIN +
+                   CCRANDOM_0_1() * (WAVE_DURATION_MAX - WAVE_DURATION_MIN);
+  float distance = WAVE_MOVE_DISTANCE_MIN +
+                   CCRANDOM_0_1() * (WAVE_MOVE_DISTANCE_MAX - WAVE_MOVE_DISTANCE_MIN);
+  float direction = (rand() % 2 == 0) ? 1.0f : -1.0f;
+
+  activeWaveCount++;
+  spt->runAction(Sequence::create(FadeIn::create(duration / 2),
+                                  FadeOut::create(duration / 2), nullptr));
+  spt->runAction(Sequence::create(ScaleTo::create(duration / 2, WAVE_SCALE_MAX),
+                                  ScaleTo::create(duration / 2, WAVE_SCALE_MIN),
+                                  nullptr));
+  spt->runAction(MoveBy::create(duration, Vec2(distance * direction, 0)));
+  spt->runAction(Sequence::create(
+      DelayTime::create(duration),
+      CallFunc::create([this]() { activeWaveCount--; }), SPT_REMOVE_FUNC,
+      nullptr));
+}
+
 bool GameScene::isShipTileBlocked(int tileX, int tileY, Movable *self,
                                   bool checkOtherShips) {
   for (const auto &occupied : shipOccupiedTiles) {
