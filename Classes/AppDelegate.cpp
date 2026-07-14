@@ -109,7 +109,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
       (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
     float rate = 3.8f;
     glview = GLViewImpl::createWithRect(
-        "Cartoon Craft", cocos2d::Rect(0, 0, 1024 * rate, 768 * rate));
+        "Cartoon Craft", cocos2d::Rect(-30, 0, 1024 * rate, 768 * rate));
 #else
     glview = GLViewImpl::create("Cartoon Craft");
 #endif

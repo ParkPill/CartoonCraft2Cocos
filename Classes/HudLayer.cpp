@@ -2946,10 +2946,18 @@ void HudLayer::setMenu(int index, int btnType) {
 
     sptBuilding = WORLD->getSpriteForIcon(unitIndex);
   }
+  // Buildings/units banned on this stage (MapEditor Restrict panel) stay
+  // visible but grayed out; clicking still routes to tryBuilding/tryCreateUnit,
+  // which shows the "can't build here" message.
+  bool bannedBuild = unitIndex >= 0 && (WORLD->isBuildTypeDisabled(unitIndex) ||
+                                        WORLD->isTrainTypeDisabled(unitIndex));
+  Color3B buildTint = bannedBuild ? Color3B(120, 120, 120) : Color3B::WHITE;
+  btn->setColor(buildTint);
   if (sptBuilding != nullptr) {
     btn->addChild(sptBuilding);
     sptBuilding->setName("icon");
     sptBuilding->setPosition(btn->getContentSize() / 2);
+    sptBuilding->setColor(buildTint);
   }
 }
 void HudLayer::onCommandClick(Ref *ref) {
@@ -3652,7 +3660,7 @@ void HudLayer::openChatInput() {
   if (chatInputField == nullptr) {
     chatInputBg = DrawNode::create();
     chatInputBg->drawSolidRect(Vec2(0, 0), Vec2(boxWidth, boxHeight),
-                                Color4F(0, 0, 0, 0.5f));
+                                Color4F(1, 1, 1, 0.3f));
     chatInputBg->setPosition(boxPos);
     this->addChild(chatInputBg, 500);
 
@@ -6558,7 +6566,7 @@ void HudLayer::showIntro() {
   sptFrame->setPosition(Vec2(size.width / 2, size.height - size.width / 2));
 
   float dur = 50;
-  Label *lbl = Label::createWithSystemFont("text", LM->getLocalizedFont(), 30);
+  Label *lbl = Label::createWithTTF("text", LM->getLocalizedFont(), 30);
   lbl->setScale(0.08);
   lbl->setString(LM->getText("intro story desc"));
   lbl->setWidth(size.width - 150);

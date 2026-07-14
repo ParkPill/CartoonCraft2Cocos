@@ -78,6 +78,26 @@ public:
     
     void setPathState(int x, int y, int state);
     deque<Cell*> getPath(int startX, int startY, int endX, int endY);
+    // When true, a diagonal step is only allowed if both adjacent orthogonal
+    // cells are passable too. Prevents paths that cut the corner between two
+    // diagonally-touching blocked cells - the water grid uses this so ships
+    // never get a route that squeezes between two land tiles (the per-frame
+    // tile check in Movable would block that step and wedge the ship).
+    bool strictDiagonal = false;
+    // When true and the goal cell was never reached (blocked tile such as a
+    // building footprint, or a disconnected region), getPath returns a path to
+    // the reachable cell closest to the goal instead of no path at all. The
+    // water grid uses this so ships approach unreachable targets as far as the
+    // water allows - proximity-based interactions (docking at an extractor,
+    // delivering at a shipyard) finish the job from the adjacent tile.
+    bool partialPathToNearest = false;
+    // When true, the A* comparator uses the true Euclidean distance as its
+    // heuristic instead of the historical squared distance. Squared distance
+    // overwhelms the per-step cost, making the search effectively greedy -
+    // paths beeline at the goal and then crawl along obstacle edges. The
+    // water grid opts in for shortest sea routes; the ground grid keeps the
+    // old (faster, rougher) behavior.
+    bool admissibleHeuristic = false;
 private:
 //    DragSprite *_player;
 //    DragSprite *_goal;

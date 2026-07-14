@@ -1,4 +1,4 @@
-#include "MapEditor.h"
+﻿#include "MapEditor.h"
 #include "GameManager.h"
 #include "LanguageManager.h"
 #include "ui/UIScale9Sprite.h"
@@ -281,7 +281,7 @@ namespace {
     const char* const kTriggerActionTypeNames[] = {
         "Display Message", "Create Unit", "Remove Unit", "Set Switch",
         "Victory", "Defeat", "Wait", "Center Camera", "Talk", "Reveal Fog",
-        "Order Attack", "Move Unit", "Lock Control"
+        "Order Attack", "Move Unit", "Lock Control", "Teleport Unit"
     };
     const char* const kComparisonNames[] = {"At Least", "At Most", "Exactly"};
     const char* const kSwitchStateNames[] = {"Set", "Cleared"};
@@ -331,6 +331,50 @@ namespace {
         const char* name = kObjectTypes[typeIndex].name;
         for (const char* b : kBuildingNames) {
             if (strcmp(name, b) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // The subset of isBuildingObjectType() a worker/oil ship can actually
+    // construct in-game - what the Map Settings restriction panel offers.
+    // Zombie buildings, Mine, and Oil Spot are placeable-only props that are
+    // never player-built, so banning them would be meaningless.
+    bool isConstructibleBuildingType(int typeIndex) {
+        if (!isBuildingObjectType(typeIndex)) {
+            return false;
+        }
+        static const char* const kNonConstructible[] = {
+            "Zombie Castle", "Zombie HQ", "Mine", "Oil Spot",
+        };
+        const char* name = kObjectTypes[typeIndex].name;
+        for (const char* b : kNonConstructible) {
+            if (strcmp(name, b) == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // The subset of units a Castle/HQ/Barracks/etc. can produce in-game - what
+    // the Map Settings "Units" restriction tab offers. Explicitly listed (like
+    // the building names above) so Undead/hero/prop entries are excluded and
+    // adding a new roster entry never silently becomes restrictable.
+    bool isTrainableUnitType(int typeIndex) {
+        if (typeIndex < 0 || typeIndex >= kObjectTypeCount) {
+            return false;
+        }
+        static const char* const kTrainableNames[] = {
+            "Worker", "Swordsman", "Archer", "Catapult", "Helicopter", "Human Ship",
+            "Orc Axe", "Orc Spear", "Goblin", "Goblin Bomb", "Goblin Worker", "Troll",
+            "Wizard", "Orc Ship",
+            "Human Battle Ship", "Orc Battle Ship", "Human Dreadnought", "Orc Dreadnought",
+            "Human Oil Ship", "Orc Oil Ship",
+        };
+        const char* name = kObjectTypes[typeIndex].name;
+        for (const char* u : kTrainableNames) {
+            if (strcmp(name, u) == 0) {
                 return true;
             }
         }
@@ -557,6 +601,7 @@ bool MapEditor::init() {
     setupModalDimmer();
     setupNewMapPanel();
     setupResizeMapPanel();
+    setupMapSettingsPanel();
     setupEditUnitPanel();
     setupTriggerPanel();
     setupConditionEditPanel();
@@ -600,6 +645,8 @@ void MapEditor::buildMap(int width, int height) {
     nextObjectId = 1;
     triggers.clear();
     selectedTriggerIndex = -1;
+    disabledBuildings.clear();
+    disabledUnits.clear();
     currentFilePath.clear();
     isDirty = false;
     clearUndoHistory();
@@ -1901,8 +1948,8 @@ void MapEditor::updateToolLabel() {
 }
 
 bool MapEditor::isAnyModalOpen() const {
-    return isNewMapPanelOpen || isResizeMapPanelOpen || isEditUnitPanelOpen || isTriggerPanelOpen ||
-           isConditionEditPanelOpen || isActionEditPanelOpen;
+    return isNewMapPanelOpen || isResizeMapPanelOpen || isMapSettingsPanelOpen || isEditUnitPanelOpen ||
+           isTriggerPanelOpen || isConditionEditPanelOpen || isActionEditPanelOpen;
 }
 
 void MapEditor::setStatus(const std::string& text) {
@@ -1951,6 +1998,7 @@ void MapEditor::setupUI() {
     MenuItemSprite* itemSaveAs = createTextButton("Save As", fileBtnW + 30, fileBtnH, [this](Ref*) { saveMapAs(); });
     MenuItemSprite* itemLoad = createTextButton("Load", fileBtnW, fileBtnH, [this](Ref*) { loadMap(); });
     MenuItemSprite* itemResize = createTextButton("Resize", fileBtnW, fileBtnH, [this](Ref*) { showResizeMapPanel(); });
+    MenuItemSprite* itemRestrict = createTextButton("Restrict", fileBtnW + 20, fileBtnH, [this](Ref*) { showMapSettingsPanel(); });
     MenuItemSprite* itemRun = createTextButton("Run", fileBtnW, fileBtnH, [this](Ref*) { runMap(); });
     itemRun->getNormalImage()->setColor(Color3B(120, 220, 120));
 
@@ -1959,9 +2007,10 @@ void MapEditor::setupUI() {
     itemSaveAs->setPosition(Vec2(240, 0));
     itemLoad->setPosition(Vec2(360, 0));
     itemResize->setPosition(Vec2(480, 0));
-    itemRun->setPosition(Vec2(600, 0));
+    itemRestrict->setPosition(Vec2(610, 0));
+    itemRun->setPosition(Vec2(740, 0));
 
-    Menu* fileMenu = Menu::create(itemNew, itemSave, itemSaveAs, itemLoad, itemResize, itemRun, nullptr);
+    Menu* fileMenu = Menu::create(itemNew, itemSave, itemSaveAs, itemLoad, itemResize, itemRestrict, itemRun, nullptr);
     fileMenu->setPosition(Vec2(120, visibleSize.height - 285));
     this->addChild(fileMenu, 10);
 
@@ -2683,6 +2732,175 @@ void MapEditor::onConfirmResizeMap() {
     setStatus(StringUtils::format("Resized to %dx%d", mapWidth, mapHeight));
 }
 
+void MapEditor::setupMapSettingsPanel() {
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+
+    mapSettingsBuildingIndices.clear();
+    mapSettingsUnitIndices.clear();
+    for (int i = 0; i < kObjectTypeCount; i++) {
+        if (isConstructibleBuildingType(i)) {
+            mapSettingsBuildingIndices.push_back(i);
+        } else if (isTrainableUnitType(i)) {
+            mapSettingsUnitIndices.push_back(i);
+        }
+    }
+
+    const int columns = 3;
+    const float rowSpacing = 58;
+    // Size the panel to whichever tab needs more rows so both fit.
+    int maxCount = std::max(static_cast<int>(mapSettingsBuildingIndices.size()),
+                            static_cast<int>(mapSettingsUnitIndices.size()));
+    const int rows = (maxCount + columns - 1) / columns;
+
+    const float panelWidth = 20 + columns * 320;
+    // Room for title, tab row, hint, the grid, and the close button.
+    const float panelHeight = 200 + rows * rowSpacing + 70;
+
+    mapSettingsPanel = Node::create();
+    mapSettingsPanel->setPosition(Vec2((visibleSize.width - panelWidth) / 2,
+                                       (visibleSize.height - panelHeight) / 2));
+    mapSettingsPanel->setVisible(false);
+    this->addChild(mapSettingsPanel, 20);
+
+    DrawNode* panelBg = DrawNode::create();
+    panelBg->drawSolidRect(Vec2(0, 0), Vec2(panelWidth, panelHeight), Color4F(0.08f, 0.08f, 0.08f, 0.95f));
+    mapSettingsPanel->addChild(panelBg);
+
+    Label* title = LM->getLocalizedLabel("Production Restrictions", Color4B::WHITE, 28);
+    title->setPosition(Vec2(panelWidth / 2, panelHeight - 30));
+    mapSettingsPanel->addChild(title);
+
+    // Buildings / Units tab row.
+    const float tabW = 200;
+    const float tabH = 46;
+    const char* const tabNames[] = {"Buildings", "Units"};
+    mapSettingsTabBgs.assign(2, nullptr);
+    Vector<MenuItem*> tabItems;
+    for (int t = 0; t < 2; t++) {
+        Scale9Sprite* bg = nullptr;
+        MenuItemSprite* item = createTextButton(tabNames[t], tabW, tabH,
+                                                 [this, t](Ref*) { selectMapSettingsTab(t); }, &bg);
+        item->setPosition(Vec2(panelWidth / 2 + (t == 0 ? -tabW / 2 - 6 : tabW / 2 + 6), panelHeight - 80));
+        tabItems.pushBack(item);
+        mapSettingsTabBgs[t] = bg;
+    }
+    Menu* tabMenu = Menu::createWithArray(tabItems);
+    tabMenu->setPosition(Vec2::ZERO);
+    mapSettingsPanel->addChild(tabMenu);
+
+    Label* hint = LM->getLocalizedLabel(
+        "Click an item to ban it on this map. Red = cannot be produced, by any side including the AI.",
+        Color4B(200, 200, 200, 255), 20);
+    hint->setPosition(Vec2(panelWidth / 2, panelHeight - 118));
+    mapSettingsPanel->addChild(hint);
+
+    const float gridTopY = panelHeight - 150;
+
+    mapSettingsBuildingContainer = Node::create();
+    mapSettingsPanel->addChild(mapSettingsBuildingContainer);
+    buildMapSettingsGrid(mapSettingsBuildingContainer, mapSettingsBuildingIndices,
+                         mapSettingsBuildingBgs, panelWidth, gridTopY);
+
+    mapSettingsUnitContainer = Node::create();
+    mapSettingsPanel->addChild(mapSettingsUnitContainer);
+    buildMapSettingsGrid(mapSettingsUnitContainer, mapSettingsUnitIndices,
+                         mapSettingsUnitBgs, panelWidth, gridTopY);
+
+    MenuItemSprite* itemClose = createTextButton("Close", 150, 56, [this](Ref*) { hideMapSettingsPanel(); });
+    itemClose->setPosition(Vec2(panelWidth / 2, 45));
+    Menu* closeMenu = Menu::create(itemClose, nullptr);
+    closeMenu->setPosition(Vec2::ZERO);
+    mapSettingsPanel->addChild(closeMenu);
+
+    selectMapSettingsTab(0);
+}
+
+void MapEditor::buildMapSettingsGrid(Node* container, const std::vector<int>& typeIndices,
+                                     std::vector<Scale9Sprite*>& outBgs,
+                                     float panelWidth, float topY) {
+    const int columns = 3;
+    const float btnW = 300;
+    const float btnH = 48;
+    const float colSpacing = 320;
+    const float rowSpacing = 58;
+
+    Vector<MenuItem*> items;
+    outBgs.assign(typeIndices.size(), nullptr);
+    for (size_t slot = 0; slot < typeIndices.size(); slot++) {
+        int typeIndex = typeIndices[slot];
+        Scale9Sprite* bg = nullptr;
+        MenuItemSprite* item = createTextButton(kObjectTypes[typeIndex].name, btnW, btnH,
+                                                 [this, typeIndex](Ref*) { toggleDisabledType(typeIndex); }, &bg);
+        float col = static_cast<float>(slot % columns);
+        float row = static_cast<float>(slot / columns);
+        item->setPosition(Vec2(20 + col * colSpacing + btnW / 2,
+                               topY - row * rowSpacing - btnH / 2));
+        items.pushBack(item);
+        outBgs[slot] = bg;
+    }
+    if (!items.empty()) {
+        Menu* menu = Menu::createWithArray(items);
+        menu->setPosition(Vec2::ZERO);
+        container->addChild(menu);
+    }
+}
+
+void MapEditor::showMapSettingsPanel() {
+    refreshMapSettingsButtons();
+    mapSettingsPanel->setVisible(true);
+    isMapSettingsPanelOpen = true;
+    setModalDimmerVisible(true);
+}
+
+void MapEditor::hideMapSettingsPanel() {
+    mapSettingsPanel->setVisible(false);
+    isMapSettingsPanelOpen = false;
+    setModalDimmerVisible(false);
+}
+
+void MapEditor::selectMapSettingsTab(int tab) {
+    mapSettingsTab = tab;
+    if (mapSettingsBuildingContainer) {
+        mapSettingsBuildingContainer->setVisible(tab == 0);
+    }
+    if (mapSettingsUnitContainer) {
+        mapSettingsUnitContainer->setVisible(tab == 1);
+    }
+    for (int t = 0; t < static_cast<int>(mapSettingsTabBgs.size()); t++) {
+        if (mapSettingsTabBgs[t]) {
+            mapSettingsTabBgs[t]->setColor(t == tab ? Color3B(255, 221, 120) : Color3B::WHITE);
+        }
+    }
+}
+
+void MapEditor::toggleDisabledType(int typeIndex) {
+    std::set<int>& target = isConstructibleBuildingType(typeIndex) ? disabledBuildings : disabledUnits;
+    if (target.count(typeIndex)) {
+        target.erase(typeIndex);
+    } else {
+        target.insert(typeIndex);
+    }
+    isDirty = true;
+    refreshMapSettingsButtons();
+}
+
+void MapEditor::refreshMapSettingsButtons() {
+    for (size_t slot = 0; slot < mapSettingsBuildingIndices.size(); slot++) {
+        Scale9Sprite* bg = mapSettingsBuildingBgs[slot];
+        if (bg) {
+            bool banned = disabledBuildings.count(mapSettingsBuildingIndices[slot]) > 0;
+            bg->setColor(banned ? Color3B(235, 110, 110) : Color3B::WHITE);
+        }
+    }
+    for (size_t slot = 0; slot < mapSettingsUnitIndices.size(); slot++) {
+        Scale9Sprite* bg = mapSettingsUnitBgs[slot];
+        if (bg) {
+            bool banned = disabledUnits.count(mapSettingsUnitIndices[slot]) > 0;
+            bg->setColor(banned ? Color3B(235, 110, 110) : Color3B::WHITE);
+        }
+    }
+}
+
 void MapEditor::addDefaultWinTrigger() {
     Trigger t;
     t.name = "Win";
@@ -3174,12 +3392,38 @@ std::string MapEditor::serialize() const {
             writer.Bool(a.visionEnabled);
             writer.Key("controlLocked");
             writer.Bool(a.controlLocked);
+            // Written only when set - absent means the default "start after
+            // the previous action finishes", so files saved before this key
+            // existed load unchanged.
+            if (a.runWithPrevious) {
+                writer.Key("runWithPrevious");
+                writer.Bool(true);
+            }
             writer.EndObject();
         }
         writer.EndArray();
         writer.EndObject();
     }
     writer.EndArray();
+
+    // Written only when something is banned - absent means "everything
+    // buildable", so files saved before these keys existed load unchanged.
+    if (!disabledBuildings.empty()) {
+        writer.Key("disabledBuildings");
+        writer.StartArray();
+        for (int typeIndex : disabledBuildings) {
+            writer.Int(typeIndex);
+        }
+        writer.EndArray();
+    }
+    if (!disabledUnits.empty()) {
+        writer.Key("disabledUnits");
+        writer.StartArray();
+        for (int typeIndex : disabledUnits) {
+            writer.Int(typeIndex);
+        }
+        writer.EndArray();
+    }
 
     writer.EndObject();
 
@@ -3358,12 +3602,42 @@ bool MapEditor::deserialize(const std::string& jsonStr) {
                     if (aitem.HasMember("controlLocked")) {
                         a.controlLocked = aitem["controlLocked"].GetBool();
                     }
+                    if (aitem.HasMember("runWithPrevious")) {
+                        a.runWithPrevious = aitem["runWithPrevious"].GetBool();
+                    }
                     t.actions.push_back(a);
                 }
             }
             triggers.push_back(t);
         }
     }
+
+    // buildMap() above already reset disabledBuildings/disabledUnits for maps
+    // saved before these keys existed.
+    if (doc.HasMember("disabledBuildings") && doc["disabledBuildings"].IsArray()) {
+        for (auto& ditem : doc["disabledBuildings"].GetArray()) {
+            if (!ditem.IsInt()) {
+                continue;
+            }
+            int typeIndex = ditem.GetInt();
+            if (isConstructibleBuildingType(typeIndex)) {
+                disabledBuildings.insert(typeIndex);
+            }
+        }
+    }
+    if (doc.HasMember("disabledUnits") && doc["disabledUnits"].IsArray()) {
+        for (auto& ditem : doc["disabledUnits"].GetArray()) {
+            if (!ditem.IsInt()) {
+                continue;
+            }
+            int typeIndex = ditem.GetInt();
+            if (isTrainableUnitType(typeIndex)) {
+                disabledUnits.insert(typeIndex);
+            }
+        }
+    }
+    refreshMapSettingsButtons();
+
     if (triggerPanel) {
         refreshTriggerList();
         refreshTriggerDetail();
@@ -3915,47 +4189,67 @@ std::string MapEditor::describeCondition(const TriggerCondition& c) const {
 }
 
 std::string MapEditor::describeAction(const TriggerAction& a) const {
+    std::string base;
     switch (a.type) {
         case TACT_DISPLAY_MESSAGE:
-            return StringUtils::format("Display message: \"%s\"", a.message.c_str());
+            base = StringUtils::format("Display message: \"%s\"", a.message.c_str());
+            break;
         case TACT_CREATE_UNIT: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
-            return StringUtils::format("Create %d %s for %s at %s", a.count, unitTypeCycleName(a.unitTypeIndex).c_str(),
+            base = StringUtils::format("Create %d %s for %s at %s", a.count, unitTypeCycleName(a.unitTypeIndex).c_str(),
                                         kSideNames[a.unitSide], at.c_str());
+            break;
         }
         case TACT_REMOVE_UNIT:
-            return StringUtils::format("Remove %s units for %s", unitTypeCycleName(a.unitTypeIndex).c_str(), kSideNames[a.unitSide]);
+            base = StringUtils::format("Remove %s units for %s", unitTypeCycleName(a.unitTypeIndex).c_str(), kSideNames[a.unitSide]);
+            break;
         case TACT_SET_SWITCH:
-            return StringUtils::format("%s switch %d", kSwitchActionNames[a.switchAction], a.switchIndex + 1);
+            base = StringUtils::format("%s switch %d", kSwitchActionNames[a.switchAction], a.switchIndex + 1);
+            break;
         case TACT_VICTORY:
-            return "Victory";
+            base = "Victory";
+            break;
         case TACT_DEFEAT:
-            return "Defeat";
+            base = "Defeat";
+            break;
         case TACT_WAIT:
-            return StringUtils::format("Wait %.1f sec", a.waitSeconds);
+            base = StringUtils::format("Wait %.1f sec", a.waitSeconds);
+            break;
         case TACT_CENTER_CAMERA:
-            return a.targetObjectId >= 0 ? StringUtils::format("Center camera at %s", describeTargetObject(a.targetObjectId).c_str())
+            base = a.targetObjectId >= 0 ? StringUtils::format("Center camera at %s", describeTargetObject(a.targetObjectId).c_str())
                                           : StringUtils::format("Center camera at (%d,%d)", a.tileX, a.tileY);
+            break;
         case TACT_TALK: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
-            return StringUtils::format("Talk at %s (%.1fs): \"%s\"", at.c_str(), a.talkSeconds, a.message.c_str());
+            base = StringUtils::format("Talk at %s (%.1fs): \"%s\"", at.c_str(), a.talkSeconds, a.message.c_str());
+            break;
         }
         case TACT_REVEAL_FOG: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
-            return StringUtils::format("Reveal fog %s at %s r=%d", a.visionEnabled ? "ON" : "OFF", at.c_str(), a.count);
+            base = StringUtils::format("Reveal fog %s at %s r=%d", a.visionEnabled ? "ON" : "OFF", at.c_str(), a.count);
+            break;
         }
         case TACT_ORDER_ATTACK:
-            return StringUtils::format("Order attack: %s %s -> enemy", kSideNames[a.unitSide], unitTypeCycleName(a.unitTypeIndex).c_str());
-        case TACT_MOVE_UNIT: {
+            base = StringUtils::format("Order attack: %s %s -> enemy", kSideNames[a.unitSide], unitTypeCycleName(a.unitTypeIndex).c_str());
+            break;
+        case TACT_MOVE_UNIT:
+        case TACT_TELEPORT_UNIT: {
             std::string at = a.targetObjectId >= 0 ? describeTargetObject(a.targetObjectId) : StringUtils::format("(%d,%d)", a.tileX, a.tileY);
             std::string unit = a.sourceObjectId >= 0 ? describeTargetObject(a.sourceObjectId) : "(no unit)";
-            return StringUtils::format("Move: %s -> %s", unit.c_str(), at.c_str());
+            base = StringUtils::format("%s: %s -> %s", a.type == TACT_TELEPORT_UNIT ? "Teleport" : "Move", unit.c_str(), at.c_str());
+            break;
         }
         case TACT_LOCK_CONTROL:
-            return a.controlLocked ? "Lock player control" : "Unlock player control";
+            base = a.controlLocked ? "Lock player control" : "Unlock player control";
+            break;
         default:
-            return "Unknown action";
+            base = "Unknown action";
+            break;
     }
+    if (a.runWithPrevious) {
+        base += " [With Prev]";
+    }
+    return base;
 }
 
 void MapEditor::refreshTriggerDetail() {
@@ -3980,7 +4274,7 @@ void MapEditor::refreshTriggerDetail() {
     }
 
     const Trigger& t = triggers[selectedTriggerIndex];
-    const float rowH = 40;
+    const float rowH = 80;
     const float rowWidth = 760;
 
     // Overflow guard, same windowing idea as the target dropdown: only a
@@ -4010,7 +4304,7 @@ void MapEditor::refreshTriggerDetail() {
     Vector<MenuItem*> condScrollItems;
     int condSlot = 0;
     if (condNeedsScroll) {
-        condScrollItems.pushBack(makeScrollItem("^ Up", conditionListScroll > 0,
+        condScrollItems.pushBack(makeScrollItem("▲Up", conditionListScroll > 0,
                                                 -static_cast<float>(condSlot++) * rowH - rowH / 2, [this]() {
             --conditionListScroll;
             // Deferred: rebuilding removes the menu that is mid-dispatch (same
@@ -4036,7 +4330,7 @@ void MapEditor::refreshTriggerDetail() {
         conditionListContainer->addChild(menu);
     }
     if (condNeedsScroll) {
-        condScrollItems.pushBack(makeScrollItem("v Down", conditionListScroll + condShown < condTotal,
+        condScrollItems.pushBack(makeScrollItem("▼Down", conditionListScroll + condShown < condTotal,
                                                 -static_cast<float>(condSlot) * rowH - rowH / 2, [this]() {
             ++conditionListScroll;
             this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "cond_scroll");
@@ -4054,7 +4348,7 @@ void MapEditor::refreshTriggerDetail() {
     Vector<MenuItem*> actScrollItems;
     int actSlot = 0;
     if (actNeedsScroll) {
-        actScrollItems.pushBack(makeScrollItem("^ Up", actionListScroll > 0,
+        actScrollItems.pushBack(makeScrollItem("▲Up", actionListScroll > 0,
                                                -static_cast<float>(actSlot++) * rowH - rowH / 2, [this]() {
             --actionListScroll;
             this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "act_scroll");
@@ -4076,14 +4370,14 @@ void MapEditor::refreshTriggerDetail() {
         actionListContainer->addChild(lbl);
 
         Scale9Sprite* upBg = nullptr;
-        MenuItemSprite* itemUp = createTextButton("^", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, -1); }, &upBg);
+        MenuItemSprite* itemUp = createTextButton("▲", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, -1); }, &upBg);
         itemUp->setPosition(Vec2(rowWidth - 246, y));
         bool canMoveUp = idx > 0;
         itemUp->setEnabled(canMoveUp);
         upBg->setOpacity(canMoveUp ? 255 : 90);
 
         Scale9Sprite* downBg = nullptr;
-        MenuItemSprite* itemDown = createTextButton("v", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, 1); }, &downBg);
+        MenuItemSprite* itemDown = createTextButton("▼", 32, rowH - 2, [this, idx](Ref*) { moveActionAtIndex(idx, 1); }, &downBg);
         itemDown->setPosition(Vec2(rowWidth - 210, y));
         bool canMoveDown = idx < actTotal - 1;
         itemDown->setEnabled(canMoveDown);
@@ -4100,7 +4394,7 @@ void MapEditor::refreshTriggerDetail() {
         actionListContainer->addChild(menu);
     }
     if (actNeedsScroll) {
-        actScrollItems.pushBack(makeScrollItem("v Down", actionListScroll + actShown < actTotal,
+        actScrollItems.pushBack(makeScrollItem("▼Down", actionListScroll + actShown < actTotal,
                                                -static_cast<float>(actSlot) * rowH - rowH / 2, [this]() {
             ++actionListScroll;
             this->scheduleOnce([this](float) { refreshTriggerDetail(); }, 0.0f, "act_scroll");
@@ -4341,7 +4635,8 @@ float MapEditor::dropdownAnchorOffsetY() const {
         case TACT_CREATE_UNIT:
             return -100.0f;
         case TACT_MOVE_UNIT:
-            return -50.0f; // "To:" row, now below Move's "Unit:" row
+        case TACT_TELEPORT_UNIT:
+            return -50.0f; // "To:" row, now below Move/Teleport's "Unit:" row
         case TACT_REVEAL_FOG:
             return -50.0f;
         default:
@@ -4398,7 +4693,7 @@ void MapEditor::rebuildTargetDropdown() {
         bool canUp = targetDropdownScroll > 0;
         Color4B col = canUp ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
         MenuItemLabel* upBtn = MenuItemLabel::create(
-            LM->getLocalizedLabel("^ Up", col, 18),
+            LM->getLocalizedLabel("▲Up", col, 18),
             [this, kMaxVis](Ref*) {
                 // Page up: jump a full window of items, not a single row.
                 targetDropdownScroll = std::max(0, targetDropdownScroll - kMaxVis);
@@ -4432,7 +4727,7 @@ void MapEditor::rebuildTargetDropdown() {
         bool canDown = targetDropdownScroll + kMaxVis < total;
         Color4B col = canDown ? Color4B(180, 180, 255, 255) : Color4B(90, 90, 110, 255);
         MenuItemLabel* downBtn = MenuItemLabel::create(
-            LM->getLocalizedLabel("v Down", col, 18),
+            LM->getLocalizedLabel("▼Down", col, 18),
             [this, total, kMaxVis](Ref*) {
                 // Page down: jump a full window, clamped so the last window
                 // stays flush with the end of the list.
@@ -4562,7 +4857,8 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     }
     editingConditionIndex = conditionIndex;
     const Trigger& t = triggers[selectedTriggerIndex];
-    if (conditionIndex >= 0 && conditionIndex < static_cast<int>(t.conditions.size())) {
+    bool isNewCondition = !(conditionIndex >= 0 && conditionIndex < static_cast<int>(t.conditions.size()));
+    if (!isNewCondition) {
         conditionDraft = t.conditions[conditionIndex];
     } else {
         conditionDraft = TriggerCondition();
@@ -4571,7 +4867,9 @@ void MapEditor::openConditionEditPanel(int conditionIndex) {
     tfCondElapsedSeconds->setString(StringUtils::format("%d", conditionDraft.elapsedSeconds));
     tfCondUnitAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     tfCondResourceAmount->setString(StringUtils::format("%d", conditionDraft.amount));
-    tfCondArriveRange->setString(StringUtils::format("%d", std::max(1, conditionDraft.amount)));
+    // `amount` is shared across condition types (default 1), but Unit Arrives
+    // wants a wider default range of 2 tiles for freshly created conditions.
+    tfCondArriveRange->setString(StringUtils::format("%d", isNewCondition ? 2 : std::max(1, conditionDraft.amount)));
     tfCondBuildingAmount->setString(StringUtils::format("%d", conditionDraft.amount));
     refreshConditionEditPanel();
 
@@ -4835,6 +5133,11 @@ void MapEditor::setupActionEditPanel() {
     actionEditPanel->addChild(rowActLockControl);
     addCycleRow(rowActLockControl, "State:", 30, 0, &lblActLockControlState, [this](int dir) { cycleActionLockControlState(dir); });
 
+    // Applies to every action type (hence outside the per-type groups, and
+    // below their deepest row at groupY-250): whether this action starts
+    // together with the previous one instead of after it finishes.
+    addCycleRow(actionEditPanel, "Timing:", 30, 100, &lblActRunWithPrev, [this](int dir) { cycleActionRunWithPrevious(dir); });
+
     MenuItemSprite* itemConfirm = createTextButton("OK", 140, 56, [this](Ref*) { onConfirmAction(); });
     MenuItemSprite* itemCancel = createTextButton("Cancel", 140, 56, [this](Ref*) { closeActionEditPanel(); });
     itemConfirm->setPosition(Vec2(panelWidth / 2 - 90, 40));
@@ -5011,6 +5314,11 @@ void MapEditor::cycleActionLockControlState(int dir) {
     refreshActionEditPanel();
 }
 
+void MapEditor::cycleActionRunWithPrevious(int dir) {
+    actionDraft.runWithPrevious = !actionDraft.runWithPrevious;
+    refreshActionEditPanel();
+}
+
 void MapEditor::refreshActionEditPanel() {
     lblActType->setString(kTriggerActionTypeNames[actionDraft.type]);
 
@@ -5023,7 +5331,9 @@ void MapEditor::refreshActionEditPanel() {
     rowActTalk->setVisible(actionDraft.type == TACT_TALK);
     rowActRevealFog->setVisible(actionDraft.type == TACT_REVEAL_FOG);
     rowActOrderAttack->setVisible(actionDraft.type == TACT_ORDER_ATTACK);
-    rowActMoveUnit->setVisible(actionDraft.type == TACT_MOVE_UNIT);
+    // Teleport shares Move's rows - both are "this unit goes to this spot",
+    // only the runtime behaviour (walk vs. instant placement) differs.
+    rowActMoveUnit->setVisible(actionDraft.type == TACT_MOVE_UNIT || actionDraft.type == TACT_TELEPORT_UNIT);
     rowActLockControl->setVisible(actionDraft.type == TACT_LOCK_CONTROL);
 
     bool createUsesManual = actionDraft.targetObjectId < 0;
@@ -5059,6 +5369,7 @@ void MapEditor::refreshActionEditPanel() {
     lblActMoveUnit->setString(actionDraft.sourceObjectId >= 0 ? describeTargetObject(actionDraft.sourceObjectId) : "(Select Unit)");
     lblActMoveTarget->setString(describeTargetObject(actionDraft.targetObjectId));
     lblActLockControlState->setString(actionDraft.controlLocked ? "Locked" : "Unlocked");
+    lblActRunWithPrev->setString(actionDraft.runWithPrevious ? "With Previous" : "After Previous");
 }
 
 void MapEditor::onConfirmAction() {
@@ -5096,7 +5407,7 @@ void MapEditor::onConfirmAction() {
             a.tileY = atoi(tfActRevealFogY->getString().c_str());
         }
         a.count = std::max(1, atoi(tfActRevealFogRadius->getString().c_str()));
-    } else if (a.type == TACT_MOVE_UNIT) {
+    } else if (a.type == TACT_MOVE_UNIT || a.type == TACT_TELEPORT_UNIT) {
         if (a.targetObjectId < 0) {
             a.tileX = atoi(tfActMoveX->getString().c_str());
             a.tileY = atoi(tfActMoveY->getString().c_str());
@@ -5314,8 +5625,8 @@ void MapEditor::setupInput() {
         if (isAnyModalOpen()) return;
         float scrollY = evt->getScrollY();
         if (fabsf(scrollY) < 0.01f) return;
-        // scroll up (scrollY > 0) = zoom in
-        applyMapZoom(mapScale + scrollY * kMapScaleStep, win32MouseWorldPos(evt));
+        // GLFW on Win32 reports wheel-up as negative scrollY, so negate: wheel up = zoom in
+        applyMapZoom(mapScale - scrollY * kMapScaleStep, win32MouseWorldPos(evt));
     };
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(mouseListener, this);
 #else

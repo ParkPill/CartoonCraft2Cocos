@@ -10,6 +10,10 @@ using namespace std;
 
 int g_goalX;
 int g_goalY;
+// Mirrors AStar::admissibleHeuristic for the free-function comparator below
+// (same pattern as g_goalX/g_goalY). Set per search in
+// fullFillPlayerAndGoalData().
+bool g_useSqrtHeuristic = false;
 
 bool compareTwoCellsByDistance(Cell *c1, Cell *c2){
     if(c1->getDistance() <= c2->getDistance()){
@@ -47,11 +51,21 @@ bool comparebyWhichNearerGoalPhysicWay(Cell *c1, Cell *c2){
 }
 
 bool comparebyDistanceBetweenStartAndGoal(Cell *c1, Cell *c2){
-    float distanceOfC1AndGoal = c1->getDistance() +
-    distanceBetweenTwoCells((float)c1->getX(),(float)c1->getY(),(float)g_goalX,(float) g_goalY);
-    
-    float distanceOfC2AndGoal = c2->getDistance() +
-    distanceBetweenTwoCells((float)c2->getX(),(float)c2->getY(),(float)g_goalX,(float) g_goalY);
+    float h1 = distanceBetweenTwoCells((float)c1->getX(),(float)c1->getY(),(float)g_goalX,(float) g_goalY);
+    float h2 = distanceBetweenTwoCells((float)c2->getX(),(float)c2->getY(),(float)g_goalX,(float) g_goalY);
+    if(g_useSqrtHeuristic){
+        // distanceBetweenTwoCells returns SQUARED distance, which swamps the
+        // accumulated step cost (1 / 1.414 per tile) and turns the search
+        // into a greedy beeline that hugs obstacle walls. Taking the root
+        // makes the heuristic admissible (Euclidean <= real path cost), so
+        // the search returns genuinely short routes. Opt-in per grid to keep
+        // the ground A*'s long-standing behavior/performance untouched.
+        h1 = sqrt(h1);
+        h2 = sqrt(h2);
+    }
+    float distanceOfC1AndGoal = c1->getDistance() + h1;
+
+    float distanceOfC2AndGoal = c2->getDistance() + h2;
     if(distanceOfC1AndGoal <= distanceOfC2AndGoal){
         return false;
     }else{
@@ -223,6 +237,31 @@ void AStar::fullFillPathData()
 {
     _vecPathCell.clear();
     Cell* cell = _m_Map.Get(_goalX,_goalY);
+    if(partialPathToNearest && cell->getLastX() == -1
+       && !(_goalX == _startX && _goalY == _startY)){
+        // Goal never reached - fall back to the reachable cell closest to it.
+        // Every cell reached by the search is marked and has a lastX backlink
+        // (only the start cell is marked with lastX == -1).
+        Cell* best = nullptr;
+        float bestGoalDist = 0;
+        for(int i = 0; i < xLineCount; ++i){
+            for(int j = 0; j < yLineCount; ++j){
+                Cell* c = _m_Map.Get(i,j);
+                if(!c->getMarked()) continue;
+                if(c->getLastX() == -1 && !(i == _startX && j == _startY)) continue;
+                float d = distanceBetweenTwoCells((float)i,(float)j,(float)_goalX,(float)_goalY);
+                if(best == nullptr || d < bestGoalDist
+                   || (d == bestGoalDist && c->getDistance() < best->getDistance())){
+                    best = c;
+                    bestGoalDist = d;
+                }
+            }
+        }
+        if(best == nullptr || (best->getX() == _startX && best->getY() == _startY)){
+            return; // already as close as the grid allows - report "no path"
+        }
+        cell = best;
+    }
     while(cell->getLastX() != -1){
         _vecPathCell.push_front(cell);
         cell = _m_Map.Get(cell->getLastX(),cell->getLastY());
@@ -242,6 +281,7 @@ void AStar::fullFillPlayerAndGoalData(){
 //
     g_goalX = _goalX;
     g_goalY = _goalY;
+    g_useSqrtHeuristic = admissibleHeuristic;
 }
 
 void AStar::menuDistanceBasedFindingCallback(cocos2d::Ref* pSender)
@@ -324,6 +364,11 @@ void AStar::startPathFinding(compareTwoCells compareMethod, int startX,int start
             
             if(indexX >= 0 && indexX < xLineCount && indexY >= 0 && indexY < yLineCount
                && _m_Map.Get(indexX,indexY)->getPassable() == true){//check is a OK cell or not
+                if(strictDiagonal && i >= 4 // diagonal directions are indices 4-7
+                   && (!_m_Map.Get(indexX, nowProcessCell->getY())->getPassable()
+                       || !_m_Map.Get(nowProcessCell->getX(), indexY)->getPassable())){
+                    continue; // would cut the corner between two blocked cells
+                }
                 Cell *cell = _m_Map.Get(indexX,indexY);
                 float beforeDistance = DISTANCE[i] * cell->getWeight() + _m_Map.Get(nowProcessCell->getX(),
                                                                                     nowProcessCell->getY())->getDistance();//calculate the distance

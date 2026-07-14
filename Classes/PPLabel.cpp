@@ -97,7 +97,10 @@ void PPLabel::setString(std::string txt){
             if(LM->getLanguageType() == LanguageType::KOREAN){
                 lblNormal = Label::createWithTTF(text, LM->getLocalizedFont(), fontSize*1.2f);
             }else{
-                lblNormal = Label::createWithSystemFont(text, LM->getLocalizedFont(), fontSize);
+                // getLocalizedFont returns a bundled font file for every
+                // language now - createWithSystemFont with a file name would
+                // just fall back to the OS default font.
+                lblNormal = Label::createWithTTF(text, LM->getLocalizedFont(), fontSize);
             }
             
             lblNormal->setTextColor(Color4B(fontColor, 255));

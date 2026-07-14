@@ -365,6 +365,11 @@ void GameScene::move(float dt, Movable *obj, Movable *target, bool horiFirst) {
 static const float kEAIRallyHoldDist = TILE_SIZE * 2.0f;
 
 void GameScene::updateUnitMoveNew(float dt) {
+  long long __m0 = PERF_NOW();
+  updateUnitMoveNewBody(dt);
+  PerfProbe::moveUs += PERF_NOW() - __m0;
+}
+void GameScene::updateUnitMoveNewBody(float dt) {
   for (auto unit : heroArray) {
     if (!unit->isInShuttle && unit->pendingShuttle) {
       EnemyBase *shuttle = (EnemyBase *)unit->pendingShuttle;
@@ -525,7 +530,11 @@ void GameScene::updateUnitMoveNew(float dt) {
       //            }
     }
     if (!isMultiplay) {
-      if (unit->wantToEli) {
+      // A unit parked for a shuttle ferry (needsFerryToTarget) must not be
+      // re-ordered into the same unreachable attack - it would churn failed
+      // path searches while waiting for a shuttle to be built. It still
+      // fights back locally via the normal target search above.
+      if (unit->wantToEli && !unit->needsFerryToTarget) {
         if (unit->unitActDetail == UNIT_ACT_DETAIL_IDLE &&
             unit->unitAct == UNIT_ACT_NONE) {
           attackNearHero((EnemyBase *)unit);
@@ -534,6 +543,25 @@ void GameScene::updateUnitMoveNew(float dt) {
     }
 
     unit->moveNew(dt);
+  }
+
+  // Neutral (readyHeroArray) and Event (mutualArray) units get no combat AI,
+  // but a MoveUnit trigger action can still order one of them around. Tick
+  // just the walking for units that carry a movement order - no target
+  // search, so they never start fights on their own.
+  const Vector<EnemyBase *> *neutralArrays[] = {&readyHeroArray, &mutualArray};
+  for (const Vector<EnemyBase *> *array : neutralArrays) {
+    for (EnemyBase *unit : *array) {
+      if (unit->energy <= 0 || !unit->canMove || unit->isBuilding ||
+          unit->isInShuttle) {
+        continue;
+      }
+      if (unit->unitAct == UNIT_ACT_MOVE ||
+          unit->unitAct == UNIT_ACT_ATTACK_DDANG ||
+          unit->moveToPos != Vec2::ZERO || unit->moveFlagPos != Vec2::ZERO) {
+        unit->moveNew(dt);
+      }
+    }
   }
 }
 void GameScene::updateUnitMove(float dt) {
@@ -2930,7 +2958,8 @@ void GameScene::setEntireMap(int stage) {
   int index = 0;
   // Ring radii were tuned for FOG_SIZE == 100; scale them so unit sight
   // range in world units stays the same when FOG_SIZE changes.
-  int fogVisRadius = std::max(1, 100 / FOG_SIZE);
+  // FOG_SIGHT_MULTIPLIER (Fog.h) then widens the base sight range.
+  int fogVisRadius = std::max(1, 100 / FOG_SIZE) * FOG_SIGHT_MULTIPLIER;
   int fogFarOffset = fogVisRadius + 1;
   for (auto fog : fogArray) {
     int x = index % (int)fogMapSize.width;
@@ -3644,6 +3673,50 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
       } else if (unitType == UNIT_ORC_TROLL_HOUSE) {
         unit->startProductSchedule();
         setOccupy(pos - Vec2(100, -100) * imageScale, 3, 3, true, unit);
+      } else if (unitType == UNIT_HUMAN_SHIPYARD ||
+                 unitType == UNIT_ORC_SHIPYARD ||
+                 unitType == UNIT_HUMAN_OIL_EXTRACTOR ||
+                 unitType == UNIT_ORC_OIL_EXTRACTOR ||
+                 unitType == UNIT_HUMAN_OIL_REFINERY ||
+                 unitType == UNIT_ORC_OIL_REFINERY ||
+                 unitType == UNIT_HUMAN_FOUNDRY ||
+                 unitType == UNIT_ORC_FOUNDRY) {
+        // Water buildings and foundries placed in the editor. Without a
+        // setOccupy call, buildingStartCoordinate/buildingOccupySize stay at
+        // (0,0)/0x0, so the minimap rect has zero size, the footprint never
+        // blocks the water A*, and getOilShipReturnPoint() BFS-searches from
+        // the map corner - oil ships then deliver toward tile (0,0) instead
+        // of the depot.
+        cocos2d::Size occ = GM->getBuildingOccupySize(unitType);
+        int w = (int)occ.width;
+        int h = (int)occ.height;
+        int sx, sy;
+        if (w == 2 && h == 2) {
+          // OilExtractor: treat the placed tile as the footprint's bottom-left
+          // tile - the same anchoring the AI uses when it builds one over an
+          // Oil Spot (see enemyAIManageShips), so an extractor placed on a
+          // spot lines up like a built one.
+          sx = x;
+          sy = y - 1;
+        } else {
+          // 3x3 buildings: center the footprint on the placed tile.
+          sx = x - 1;
+          sy = y - 1;
+        }
+        Vec2 topLeft = getPositionFromTileCoordinate(sx, sy);
+        setOccupy(topLeft, w, h, true, unit);
+        // Re-center the sprite over the footprint exactly like
+        // buildTheBuilding() does, so the art matches the occupied tiles.
+        unit->setPosition(topLeft +
+                          Vec2(w * TILE_SIZE / 2 - TILE_SIZE / 2,
+                               -(h - 1) * TILE_SIZE + h * TILE_SIZE / 2 -
+                                   TILE_SIZE / 2));
+        if (unitType == UNIT_HUMAN_SHIPYARD || unitType == UNIT_ORC_SHIPYARD ||
+            unitType == UNIT_HUMAN_FOUNDRY || unitType == UNIT_ORC_FOUNDRY) {
+          // Mirrors setAfterBuildingProcess(): ship/unit producers tick their
+          // production queue.
+          unit->startProductSchedule();
+        }
       } else if (unitType == UNIT_BARBECUE) {
         setOccupy(pos - Vec2(100, -50) * imageScale, 3, 2, true, unit);
       }
@@ -3658,12 +3731,41 @@ void GameScene::spawnObjectsFromEditorJsonFile(const std::string &path) {
 
 void GameScene::loadTriggersFromEditorJsonFile(const std::string &path) {
   activeTriggers.clear();
+  disabledBuildUnitTypes.clear();
+  disabledTrainUnitTypes.clear();
   playerControlsLocked = false;
   std::string jsonStr = FileUtils::getInstance()->getStringFromFile(path);
   rapidjson::Document doc;
   doc.Parse(jsonStr.c_str());
-  if (doc.HasParseError() || !doc.IsObject() || !doc.HasMember("triggers") ||
-      !doc["triggers"].IsArray()) {
+  if (doc.HasParseError() || !doc.IsObject()) {
+    return;
+  }
+  // Map-wide building bans (MapEditor's Restrict panel) - stored as editor
+  // roster indices, converted to UNIT_* here. Parsed before the triggers
+  // check because a map can have bans without any triggers.
+  if (doc.HasMember("disabledBuildings") && doc["disabledBuildings"].IsArray()) {
+    for (auto &ditem : doc["disabledBuildings"].GetArray()) {
+      if (!ditem.IsInt())
+        continue;
+      int typeIndex = ditem.GetInt();
+      if (typeIndex >= 0 && typeIndex < kEditorTypeCount &&
+          kEditorTypeToUnit[typeIndex] != -1) {
+        disabledBuildUnitTypes.insert(kEditorTypeToUnit[typeIndex]);
+      }
+    }
+  }
+  if (doc.HasMember("disabledUnits") && doc["disabledUnits"].IsArray()) {
+    for (auto &ditem : doc["disabledUnits"].GetArray()) {
+      if (!ditem.IsInt())
+        continue;
+      int typeIndex = ditem.GetInt();
+      if (typeIndex >= 0 && typeIndex < kEditorTypeCount &&
+          kEditorTypeToUnit[typeIndex] != -1) {
+        disabledTrainUnitTypes.insert(kEditorTypeToUnit[typeIndex]);
+      }
+    }
+  }
+  if (!doc.HasMember("triggers") || !doc["triggers"].IsArray()) {
     return;
   }
   for (auto &titem : doc["triggers"].GetArray()) {
@@ -3747,6 +3849,8 @@ void GameScene::loadTriggersFromEditorJsonFile(const std::string &path) {
           a.visionEnabled = aitem["visionEnabled"].GetBool();
         if (aitem.HasMember("controlLocked"))
           a.controlLocked = aitem["controlLocked"].GetBool();
+        if (aitem.HasMember("runWithPrevious"))
+          a.runWithPrevious = aitem["runWithPrevious"].GetBool();
         t.actions.push_back(a);
       }
     }
@@ -3783,75 +3887,115 @@ EnemyBase *GameScene::findLiveUnitByEditorObjectId(int targetObjectId) {
   return nullptr;
 }
 
-void GameScene::clearTriggerTalkBubble() {
-  if (activeTalkBubble != nullptr) {
-    activeTalkBubble->removeFromParent();
-    activeTalkBubble = nullptr;
+// Seconds between typewriter ticks - one displayed character per tick (see
+// triggerTalkTypingUpdate). Shared by the reveal itself and by
+// triggerTalkTypingDurationSeconds so pacing matches what's on screen.
+static const float kTriggerTalkTypeInterval = 0.035f;
+
+float GameScene::triggerTalkTypingDurationSeconds(const std::string &message) {
+  // Mirror showTriggerTalkBubble's handling: strip the "(!)" yell marker,
+  // convert to UTF-16, and count reveal ticks - a surrogate pair is typed in
+  // a single tick, everything else is one tick per UTF-16 unit.
+  std::string text = message;
+  if (text.compare(0, 3, "(!)") == 0) {
+    text = text.substr(3);
   }
-  activeTalkBubbleTargetObjectId = -1;
-  activeTalkLabel = nullptr;
-  activeTalkFullText.clear();
-  activeTalkTypedChars = 0;
+  std::u16string utf16;
+  if (!cocos2d::StringUtils::UTF8ToUTF16(text, utf16) || utf16.empty()) {
+    return 0.0f;
+  }
+  int ticks = 0;
+  for (size_t i = 0; i < utf16.length(); i++) {
+    char16_t c = utf16[i];
+    if (c >= 0xD800 && c <= 0xDBFF) {
+      i++;
+    }
+    ticks++;
+  }
+  return ticks * kTriggerTalkTypeInterval;
+}
+
+void GameScene::clearTriggerTalkBubble() {
+  for (auto &entry : activeTalkBubbles) {
+    if (entry.bubble != nullptr) {
+      entry.bubble->removeFromParent();
+    }
+  }
+  activeTalkBubbles.clear();
   this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
   this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
 }
 
 void GameScene::triggerTalkBubbleUpdate(float dt) {
-  if (activeTalkBubble == nullptr || activeTalkBubbleTargetObjectId < 0) {
-    activeTalkBubbleTargetObjectId = -1;
-    this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
-    return;
+  bool anyFollowing = false;
+  for (auto &entry : activeTalkBubbles) {
+    if (entry.bubble == nullptr || entry.followObjectId < 0) {
+      continue;
+    }
+    // Re-find the target by id every tick rather than caching a pointer - the
+    // unit may have died and been freed since last frame. If it's gone, stop
+    // following but leave the bubble at its last position until the trigger
+    // sequence dismisses it.
+    EnemyBase *target = findLiveUnitByEditorObjectId(entry.followObjectId);
+    if (target == nullptr) {
+      entry.followObjectId = -1;
+      continue;
+    }
+    entry.bubble->setPosition(target->getPosition());
+    anyFollowing = true;
   }
-  // Re-find the target by id every tick rather than caching a pointer - the
-  // unit may have died and been freed since last frame. If it's gone, stop
-  // following but leave the bubble at its last position until the trigger
-  // sequence dismisses it.
-  EnemyBase *target =
-      findLiveUnitByEditorObjectId(activeTalkBubbleTargetObjectId);
-  if (target == nullptr) {
-    activeTalkBubbleTargetObjectId = -1;
+  if (!anyFollowing) {
     this->unschedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
-    return;
   }
-  activeTalkBubble->setPosition(target->getPosition());
 }
 
 void GameScene::triggerTalkTypingUpdate(float dt) {
-  if (activeTalkBubble == nullptr || activeTalkLabel == nullptr) {
-    this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
-    return;
-  }
-  activeTalkTypedChars++;
-  // Never cut a UTF-16 surrogate pair in half - if we just landed on a high
-  // surrogate, take its partner in the same tick.
-  if (activeTalkTypedChars < (int)activeTalkFullText.length()) {
-    char16_t last = activeTalkFullText[activeTalkTypedChars - 1];
-    if (last >= 0xD800 && last <= 0xDBFF) {
-      activeTalkTypedChars++;
+  bool anyStillTyping = false;
+  for (auto &entry : activeTalkBubbles) {
+    if (entry.bubble == nullptr || entry.label == nullptr ||
+        entry.typedChars >= (int)entry.fullText.length()) {
+      continue;
+    }
+    entry.typedChars++;
+    // Never cut a UTF-16 surrogate pair in half - if we just landed on a high
+    // surrogate, take its partner in the same tick.
+    if (entry.typedChars < (int)entry.fullText.length()) {
+      char16_t last = entry.fullText[entry.typedChars - 1];
+      if (last >= 0xD800 && last <= 0xDBFF) {
+        entry.typedChars++;
+      }
+    }
+    if (entry.typedChars > (int)entry.fullText.length()) {
+      entry.typedChars = (int)entry.fullText.length();
+    }
+    std::string shown;
+    cocos2d::StringUtils::UTF16ToUTF8(entry.fullText.substr(0, entry.typedChars),
+                                      shown);
+    entry.label->setString(shown);
+    if (entry.typedChars < (int)entry.fullText.length()) {
+      anyStillTyping = true;
     }
   }
-  if (activeTalkTypedChars >= (int)activeTalkFullText.length()) {
-    activeTalkTypedChars = (int)activeTalkFullText.length();
+  if (!anyStillTyping) {
     this->unschedule(schedule_selector(GameScene::triggerTalkTypingUpdate));
   }
-  std::string shown;
-  cocos2d::StringUtils::UTF16ToUTF8(
-      activeTalkFullText.substr(0, activeTalkTypedChars), shown);
-  activeTalkLabel->setString(shown);
 }
 
 void GameScene::showTriggerTalkBubble(const std::string &message,
                                       const cocos2d::Vec2 &worldPos,
                                       EnemyBase *followTarget) {
-  clearTriggerTalkBubble();
+  // Deliberately no clearTriggerTalkBubble() here: a Talk grouped via
+  // runWithPrevious must show alongside the previous Talk's bubble, not
+  // replace it. Dismissing older bubbles is executeTriggerAction's job when
+  // the next (non-grouped) step starts.
 
-  // A message that starts with "(yl)" is a yell: strip the marker, enlarge the
+  // A message that starts with "(!)" is a yell: strip the marker, enlarge the
   // balloon, and shake it - same idea as the "(yell)" marker in showTalkText.
   std::string text = message;
   bool isYell = false;
-  if (text.compare(0, 4, "(yl)") == 0) {
+  if (text.compare(0, 3, "(!)") == 0) {
     isYell = true;
-    text = text.substr(4);
+    text = text.substr(3);
   }
 
   // Same balloon construction as showTalkText: a scale-9 talkBoxFrame sized
@@ -3916,15 +4060,15 @@ void GameScene::showTriggerTalkBubble(const std::string &message,
   // Korean characters appear whole, never as split UTF-8 fragments), start
   // the label empty, and let triggerTalkTypingUpdate add one character per
   // tick. If the conversion somehow fails, the label just keeps the full
-  // message it already has.
-  activeTalkLabel = lbl;
-  activeTalkFullText.clear();
-  activeTalkTypedChars = 0;
-  if (cocos2d::StringUtils::UTF8ToUTF16(text, activeTalkFullText) &&
-      !activeTalkFullText.empty()) {
+  // message it already has. Scheduling an already-scheduled selector (a
+  // second grouped Talk) is harmless - cocos2d just keeps the existing timer.
+  TriggerTalkBubble entry;
+  entry.label = lbl;
+  if (cocos2d::StringUtils::UTF8ToUTF16(text, entry.fullText) &&
+      !entry.fullText.empty()) {
     lbl->setString("");
     this->schedule(schedule_selector(GameScene::triggerTalkTypingUpdate),
-                   0.035f);
+                   kTriggerTalkTypeInterval);
   }
 
   Sprite *pointer = Sprite::createWithSpriteFrameName("talkBoxPointer.png");
@@ -3939,15 +4083,16 @@ void GameScene::showTriggerTalkBubble(const std::string &message,
 
   batch->addChild(bubble,
                   100000); // draw above units, same spirit as Fog's z-order
-  activeTalkBubble = bubble;
+  entry.bubble = bubble;
 
   // If the speaker is a live unit, follow it while the bubble is on screen
   // instead of staying pinned to where the unit was when the trigger fired.
   if (followTarget != nullptr && followTarget->editorObjectId >= 0) {
     bubble->setPosition(followTarget->getPosition());
-    activeTalkBubbleTargetObjectId = followTarget->editorObjectId;
+    entry.followObjectId = followTarget->editorObjectId;
     this->schedule(schedule_selector(GameScene::triggerTalkBubbleUpdate));
   }
+  activeTalkBubbles.push_back(entry);
 }
 
 void GameScene::playFlagArriveEffect(const Vec2 &worldPos) {
@@ -4148,8 +4293,15 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a,
                                      bool flipOutcome) {
   // Whatever step is starting now ends the previous Talk bubble's lifetime,
   // if one is still showing - its visible duration is however long the
-  // *previous* step's own pacing (typically a Wait) lasted, not a fixed timer.
-  clearTriggerTalkBubble();
+  // *previous* step's own pacing lasted, not a fixed timer. A Wait is the
+  // exception: it IS the pacing for a Talk right before it (runTriggerActionStep
+  // gives such a Talk zero delay), so it must leave the bubble up. So is an
+  // action flagged runWithPrevious: it starts alongside the action before it
+  // (same step, same frame), so it isn't the "next step" that should end a
+  // bubble shown a moment ago by its own group.
+  if (a.type != 6 && !a.runWithPrevious) { // 6 = Wait
+    clearTriggerTalkBubble();
+  }
 
   switch (a.type) {
   case 0: { // DisplayMessage
@@ -4372,6 +4524,34 @@ void GameScene::executeTriggerAction(const RuntimeTriggerAction &a,
       GM->getHudLayer()->setControlLockUi(a.controlLocked);
     }
     break;
+  case 13: { // TeleportUnit - same source/destination fields as MoveUnit, but
+             // the unit is placed at the destination instantly instead of
+             // walking there.
+    EnemyBase *unit = findLiveUnitByEditorObjectId(a.sourceObjectId);
+    
+    if (unit != nullptr && !unit->isInShuttle) {
+      Vec2 destPos =
+          resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY);
+      
+      unit->setPosition(destPos);
+      if (unit->ndLevelCircle) {
+        // The ring only re-syncs while the unit is walking - snap it too.
+        unit->ndLevelCircle->setPosition(unit->getEffectStartPosition());
+      }
+      // Drop any in-progress order; its path/flag positions belong to the
+      // spot the unit was standing on before the jump.
+      unit->unitAct = UNIT_ACT_NONE;
+      unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+      unit->moveToPos = Vec2::ZERO;
+      unit->moveFlagPos = Vec2::ZERO;
+      unit->attackFlagPos = Vec2::ZERO;
+      unit->attackDdangPos = Vec2::ZERO;
+      unit->target = nullptr;
+      
+      unit->resetRoute();
+    }
+    break;
+  }
   default:
     break;
   }
@@ -4384,6 +4564,7 @@ void GameScene::runTriggerActions(const RuntimeTrigger &t) {
   // Enemy too) and the two Neutral flags all resolve literally - there's no
   // clear single-player meaning for "the neutral side's victory" yet.
   bool flipOutcome = t.sides[1] && !t.sides[0];
+  log("Trigger fired: %s", t.name.c_str());
   if (t.actions.empty()) {
     return;
   }
@@ -4400,71 +4581,118 @@ void GameScene::runTriggerActionStep(
     clearTriggerTalkBubble();
     return;
   }
-  const RuntimeTriggerAction &a = (*actions)[index];
-  executeTriggerAction(a, flipOutcome);
-
-  if (a.type == 11) { // MoveUnit - hold up the rest of the sequence until the
-                      // unit actually reaches its destination (see
-                      // scheduleTriggerMoveWait), instead of continuing
-                      // immediately like every other action.
-    Vec2 destPos =
-        resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY);
-    scheduleTriggerMoveWait(a.sourceObjectId, destPos, actions, index + 1,
-                            flipOutcome);
-    return;
+  // One step is actions[index] plus every directly following action flagged
+  // runWithPrevious - those start in this same frame instead of waiting for
+  // the action before them to finish. The whole group then shares one pacing
+  // before the next step: the longest Wait/Talk delay in the group, and - if
+  // the group contains MoveUnits - the arrival of every moved unit on top of
+  // that (whichever finishes last).
+  size_t groupEnd = index + 1;
+  while (groupEnd < actions->size() && (*actions)[groupEnd].runWithPrevious) {
+    groupEnd++;
   }
 
   float delay = 0.0f;
-  if (a.type == 6) { // Wait
-    delay = std::max(0.0f, a.waitSeconds);
-  } else if (a.type == 8) { // Talk
-    // A Talk bubble lives until the next step starts. Without an explicit
-    // Wait right after it, the next step (or the end-of-sequence cleanup)
-    // would clear it in the same frame - hold it on screen for the authored
-    // duration (talkSeconds, default 3s).
-    bool nextIsWait =
-        (index + 1 < actions->size()) && (*actions)[index + 1].type == 6;
-    if (!nextIsWait) {
-      delay = std::max(0.0f, a.talkSeconds);
+  std::vector<std::pair<int, Vec2>> pendingMoves;
+  for (size_t i = index; i < groupEnd; i++) {
+    const RuntimeTriggerAction &a = (*actions)[i];
+    executeTriggerAction(a, flipOutcome);
+    if (a.type == 11) { // MoveUnit - hold up the rest of the sequence until
+                        // the unit actually reaches its destination (see
+                        // scheduleTriggerMoveWait), instead of continuing
+                        // immediately like every other action.
+      pendingMoves.emplace_back(
+          a.sourceObjectId,
+          resolveTriggerTargetPosition(a.targetObjectId, a.tileX, a.tileY));
+    } else if (a.type == 6) { // Wait
+      delay = std::max(delay, a.waitSeconds);
+    } else if (a.type == 8) { // Talk
+      // A Talk bubble lives until the next step starts. Without an explicit
+      // Wait right after it, the next step (or the end-of-sequence cleanup)
+      // would clear it in the same frame - hold it on screen for the authored
+      // duration (talkSeconds, default 3s). A long message can need more
+      // time than that just to finish its typewriter reveal, so the real
+      // floor is "typing done plus a 0.5s beat to actually read it" -
+      // whichever of the two is longer.
+      bool nextIsWait =
+          (groupEnd < actions->size()) && (*actions)[groupEnd].type == 6;
+      if (!nextIsWait) {
+        float typingFloor =
+            triggerTalkTypingDurationSeconds(LM->getText(a.message)) + 0.5f;
+        delay = std::max(delay, std::max(a.talkSeconds, typingFloor));
+      }
     }
   }
+
+  if (!pendingMoves.empty()) {
+    scheduleTriggerMoveWait(pendingMoves, actions, groupEnd, flipOutcome, delay);
+    return;
+  }
+
   static int sTriggerStepCounter = 0;
   std::string key =
       StringUtils::format("trigger_step_%d", sTriggerStepCounter++);
   this->scheduleOnce(
-      [this, actions, index, flipOutcome](float) {
-        runTriggerActionStep(actions, index + 1, flipOutcome);
+      [this, actions, groupEnd, flipOutcome](float) {
+        runTriggerActionStep(actions, groupEnd, flipOutcome);
       },
       delay, key);
 }
 
 void GameScene::scheduleTriggerMoveWait(
-    int sourceObjectId, const cocos2d::Vec2 &destPos,
+    const std::vector<std::pair<int, cocos2d::Vec2>> &moves,
     std::shared_ptr<std::vector<RuntimeTriggerAction>> actions,
-    size_t nextIndex, bool flipOutcome) {
-  // No unit to wait for (bad/unset reference) - move straight on.
-  if (findLiveUnitByEditorObjectId(sourceObjectId) == nullptr) {
-    runTriggerActionStep(actions, nextIndex, flipOutcome);
-    return;
+    size_t nextIndex, bool flipOutcome, float minDelay) {
+  // Only wait on entries that name a live unit - a bad/unset reference would
+  // otherwise stall the sequence until the safety timeout.
+  auto pending = std::make_shared<std::vector<std::pair<int, Vec2>>>();
+  for (const auto &move : moves) {
+    if (findLiveUnitByEditorObjectId(move.first) != nullptr) {
+      pending->push_back(move);
+    }
   }
   static int sMoveWaitCounter = 0;
   auto key = std::make_shared<std::string>(
       StringUtils::format("trigger_move_wait_%d", sMoveWaitCounter++));
+  if (pending->empty()) {
+    // No move to wait on, but the group's Wait/Talk pacing still applies.
+    if (minDelay > 0.0f) {
+      this->scheduleOnce(
+          [this, actions, nextIndex, flipOutcome](float) {
+            runTriggerActionStep(actions, nextIndex, flipOutcome);
+          },
+          minDelay, *key);
+    } else {
+      runTriggerActionStep(actions, nextIndex, flipOutcome);
+    }
+    return;
+  }
   auto elapsed = std::make_shared<float>(0.0f);
   const float kArriveDist = TILE_SIZE * 0.5f;
   const float kArriveDistSq = kArriveDist * kArriveDist;
   const float kSafetyTimeout =
-      8.0f; // in case the unit is stuck/blocked, don't hang the trigger forever
+      8.0f; // in case a unit is stuck/blocked, don't hang the trigger forever
   this->schedule(
-      [this, sourceObjectId, destPos, actions, nextIndex, flipOutcome, key,
-       elapsed, kArriveDistSq, kSafetyTimeout](float dt) {
+      [this, actions, nextIndex, flipOutcome, key, pending, elapsed,
+       kArriveDistSq, kSafetyTimeout, minDelay](float dt) {
         *elapsed += dt;
-        EnemyBase *unit = findLiveUnitByEditorObjectId(sourceObjectId);
-        bool arrived =
-            (unit == nullptr) ||
-            (unit->getPosition().distanceSquared(destPos) <= kArriveDistSq) ||
-            (*elapsed >= kSafetyTimeout);
-        if (arrived) {
+        for (auto it = pending->begin(); it != pending->end();) {
+          EnemyBase *unit = findLiveUnitByEditorObjectId(it->first);
+          bool arrived = (unit == nullptr) ||
+                         (unit->getPosition().distanceSquared(it->second) <=
+                          kArriveDistSq);
+          if (arrived) {
+            it = pending->erase(it);
+          } else {
+            ++it;
+          }
+        }
+        // The step's pacing is whichever finishes last: every moved unit
+        // arriving (or the stuck-safety timeout) AND the group's longest
+        // Wait/Talk delay - a Talk 3s grouped with a fast move must still
+        // hold the next step for the full 3s.
+        bool movesDone = pending->empty() || *elapsed >= kSafetyTimeout;
+        if (movesDone && *elapsed >= minDelay) {
           this->unschedule(*key);
           runTriggerActionStep(actions, nextIndex, flipOutcome);
         }
@@ -4984,6 +5212,7 @@ void GameScene::updateMiniMapForMoving() {
   //    return; // test
   if (GM->currentStageIndex == STAGE_LOBBY)
     return;
+  long long __t0 = PERF_NOW();
   drawMiniMapForMoving->clear();
 
   Vec2 startPos;
@@ -5021,6 +5250,7 @@ void GameScene::updateMiniMapForMoving() {
       miniMapViewRect.origin,
       Vec2(miniMapViewRect.getMaxX(), miniMapViewRect.getMaxY()),
       Color4F::WHITE);
+  PerfProbe::minimapUs += PERF_NOW() - __t0;
 }
 
 void GameScene::updateMiniMapForNonMoving() {
@@ -6492,6 +6722,18 @@ Vec2 GameScene::getPositionFromTileCoordinate(int x, int y) {
               (theMap->getMapSize().height - y - 1) * TILE_SIZE) +
          Vec2(0, TILE_SIZE / 2);
 }
+// How far below the (future) OilExtractor's center the OilSpot image should
+// sit. "Slightly below the derrick center" - tune this to taste.
+static const float kOilSpotDropBelowCenter = 8.0f;
+// An OilExtractor is 2x2, so its center is the intersection of 4 tiles, half a
+// tile up-and-right of the 1x1 spot tile's center (the spot is snapped to be
+// the extractor's bottom-left tile). We render the spot sprite at that
+// intersection, then drop it a touch, so the image reads as sitting just below
+// where the derrick will be. The spot's *logical* tile is unchanged - use
+// getOilSpotTile() to recover it.
+static const cocos2d::Vec2
+    kOilSpotVisualOffset(TILE_SIZE / 2.0f,
+                         TILE_SIZE / 2.0f - kOilSpotDropBelowCenter);
 void GameScene::resetPathState() {
   int gid;
   TMXLayer *stageLayer = theMap->getLayer("deco");
@@ -6531,7 +6773,8 @@ void GameScene::resetWaterPathState() {
   auto isWaterBuildingType = [](int type) -> bool {
     return type == UNIT_HUMAN_SHIPYARD || type == UNIT_ORC_SHIPYARD ||
            type == UNIT_HUMAN_OIL_EXTRACTOR || type == UNIT_ORC_OIL_EXTRACTOR ||
-           type == UNIT_HUMAN_OIL_REFINERY || type == UNIT_ORC_OIL_REFINERY;
+           type == UNIT_HUMAN_OIL_REFINERY || type == UNIT_ORC_OIL_REFINERY ||
+           type == UNIT_HUMAN_FOUNDRY || type == UNIT_ORC_FOUNDRY;
   };
   auto markBuilding = [&](EnemyBase *u) {
     if (!u->isBuilding || !u->isBuildingComplete ||
@@ -6703,6 +6946,51 @@ cocos2d::Vec2 GameScene::findCoastalDropPoint(cocos2d::Vec2 worldTarget) {
   return best;
 }
 
+cocos2d::Vec2 GameScene::findShuttlePickupPoint(EnemyBase *shuttle,
+                                                cocos2d::Vec2 unitsWorldPos) {
+  if (!islandRegionsComputed)
+    computeIslandRegions();
+  int targetIsland = getIslandIdAt(unitsWorldPos);
+  if (shuttle == nullptr || targetIsland < 0 || landIslandId.empty())
+    return Vec2::ZERO;
+
+  int w = (int)landIslandId.size(), h = (int)landIslandId[0].size();
+  // The shuttle can only reach water tiles in its own connected water region.
+  int shuttleRegion = -1;
+  Vec2 st = getCoordinateFromPosition(shuttle->getPosition());
+  if (st.x >= 0 && st.y >= 0 && (int)st.x < w && (int)st.y < h)
+    shuttleRegion = waterRegionId[(int)st.x][(int)st.y];
+  if (shuttleRegion < 0)
+    return Vec2::ZERO;
+
+  Vec2 targetTile = getCoordinateFromPosition(unitsWorldPos);
+  static const int dx[] = {1, -1, 0, 0};
+  static const int dy[] = {0, 0, 1, -1};
+
+  Vec2 best = Vec2::ZERO;
+  float bestD = FLT_MAX;
+  for (int j = 0; j < h; j++) {
+    for (int i = 0; i < w; i++) {
+      if (landIslandId[i][j] != targetIsland)
+        continue;
+      for (int k = 0; k < 4; k++) {
+        int nx = i + dx[k], ny = j + dy[k];
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h)
+          continue;
+        if (waterRegionId[nx][ny] != shuttleRegion)
+          continue;
+        float d = ((float)nx - targetTile.x) * ((float)nx - targetTile.x) +
+                  ((float)ny - targetTile.y) * ((float)ny - targetTile.y);
+        if (d < bestD) {
+          bestD = d;
+          best = getPositionFromTileCoordinate(nx, ny);
+        }
+      }
+    }
+  }
+  return best;
+}
+
 // Finds a same-side Shuttle with cargo room and sends `unit` to board it
 // (reusing the existing pendingShuttle "walk over, auto-board" pump). Marks
 // the Shuttle as auto-ferrying toward finalWorldTarget's island so
@@ -6723,9 +7011,21 @@ bool GameScene::beginShuttleFerry(Movable *unit,
       continue;
     if (u->unitType != UNIT_HUMAN_SHUTTLE && u->unitType != UNIT_ORC_SHUTTLE)
       continue;
-    // Don't hijack a Shuttle that's already ferrying passengers somewhere else.
-    if (u->isAutoFerrying && u->autoFerryDropTarget != finalWorldTarget)
+    // A shuttle that already departed for its drop-off can't take boarders.
+    if (u->isAutoFerrying && u->isAutoFerrySailingToDrop)
       continue;
+    // Ride-sharing: wave units each carry their own attack position, but any
+    // passenger bound for the same *island* can use the same crossing (each
+    // one resumes toward its own ferryFinalTarget after unloading). Requiring
+    // identical coordinates here forced one-passenger trips.
+    if (u->isAutoFerrying) {
+      int a = getIslandIdAt(u->autoFerryDropTarget);
+      int b = getIslandIdAt(finalWorldTarget);
+      bool sameDropIsland =
+          (a >= 0 && a == b) || u->autoFerryDropTarget == finalWorldTarget;
+      if (!sameDropIsland)
+        continue;
+    }
     int outCol, outRow;
     if (!findCargoSlot(u, cols, rows, outCol, outRow))
       continue;
@@ -6741,14 +7041,54 @@ bool GameScene::beginShuttleFerry(Movable *unit,
   unit->pendingShuttle = bestShuttle;
   unit->needsFerryToTarget = true;
   unit->ferryFinalTarget = finalWorldTarget;
+
+  // Meet halfway, same pattern as the manual boarding flow: the Shuttle
+  // sails to the coast of the passenger's island nearest to it (within its
+  // own water region) and the passenger walks to the land tile beside that
+  // pickup point. Aiming the walker at the Shuttle's own water tile would
+  // strand it - the land A* returns an empty path to a water goal, so the
+  // passenger would never get within boarding range.
+  Vec2 walkTo = bestShuttle->getPosition();
+  Vec2 pickup = findShuttlePickupPoint(bestShuttle, unit->getPosition());
+  if (pickup != Vec2::ZERO) {
+    if (bestShuttle->getPosition().distance(pickup) > TILE_SIZE * 1.5f) {
+      bestShuttle->moveToPos = Vec2::ZERO;
+      bestShuttle->moveFlagPos = pickup;
+      bestShuttle->target = nullptr;
+      bestShuttle->unitAct = UNIT_ACT_MOVE;
+      bestShuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+    }
+    Vec2 pickupTile = getCoordinateFromPosition(pickup);
+    int px = (int)pickupTile.x, py = (int)pickupTile.y;
+    int walkersIsland = getIslandIdAt(unit->getPosition());
+    int w = (int)landIslandId.size();
+    int h = w > 0 ? (int)landIslandId[0].size() : 0;
+    int adj4x[] = {1, -1, 0, 0};
+    int adj4y[] = {0, 0, 1, -1};
+    for (int i = 0; i < 4; i++) {
+      int nx = px + adj4x[i], ny = py + adj4y[i];
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h)
+        continue;
+      if (landIslandId[nx][ny] == walkersIsland) {
+        walkTo = getPositionFromTileCoordinate(nx, ny);
+        break;
+      }
+    }
+  }
   unit->moveToPos = Vec2::ZERO;
-  unit->moveFlagPos = bestShuttle->getPosition();
+  unit->moveFlagPos = walkTo;
   unit->target = nullptr;
   unit->unitAct = UNIT_ACT_MOVE;
   unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
 
+  // Only claim the drop target when this is a fresh claim - joining an
+  // existing boarding party must not retarget the shuttle.
+  if (!bestShuttle->isAutoFerrying) {
+    bestShuttle->autoFerryDropTarget = finalWorldTarget;
+    bestShuttle->autoFerryWaitTicks = 0;
+  }
   bestShuttle->isAutoFerrying = true;
-  bestShuttle->autoFerryDropTarget = finalWorldTarget;
+  bestShuttle->isAutoFerrySailingToDrop = false;
   return true;
 }
 
@@ -6759,8 +7099,26 @@ void GameScene::updateShuttleFerries() {
     for (auto *u : army) {
       if (!u || u->energy <= 0)
         continue;
-      if (!u->needsFerryToTarget || u->isInShuttle || u->pendingShuttle)
+      if (!u->needsFerryToTarget || u->isInShuttle)
         continue;
+      if (u->pendingShuttle) {
+        // Drop a stale claim - the shuttle died, stopped ferrying, departed
+        // for its drop-off, or now serves a different island. The boarding
+        // pump would otherwise wait forever on a shuttle that never returns
+        // (this stranded every walker that missed its wave's first trip).
+        EnemyBase *s = (EnemyBase *)u->pendingShuttle;
+        bool stale = !s || s->isDead || s->energy <= 0 || !s->isAutoFerrying ||
+                     s->isAutoFerrySailingToDrop;
+        if (!stale) {
+          int a = getIslandIdAt(s->autoFerryDropTarget);
+          int b = getIslandIdAt(u->ferryFinalTarget);
+          stale = !((a >= 0 && a == b) ||
+                    s->autoFerryDropTarget == u->ferryFinalTarget);
+        }
+        if (!stale)
+          continue;
+        u->pendingShuttle = nullptr;
+      }
       beginShuttleFerry(u, u->ferryFinalTarget);
     }
   };
@@ -6788,11 +7146,104 @@ void GameScene::updateShuttleFerries() {
           break;
         }
       }
-      if (!hasFerryPassenger)
-        continue; // still waiting for boarding
+      if (!shuttle->isAutoFerrySailingToDrop) {
+        // ── Boarding phase ──
+        // Living walkers still headed for this shuttle.
+        std::vector<EnemyBase *> inbound;
+        for (auto *u : army)
+          if (u && u->energy > 0 && !u->isInShuttle &&
+              u->pendingShuttle == shuttle)
+            inbound.push_back(u);
 
-      if (shuttle->unitAct != UNIT_ACT_MOVE) {
-        // Not yet sailing for this ferry - issue the order.
+        if (!hasFerryPassenger && inbound.empty()) {
+          // Nobody aboard and nobody coming (walkers died or re-dispatched):
+          // drop the claim so the shuttle isn't reserved forever.
+          shuttle->isAutoFerrying = false;
+          shuttle->autoFerryDropTarget = Vec2::ZERO;
+          shuttle->autoFerryWaitTicks = 0;
+          continue;
+        }
+
+        // Keep the rendezvous alive: re-aim a stalled shuttle at the pickup
+        // coast, and re-aim walkers idling at an outdated meeting point.
+        // Ships can stall short of their goal (collision sidesteps) and the
+        // pickup shifts as walkers move, so the one-shot orders issued by
+        // beginShuttleFerry are not enough on their own - without this pass
+        // a near-miss became a permanent deadlock (shuttle waiting afloat,
+        // walkers waiting ashore, nobody within boarding range).
+        if (!inbound.empty()) {
+          Vec2 pickup =
+              findShuttlePickupPoint(shuttle, inbound[0]->getPosition());
+          if (pickup != Vec2::ZERO) {
+            bool docked =
+                shuttle->getPosition().distance(pickup) <= TILE_SIZE * 1.5f &&
+                isShuttleAdjacentToLand(shuttle);
+            if (!docked && (shuttle->unitAct != UNIT_ACT_MOVE ||
+                            shuttle->moveFlagPos != pickup)) {
+              shuttle->moveToPos = Vec2::ZERO;
+              shuttle->moveFlagPos = pickup;
+              shuttle->target = nullptr;
+              shuttle->unitAct = UNIT_ACT_MOVE;
+              shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+            }
+            Vec2 pickupTile = getCoordinateFromPosition(pickup);
+            int px = (int)pickupTile.x, py = (int)pickupTile.y;
+            int lw = (int)landIslandId.size();
+            int lh = lw > 0 ? (int)landIslandId[0].size() : 0;
+            int adj4x[] = {1, -1, 0, 0};
+            int adj4y[] = {0, 0, 1, -1};
+            Vec2 approach = Vec2::ZERO;
+            int walkersIsland = getIslandIdAt(inbound[0]->getPosition());
+            for (int i = 0; i < 4; i++) {
+              int nx = px + adj4x[i], ny = py + adj4y[i];
+              if (nx < 0 || ny < 0 || nx >= lw || ny >= lh)
+                continue;
+              if (landIslandId[nx][ny] == walkersIsland) {
+                approach = getPositionFromTileCoordinate(nx, ny);
+                break;
+              }
+            }
+            if (approach != Vec2::ZERO) {
+              for (auto *wkr : inbound) {
+                if (wkr->unitAct != UNIT_ACT_NONE &&
+                    wkr->unitAct != UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH)
+                  continue; // still walking somewhere - let it arrive first
+                if (wkr->getPosition().distance(approach) <= TILE_SIZE * 2.5f)
+                  continue; // close enough - the boarding pump takes over
+                wkr->moveToPos = Vec2::ZERO;
+                wkr->moveFlagPos = approach;
+                wkr->target = nullptr;
+                wkr->unitAct = UNIT_ACT_MOVE;
+                wkr->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+              }
+            }
+          }
+        }
+
+        if (!hasFerryPassenger) {
+          shuttle->autoFerryWaitTicks = 0;
+          continue; // still waiting for the first boarder
+        }
+
+        // Departure policy: hold the door while more walkers are inbound and
+        // there's cargo room, but never forever - a walker wedged behind
+        // terrain must not hold the crossing hostage. (Departing on the very
+        // first boarder shipped one-goblin waves and stranded the rest.)
+        shuttle->autoFerryWaitTicks++;
+        int freeCol, freeRow;
+        bool cargoFull = !findCargoSlot(shuttle, 1, 1, freeCol, freeRow);
+        const int kFerryDepartGraceTicks = 20; // ~20s of 1s ferry ticks
+        if (!cargoFull && !inbound.empty() &&
+            shuttle->autoFerryWaitTicks < kFerryDepartGraceTicks)
+          continue;
+
+        // Departing: anyone left ashore loses this trip. Clear their claim
+        // now so the retry pump re-dispatches them (to this shuttle's next
+        // round trip or another shuttle) instead of waiting for a shuttle
+        // that already left.
+        for (auto *wkr : inbound)
+          wkr->pendingShuttle = nullptr;
+
         Vec2 drop = findCoastalDropPoint(shuttle->autoFerryDropTarget);
         if (drop == Vec2::ZERO) {
           // No reachable coast found (shouldn't happen once
@@ -6804,6 +7255,7 @@ void GameScene::updateShuttleFerries() {
               pax->needsFerryToTarget = false;
           }
           shuttle->isAutoFerrying = false;
+          shuttle->autoFerryWaitTicks = 0;
           continue;
         }
         shuttle->moveToPos = Vec2::ZERO;
@@ -6811,11 +7263,50 @@ void GameScene::updateShuttleFerries() {
         shuttle->target = nullptr;
         shuttle->unitAct = UNIT_ACT_MOVE;
         shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+        shuttle->isAutoFerrySailingToDrop = true;
+        shuttle->autoFerryWaitTicks = 0;
         continue;
       }
 
-      // Already sailing - check arrival.
-      float dist = shuttle->getPosition().distance(shuttle->moveFlagPos);
+      // ── Sailing to the drop-off ──
+      if (!hasFerryPassenger) {
+        // Every boarded ferry passenger died mid-crossing - release the
+        // shuttle so it can serve future ferries.
+        shuttle->isAutoFerrying = false;
+        shuttle->isAutoFerrySailingToDrop = false;
+        shuttle->autoFerryDropTarget = Vec2::ZERO;
+        continue;
+      }
+
+      // Anchor arrival on the recomputed drop point, not on moveFlagPos: a
+      // stall or an outside order (flee, revenge) can leave moveFlagPos
+      // pointing elsewhere, and the old check then waited forever.
+      Vec2 dropPoint = findCoastalDropPoint(shuttle->autoFerryDropTarget);
+      if (dropPoint == Vec2::ZERO) {
+        for (auto &slot : shuttle->shuttleCargo) {
+          EnemyBase *pax = (EnemyBase *)slot.unit;
+          if (pax)
+            pax->needsFerryToTarget = false;
+        }
+        shuttle->isAutoFerrying = false;
+        shuttle->isAutoFerrySailingToDrop = false;
+        shuttle->autoFerryDropTarget = Vec2::ZERO;
+        continue;
+      }
+      if (!(shuttle->unitAct == UNIT_ACT_MOVE &&
+            shuttle->moveFlagPos == dropPoint) &&
+          shuttle->getPosition().distance(dropPoint) > TILE_SIZE * 1.5f) {
+        // Stalled short of the coast or redirected - re-issue the order.
+        shuttle->moveToPos = Vec2::ZERO;
+        shuttle->moveFlagPos = dropPoint;
+        shuttle->target = nullptr;
+        shuttle->unitAct = UNIT_ACT_MOVE;
+        shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+        continue;
+      }
+
+      // Sailing to the drop-off - check arrival.
+      float dist = shuttle->getPosition().distance(dropPoint);
       if (dist <= TILE_SIZE * 1.5f && isShuttleAdjacentToLand(shuttle)) {
         std::vector<std::pair<EnemyBase *, Vec2>> toResume;
         for (auto &slot : shuttle->shuttleCargo) {
@@ -6825,6 +7316,7 @@ void GameScene::updateShuttleFerries() {
         }
         unloadShuttle(shuttle);
         shuttle->isAutoFerrying = false;
+        shuttle->isAutoFerrySailingToDrop = false;
         shuttle->autoFerryDropTarget = Vec2::ZERO;
         shuttle->unitAct = UNIT_ACT_NONE;
         shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
@@ -6975,6 +7467,9 @@ EnemyBase *GameScene::createUnit(int index, int whichSide, bool isBuilding,
   unit->setLocalZOrder(-unit->getBoundingBox().getMinY());
   if (unit->unitType == UNIT_OIL_SPOT) {
     unit->setLocalZOrder(-100000);
+    // Nudge the spot's image onto the future OilExtractor's center (slightly
+    // below it). The logical tile stays 'pos'; getOilSpotTile() undoes this.
+    unit->setPosition(pos + kOilSpotVisualOffset);
   }
   unit->stop();
 
@@ -6989,6 +7484,29 @@ EnemyBase *GameScene::createUnit(int index, int whichSide, bool isBuilding,
       unit->unitType == UNIT_HERO_BATMONSTER) {
     unit->isFlying = true;
     unit->setLocalZOrder(10);
+  }
+  if (unit->unitType == UNIT_HUMAN_SHUTTLE ||
+      unit->unitType == UNIT_ORC_SHUTTLE || unit->unitType == UNIT_HUMAN_SHIP ||
+      unit->unitType == UNIT_ORC_SHIP ||
+      unit->unitType == UNIT_HUMAN_BATTLE_SHIP ||
+      unit->unitType == UNIT_ORC_BATTLE_SHIP ||
+      unit->unitType == UNIT_HUMAN_OIL_SHIP ||
+      unit->unitType == UNIT_ORC_OIL_SHIP) {
+    // Ships rock gently around their center like they're floating on waves.
+    // Period/phase are randomized per ship so a fleet doesn't sway in unison.
+    float tilt = 2.0f + CCRANDOM_0_1() * 1.0f;      // degrees
+    float halfPeriod = 1.4f + CCRANDOM_0_1() * 0.8f; // seconds per swing
+    unit->setRotation(-tilt + CCRANDOM_0_1() * tilt * 2);
+    // Wrapped in Speed so Movable::moveNew can crank the sway up while the
+    // ship is actually sailing and ease it back down when anchored.
+    auto rock = Speed::create(
+        RepeatForever::create(Sequence::create(
+            EaseInOut::create(RotateTo::create(halfPeriod, tilt), 2.0f),
+            EaseInOut::create(RotateTo::create(halfPeriod, -tilt), 2.0f),
+            nullptr)),
+        1.0f);
+    rock->setTag(ACTION_TAG_SHIP_ROCK);
+    unit->runAction(rock);
   }
   return unit;
 }
@@ -7083,7 +7601,7 @@ int GameScene::getUnitSP(int unit) {
     return 430;
   } else if (unit == UNIT_HUMAN_SHIP || unit == UNIT_ORC_SHIP) {
     return 350;
-  } else if (unit == UNIT_HUMAN_BATTLE_SHIP) {
+  } else if (unit == UNIT_HUMAN_BATTLE_SHIP || unit == UNIT_ORC_BATTLE_SHIP) {
     return 245;
   }
   return 450;
@@ -7161,7 +7679,7 @@ float GameScene::getUnitCreateTime(int index) {
 }
 float GameScene::getUnitMonitoringDistance(int index) {
   if (index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP ||
-      index == UNIT_HUMAN_BATTLE_SHIP) {
+      index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP) {
     return 200000;
   } else if (index == UNIT_ARCHER) {
     return 150000;
@@ -7199,7 +7717,7 @@ float GameScene::getUnitMonitoringDistance(int index) {
 
 float GameScene::getUnitAttackRange(int index) {
   if (index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP ||
-      index == UNIT_HUMAN_BATTLE_SHIP) {
+      index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP) {
     return 85000;
   } else if (index == UNIT_ARCHER) {
     return 50176;
@@ -7228,7 +7746,7 @@ int GameScene::getUnitAttackType(int index) {
       index == UNIT_HERO_LADY_WEREWOLF || index == UNIT_HERO_LADY_BEAR ||
       index == UNIT_HERO_PARASITE || index == UNIT_HERO_BABYMINO ||
       index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP ||
-      index == UNIT_HUMAN_BATTLE_SHIP) {
+      index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP) {
     return ATTACK_TYPE_RANGE;
   } else if (index == UNIT_FARM || index == UNIT_BARRACKS ||
              index == UNIT_LUMBERMILL || index == UNIT_FACTORY ||
@@ -7269,13 +7787,14 @@ int GameScene::getUnitAttackType(int index) {
 int GameScene::getUnitAttackTargetType(int index) {
   if (index == UNIT_CATAPULT || index == UNIT_WIZARD ||
       index == UNIT_HERO_UNDINE || index == UNIT_HERO_WIZARD ||
-      index == UNIT_HERO_SANTA || index == UNIT_HUMAN_BATTLE_SHIP) {
+      index == UNIT_HERO_SANTA || index == UNIT_HUMAN_BATTLE_SHIP ||
+      index == UNIT_ORC_BATTLE_SHIP) {
     return ATTACK_TARGET_TYPE_SPLASH;
   }
   return ATTACK_TARGET_TYPE_SINGLE;
 }
 float GameScene::getUnitAttackCoolTime(int index) {
-  if (index == UNIT_HUMAN_BATTLE_SHIP) {
+  if (index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP) {
     return 6.0f;
   } else if (index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP) {
     return 3.0f;
@@ -7355,7 +7874,7 @@ float GameScene::getUnitAttackCoolTime(int index) {
 }
 float GameScene::getUnitAttackHappenTime(int index) {
   if (index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP ||
-      index == UNIT_HUMAN_BATTLE_SHIP) {
+      index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP) {
     return 0.5f;
   } else if (index == UNIT_ARCHER) {
     return 0.3f;
@@ -7916,6 +8435,8 @@ void GameScene::bubbleUpdate(float dt) {
   }
 }
 Movable *GameScene::findTargetHero(Movable *finder) {
+  long long __t0 = PERF_NOW();
+  PerfProbe::targetCalls++;
   float minDistance = 1000000;
   EnemyBase *nearest = nullptr;
 
@@ -7949,9 +8470,12 @@ Movable *GameScene::findTargetHero(Movable *finder) {
     }
   }
 
+  PerfProbe::targetUs += PERF_NOW() - __t0;
   return nearest;
 }
 Movable *GameScene::findTargetEnemy(Movable *finder) {
+  long long __t0 = PERF_NOW();
+  PerfProbe::targetCalls++;
   float minDistance = 1000000;
   EnemyBase *nearest = nullptr;
   Vec2 finderPos = finder->getPosition();
@@ -7998,12 +8522,15 @@ Movable *GameScene::findTargetEnemy(Movable *finder) {
           }
         }
       }
+      PerfProbe::targetUs += PERF_NOW() - __t0;
       return nearestTree;
     } else {
+      PerfProbe::targetUs += PERF_NOW() - __t0;
       return nullptr;
     }
   } else {
 
+    PerfProbe::targetUs += PERF_NOW() - __t0;
     return nearest;
   }
 }
@@ -8034,6 +8561,15 @@ void GameScene::entranceSchedule(float dt) {}
 void GameScene::releaseCustomMovingCamera() { isCameraInCustomMoving = false; }
 // gravityupdate
 void GameScene::gravityUpdate(float dt) {
+  long long __f0 = PERF_NOW();
+  gravityUpdateBody(dt);
+  long long __fd = PERF_NOW() - __f0;
+  PerfProbe::frameUs += __fd;
+  if (__fd > PerfProbe::frameMaxUs)
+    PerfProbe::frameMaxUs = __fd;
+  PerfProbe::report(dt, (int)heroArray.size(), (int)enemyArray.size());
+}
+void GameScene::gravityUpdateBody(float dt) {
   if (isMultiplay) {
     MM->update(dt);
 
@@ -9377,9 +9913,12 @@ void GameScene::oneSecUpdate(float dt) {
     loadMapData();
   }
 
+  long long __ai0 = PERF_NOW();
   updateEnemyAI();
+  PerfProbe::aiUs += PERF_NOW() - __ai0;
   if (!isMultiplay)
     updateShuttleFerries();
+  updateManualUnloadSails();
 }
 void GameScene::halfSecUpdate(float dt) {
   stepFogMaskFade(dt);
@@ -9396,6 +9935,7 @@ void GameScene::halfSecUpdate(float dt) {
 }
 void GameScene::updateFog() {
   //    return; // test
+  long long __fog0 = PERF_NOW();
   if (GM->currentStageIndex == STAGE_SINGLEPLAY ||
       GM->currentStageIndex == STAGE_RAID) {
     blackSheepWell = true;
@@ -9611,6 +10151,7 @@ void GameScene::updateFog() {
   }
   updateMiniMapForNonMoving();
   updateMiniMapForMoving();
+  PerfProbe::fogUs += PERF_NOW() - __fog0;
 }
 void GameScene::processNewFogState() {
   for (auto fog : fogArray) {
@@ -9873,6 +10414,29 @@ TMXTiledMap *GameScene::getTileMap(Vec2 pos) {
 cocos2d::Vec2 GameScene::getCoordinateFromPosition(cocos2d::Vec2 position) {
   return getCoordinateFromPosition(position, theMap);
 }
+cocos2d::Vec2 GameScene::getOilSpotTile(Movable *spot) {
+  return getCoordinateFromPosition(spot->getPosition() - kOilSpotVisualOffset);
+}
+bool GameScene::isTileInOilSpotZone(int tx, int ty) {
+  // OilSpots never claim a deco block (see the building chain in
+  // spawnObjectsFromEditorJsonFile), so tile-free tests treat their area as
+  // open water; placement code must ask here explicitly.
+  // A spot logically occupies one tile, but its slick artwork spreads about
+  // two tiles in every direction, and every 2x2 OilExtractor footprint that
+  // covers the spot tile (a 3x3 union) must stay free or the spot becomes
+  // unharvestable. Reserve the surrounding 5x5 block: no water building
+  // except the OilExtractor may take any tile in it.
+  const int kOilSpotClearance = 2;
+  for (auto mutual : mutualArray) {
+    if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT)
+      continue;
+    Vec2 st = getOilSpotTile(mutual);
+    if (std::abs((int)st.x - tx) <= kOilSpotClearance &&
+        std::abs((int)st.y - ty) <= kOilSpotClearance)
+      return true;
+  }
+  return false;
+}
 Vec2 GameScene::getCoordinateFromPosition(Vec2 position, TMXTiledMap *map) {
   int mapRowCount = map->getMapSize().height;
   int mapColumnCount = map->getMapSize().width;
@@ -10045,6 +10609,10 @@ void GameScene::handleWin32RightClick(Vec2 screenPos) {
     cancelWin32AttackMoveMode();
     return;
   }
+  if (unloadClickShuttle != nullptr) {
+    unloadClickShuttle = nullptr;
+    return;
+  }
   if (selectedArray.size() == 0) {
     return;
   }
@@ -10172,66 +10740,91 @@ void GameScene::handleWin32RightClick(Vec2 screenPos) {
         int stx = (int)shuttleTile.x, sty = (int)shuttleTile.y;
         int adj4x[] = {1, -1, 0, 0};
         int adj4y[] = {0, 0, 1, -1};
-        if (isShuttleAdjacentToLand(clickedShuttle)) {
-          // Find the adjacent land tile to use as approach position
-          Vec2 boardPos = clickedShuttle->getPosition();
-          for (int i = 0; i < 4; i++) {
-            int nx = stx + adj4x[i], ny = sty + adj4y[i];
-            if (!isWaterTileAt(nx, ny)) {
-              boardPos = Vec2((nx + 0.5f) * TILE_SIZE,
-                              (tileMapH - ny - 0.5f) * TILE_SIZE);
-              break;
+
+        // Anyone already standing next to a docked shuttle boards right away;
+        // everyone else has to walk.
+        Vector<EnemyBase *> walkers;
+        bool docked = isShuttleAdjacentToLand(clickedShuttle);
+        for (auto unit : boarders) {
+          float dist =
+              unit->getPosition().distance(clickedShuttle->getPosition());
+          if (docked && dist <= TILE_SIZE * 3) {
+            if (loadUnitToShuttle(clickedShuttle, unit))
+              refreshShuttleCargoPanel();
+          } else {
+            walkers.pushBack(unit);
+          }
+        }
+
+        if (!walkers.empty()) {
+          // Meet halfway: the shuttle sails to the coast of the walkers'
+          // island nearest to them (within its own water region), and the
+          // walkers head for the land tile beside that pickup point. The
+          // pendingShuttle pump in updateUnitMoveNew() completes the boarding
+          // once both sides arrive.
+          Vec2 approachPos = Vec2::ZERO;
+          Vec2 pickup = findShuttlePickupPoint(clickedShuttle,
+                                               walkers.at(0)->getPosition());
+          if (pickup != Vec2::ZERO) {
+            if (clickedShuttle->getPosition().distance(pickup) >
+                TILE_SIZE * 1.5f) {
+              // Same manual-sail pattern as updateShuttleFerries().
+              clickedShuttle->moveToPos = Vec2::ZERO;
+              clickedShuttle->moveFlagPos = pickup;
+              clickedShuttle->target = nullptr;
+              clickedShuttle->unitAct = UNIT_ACT_MOVE;
+              clickedShuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+            }
+            Vec2 pickupTile = getCoordinateFromPosition(pickup);
+            int px = (int)pickupTile.x, py = (int)pickupTile.y;
+            int walkersIsland = getIslandIdAt(walkers.at(0)->getPosition());
+            int w = (int)landIslandId.size();
+            int h = w > 0 ? (int)landIslandId[0].size() : 0;
+            for (int i = 0; i < 4; i++) {
+              int nx = px + adj4x[i], ny = py + adj4y[i];
+              if (nx < 0 || ny < 0 || nx >= w || ny >= h)
+                continue;
+              if (landIslandId[nx][ny] == walkersIsland) {
+                approachPos = getPositionFromTileCoordinate(nx, ny);
+                break;
+              }
             }
           }
-          for (auto unit : boarders) {
-            float dist =
-                unit->getPosition().distance(clickedShuttle->getPosition());
-            if (dist <= TILE_SIZE * 3) {
-              if (loadUnitToShuttle(clickedShuttle, unit))
-                refreshShuttleCargoPanel();
-            } else {
-              unit->pendingShuttle = clickedShuttle;
-              Vector<EnemyBase *> list;
-              list.pushBack(unit);
-              moveTo(list, boardPos);
-            }
-          }
-        } else {
-          // Shuttle not adjacent to land: find nearest shoreline tile to the
-          // shuttle
-          int mapW = (int)mapSize.width;
-          int mapHt = (int)mapSize.height;
-          Vec2 nearestLandPos = Vec2::ZERO;
-          float nearestDistSq = FLT_MAX;
-          Vec2 shuttleWorldPos = clickedShuttle->getPosition();
-          for (int r = 1; r <= 40 && nearestLandPos == Vec2::ZERO; r++) {
-            for (int ox = -r; ox <= r; ox++) {
-              for (int oy = -r; oy <= r; oy++) {
-                if (ox > -r && ox < r && oy > -r && oy < r)
-                  continue; // skip interior
-                int nx = stx + ox, ny = sty + oy;
-                if (nx < 0 || ny < 0 || nx >= mapW || ny >= mapHt)
-                  continue;
-                if (!isWaterTileAt(nx, ny)) {
-                  Vec2 p = Vec2((nx + 0.5f) * TILE_SIZE,
-                                (tileMapH - ny - 0.5f) * TILE_SIZE);
-                  float dsq = p.distanceSquared(shuttleWorldPos);
-                  if (dsq < nearestDistSq) {
-                    nearestDistSq = dsq;
-                    nearestLandPos = p;
+          if (approachPos == Vec2::ZERO) {
+            // No island/region info (e.g. walker somehow not on mapped land):
+            // fall back to walking toward the shore nearest the shuttle's
+            // current spot, like before.
+            int mapW = (int)mapSize.width;
+            int mapHt = (int)mapSize.height;
+            float nearestDistSq = FLT_MAX;
+            Vec2 shuttleWorldPos = clickedShuttle->getPosition();
+            for (int r = 1; r <= 40 && approachPos == Vec2::ZERO; r++) {
+              for (int ox = -r; ox <= r; ox++) {
+                for (int oy = -r; oy <= r; oy++) {
+                  if (ox > -r && ox < r && oy > -r && oy < r)
+                    continue; // skip interior
+                  int nx = stx + ox, ny = sty + oy;
+                  if (nx < 0 || ny < 0 || nx >= mapW || ny >= mapHt)
+                    continue;
+                  if (!isWaterTileAt(nx, ny)) {
+                    Vec2 p = Vec2((nx + 0.5f) * TILE_SIZE,
+                                  (tileMapH - ny - 0.5f) * TILE_SIZE);
+                    float dsq = p.distanceSquared(shuttleWorldPos);
+                    if (dsq < nearestDistSq) {
+                      nearestDistSq = dsq;
+                      approachPos = p;
+                    }
                   }
                 }
               }
             }
-            if (nearestLandPos != Vec2::ZERO)
-              break;
           }
-          if (nearestLandPos != Vec2::ZERO) {
-            for (auto unit : boarders) {
+          if (approachPos != Vec2::ZERO) {
+            for (auto unit : walkers) {
               unit->pendingShuttle = clickedShuttle;
               Vector<EnemyBase *> list;
               list.pushBack(unit);
-              moveTo(list, nearestLandPos);
+              moveTo(list, approachPos);
             }
           }
         }
@@ -11104,6 +11697,23 @@ void GameScene::checkVisibilityForInScreen() {
 void GameScene::doClick(cocos2d::Vec2 pos) {
   if (gameMode == GAME_MODE_PVP6 || gameMode == GAME_MODE_PVP12) {
     return;
+  }
+  // Unload button pressed - this click picks where to unload. Consume it
+  // here so it doesn't fall through to selection.
+  if (unloadClickShuttle != nullptr) {
+    EnemyBase *shuttle = unloadClickShuttle;
+    if (shuttle->isDead || shuttle->energy <= 0) {
+      unloadClickShuttle = nullptr; // fall through to a normal click
+    } else if (getIslandIdAt(pos) < 0) {
+      // Water (or off-map) - keep waiting for a land tile.
+      if (HUD)
+        HUD->showPriceInfo(LM->getText("click land"), 0, 0, 0);
+      return;
+    } else {
+      unloadClickShuttle = nullptr;
+      beginManualUnloadAt(shuttle, pos);
+      return;
+    }
   }
   try {
     if (HUD) {
@@ -12075,6 +12685,34 @@ void GameScene::updateBuildingTemplateAtScreenPos(Vec2 glPos,
   }
   Vec2 pos = this->getPositionFromTileCoordinate(coordinate.x, coordinate.y) -
              Vec2(TILE_SIZE / 2, TILE_SIZE / 2);
+
+  // An OilExtractor may only go on an OilSpot, and it must land exactly on it -
+  // so as the template nears a spot, magnetically snap it to the one placement
+  // that centers the 2x2 on that spot (the spot becomes the bottom-left tile,
+  // its image sitting just below the derrick center). This makes the spot a
+  // single, unambiguous build point.
+  int templateTag = buildingTemplate->getTag();
+  if (templateTag == UNIT_HUMAN_OIL_EXTRACTOR ||
+      templateTag == UNIT_ORC_OIL_EXTRACTOR) {
+    const float snapRange = TILE_SIZE * 1.5f;
+    float bestD = snapRange * snapRange;
+    Vec2 snapPos = pos;
+    for (auto mutual : mutualArray) {
+      if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT)
+        continue;
+      Vec2 st = getOilSpotTile(mutual);
+      Vec2 candidate =
+          getPositionFromTileCoordinate((int)st.x, (int)st.y) -
+          Vec2(TILE_SIZE / 2, TILE_SIZE / 2);
+      float d = pos.distanceSquared(candidate);
+      if (d < bestD) {
+        bestD = d;
+        snapPos = candidate;
+      }
+    }
+    pos = snapPos;
+  }
+
   if (pos.x < TILE_SIZE) {
     pos.x = TILE_SIZE;
   }
@@ -12167,7 +12805,7 @@ void GameScene::checkBuildingTemplate() {
             for (auto mutual : mutualArray) {
               if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT)
                 continue;
-              Vec2 st = getCoordinateFromPosition(mutual->getPosition());
+              Vec2 st = getOilSpotTile(mutual);
               if ((int)st.x == (int)pos.x && (int)st.y == (int)pos.y) {
                 decoBlocked = false;
                 break;
@@ -12178,6 +12816,14 @@ void GameScene::checkBuildingTemplate() {
         } else {
           isBlock = isDecoBlock(getTileGIDAt(decoLayer, pos)) ||
                     isSoilBlock(getTileGIDAt(soilLayer, pos));
+        }
+        // Only an OilExtractor may sit inside an OilSpot's reserved block -
+        // any other water building there would bury the slick or crowd out
+        // the extractor footprints (see isTileInOilSpotZone).
+        if (isWaterBuilding && btag != UNIT_HUMAN_OIL_EXTRACTOR &&
+            btag != UNIT_ORC_OIL_EXTRACTOR &&
+            isTileInOilSpotZone((int)pos.x, (int)pos.y)) {
+          isBlock = true;
         }
         spt->setColor(isBlock ? Color3B::RED : Color3B::GREEN);
         if (isBlock) {
@@ -12225,7 +12871,7 @@ void GameScene::checkBuildingTemplate() {
     for (auto mutual : mutualArray) {
       if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT)
         continue;
-      Vec2 st = getCoordinateFromPosition(mutual->getPosition());
+      Vec2 st = getOilSpotTile(mutual);
       if ((int)st.x >= cx && (int)st.x < cx + ew && (int)st.y >= cy - eh &&
           (int)st.y < cy) {
         hasOilSpot = true;
@@ -12267,6 +12913,14 @@ EnemyBase *GameScene::buildTheBuilding(int index, int x, int y, int width,
         isBlock = isDecoBlock(getTileGIDAt(decoLayer, pos)) ||
                   isSoilBlock(getTileGIDAt(soilLayer, pos));
       }
+      // Only an OilExtractor may sit inside an OilSpot's reserved block
+      // (mirrors checkBuildingTemplate); this is the authoritative gate for
+      // paths that skip the placement template, e.g. AI builds.
+      if (isWaterBuilding && index != UNIT_HUMAN_OIL_EXTRACTOR &&
+          index != UNIT_ORC_OIL_EXTRACTOR &&
+          isTileInOilSpotZone((int)pos.x, (int)pos.y)) {
+        isBlock = true;
+      }
       if (isBlock) {
         isPlaceReady = false;
       }
@@ -12291,7 +12945,7 @@ EnemyBase *GameScene::buildTheBuilding(int index, int x, int y, int width,
     for (auto mutual : mutualArray) {
       if (mutual == nullptr || mutual->unitType != UNIT_OIL_SPOT)
         continue;
-      Vec2 st = getCoordinateFromPosition(mutual->getPosition());
+      Vec2 st = getOilSpotTile(mutual);
       if ((int)st.x >= x && (int)st.x < x + width && (int)st.y >= y - height &&
           (int)st.y < y) {
         hasOilSpot = true;
@@ -12625,8 +13279,14 @@ Sprite *GameScene::getSpriteForIcon(int index) {
   } else if (index == UNIT_ORC_FOUNDRY) {
     sptBuilding = Sprite::createWithSpriteFrameName("orcFoundary.png");
   } else {
-    sptBuilding = Sprite::create("hh.png");
+    // No icon defined for this unit type (e.g. hero units, which are drawn
+    // with Spine rather than sprite frames). Return null instead of building a
+    // sprite from a nonexistent frame ("hh.png"), which would crash on the
+    // setScale below. Callers must handle a null return.
+    return nullptr;
   }
+  if (sptBuilding == nullptr)
+    return nullptr;
   sptBuilding->setScale(2);
   return sptBuilding;
 }
@@ -12654,6 +13314,11 @@ bool GameScene::isThisSpotAvailable(cocos2d::Vec2 tileCoordinate) {
   return true;
 }
 void GameScene::tryCreateUnit(int index) {
+  if (isTrainTypeDisabled(index)) {
+    HUD->showInstanceMessage(LM->getText("cannot build this stage"));
+    GM->playSoundEffect(SOUND_NAGATIVE);
+    return;
+  }
   int goldPrice = getGoldPriceForUnit(index);
   int lumberPrice = getLumberPriceForUnit(index);
   int oilPrice = getOilPriceForUnit(index);
@@ -12710,9 +13375,11 @@ void GameScene::setPriceInfo(int btnType) {
   imgBack->removeChildByName("sptIcon");
 
   Sprite *spt = getSpriteForIcon(unitIndex);
-  spt->setName("sptIcon");
-  imgBack->addChild(spt);
-  spt->setPosition(imgBack->getContentSize() / 2);
+  if (spt != nullptr) {
+    spt->setName("sptIcon");
+    imgBack->addChild(spt);
+    spt->setPosition(imgBack->getContentSize() / 2);
+  }
 
   Text *lbl = (Text *)ndInfo->getChildByName("lblName");
   LM->setLocalizedString(lbl, GM->getUnitName(unitIndex).c_str());
@@ -12813,6 +13480,11 @@ int GameScene::getUnitIndexFromBtnMenuType(int btnType) {
   return -1;
 }
 bool GameScene::tryBuilding(int index) {
+  if (isBuildTypeDisabled(index)) {
+    HUD->showInstanceMessage(LM->getText("cannot build this stage"));
+    GM->playSoundEffect(SOUND_NAGATIVE);
+    return false;
+  }
   int goldPrice = getGoldPriceForUnit(index);
   int lumberPrice = getLumberPriceForUnit(index);
   if (gold < goldPrice) {
@@ -13406,6 +14078,10 @@ void GameScene::moveAndAttackTo(Vector<EnemyBase *> troop, Vec2 pos) {
   for (auto unit : troop) {
     //        moveAndAttackTo(unit, pos);
     unit->attackFlagPos = unit->moveFlagPos;
+    // Same stamp as Movable::attackDdangTo - the failed-path branch in
+    // moveNew needs it to recognize a failed attack-move and offer the
+    // shuttle-ferry fallback.
+    unit->attackFlagTilePos = getCoordinateFromPosition(unit->moveFlagPos);
     unit->attackDdangPos = unit->moveFlagPos;
     unit->unitAct = UNIT_ACT_ATTACK_DDANG;
     unit->target = nullptr;
@@ -13710,7 +14386,13 @@ void GameScene::updateMenu() {
         if (worker->unitType == UNIT_WORKER ||
             worker->unitType == UNIT_GOBLIN_WORKER) {
           workerIsBusy = worker->isGatheringGold || worker->isGatheringTree ||
-                         worker->isBuildingABuilding;
+                         worker->isBuildingABuilding ||
+                         // En route to board a shuttle. updateMenu() also
+                         // fires from deselect() as the other boarders load
+                         // one by one - when the walking worker becomes the
+                         // last selected unit, don't yank it to a stop and
+                         // pop the build menu mid-walk.
+                         worker->pendingShuttle != nullptr;
         }
       }
 
@@ -14259,8 +14941,19 @@ cocos2d::Vec2 GameScene::findEmptyWaterSpawnTile(int shipyardTileX,
     return false;
   };
 
+  // Prefer OPEN water (all four corners water). isWaterTileAt also accepts
+  // the coast-transition tiles, which are partially land - around a shipyard
+  // built against the coast the BFS reaches those shore tiles first (the seed
+  // order starts at the landward top row), so ships spawned there line up
+  // "beached" along the coastline. Keep the first shore tile found as a
+  // fallback (narrow rivers may have no fully-open water at all) but keep
+  // scanning a few more rings for open water before settling for it.
+  Vec2 shoreFallback(-1, -1);
+  int shoreFallbackLevel = -1;
   int limit = 0;
   while (!frontier.empty() && limit++ < 200) {
+    if (shoreFallbackLevel >= 0 && limit > shoreFallbackLevel + 4)
+      break;
     std::vector<std::pair<int, int>> next;
     for (auto &p : frontier) {
       if (visited.count(p))
@@ -14272,7 +14965,13 @@ cocos2d::Vec2 GameScene::findEmptyWaterSpawnTile(int shipyardTileX,
         continue;
       if (isWaterTileAt(tx, ty) && !isShipTileBlocked(tx, ty, nullptr) &&
           !liveShipOnTile(tx, ty)) {
-        return getPositionFromTileCoordinate(tx, ty);
+        if (isOpenWaterTileAt(tx, ty)) {
+          return getPositionFromTileCoordinate(tx, ty);
+        }
+        if (shoreFallbackLevel < 0) {
+          shoreFallback = getPositionFromTileCoordinate(tx, ty);
+          shoreFallbackLevel = limit;
+        }
       }
       for (int i = 0; i < 4; i++) {
         std::pair<int, int> nb = {tx + dx[i], ty + dy[i]};
@@ -14282,7 +14981,7 @@ cocos2d::Vec2 GameScene::findEmptyWaterSpawnTile(int shipyardTileX,
     }
     frontier = next;
   }
-  return Vec2(-1, -1);
+  return shoreFallback;
 }
 
 bool GameScene::isWaterTileAt(int tileX, int tileY) {
@@ -14299,6 +14998,20 @@ bool GameScene::isWaterTileAt(int tileX, int tileY) {
   // purpose (blocking land units from water).
   int gid = getTileGIDAt(stageLayer, Vec2(tileX, tileY));
   return gid >= 141 && gid <= 163;
+}
+bool GameScene::isOpenWaterTileAt(int tileX, int tileY) {
+  if (theMap == nullptr) {
+    return false;
+  }
+  TMXLayer *stageLayer = theMap->getLayer("stage");
+  if (stageLayer == nullptr) {
+    return false;
+  }
+  // Tile-id 151 is the only water tile with terrain "1,1,1,1" (all four
+  // corners water) in the shared 50TileSet - see the terrain table in
+  // createTMXFromEditorJsonFile and MapEditor's kCornerTiles (water = soil
+  // tile-id 41 + the +110 water offset). +1 for the TMX firstgid.
+  return getTileGIDAt(stageLayer, Vec2(tileX, tileY)) == 152;
 }
 bool GameScene::isShipTileBlocked(int tileX, int tileY, Movable *self,
                                   bool checkOtherShips) {
@@ -14327,7 +15040,8 @@ bool GameScene::isShipTileBlocked(int tileX, int tileY, Movable *self,
   auto isWaterBuildingType = [](int type) -> bool {
     return type == UNIT_HUMAN_SHIPYARD || type == UNIT_ORC_SHIPYARD ||
            type == UNIT_HUMAN_OIL_EXTRACTOR || type == UNIT_ORC_OIL_EXTRACTOR ||
-           type == UNIT_HUMAN_OIL_REFINERY || type == UNIT_ORC_OIL_REFINERY;
+           type == UNIT_HUMAN_OIL_REFINERY || type == UNIT_ORC_OIL_REFINERY ||
+           type == UNIT_HUMAN_FOUNDRY || type == UNIT_ORC_FOUNDRY;
   };
   auto tileInUnit = [&](EnemyBase *bldg, int tx, int ty) -> bool {
     if (!bldg->isBuilding || !bldg->isBuildingComplete ||
@@ -14365,6 +15079,17 @@ void GameScene::fleeShipFromAttacker(Movable *unit, Movable *attacker) {
       unit->unitType != UNIT_ORC_SHUTTLE) {
     return;
   }
+  // A transport already carrying its ferry passengers to the drop-off keeps
+  // sailing - the crossing IS its escape, and the ferry pump would just
+  // re-issue the drop order anyway.
+  if (unit->isAutoFerrySailingToDrop)
+    return;
+  // A player ship mid-oil-run stays on the job: the flee is a normal move
+  // order now, and only the *enemy* side has a pump (enemyAIManageShips)
+  // that restarts a broken oil loop - a player ship would just go idle.
+  if (!unit->isEnemy && (unit->isGatheringOil || unit->isCarryingOil))
+    return;
+
   Vec2 tile = getCoordinateFromPosition(unit->getPosition());
   int tx = (int)tile.x, ty = (int)tile.y;
 
@@ -14379,30 +15104,43 @@ void GameScene::fleeShipFromAttacker(Movable *unit, Movable *attacker) {
   static const int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
   static const int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
 
-  int bestIdx = -1;
-  float bestDot = -2.0f;
-  for (int i = 0; i < 8; i++) {
-    int nx = tx + dx[i], ny = ty + dy[i];
-    if (nx < 0 || ny < 0 || nx >= (int)mapSize.width ||
-        ny >= (int)mapSize.height)
-      continue;
-    if (!isWaterTileAt(nx, ny) || isShipTileBlocked(nx, ny, unit))
-      continue;
-    Vec2 worldDir = Vec2((float)dx[i], -(float)dy[i]).getNormalized();
-    float dot = worldDir.dot(away);
-    if (dot > bestDot) {
-      bestDot = dot;
-      bestIdx = i;
+  // Walk outward a few tiles along the most-opposite free water tiles, so the
+  // destination is open water the ship can actually reach.
+  const int kFleeTiles = 3;
+  int cx = tx, cy = ty;
+  for (int step = 0; step < kFleeTiles; step++) {
+    int bestIdx = -1;
+    float bestDot = -2.0f;
+    for (int i = 0; i < 8; i++) {
+      int nx = cx + dx[i], ny = cy + dy[i];
+      if (nx < 0 || ny < 0 || nx >= (int)mapSize.width ||
+          ny >= (int)mapSize.height)
+        continue;
+      if (!isWaterTileAt(nx, ny) || isShipTileBlocked(nx, ny, unit))
+        continue;
+      Vec2 worldDir = Vec2((float)dx[i], -(float)dy[i]).getNormalized();
+      float dot = worldDir.dot(away);
+      if (dot > bestDot) {
+        bestDot = dot;
+        bestIdx = i;
+      }
     }
+    if (bestIdx < 0)
+      break;
+    cx += dx[bestIdx];
+    cy += dy[bestIdx];
   }
-  if (bestIdx < 0)
+  if (cx == tx && cy == ty)
     return;
 
-  Vec2 newPos =
-      getPositionFromTileCoordinate(tx + dx[bestIdx], ty + dy[bestIdx]);
-  unit->setPosition(newPos);
-  if (unit->spine)
-    unit->spine->setPosition(newPos);
+  // Ordinary sail order - never teleport. The ship visibly retreats; anything
+  // mission-critical (ferry pickup, oil loop restart) is re-issued by its own
+  // management pump afterwards.
+  unit->moveToPos = Vec2::ZERO;
+  unit->moveFlagPos = getPositionFromTileCoordinate(cx, cy);
+  unit->target = nullptr;
+  unit->unitAct = UNIT_ACT_MOVE;
+  unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
 }
 
 bool GameScene::isShuttleAdjacentToLand(EnemyBase *shuttle) {
@@ -14483,26 +15221,108 @@ bool GameScene::loadUnitToShuttle(EnemyBase *shuttle, EnemyBase *unit) {
   unit->setVisible(false);
   if (unit->spine)
     unit->spine->setVisible(false);
+  // The hero level ring (ndLevelCircle) and selection circle live in the world
+  // as siblings, not children, of the unit - hide them too or they stay
+  // spinning on the ground where the unit boarded.
+  if (unit->ndLevelCircle)
+    unit->ndLevelCircle->setVisible(false);
   unit->untouchable = true;
   unit->stop();
   deselect(unit);
+  unit->showSelectedCircle(false);
   return true;
+}
+
+std::vector<Vec2> GameScene::findUnloadPositions(EnemyBase *shuttle,
+                                                 int count) {
+  std::vector<Vec2> result;
+  if (count <= 0)
+    return result;
+  Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
+  int tx = (int)tile.x, ty = (int)tile.y;
+  int mapH = (int)theMap->getMapSize().height;
+  // Don't wander more than this many tiles from the shuttle looking for room.
+  const int kMaxUnloadDist = 8;
+
+  // Tiles already taken by standing ground units (walking units only - tiles
+  // blocked by buildings/trees are already rejected by isThisSpotAvailable
+  // via the deco/soil layers).
+  std::set<std::pair<int, int>> occupied;
+  auto markOccupied = [&](EnemyBase *u) {
+    if (u == nullptr || u->isDead || u->energy <= 0 || u->isInShuttle ||
+        u->isFlying || u->isBuilding)
+      return;
+    Vec2 t = getCoordinateFromPosition(u->getPosition());
+    occupied.insert(std::make_pair((int)t.x, (int)t.y));
+  };
+  for (auto u : heroArray)
+    markOccupied(u);
+  for (auto u : enemyArray)
+    markOccupied(u);
+
+  // BFS over the shore connected to the shuttle: seed with the shuttle's
+  // land neighbors, then expand across land tiles only, so cargo never gets
+  // dropped on the far side of a channel. Nearest free tiles come out first.
+  std::set<std::pair<int, int>> visited;
+  std::vector<std::pair<std::pair<int, int>, int>> queue; // (tile, dist)
+  int dx[] = {1, -1, 0, 0};
+  int dy[] = {0, 0, 1, -1};
+  // Bounds check before isWaterTileAt: getTileGIDAt only rejects negative
+  // coordinates, and TMXLayer asserts on tiles past the map edge.
+  auto isLand = [&](int x, int y) {
+    return isCoordinateValid(Vec2(x, y)) && !isWaterTileAt(x, y);
+  };
+  for (int i = 0; i < 4; i++) {
+    int nx = tx + dx[i], ny = ty + dy[i];
+    if (isLand(nx, ny) && visited.insert({nx, ny}).second)
+      queue.push_back({{nx, ny}, 1});
+  }
+  for (size_t head = 0; head < queue.size(); head++) {
+    int cx = queue[head].first.first;
+    int cy = queue[head].first.second;
+    int dist = queue[head].second;
+    if (isThisSpotAvailable(Vec2(cx, cy)) && !occupied.count({cx, cy})) {
+      result.push_back(
+          Vec2((cx + 0.5f) * TILE_SIZE, (mapH - cy - 0.5f) * TILE_SIZE));
+      occupied.insert({cx, cy});
+      if ((int)result.size() >= count)
+        break;
+    }
+    if (dist >= kMaxUnloadDist)
+      continue;
+    for (int i = 0; i < 4; i++) {
+      int nx = cx + dx[i], ny = cy + dy[i];
+      if (isLand(nx, ny) && visited.insert({nx, ny}).second)
+        queue.push_back({{nx, ny}, dist + 1});
+    }
+  }
+  return result;
 }
 
 void GameScene::unloadShuttle(EnemyBase *shuttle) {
   if (!isShuttleAdjacentToLand(shuttle))
     return;
-  Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
-  int tx = (int)tile.x, ty = (int)tile.y;
-  int mapH = (int)theMap->getMapSize().height;
-  std::vector<Vec2> landPos;
-  int dx[] = {1, -1, 0, 0};
-  int dy[] = {0, 0, 1, -1};
-  for (int i = 0; i < 4; i++) {
-    int nx = tx + dx[i], ny = ty + dy[i];
-    if (!isWaterTileAt(nx, ny))
-      landPos.push_back(
-          Vec2((nx + 0.5f) * TILE_SIZE, (mapH - ny - 0.5f) * TILE_SIZE));
+  int aliveCount = 0;
+  for (auto &slot : shuttle->shuttleCargo) {
+    EnemyBase *unit = (EnemyBase *)slot.unit;
+    if (unit && unit->energy > 0)
+      aliveCount++;
+  }
+  std::vector<Vec2> landPos = findUnloadPositions(shuttle, aliveCount);
+  if (landPos.empty()) {
+    // Every nearby tile is blocked by standing units; fall back to dumping on
+    // the adjacent land tiles so unload never silently fails.
+    Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
+    int tx = (int)tile.x, ty = (int)tile.y;
+    int mapH = (int)theMap->getMapSize().height;
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+    for (int i = 0; i < 4; i++) {
+      int nx = tx + dx[i], ny = ty + dy[i];
+      if (!isWaterTileAt(nx, ny))
+        landPos.push_back(
+            Vec2((nx + 0.5f) * TILE_SIZE, (mapH - ny - 0.5f) * TILE_SIZE));
+    }
   }
   if (landPos.empty())
     return;
@@ -14518,6 +15338,12 @@ void GameScene::unloadShuttle(EnemyBase *shuttle) {
     if (unit->spine)
       unit->spine->setVisible(true);
     unit->setPosition(landPos[idx % landPos.size()]);
+    if (unit->ndLevelCircle) {
+      unit->ndLevelCircle->setVisible(true);
+      // Move updates only re-sync the ring while the unit is walking, so snap
+      // it to the unload spot now.
+      unit->ndLevelCircle->setPosition(unit->getEffectStartPosition());
+    }
     // Clear all stale movement state set during boarding (stop() runs while
     // unit is at the shuttle's water tile, which causes stopNew() to queue a
     // move to a nearby land tile — we don't want that after unloading).
@@ -14536,6 +15362,102 @@ void GameScene::unloadShuttle(EnemyBase *shuttle) {
   refreshShuttleCargoPanel();
 }
 
+// Fresh sail order for a manual unload, mirroring GameScene::moveTo(troop,
+// pos). The bare ferry-style order (set moveFlagPos + unitAct only) is not
+// enough for a shuttle that is already moving: the re-path in Movable's move
+// handler appends the new path after the old route's leftover waypoints and
+// addRoute() resets movePointCounter to 0, so the shuttle would first re-sail
+// its old route from its start point before heading to the new goal.
+static void orderShuttleSail(EnemyBase *shuttle, Vec2 dest) {
+  shuttle->unreachableTarget = nullptr;
+  shuttle->moveToPos = Vec2::ZERO;
+  shuttle->attackDdangPos = Vec2::ZERO;
+  shuttle->attackFlagPos = Vec2::ZERO;
+  shuttle->moveFlagPos = dest;
+  shuttle->target = nullptr;
+  shuttle->unitAct = UNIT_ACT_MOVE;
+  shuttle->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+  shuttle->cancelAttackSchedule();
+  shuttle->resetRoute();
+  shuttle->shipSidestepTarget = Vec2::ZERO;
+}
+
+void GameScene::beginManualUnloadAt(EnemyBase *shuttle, Vec2 landPos) {
+  if (!shuttle || shuttle->shuttleCargo.empty())
+    return;
+  // Shore nearest the clicked spot that this shuttle can actually reach
+  // (restricted to its own water region; fall back to any bordering water
+  // tile if the shuttle's region info is unavailable).
+  Vec2 shore = findShuttlePickupPoint(shuttle, landPos);
+  if (shore == Vec2::ZERO)
+    shore = findCoastalDropPoint(landPos);
+  if (shore == Vec2::ZERO) {
+    if (HUD)
+      HUD->showPriceInfo(LM->getText("unload land only"), 0, 0, 0);
+    return;
+  }
+  showTargetHand(landPos, false);
+  if (shuttle->getPosition().distance(shore) <= TILE_SIZE * 1.5f &&
+      isShuttleAdjacentToLand(shuttle)) {
+    // Already docked at that shore - no sailing needed. Clear any pending
+    // attack-move first so stopNew() can't resume it after the unload.
+    shuttle->attackFlagPos = Vec2::ZERO;
+    shuttle->attackDdangPos = Vec2::ZERO;
+    shuttle->stopNew();
+    unloadShuttle(shuttle);
+    return;
+  }
+  shuttle->manualUnloadTarget = shore;
+  orderShuttleSail(shuttle, shore);
+}
+
+void GameScene::updateManualUnloadSails() {
+  // Snapshot: unloadShuttle() mutates cargo/unit state mid-iteration.
+  std::vector<EnemyBase *> snap(heroArray.begin(), heroArray.end());
+  for (auto *shuttle : snap) {
+    if (!shuttle || shuttle->manualUnloadTarget == Vec2::ZERO)
+      continue;
+    if (shuttle->isDead || shuttle->energy <= 0) {
+      shuttle->manualUnloadTarget = Vec2::ZERO;
+      continue;
+    }
+    bool hasCargo = false;
+    for (auto &slot : shuttle->shuttleCargo) {
+      EnemyBase *unit = (EnemyBase *)slot.unit;
+      if (unit && unit->energy > 0) {
+        hasCargo = true;
+        break;
+      }
+    }
+    if (!hasCargo) {
+      // Everyone aboard died (or was unloaded one by one) - nothing to do.
+      shuttle->manualUnloadTarget = Vec2::ZERO;
+      continue;
+    }
+    Vec2 shore = shuttle->manualUnloadTarget;
+    float dist = shuttle->getPosition().distance(shore);
+    // Arrived - or came to rest close by (the exact shore tile can be held
+    // by another docked ship; endlessly re-ordering it there just makes the
+    // shuttle jiggle in front of the coast).
+    bool closeEnough =
+        dist <= TILE_SIZE * 1.5f ||
+        (shuttle->unitAct == UNIT_ACT_NONE && dist <= TILE_SIZE * 3.0f);
+    if (closeEnough && isShuttleAdjacentToLand(shuttle)) {
+      shuttle->manualUnloadTarget = Vec2::ZERO;
+      shuttle->attackFlagPos = Vec2::ZERO;
+      shuttle->attackDdangPos = Vec2::ZERO;
+      shuttle->stopNew();
+      unloadShuttle(shuttle);
+      continue;
+    }
+    // Stalled short of the shore or redirected - re-issue the order.
+    if (!(shuttle->unitAct == UNIT_ACT_MOVE &&
+          shuttle->moveFlagPos == shore)) {
+      orderShuttleSail(shuttle, shore);
+    }
+  }
+}
+
 void GameScene::unloadSingleUnitFromShuttle(EnemyBase *shuttle,
                                             EnemyBase *unit) {
   if (!shuttle || !unit)
@@ -14544,17 +15466,23 @@ void GameScene::unloadSingleUnitFromShuttle(EnemyBase *shuttle,
     HUD->showPriceInfo(LM->getText("unload land only"), 0, 0, 0);
     return;
   }
-  Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
-  int tx = (int)tile.x, ty = (int)tile.y;
-  int mapH = (int)theMap->getMapSize().height;
-  int dx[] = {1, -1, 0, 0};
-  int dy[] = {0, 0, 1, -1};
+  std::vector<Vec2> spots = findUnloadPositions(shuttle, 1);
   Vec2 landPos = Vec2::ZERO;
-  for (int i = 0; i < 4; i++) {
-    int nx = tx + dx[i], ny = ty + dy[i];
-    if (!isWaterTileAt(nx, ny)) {
-      landPos = Vec2((nx + 0.5f) * TILE_SIZE, (mapH - ny - 0.5f) * TILE_SIZE);
-      break;
+  if (!spots.empty()) {
+    landPos = spots[0];
+  } else {
+    // No free tile nearby - fall back to the first adjacent land tile.
+    Vec2 tile = getCoordinateFromPosition(shuttle->getPosition());
+    int tx = (int)tile.x, ty = (int)tile.y;
+    int mapH = (int)theMap->getMapSize().height;
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+    for (int i = 0; i < 4; i++) {
+      int nx = tx + dx[i], ny = ty + dy[i];
+      if (!isWaterTileAt(nx, ny)) {
+        landPos = Vec2((nx + 0.5f) * TILE_SIZE, (mapH - ny - 0.5f) * TILE_SIZE);
+        break;
+      }
     }
   }
   if (landPos == Vec2::ZERO)
@@ -14578,6 +15506,10 @@ void GameScene::unloadSingleUnitFromShuttle(EnemyBase *shuttle,
   if (unit->spine)
     unit->spine->setVisible(true);
   unit->setPosition(landPos);
+  if (unit->ndLevelCircle) {
+    unit->ndLevelCircle->setVisible(true);
+    unit->ndLevelCircle->setPosition(unit->getEffectStartPosition());
+  }
   unit->unitAct = UNIT_ACT_NONE;
   unit->unitActDetail = UNIT_ACT_DETAIL_IDLE;
   unit->moveToPos = Vec2::ZERO;
@@ -14633,15 +15565,40 @@ void GameScene::showShuttleCargoPanel(EnemyBase *shuttle) {
     float iconH = slot.rows * CELL + (slot.rows - 1) * PAD;
     float cx = PAD + slot.col * (CELL + PAD) + iconW * 0.5f;
     float cy = PAD + slot.row * (CELL + PAD) + iconH * 0.5f;
-    Sprite *icon = getSpriteForIcon(unit->unitType);
-    if (icon) {
-      float natW = icon->getContentSize().width * icon->getScale();
-      float natH = icon->getContentSize().height * icon->getScale();
-      float sc = std::min((iconW * 0.75f) / natW, (iconH * 0.75f) / natH);
-      icon->setScale(icon->getScale() * sc);
-      icon->setAnchorPoint(Vec2(0.5f, 0.5f));
-      icon->setPosition(Vec2(cx, cy));
-      panel->addChild(icon, 2);
+    if (unit->spine != nullptr) {
+      // Hero units are rendered with Spine, not sprite frames, so there is no
+      // sprite-frame icon for them (getSpriteForIcon returns null). Build a
+      // fresh idle Spine to use as the cargo icon, sized to fit the slot.
+      spine::SkeletonAnimation *heroIcon = GM->getHeroSpine(unit->unitType);
+      if (heroIcon) {
+        heroIcon->setAnimation(0, "idle", true);
+        // Pose the skeleton now; the bounding box is computed from skeleton
+        // world vertices, which are garbage until the first update() runs.
+        heroIcon->update(0);
+        // Measured at scale 1 / position (0,0): bb is the pose extents around
+        // the skeleton origin (usually the feet), so bb center scales linearly.
+        Rect bb = heroIcon->getBoundingBox();
+        heroIcon->setPosition(Vec2(cx, cy));
+        if (bb.size.width > 0 && bb.size.height > 0) {
+          float sc = std::min((iconW * 0.75f) / bb.size.width,
+                              (iconH * 0.75f) / bb.size.height);
+          heroIcon->setScale(sc);
+          heroIcon->setPosition(
+              Vec2(cx, cy) - Vec2(bb.getMidX(), bb.getMidY()) * sc);
+        }
+        panel->addChild(heroIcon, 2);
+      }
+    } else {
+      Sprite *icon = getSpriteForIcon(unit->unitType);
+      if (icon) {
+        float natW = icon->getContentSize().width * icon->getScale();
+        float natH = icon->getContentSize().height * icon->getScale();
+        float sc = std::min((iconW * 0.75f) / natW, (iconH * 0.75f) / natH);
+        icon->setScale(icon->getScale() * sc);
+        icon->setAnchorPoint(Vec2(0.5f, 0.5f));
+        icon->setPosition(Vec2(cx, cy));
+        panel->addChild(icon, 2);
+      }
     }
     // Transparent clickable button over this slot for individual unload
     EnemyBase *capturedUnit = unit;
@@ -14672,13 +15629,12 @@ void GameScene::showShuttleCargoPanel(EnemyBase *shuttle) {
   btnUnload->setPosition(Vec2(winSize.width * 0.5f + panelW * 0.5f + 12.0f,
                               80.0f + panelH * 0.5f));
   btnUnload->addClickEventListener([this](Ref *) {
-    if (!shuttlePanelTarget)
+    if (!shuttlePanelTarget || shuttlePanelTarget->shuttleCargo.empty())
       return;
-    if (isShuttleAdjacentToLand(shuttlePanelTarget)) {
-      unloadShuttle(shuttlePanelTarget);
-    } else {
-      HUD->showPriceInfo(LM->getText("unload land only"), 0, 0, 0);
-    }
+    // Don't unload in place: ask the player where, then sail to the shore
+    // nearest their click and unload there (doClick → beginManualUnloadAt).
+    unloadClickShuttle = shuttlePanelTarget;
+    HUD->showPriceInfo(LM->getText("click land"), 0, 0, 0);
   });
   HUD->addChild(btnUnload, 500);
 }
@@ -14689,6 +15645,7 @@ void GameScene::hideShuttleCargoPanel() {
     HUD->removeChildByName("btnUnloadShuttle");
   }
   shuttlePanelTarget = nullptr;
+  unloadClickShuttle = nullptr;
 }
 
 void GameScene::refreshShuttleCargoPanel() {
@@ -16144,6 +17101,10 @@ int GameScene::getGoldPriceForUnit(int index) {
     return 1100;
   } else if (index == UNIT_ORC_SHIPYARD) {
     return 1000;
+  } else if (index == UNIT_ORC_SHUTTLE) {
+    return 400;
+  } else if (index == UNIT_ORC_SHIP) {
+    return 700;
   } else if (index == UNIT_ORC_BATTLE_SHIP) {
     return 1100;
   } else if (index == UNIT_HUMAN_OIL_SHIP) {
@@ -16219,6 +17180,10 @@ int GameScene::getLumberPriceForUnit(int index) {
     return 500;
   } else if (index == UNIT_ORC_SHIPYARD) {
     return 600;
+  } else if (index == UNIT_ORC_SHUTTLE) {
+    return 150;
+  } else if (index == UNIT_ORC_SHIP) {
+    return 300;
   } else if (index == UNIT_ORC_BATTLE_SHIP) {
     return 500;
   } else if (index == UNIT_HUMAN_OIL_SHIP) {
@@ -17130,11 +18095,20 @@ void GameScene::revengeAttack(Movable *attackee, Movable *attacker) {
       getAttackPriority(attacker) <= getAttackPriority(attackee->target)) {
     return;
   }
+  // Non-combat ships never join a revenge posse: OilShips and Shuttles can't
+  // fight (canAttack rejects OilShips; Shuttles are transports). Being yanked
+  // toward the attacker broke the oil loop (the gather flags stay set, so the
+  // ship AI thought they were still working) and froze ferrying shuttles.
+  auto isNonCombatShip = [](EnemyBase *u) {
+    return u->unitType == UNIT_HUMAN_OIL_SHIP ||
+           u->unitType == UNIT_ORC_OIL_SHIP ||
+           u->unitType == UNIT_HUMAN_SHUTTLE || u->unitType == UNIT_ORC_SHUTTLE;
+  };
   Vector<EnemyBase *> list;
   if (attacker->isEnemy) {
     for (auto unit : heroArray) {
       if (unit && unit != nullptr && !unit->isBuilding &&
-          unit->attackType != ATTACK_TYPE_NONE &&
+          unit->attackType != ATTACK_TYPE_NONE && !isNonCombatShip(unit) &&
           unit->getPosition().distanceSquared(attackee->getPosition()) <
               300000 &&
           !unit->isGatheringGold && !unit->isGatheringTree &&
@@ -17156,11 +18130,12 @@ void GameScene::revengeAttack(Movable *attackee, Movable *attacker) {
   } else {
     for (auto unit : enemyArray) {
       if (unit && unit != nullptr && !unit->isBuilding &&
-          unit->attackType != ATTACK_TYPE_NONE &&
+          unit->attackType != ATTACK_TYPE_NONE && !isNonCombatShip(unit) &&
           unit->getPosition().distanceSquared(attackee->getPosition()) <
               300000 &&
           !unit->isGatheringGold && !unit->isGatheringTree &&
-          !unit->isGoingToBuild) {
+          !unit->isGatheringOil && !unit->isCarryingOil &&
+          !unit->isGoingToBuild && !unit->needsFerryToTarget) {
         list.pushBack(unit);
         //                moveAndAttackTo(unit, attacker->getPosition());
         //                if (isMultiplay) {
@@ -17556,6 +18531,16 @@ bool GameScene::enemyAIFindWaterBuildTile(Vec2 nearPos, int w, int h,
         int by = cy + dy + h;
         if (!enemyAIIsWaterTileFree(bx, by, w, h))
           continue;
+        // An OilSpot's area reads as free water (spots claim no deco block),
+        // but only an OilExtractor may sit inside its reserved block -
+        // Shipyard/Foundry/Refinery footprints must stay clear of it.
+        bool inSpotZone = false;
+        for (int j = 0; j < h && !inSpotZone; j++)
+          for (int i = 0; i < w && !inSpotZone; i++)
+            if (isTileInOilSpotZone(bx + i, by - j - 1))
+              inSpotZone = true;
+        if (inSpotZone)
+          continue;
         outBx = bx;
         outBy = by;
         return true;
@@ -17611,17 +18596,25 @@ void GameScene::enemyAIManageWorkers() {
       // A builder hidden inside a construction has unitAct == UNIT_ACT_NONE
       // but must never be handed a gathering job; it still counts toward
       // assignedCount below (busy, not dead).
+      // RESTING counts as idle too: updateUnitMoveNew parks every target-less
+      // enemy unit in 3-second rest cycles, so a do-nothing worker shows
+      // UNIT_ACT_NONE only for single-frame windows that this once-a-second
+      // tick would almost never observe - without this the AI never staffs
+      // its economy.
       else if (!w->isGoingToBuild && !w->isBuildingABuilding &&
-               w->unitAct == UNIT_ACT_NONE)
+               (w->unitAct == UNIT_ACT_NONE ||
+                w->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH))
         idleWorkers.push_back(w);
     }
 
     // Stop handing out jobs once this HQ has kEAIMaxWorkersPerHQ workers
-    // committed. assignedCount seeds from the workers already near the HQ and
-    // grows as we assign idle ones this tick. (The old guard compared the
-    // static nearWorkers.size() once - it never changed inside the loop and was
-    // off-by-one, allowing an 11th worker.)
-    int assignedCount = (int)nearWorkers.size();
+    // committed. assignedCount seeds from the *busy* workers near the HQ
+    // (gathering, or walking to / hidden inside a construction) and grows as
+    // we assign idle ones this tick. Idle workers must not seed the count:
+    // at a full HQ (kEAIMaxWorkersPerHQ near workers) a builder that just
+    // finished construction would push the seed to the cap and could never be
+    // reassigned - it stood at the finished building forever.
+    int assignedCount = (int)nearWorkers.size() - (int)idleWorkers.size();
     for (auto *worker : idleWorkers) {
       if (assignedCount >= kEAIMaxWorkersPerHQ)
         break;
@@ -17693,10 +18686,24 @@ void GameScene::enemyAIManageShips() {
       continue;
     if (u->unitType != UNIT_HUMAN_OIL_SHIP && u->unitType != UNIT_ORC_OIL_SHIP)
       continue;
-    if (u->isGatheringOil || u->isCarryingOil)
-      continue;
     if (u->isGoingToBuild || u->isBuildingABuilding)
       continue;
+    if (u->isGatheringOil || u->isCarryingOil) {
+      // Stuck detector: a ship in the oil loop is either hidden inside the
+      // extractor or sailing one of its legs. Sitting idle/resting outside
+      // the extractor means the loop was broken by an outside order (a flee
+      // from an attacker, an old revenge pull, a destroyed waypoint) - reset
+      // the oil state so the reassignment below restarts the cycle instead
+      // of treating the ship as busy forever.
+      if (u->isInExtractor ||
+          (u->unitAct != UNIT_ACT_NONE &&
+           u->unitAct != UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH))
+        continue;
+      u->isGatheringOil = false;
+      u->isCarryingOil = false;
+      u->currentOilExtractor = nullptr;
+      u->returningPlace = nullptr;
+    }
     idleOilShips.push_back(u);
   }
   if (idleOilShips.empty())
@@ -17769,6 +18776,8 @@ void GameScene::enemyAIManageShips() {
     // No free extractor - claim the nearest OilSpot and send this ship to
     // build one there. Once it completes, the ship goes idle and a later pass
     // assigns it (or another ship) to the finished extractor.
+    if (isBuildTypeDisabled(extractorType))
+      continue; // banned on this map (MapEditor Restrict panel)
     if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost)
       continue;
 
@@ -17799,15 +18808,22 @@ void GameScene::enemyAIManageShips() {
         break;
       tried.push_back(nearestSpot);
 
-      Vec2 spotCoord = getCoordinateFromPosition(nearestSpot->getPosition());
+      Vec2 spotCoord = getOilSpotTile(nearestSpot);
       int sx = (int)spotCoord.x, sy = (int)spotCoord.y;
       if (isSpotClaimed(sx, sy))
         continue;
 
       // Find a placement whose footprint covers the spot and is free water.
       // buildTheBuilding re-validates on arrival; a failure there refunds
-      // (see Movable::stopNew).
+      // (see Movable::stopNew). Prefer the canonical anchoring (spot as the
+      // extractor's bottom-left tile) so the derrick lines up over the spot
+      // image the same way a player-built one does; fall back to any covering
+      // footprint if that exact spot isn't free water.
       int bx = -1, by = -1;
+      if (enemyAIIsWaterTileFree(sx, sy + 1, ew, eh)) {
+        bx = sx;
+        by = sy + 1;
+      }
       for (int oy = 0; oy < eh && bx < 0; oy++) {
         for (int ox = 0; ox < ew && bx < 0; ox++) {
           int tx = sx - ox;
@@ -17853,6 +18869,10 @@ static const EAIBuildDef kHumanBuildList[] = {
     {UNIT_FACTORY, "factory.png", UNIT_LUMBERMILL},
     {UNIT_AIRPORT, "airport.png", UNIT_LUMBERMILL},
     {UNIT_HUMAN_SHIPYARD, "humanShipyard.png", -1},
+    // Foundry is the Shuttle-production prerequisite (see enemyAITrainUnits);
+    // it comes right after the Shipyard so transports unlock before the
+    // oil-bonus Refinery.
+    {UNIT_HUMAN_FOUNDRY, "humanFoundary.png", UNIT_HUMAN_SHIPYARD},
     // OilRefinery is the oil drop-off that grants the +30% oil-per-trip bonus
     // (see Movable::moveNew). Needs a Shipyard first and only makes sense on
     // water maps; placed on water like the Shipyard (see eaiIsWaterBuildType).
@@ -17865,6 +18885,7 @@ static const EAIBuildDef kOrcBuildList[] = {
     {UNIT_ORC_TROLL_HOUSE, "statueHouse.png", UNIT_ORC_BARRACKS},
     {UNIT_TEMPLE, "alter.png", UNIT_ORC_BARRACKS},
     {UNIT_ORC_SHIPYARD, "orcShipyard.png", -1},
+    {UNIT_ORC_FOUNDRY, "orcFoundary.png", UNIT_ORC_SHIPYARD},
     {UNIT_ORC_OIL_REFINERY, "orcOilRefinery.png", UNIT_ORC_SHIPYARD},
 };
 
@@ -17872,8 +18893,38 @@ static const EAIBuildDef kOrcBuildList[] = {
 // and only on maps that have water.
 static bool eaiIsWaterBuildType(int t) {
   return t == UNIT_HUMAN_SHIPYARD || t == UNIT_ORC_SHIPYARD ||
+         t == UNIT_HUMAN_FOUNDRY || t == UNIT_ORC_FOUNDRY ||
          t == UNIT_HUMAN_OIL_REFINERY || t == UNIT_ORC_OIL_REFINERY;
 }
+
+// Production tables live up here (not with enemyAITrainUnits below) because
+// enemyAICheckBuildings scans them to decide whether anything outside the
+// naval line consumes oil (see the navyUseful computation there).
+struct EAIProdEntry {
+  int buildType;
+  int units[4]; // -1 terminates
+};
+
+static const EAIProdEntry kHumanProd[] = {
+    {UNIT_BARRACKS, {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
+    {UNIT_FACTORY, {UNIT_CATAPULT, -1, -1, -1}},
+    {UNIT_AIRPORT, {UNIT_HELICOPTER, -1, -1, -1}},
+    // Priority order: OilShip (economy) > Shuttle (cheap utility) >
+    // Ship (main workhorse) > BattleShip (priciest, capped low).
+    {UNIT_HUMAN_SHIPYARD,
+     {UNIT_HUMAN_OIL_SHIP, UNIT_HUMAN_SHUTTLE, UNIT_HUMAN_SHIP,
+      UNIT_HUMAN_BATTLE_SHIP}},
+    {-1, {-1, -1, -1, -1}},
+};
+static const EAIProdEntry kOrcProd[] = {
+    {UNIT_ORC_BARRACKS, {UNIT_ORC_AXE, UNIT_ORC_SPEAR, -1, -1}},
+    {UNIT_ORC_TROLL_HOUSE, {UNIT_TROLL, -1, -1, -1}},
+    {UNIT_TEMPLE, {UNIT_GOBLIN, UNIT_GOBLIN_BOMB, -1, -1}},
+    {UNIT_ORC_SHIPYARD,
+     {UNIT_ORC_OIL_SHIP, UNIT_ORC_SHUTTLE, UNIT_ORC_SHIP,
+      UNIT_ORC_BATTLE_SHIP}},
+    {-1, {-1, -1, -1, -1}},
+};
 
 // Returns the AI owner-id of the nearest live enemy HQ to pos, assigning that
 // HQ a fresh id if it lacks one. Returns 0 when there is no live HQ (caller
@@ -17915,7 +18966,11 @@ EnemyBase *GameScene::enemyAIFindBuilderWorker(Vec2 nearPos) {
     if (u->isGoingToBuild || u->isBuildingABuilding || u->isInMine)
       continue;
     float d = nearPos.distanceSquared(u->getPosition());
-    if (u->unitAct == UNIT_ACT_NONE) {
+    // RESTING == idle here, same as enemyAIManageWorkers: an idle enemy
+    // worker spends nearly all its time in the 3s rest cycle, not in
+    // UNIT_ACT_NONE.
+    if (u->unitAct == UNIT_ACT_NONE ||
+        u->unitAct == UNIT_ACT_RESTING_FOR_NEXT_TARGET_SEARCH) {
       if (d < bestIdleD) {
         bestIdleD = d;
         bestIdle = u;
@@ -17948,6 +19003,51 @@ int GameScene::enemyAICountPendingBuilds(int unitType, int ownerHQId) {
     n++;
   }
   return n;
+}
+
+// True when attacking the player requires a water crossing: some live enemy
+// HQ sits on a different land island than the player position nearest to it.
+// Player buildings anchor the check (units move around); when the player has
+// no buildings left, any living player unit is used instead. Gates the whole
+// naval line (Shipyard/Foundry, Shuttle/Ship/BattleShip production) so the AI
+// doesn't sink resources into a fleet on maps it can walk across.
+bool GameScene::enemyAINeedsCrossing() {
+  for (auto *u : enemyArray) {
+    if (!u || u->energy <= 0 || !u->isBuilding || !u->isBuildingComplete)
+      continue;
+    if (u->unitType != UNIT_CASTLE && u->unitType != UNIT_ORC_HQ)
+      continue;
+    Vec2 hqPos = u->getPosition();
+
+    bool found = false;
+    Vec2 best = Vec2::ZERO;
+    float bestD = FLT_MAX;
+    for (auto *h : heroArray) {
+      if (!h || h->energy <= 0 || !h->isBuilding)
+        continue;
+      float d = hqPos.distanceSquared(h->getPosition());
+      if (d < bestD) {
+        bestD = d;
+        best = h->getPosition();
+        found = true;
+      }
+    }
+    if (!found) {
+      for (auto *h : heroArray) {
+        if (!h || h->energy <= 0 || h->isBuilding)
+          continue;
+        float d = hqPos.distanceSquared(h->getPosition());
+        if (d < bestD) {
+          bestD = d;
+          best = h->getPosition();
+          found = true;
+        }
+      }
+    }
+    if (found && !isSameIsland(hqPos, best))
+      return true;
+  }
+  return false;
 }
 
 void GameScene::enemyAICheckBuildings() {
@@ -18130,116 +19230,163 @@ void GameScene::enemyAICheckBuildings() {
         n++;
     return n;
   };
+  // Water buildings (Shipyard/Foundry/Refinery) are shared side-wide: one of
+  // each per AI, built by whichever HQ can reach water, so they are counted
+  // across every owner - pending builders included.
+  auto countAnywhere = [&](int type) {
+    int n = 0;
+    for (auto *u : snap)
+      if (u->unitType == type && u->isBuilding && u->energy > 0)
+        n++;
+    n += enemyAICountPendingBuilds(type, -1);
+    return n;
+  };
+  auto countAnywhereCompleted = [&](int type) {
+    int n = 0;
+    for (auto *u : snap)
+      if (u->unitType == type && u->isBuilding && u->isBuildingComplete &&
+          u->energy > 0)
+        n++;
+    return n;
+  };
+
+  // ── Naval-line gating ──
+  // The Shipyard/Foundry/Refinery line only gets resources when the water is
+  // actually needed: the player sits across a crossing, or the map has oil
+  // and something *outside* the naval line itself consumes oil (the naval
+  // units' own oil costs must not count, or the gate would be circular).
+  bool navyUseful = enemyAINeedsCrossing();
+  if (!navyUseful && mapHasWater) {
+    bool oilSpotExists = false;
+    for (auto *m : mutualArray)
+      if (m->unitType == UNIT_OIL_SPOT && m->energy > 0) {
+        oilSpotExists = true;
+        break;
+      }
+    if (oilSpotExists) {
+      int shipyardType = isOrc ? UNIT_ORC_SHIPYARD : UNIT_HUMAN_SHIPYARD;
+      const EAIProdEntry *prodTable = isOrc ? kOrcProd : kHumanProd;
+      for (int i = 0; i < buildListSize && !navyUseful; i++)
+        if (!eaiIsWaterBuildType(buildList[i].unitType) &&
+            getOilPriceForUnit(buildList[i].unitType) > 0)
+          navyUseful = true;
+      for (int pi = 0; prodTable[pi].buildType != -1 && !navyUseful; pi++) {
+        if (prodTable[pi].buildType == shipyardType)
+          continue;
+        for (int ui = 0; ui < 4 && prodTable[pi].units[ui] != -1; ui++)
+          if (getOilPriceForUnit(prodTable[pi].units[ui]) > 0) {
+            navyUseful = true;
+            break;
+          }
+      }
+    }
+  }
 
   for (auto *hq : hqs) {
     Vec2 hqPos = hq->getPosition();
 
-    const EAIBuildDef *pick = nullptr;
+    // Candidates in priority order. The first affordable one that actually
+    // places gets built. A candidate with no free tile falls through to the
+    // next (e.g. an inland HQ skips the Shipyard and still builds the rest;
+    // some other HQ near water will place it). An unaffordable candidate
+    // ends this HQ's pass instead, so the AI saves toward the priority item
+    // rather than buying cheaper lower-priority ones.
+    std::vector<const EAIBuildDef *> candidates;
 
     if (foodShort) {
       int foodType = isOrc ? UNIT_BARBECUE : UNIT_FARM;
-      if (countNear(foodType, hq) < kEAIMaxFoodBuildingsPerHQ)
+      if (!isBuildTypeDisabled(foodType) &&
+          countNear(foodType, hq) < kEAIMaxFoodBuildingsPerHQ)
         for (int i = 0; i < buildListSize; i++)
           if (buildList[i].unitType == foodType) {
-            pick = &buildList[i];
+            candidates.push_back(&buildList[i]);
             break;
           }
     }
 
-    if (!pick) {
-      for (int i = 0; i < buildListSize; i++) {
-        const EAIBuildDef &def = buildList[i];
-        if (eaiIsWaterBuildType(def.unitType) && !mapHasWater)
+    for (int i = 0; i < buildListSize; i++) {
+      const EAIBuildDef &def = buildList[i];
+      if (!candidates.empty() && candidates[0] == &def)
+        continue; // already queued by the food-shortage branch
+      if (isBuildTypeDisabled(def.unitType))
+        continue; // banned on this map (MapEditor Restrict panel)
+      if (eaiIsWaterBuildType(def.unitType)) {
+        if (!mapHasWater || !navyUseful)
           continue;
-        if (countNear(def.unitType, hq) > 0)
+        if (countAnywhere(def.unitType) > 0)
           continue;
-        if (def.prereqType != -1 && countNearCompleted(def.prereqType, hq) == 0)
-          continue;
-        pick = &def;
-        break;
+      } else if (countNear(def.unitType, hq) > 0) {
+        continue;
       }
+      if (def.prereqType != -1) {
+        bool prereqDone = eaiIsWaterBuildType(def.prereqType)
+                              ? countAnywhereCompleted(def.prereqType) > 0
+                              : countNearCompleted(def.prereqType, hq) > 0;
+        if (!prereqDone)
+          continue;
+      }
+      candidates.push_back(&def);
     }
 
-    if (!pick) {
+    if (candidates.empty()) {
       log("enemyAI[build]: HQ at (%.0f,%.0f) has nothing left to build in its "
           "list",
           hqPos.x, hqPos.y);
       continue;
     }
 
-    int gCost = getGoldPriceForUnit(pick->unitType);
-    int lCost = getLumberPriceForUnit(pick->unitType);
-    int oCost = getOilPriceForUnit(pick->unitType);
-    if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) {
-      log("enemyAI[build]: waiting on resources for unitType %d (have "
-          "%d/%d/%d, need %d/%d/%d)",
-          pick->unitType, enemyGold, enemyLumber, enemyOil, gCost, lCost,
-          oCost);
-      continue;
-    }
+    for (const EAIBuildDef *pick : candidates) {
+      int gCost = getGoldPriceForUnit(pick->unitType);
+      int lCost = getLumberPriceForUnit(pick->unitType);
+      int oCost = getOilPriceForUnit(pick->unitType);
+      if (enemyGold < gCost || enemyLumber < lCost || enemyOil < oCost) {
+        log("enemyAI[build]: waiting on resources for unitType %d (have "
+            "%d/%d/%d, need %d/%d/%d)",
+            pick->unitType, enemyGold, enemyLumber, enemyOil, gCost, lCost,
+            oCost);
+        break; // save toward this one instead of buying a cheaper item
+      }
 
-    bool isWaterPick = eaiIsWaterBuildType(pick->unitType);
-    Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
-    int w = (int)sz.x, h = (int)sz.y;
-    int bx, by;
-    bool foundTile = isWaterPick
-                         ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
-                         : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
-    if (!foundTile) {
-      log("enemyAI[build]: could not find a free tile for unitType %d near HQ "
-          "(%.0f,%.0f)",
-          pick->unitType, hqPos.x, hqPos.y);
-      continue;
-    }
+      bool isWaterPick = eaiIsWaterBuildType(pick->unitType);
+      Vec2 sz = GM->getBuildingOccupySize(pick->unitType);
+      int w = (int)sz.x, h = (int)sz.y;
+      int bx, by;
+      bool foundTile = isWaterPick
+                           ? enemyAIFindWaterBuildTile(hqPos, w, h, bx, by)
+                           : enemyAIFindBuildTile(hqPos, w, h, bx, by, false);
+      if (!foundTile) {
+        log("enemyAI[build]: could not find a free tile for unitType %d near "
+            "HQ (%.0f,%.0f)",
+            pick->unitType, hqPos.x, hqPos.y);
+        continue; // this HQ can't place it - try the next candidate
+      }
 
-    EnemyBase *worker =
-        enemyAIFindBuilderWorker(getPositionFromTileCoordinate(bx, by));
-    if (worker == nullptr) {
-      log("enemyAI[build]: no available worker to build unitType %d",
-          pick->unitType);
-      continue;
+      EnemyBase *worker =
+          enemyAIFindBuilderWorker(getPositionFromTileCoordinate(bx, by));
+      if (worker == nullptr) {
+        log("enemyAI[build]: no available worker to build unitType %d",
+            pick->unitType);
+        break; // no worker now means no worker for any candidate this pass
+      }
+      addEnemyGold(-gCost);
+      addEnemyLumber(-lCost);
+      addEnemyOil(-oCost);
+      // Stamp ownership on the builder; Movable::stopNew() copies it onto the
+      // building on arrival so it counts toward this HQ's caps next pass.
+      worker->aiOwnerHQId = hq->aiOwnerHQId;
+      setWorkerToBuild(worker, pick->unitType, bx, by);
+      log("enemyAI[build]: dispatched worker to build unitType %d at tile "
+          "(%d,%d)",
+          pick->unitType, bx, by);
+      break;
     }
-    addEnemyGold(-gCost);
-    addEnemyLumber(-lCost);
-    addEnemyOil(-oCost);
-    // Stamp ownership on the builder; Movable::stopNew() copies it onto the
-    // building on arrival so it counts toward this HQ's caps next pass.
-    worker->aiOwnerHQId = hq->aiOwnerHQId;
-    setWorkerToBuild(worker, pick->unitType, bx, by);
-    log("enemyAI[build]: dispatched worker to build unitType %d at tile "
-        "(%d,%d)",
-        pick->unitType, bx, by);
   }
 }
 
 // ── Unit training
 // ─────────────────────────────────────────────────────────────
-
-struct EAIProdEntry {
-  int buildType;
-  int units[4]; // -1 terminates
-};
-
-static const EAIProdEntry kHumanProd[] = {
-    {UNIT_BARRACKS, {UNIT_SWORDMAN, UNIT_ARCHER, -1, -1}},
-    {UNIT_FACTORY, {UNIT_CATAPULT, -1, -1, -1}},
-    {UNIT_AIRPORT, {UNIT_HELICOPTER, -1, -1, -1}},
-    // Priority order: OilShip (economy) > Shuttle (cheap utility) >
-    // Ship (main workhorse) > BattleShip (priciest, capped low).
-    {UNIT_HUMAN_SHIPYARD,
-     {UNIT_HUMAN_OIL_SHIP, UNIT_HUMAN_SHUTTLE, UNIT_HUMAN_SHIP,
-      UNIT_HUMAN_BATTLE_SHIP}},
-    {-1, {-1, -1, -1, -1}},
-};
-static const EAIProdEntry kOrcProd[] = {
-    {UNIT_ORC_BARRACKS, {UNIT_ORC_AXE, UNIT_ORC_SPEAR, -1, -1}},
-    {UNIT_ORC_TROLL_HOUSE, {UNIT_TROLL, -1, -1, -1}},
-    {UNIT_TEMPLE, {UNIT_GOBLIN, UNIT_GOBLIN_BOMB, -1, -1}},
-    {UNIT_ORC_SHIPYARD,
-     {UNIT_ORC_OIL_SHIP, UNIT_ORC_SHUTTLE, UNIT_ORC_SHIP,
-      UNIT_ORC_BATTLE_SHIP}},
-    {-1, {-1, -1, -1, -1}},
-};
+// (EAIProdEntry / kHumanProd / kOrcProd are defined above, next to the build
+// lists, because enemyAICheckBuildings also reads them.)
 
 // Per-unit-type population cap for AI production, overriding the generic
 // kEAIMaxUnitsPerType for units that need their own ceiling.
@@ -18290,6 +19437,22 @@ void GameScene::enemyAITrainUnits() {
     if (m->unitType == UNIT_OIL_SPOT && m->energy > 0)
       oilSpotCount++;
 
+  // Transports and warships only matter when the player must be reached
+  // across water. OilShips are exempt: they are the oil economy and are
+  // already capped by oilSpotCount.
+  bool crossingNeeded = enemyAINeedsCrossing();
+
+  // Shuttles additionally require a completed Foundry, the same prerequisite
+  // the player builds under.
+  bool hasFoundry = false;
+  for (auto *u : snap)
+    if ((u->unitType == UNIT_HUMAN_FOUNDRY ||
+         u->unitType == UNIT_ORC_FOUNDRY) &&
+        u->isBuilding && u->isBuildingComplete && u->energy > 0) {
+      hasFoundry = true;
+      break;
+    }
+
   for (auto *bld : snap) {
     if (!bld->isBuilding || !bld->isBuildingComplete || bld->energy <= 0)
       continue;
@@ -18309,6 +19472,8 @@ void GameScene::enemyAITrainUnits() {
 
     // Castle / HQ → workers
     if (bld->unitType == UNIT_CASTLE || bld->unitType == UNIT_ORC_HQ) {
+      if (isTrainTypeDisabled(workerType))
+        continue; // banned on this map (MapEditor Restrict panel, Units tab)
       int targetWorkers = hqCount * kEAITargetWorkers;
       if (counts[workerType] >= targetWorkers)
         continue;
@@ -18363,6 +19528,17 @@ void GameScene::enemyAITrainUnits() {
       for (int step = 0; step < listLen; step++) {
         int ui = (start + step) % listLen;
         int uType = prodTable[pi].units[ui];
+        if (isTrainTypeDisabled(uType))
+          continue; // banned on this map (MapEditor Restrict panel, Units tab)
+        bool isTransport =
+            (uType == UNIT_HUMAN_SHUTTLE || uType == UNIT_ORC_SHUTTLE);
+        bool isWarship =
+            (uType == UNIT_HUMAN_SHIP || uType == UNIT_ORC_SHIP ||
+             uType == UNIT_HUMAN_BATTLE_SHIP || uType == UNIT_ORC_BATTLE_SHIP);
+        if ((isTransport || isWarship) && !crossingNeeded)
+          continue;
+        if (isTransport && !hasFoundry)
+          continue;
         int cap = enemyAIUnitCap(uType, oilSpotCount);
         if (counts[uType] >= cap)
           continue;
@@ -18419,6 +19595,12 @@ bool GameScene::enemyAIIsRallyCombatType(int unitType) {
   if (unitType == UNIT_HUMAN_OIL_SHIP || unitType == UNIT_ORC_OIL_SHIP)
     return false;
   if (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE)
+    return false;
+  // Warships can't stand on the land rally point - they would grind failed
+  // path searches at the shore forever. They fight from the water on their
+  // own instead of joining land waves.
+  if (unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP ||
+      unitType == UNIT_HUMAN_BATTLE_SHIP || unitType == UNIT_ORC_BATTLE_SHIP)
     return false;
   return true;
 }

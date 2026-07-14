@@ -70,6 +70,31 @@ using namespace cocos2d::ui;
 #define SHAKE_ONCE CallFunc::create(CC_CALLBACK_0(GameScene::shakeScreenOnce, this))
 #define strmake StringUtils::format
 
+// --- temporary performance instrumentation ---------------------------------
+// Accumulates per-system CPU time on the main thread and reports every 5
+// seconds via cocos log() AND appends to perf_log.txt in the working
+// directory. Remove once the frame-drop investigation is done.
+struct PerfProbe {
+    static long long frameUs;      // whole gravityUpdate tick
+    static long long frameMaxUs;   // worst single tick in the window
+    static long long moveUs;       // updateUnitMoveNew total (includes target+path)
+    static long long targetUs;     // findTargetHero/findTargetEnemy
+    static long long pathUs;       // GameManager::getPath / getPathForShip
+    static long long pathMaxUs;    // worst single path request in the window
+    static long long fogUs;        // GameScene::updateFog
+    static long long minimapUs;    // updateMiniMapForMoving
+    static long long aiUs;         // updateEnemyAI (1/sec)
+    static int frameCount;
+    static int targetCalls;
+    static int pathCalls2; // "2" to avoid clashing with existing getPathCall
+    static double sinceLogSec;
+    static long long nowUs();
+    // Called once per gravityUpdate tick; logs+resets every 5 seconds.
+    static void report(float dt, int heroes, int enemies);
+};
+#define PERF_NOW PerfProbe::nowUs
+// ----------------------------------------------------------------------------
+
 #define ITEM_TYPE_WEAPON 0
 #define ITEM_TYPE_HELMET 1
 #define ITEM_TYPE_SHIELD 2
@@ -488,6 +513,9 @@ using namespace cocos2d::ui;
 // the building-death path can stop just that action (never stopAllActions on
 // a worker that may be carrying resources).
 #define ACTION_TAG_BUILD_COMPLETE 2
+// Endless gentle bobbing rotation ships run on themselves so they read as
+// floating on water. Tagged so nothing else accidentally stops/duplicates it.
+#define ACTION_TAG_SHIP_ROCK 3
 
 #define GUN_ORDINARY 0
 

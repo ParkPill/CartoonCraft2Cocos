@@ -13,6 +13,8 @@
 #define FOG_SEEN_LITTLE 2
 #define FOG_SEEN_NOW 3
 #define FOG_SIZE 50
+// Unit sight radius multiplier for fog reveal: 1 = original range, 2 = doubled.
+#define FOG_SIGHT_MULTIPLIER 2
 
 
 #include "cocos2d.h"

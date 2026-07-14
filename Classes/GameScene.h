@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <utility>
 #include <vector>
 
 // #include "../Source/Colyseus/Client.hpp"
@@ -291,14 +292,14 @@ protected:
   struct RuntimeTriggerAction {
     int type = 0; // 0 DisplayMessage,1 CreateUnit,2 RemoveUnit,3 SetSwitch,
                   // 4 Victory,5 Defeat,6 Wait,7 CenterCamera,8 Talk,9 RevealFog,
-                  // 10 OrderAttack,11 MoveUnit,12 LockControl
+                  // 10 OrderAttack,11 MoveUnit,12 LockControl,13 TeleportUnit
     std::string message;
     int unitSide = 0;
     int unitTypeIndex = -1;
     int tileX = 0;
     int tileY = 0;
     int targetObjectId = -1; // -1 = use tileX/tileY, else a placed object's id
-    int sourceObjectId = -1; // MoveUnit: placed object id of the unit to move
+    int sourceObjectId = -1; // MoveUnit/TeleportUnit: placed object id of the unit to move
     int count = 1;           // RevealFog: radius in fog tiles
     int switchIndex = 0;
     int switchAction = 0; // 0 Set,1 Clear,2 Toggle
@@ -306,6 +307,10 @@ protected:
     float talkSeconds = 3.0f;  // Talk: seconds the speech bubble stays on screen
     bool visionEnabled = true; // RevealFog: true=reveal, false=cancel
     bool controlLocked = true; // LockControl: true=lock player controls, false=unlock
+    // Any type: start in the same frame as the previous action instead of
+    // waiting for its pacing (Wait delay / Talk duration / MoveUnit arrival)
+    // to finish - see runTriggerActionStep's group handling.
+    bool runWithPrevious = false;
   };
   // A fog region made permanently visible by a TACT_REVEAL_FOG trigger action,
   // independent of unit presence. Stored as world-space centre + fog-tile radius.
@@ -322,6 +327,18 @@ protected:
     bool hasFired = false; // true = permanently deactivated (isRepeat=false after first fire)
   };
   std::vector<RuntimeTrigger> activeTriggers;
+  // Building unit types (UNIT_*) banned on this stage for every side, the
+  // AI included - the stage JSON's top-level "disabledBuildings" array
+  // (MapEditor's Restrict panel; stored there as editor roster indices and
+  // mapped through kEditorTypeToUnit at load). Enforced in tryBuilding()
+  // and the enemy-AI build passes; HudLayer grays the build buttons via
+  // isBuildTypeDisabled().
+  std::set<int> disabledBuildUnitTypes;
+  // Trainable unit types (UNIT_*) banned on this stage for every side - the
+  // stage JSON's top-level "disabledUnits" array (MapEditor's Restrict panel,
+  // Units tab). Enforced in tryCreateUnit() and enemyAITrainUnits(); HudLayer
+  // grays the production buttons via isTrainTypeDisabled().
+  std::set<int> disabledTrainUnitTypes;
   bool triggerSwitches[16] = {false};
   std::vector<TriggerRevealedFogRegion> triggerRevealedFogRegions;
   // Set by a TACT_LOCK_CONTROL trigger action. While true, the Win32 RTS
@@ -350,22 +367,28 @@ protected:
   // condition only reads ids in this set as "was alive, now gone" - a Flag
   // or a stale id must not count as already dead at game start.
   std::set<int> spawnedUnitEditorObjectIds;
-  // The single currently-visible Talk speech bubble, if any (shared across
-  // all triggers - a second Talk firing concurrently from a different
-  // trigger will replace it, see runTriggerActions).
-  cocos2d::Node *activeTalkBubble = nullptr;
-  // Editor object id of the unit the bubble follows while visible (-1 = fixed
-  // position, e.g. the target was a Flag or a bare tile coordinate). Stored as
-  // an id rather than a pointer so a unit that dies mid-Talk can't leave a
-  // dangling reference - triggerTalkBubbleUpdate re-finds it every tick.
-  int activeTalkBubbleTargetObjectId = -1;
-  // Typewriter reveal state for the active Talk bubble. The full message is
-  // kept as UTF-16 so the per-character reveal can't split a multi-byte
-  // (Korean) UTF-8 sequence; the label starts empty and gains one character
-  // per triggerTalkTypingUpdate tick while the bubble stays full-text sized.
-  cocos2d::Label *activeTalkLabel = nullptr;
-  std::u16string activeTalkFullText;
-  int activeTalkTypedChars = 0;
+  // The currently-visible Talk speech bubbles. Usually a single one, but a
+  // Talk flagged runWithPrevious starts in the same step as the Talk before
+  // it, so two (or more) can be on screen at once - each needs its own
+  // follow-target and typewriter state. They are all dismissed together when
+  // the next (non-grouped) step starts - see executeTriggerAction.
+  struct TriggerTalkBubble {
+    cocos2d::Node *bubble = nullptr;
+    // Editor object id of the unit the bubble follows while visible (-1 =
+    // fixed position, e.g. the target was a Flag or a bare tile coordinate).
+    // Stored as an id rather than a pointer so a unit that dies mid-Talk
+    // can't leave a dangling reference - triggerTalkBubbleUpdate re-finds it
+    // every tick.
+    int followObjectId = -1;
+    // Typewriter reveal state. The full message is kept as UTF-16 so the
+    // per-character reveal can't split a multi-byte (Korean) UTF-8 sequence;
+    // the label starts empty and gains one character per
+    // triggerTalkTypingUpdate tick while the bubble stays full-text sized.
+    cocos2d::Label *label = nullptr;
+    std::u16string fullText;
+    int typedChars = 0;
+  };
+  std::vector<TriggerTalkBubble> activeTalkBubbles;
 
   void loadTriggersFromEditorJsonFile(const std::string &path);
   void updateTriggers();
@@ -378,12 +401,17 @@ protected:
   // scheduled callbacks that step through it.
   void runTriggerActionStep(std::shared_ptr<std::vector<RuntimeTriggerAction>> actions,
                              size_t index, bool flipOutcome);
-  // Polls once per frame until the unit named by sourceObjectId reaches
-  // destPos (or dies, or a safety timeout elapses so a stuck/blocked path
-  // can't hang the trigger sequence forever), then resumes at actions[nextIndex].
-  void scheduleTriggerMoveWait(int sourceObjectId, const cocos2d::Vec2 &destPos,
+  // Polls once per frame until every unit in `moves` (sourceObjectId ->
+  // destination) reaches its destination (or dies, or a shared safety timeout
+  // elapses so a stuck/blocked path can't hang the trigger sequence forever)
+  // AND at least minDelay seconds have passed (the longest Wait/Talk pacing
+  // among the group's other actions - a grouped Talk 3s must still hold the
+  // next step for 3s even if the moved unit arrives sooner), then resumes at
+  // actions[nextIndex]. Multiple entries happen when runWithPrevious groups
+  // several MoveUnit actions into one step.
+  void scheduleTriggerMoveWait(const std::vector<std::pair<int, cocos2d::Vec2>> &moves,
                                std::shared_ptr<std::vector<RuntimeTriggerAction>> actions,
-                               size_t nextIndex, bool flipOutcome);
+                               size_t nextIndex, bool flipOutcome, float minDelay);
   // Unit Arrives feedback: a green blink circle (same look as a unit's own
   // selection ring) that plays once under the target flag/object and then
   // removes itself, so the player sees the condition trip.
@@ -397,6 +425,10 @@ protected:
   EnemyBase *findLiveUnitByEditorObjectId(int targetObjectId);
   void showTriggerTalkBubble(const std::string &message, const cocos2d::Vec2 &worldPos,
                              EnemyBase *followTarget = nullptr);
+  // Seconds the typewriter reveal needs to show `message` (post-localization,
+  // "(!)" marker stripped) in full - used by runTriggerActionStep so a Talk
+  // step is never paced shorter than its own text reveal.
+  float triggerTalkTypingDurationSeconds(const std::string &message);
   void triggerTalkBubbleUpdate(float dt);
   void triggerTalkTypingUpdate(float dt);
   void clearTriggerTalkBubble();
@@ -407,6 +439,16 @@ protected:
   void receivingData(float dt);
 
 public:
+  // True when the stage's editor JSON bans constructing this building type
+  // (see disabledBuildUnitTypes above).
+  bool isBuildTypeDisabled(int unitType) const {
+    return disabledBuildUnitTypes.count(unitType) > 0;
+  }
+  // True when the stage's editor JSON bans producing this unit type
+  // (see disabledTrainUnitTypes above).
+  bool isTrainTypeDisabled(int unitType) const {
+    return disabledTrainUnitTypes.count(unitType) > 0;
+  }
   Movable *findTargetEnemy(Movable *finder);
   Movable *findTargetHero(Movable *finder);
   void updateUnitMove(float dt);
@@ -503,6 +545,11 @@ public:
   // entries naturally relocate as ships actually move. Public so Movable.cpp
   // (a different, unrelated class) can read/update it via WORLD->.
   bool isWaterTileAt(int tileX, int tileY);
+  // Fully-water tile (all four terrain corners water). isWaterTileAt also
+  // accepts the coast-transition tiles, which are partially (sometimes
+  // mostly) land - fine to sail through, but a ship SPAWNED on one sits
+  // visibly beached on the coast.
+  bool isOpenWaterTileAt(int tileX, int tileY);
   // checkOtherShips=false skips the ship-vs-ship occupancy test and only
   // reports water-building tiles as blocked. Oil ships pass it false so they
   // move like workers - routed around terrain/buildings by their water A* but
@@ -518,12 +565,26 @@ public:
   void getCargoSize(int unitType, int &cols, int &rows);
   bool findCargoSlot(EnemyBase *shuttle, int cols, int rows, int &outCol, int &outRow);
   bool loadUnitToShuttle(EnemyBase *shuttle, EnemyBase *unit);
+  // BFS outward from the shuttle over the connected shore and return up to
+  // `count` free land positions (nearest first) for unloading cargo.
+  std::vector<cocos2d::Vec2> findUnloadPositions(EnemyBase *shuttle, int count);
   void unloadShuttle(EnemyBase *shuttle);
   void unloadSingleUnitFromShuttle(EnemyBase *shuttle, EnemyBase *unit);
   void showShuttleCargoPanel(EnemyBase *shuttle);
   void hideShuttleCargoPanel();
   void refreshShuttleCargoPanel();
   EnemyBase *shuttlePanelTarget = nullptr;
+  // Set by the cargo panel's unload button: the Shuttle waiting for the
+  // player to click a land tile to unload at. The next world click (doClick)
+  // on land is consumed as the unload destination; right-click cancels.
+  EnemyBase *unloadClickShuttle = nullptr;
+  // Player picked `landPos` for unloadClickShuttle: sail to the shore
+  // nearest that spot (within the shuttle's water region) and unload all
+  // cargo on arrival.
+  void beginManualUnloadAt(EnemyBase *shuttle, cocos2d::Vec2 landPos);
+  // Per-second: advances Shuttles with a pending manualUnloadTarget
+  // (re-issues stalled sail orders, unloads on arrival).
+  void updateManualUnloadSails();
 
   // Island/water-region geography (for cross-island attack-move via Shuttle).
   // Computed once, lazily, from static terrain only (soilLayer/stageLayer) -
@@ -545,6 +606,12 @@ public:
   // Nearest water tile bordering worldTarget's island (a valid Shuttle
   // drop-off coast for reaching worldTarget). Vec2::ZERO if none found.
   cocos2d::Vec2 findCoastalDropPoint(cocos2d::Vec2 worldTarget);
+  // Like findCoastalDropPoint, but restricted to water tiles in `shuttle`'s
+  // own water region, so the returned pickup point is actually reachable by
+  // that shuttle. Used when boarders right-click a shuttle and it must sail
+  // out to meet them at their shore. Vec2::ZERO if none found.
+  cocos2d::Vec2 findShuttlePickupPoint(EnemyBase *shuttle,
+                                       cocos2d::Vec2 unitsWorldPos);
 
   // Auto-ferry: called when a ground unit's attack-move target turned out to
   // be unreachable by land because it's a single water-crossing away. Finds
@@ -697,6 +764,8 @@ public:
   void setPlayerPosition(cocos2d::Vec2 position);
   void bubbleUpdate(float dt);
   void gravityUpdate(float dt);
+  void gravityUpdateBody(float dt); // real tick; gravityUpdate wraps it for perf timing
+  void updateUnitMoveNewBody(float dt); // wrapped by updateUnitMoveNew for perf timing
   void gravityUpdateHandler(float dt);
   void gravityUpdateForStraight(float dt);
   void gravityUpdateForCustomMoving(float dt);
@@ -784,6 +853,14 @@ public:
   cocos2d::Vec2 getCoordinateFromPosition(cocos2d::Vec2 position,
                                           TMXTiledMap *map);
   cocos2d::Vec2 getCoordinateFromPosition(cocos2d::Vec2 position);
+  // An OilSpot's sprite is nudged off its logical tile so its image lines up
+  // under the future OilExtractor (see kOilSpotVisualOffset in GameScene.cpp);
+  // this undoes that nudge to recover the single tile the spot occupies.
+  cocos2d::Vec2 getOilSpotTile(Movable *spot);
+  // True when tile (tx,ty) falls inside an OilSpot's reserved block (the
+  // spot tile plus a 2-tile ring). Water buildings other than the
+  // OilExtractor must stay out of it - see the comment on the definition.
+  bool isTileInOilSpotZone(int tx, int ty);
   cocos2d::Rect tileRectFromTileCoords(cocos2d::Vec2 tileCoords,
                                        TMXTiledMap *map);
   void getDown();
@@ -1283,6 +1360,9 @@ public:
   int enemyAINearestHQOwnerId(cocos2d::Vec2 pos);
   EnemyBase *enemyAIFindBuilderWorker(cocos2d::Vec2 nearPos);
   int enemyAICountPendingBuilds(int unitType, int ownerHQId);
+  // True when attacking the player requires a water crossing from some enemy
+  // HQ; gates the AI's naval buildings and ship production.
+  bool enemyAINeedsCrossing();
   void refundEnemyBuildCost(int unitType);
   void updateFoodInUse();
   void addFoodMax(int amount);

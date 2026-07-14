@@ -7,6 +7,7 @@
 #include <vector>
 #include <functional>
 #include <utility>
+#include <set>
 
 // Standalone terrain editor. Deliberately has no dependency on Movable /
 // EnemyBase / HelloWorldScene — it only paints terrain and places object
@@ -167,6 +168,11 @@ private:
         // interfere. `controlLocked` = true locks, false unlocks; a later
         // trigger firing this action with false is how a lock gets released.
         TACT_LOCK_CONTROL,
+        // Same fields as MOVE_UNIT (sourceObjectId + targetObjectId/tileX/
+        // tileY) but the unit is placed at the destination instantly instead
+        // of walking there. Appended at the end so existing saved maps' int
+        // action-type values keep meaning what they already meant.
+        TACT_TELEPORT_UNIT,
         TACT_TYPE_COUNT
     };
 
@@ -236,6 +242,11 @@ private:
         float talkSeconds = 3.0f;            // TALK: seconds the speech bubble stays on screen
         bool visionEnabled = true;           // REVEAL_FOG: true = reveal, false = cancel revelation
         bool controlLocked = true;           // LOCK_CONTROL: true = lock player controls, false = unlock
+        // Any type: start this action in the same frame as the action before
+        // it, instead of waiting for that action's pacing (a Wait's delay, a
+        // Talk's duration, a MoveUnit's arrival) to finish - lets e.g. a unit
+        // talk while it walks. No effect on the first action of a trigger.
+        bool runWithPrevious = false;
     };
 
     struct Trigger {
@@ -454,6 +465,8 @@ private:
     int editingActionIndex = -1; // -1 = adding a new action
     TriggerAction actionDraft;
     cocos2d::Label* lblActType = nullptr;
+    // "Timing:" row, shown for every action type - runWithPrevious toggle.
+    cocos2d::Label* lblActRunWithPrev = nullptr;
     // Each action type's fields live in their own self-contained row group;
     // only the group matching actionDraft.type is shown at a time.
     cocos2d::Node* rowActMessage = nullptr;
@@ -550,6 +563,27 @@ private:
     cocos2d::ui::TextField* tfResizeWidth = nullptr;
     cocos2d::ui::TextField* tfResizeHeight = nullptr;
     bool isResizeMapPanelOpen = false;
+
+    // Map-wide production restrictions ("this stage can't build a Shipyard"
+    // / "can't train Catapults"). Each holds kObjectTypes indices banned on
+    // this map for every side including the AI. Saved as the top-level
+    // "disabledBuildings" / "disabledUnits" JSON arrays (absent = nothing
+    // banned); GameScene maps the indices to UNIT_* values at load and
+    // enforces them in tryBuilding()/tryCreateUnit() and the enemy-AI passes.
+    std::set<int> disabledBuildings;
+    std::set<int> disabledUnits;
+    cocos2d::Node* mapSettingsPanel = nullptr;
+    bool isMapSettingsPanelOpen = false;
+    int mapSettingsTab = 0; // 0 = Buildings, 1 = Units
+    std::vector<cocos2d::ui::Scale9Sprite*> mapSettingsTabBgs;
+    // The Buildings / Units grids each live in their own container (one shown
+    // at a time). Parallel arrays: kObjectTypes index and its toggle-button bg.
+    cocos2d::Node* mapSettingsBuildingContainer = nullptr;
+    cocos2d::Node* mapSettingsUnitContainer = nullptr;
+    std::vector<int> mapSettingsBuildingIndices;
+    std::vector<int> mapSettingsUnitIndices;
+    std::vector<cocos2d::ui::Scale9Sprite*> mapSettingsBuildingBgs;
+    std::vector<cocos2d::ui::Scale9Sprite*> mapSettingsUnitBgs;
 
     cocos2d::EventListenerMouse* mouseListener = nullptr;
     cocos2d::EventListenerTouchOneByOne* touchListener = nullptr;
@@ -669,6 +703,19 @@ private:
     void onConfirmResizeMap();
     void resizeMap(int newWidth, int newHeight);
 
+    void setupMapSettingsPanel();
+    // Builds a grid of toggle buttons (one per index in `typeIndices`) into
+    // `container`, filling `outBgs`. Shared by both the Buildings and Units tabs.
+    void buildMapSettingsGrid(cocos2d::Node* container, const std::vector<int>& typeIndices,
+                              std::vector<cocos2d::ui::Scale9Sprite*>& outBgs,
+                              float panelWidth, float topY);
+    void showMapSettingsPanel();
+    void hideMapSettingsPanel();
+    void selectMapSettingsTab(int tab);
+    // Routes typeIndex into disabledBuildings or disabledUnits by its kind.
+    void toggleDisabledType(int typeIndex);
+    void refreshMapSettingsButtons();
+
     void setupUnitPropertiesBar();
     void selectSide(int side);
     int parsedHpOverride() const;
@@ -751,6 +798,7 @@ private:
     void cycleActionMoveSource(int dir);
     void cycleActionMoveTarget(int dir);
     void cycleActionLockControlState(int dir);
+    void cycleActionRunWithPrevious(int dir);
     int cycleTargetObjectId(int currentId, int dir) const;
     std::string describeTargetObject(int id) const;
     void refreshActionEditPanel();

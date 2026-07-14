@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build
 
 **Windows (primary development platform):**
-Open and build `proj.win32/CartoonCraftNV.sln` in Visual Studio. The CMakeLists.txt is a Cocos2d-x template stub and does not reflect the full source list; the VS project is the authoritative build configuration for Win32.
+Open and build `proj.win32/CartoonCraft2.sln` in Visual Studio (the project inside it is named `CartoonCraftNV.vcxproj`). The CMakeLists.txt is a Cocos2d-x template stub and does not reflect the full source list; the VS project is the authoritative build configuration for Win32.
 
 **Android:**
 Build via `proj.android/` using Android Studio or the Cocos command-line tools.

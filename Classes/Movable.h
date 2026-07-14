@@ -639,6 +639,20 @@ public:
     // island nearest autoFerryDropTarget, so it knows to auto-unload on arrival.
     bool isAutoFerrying = false;
     cocos2d::Vec2 autoFerryDropTarget = cocos2d::Vec2::ZERO;
+    // Distinguishes the two sail legs of an auto-ferry: false while sailing to
+    // the pickup coast / waiting for boarding, true once the drop-off order is
+    // issued. Without it, updateShuttleFerries would mistake arrival at the
+    // pickup point for arrival at the drop-off and unload the passengers back
+    // onto their own island.
+    bool isAutoFerrySailingToDrop = false;
+    // Ferry ticks spent holding the door for more walkers after the first
+    // passenger boarded (see updateShuttleFerries' departure policy).
+    int autoFerryWaitTicks = 0;
+    // Manual unload (Shuttle unload button, then the player clicks a land
+    // tile): the shore water tile this Shuttle is sailing to; all cargo is
+    // unloaded on arrival. Vec2::ZERO = inactive.
+    // See GameScene::beginManualUnloadAt / updateManualUnloadSails.
+    cocos2d::Vec2 manualUnloadTarget = cocos2d::Vec2::ZERO;
 };
 
 #endif

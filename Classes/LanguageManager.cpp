@@ -24,30 +24,27 @@ LanguageManager* LanguageManager::getInstance()
 }
 
 const char* LanguageManager::getLocalizedFont(){
-    
+    // Every supported language maps to a bundled font file so text renders
+    // identically on every machine (the old "Helveticas" name relied on the
+    // OS silently substituting a system font, which only worked on Android).
     cocos2d::LanguageType type = getLanguageType();
-    std::string str;
     if (type == LanguageType::KOREAN || type == LanguageType::ENGLISH) {
         return "BMDOHYEON.ttf";
+    }else if (type == LanguageType::JAPANESE) {
+        return "NotoSansJP-Regular.otf";
     }else{
-//        return "visitor1.ttf";
-//        return "arial";
-        return "Helveticas";
+        // italian/russian/spanish/french/german/turkish/pt - Arial covers
+        // Latin Extended (incl. Turkish) and Cyrillic; BMDOHYEON doesn't.
+        return "arial.ttf";
     }
 }
 cocos2d::Label* LanguageManager::getLocalizedLabel(const char* text, Color4B color, int size){
-    if (LanguageManager::getInstance()->getLanguageType() == LanguageType::KOREAN) {
-        Label* lbl = Label::createWithTTF(text, getLocalizedFont(), size);
-        lbl->setTextColor(color);
-        return lbl;
-    }else{
-        
-//                Label* lbl = Label::createWithTTF("label", "bitdust1.ttf", 80);
-        Label* lbl = Label::createWithSystemFont(text, getLocalizedFont(), size);
-        lbl->setTextColor(color);
-//        lbl->enableShadow();
-        return lbl;
-    }
+    // Always FreeType: every language's font is a bundled TTF/OTF now, and
+    // createWithSystemFont with a file name (not a family name) would just
+    // fall back to the OS default font.
+    Label* lbl = Label::createWithTTF(text, getLocalizedFont(), size);
+    lbl->setTextColor(color);
+    return lbl;
 }
 cocos2d::Label* LanguageManager::getLocalizedLabel(){
     return getLocalizedLabel("", Color4B::WHITE);

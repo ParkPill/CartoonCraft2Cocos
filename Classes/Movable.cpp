@@ -1689,7 +1689,8 @@ void Movable::attack() {
       missile =
           Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0, "canonBall.png");
       missile->runAction(RotateBy::create(1.5f, 540));
-    } else if (unitType == UNIT_HUMAN_BATTLE_SHIP) {
+    } else if (unitType == UNIT_HUMAN_BATTLE_SHIP ||
+               unitType == UNIT_ORC_BATTLE_SHIP) {
       missile = Movable::createMovable(UNIT_MISSILE_STRAIGHT, ap, 0,
                                        "battleCanonBall.png");
       missile->runAction(RepeatForever::create(RotateBy::create(1.0f, 360)));
@@ -1851,7 +1852,8 @@ void Movable::attack() {
     } else if (unitType == UNIT_WIZARD || unitType == UNIT_HERO_SANTA ||
                unitType == UNIT_HERO_PARASITE ||
                (unitType == UNIT_HERO_LADY_BEAR && !isSkillOn) ||
-               unitType == UNIT_HUMAN_BATTLE_SHIP) {
+               unitType == UNIT_HUMAN_BATTLE_SHIP ||
+               unitType == UNIT_ORC_BATTLE_SHIP) {
       if (unitType == UNIT_HERO_SANTA) {
         extraPos = Vec2(isFlippedX() ? 70 : -70, 70);
       }
@@ -2089,8 +2091,9 @@ bool Movable::getHitAndIsDead(int ap, Movable *attacker) {
   if (energy > 0 &&
       (unitType == UNIT_HUMAN_OIL_SHIP || unitType == UNIT_ORC_OIL_SHIP ||
        unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE)) {
-    // OilShip/Shuttle can't fight back - hop one water tile away from
-    // whatever hit them instead of just sitting there tanking more hits.
+    // OilShip/Shuttle can't fight back - sail a few water tiles away from
+    // whatever hit them (an ordinary move order, never a teleport) instead
+    // of just sitting there tanking more hits.
     WORLD->fleeShipFromAttacker(this, attacker);
   }
   if (WORLD->isMultiplay) {
@@ -2358,6 +2361,12 @@ void Movable::attackDdangTo(Vec2 pos) {
   cancelAttackSchedule();
 
   attackFlagPos = moveFlagPos;
+  // moveNew's failed-path branch only treats the failure as a failed
+  // attack-move (and thus considers the shuttle-ferry fallback) when
+  // targetMoveTilePos == attackFlagTilePos. Without stamping the tile here,
+  // orders issued through attackDdangTo (AI waves via attackNearHero /
+  // moveAndAttackTo) could never trigger a water crossing.
+  attackFlagTilePos = WORLD->getCoordinateFromPosition(attackFlagPos);
   unitAct = UNIT_ACT_ATTACK_DDANG;
   target = nullptr;
   //    log("attack ddang to %d", isEnemy);
@@ -2609,7 +2618,14 @@ void Movable::gatherOil(Movable *extractor) {
   unitActDetail = UNIT_ACT_DETAIL_IDLE;
   moveToPos = Vec2::ZERO;
   target = extractor;
-  moveFlagPos = extractor->getApproachingPoint(getPosition());
+  // getApproachingPoint() rejects candidates via the ground-occupancy grid,
+  // and for a building surrounded by water every ring tile is water (= blocked
+  // for ground units), so it returns a garbage point the water A* can't reach.
+  // Aim at the nearest free water tile bordering the extractor instead - the
+  // same targeting the depot return trip uses; docking still triggers off
+  // bounding-box overlap once the ship pulls alongside.
+  moveFlagPos =
+      WORLD->getOilShipReturnPoint((EnemyBase *)extractor, getPosition());
   currentOilExtractor = extractor;
   oilGatheringTimer = 3.0f;
 }
@@ -3172,6 +3188,21 @@ void Movable::cancelAttackSchedule() {
   this->stopActionByTag(attackTag);
 }
 void Movable::moveNew(float dt) { // movenew start
+  // Ships rock 3x faster while sailing than while anchored (the rock action
+  // is a tagged Speed wrapper created in GameScene::createUnit).
+  if (unitType == UNIT_HUMAN_SHUTTLE || unitType == UNIT_ORC_SHUTTLE ||
+      unitType == UNIT_HUMAN_SHIP || unitType == UNIT_ORC_SHIP ||
+      unitType == UNIT_HUMAN_BATTLE_SHIP || unitType == UNIT_ORC_BATTLE_SHIP ||
+      unitType == UNIT_HUMAN_OIL_SHIP || unitType == UNIT_ORC_OIL_SHIP) {
+    Speed *rock = static_cast<Speed *>(getActionByTag(ACTION_TAG_SHIP_ROCK));
+    if (rock != nullptr) {
+      bool sailing =
+          unitAct == UNIT_ACT_MOVE ||
+          unitActDetail == UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET ||
+          unitActDetail == UNIT_ACT_DETAIL_WALK_ROUTE;
+      rock->setSpeed(sailing ? 3.0f : 1.0f);
+    }
+  }
   attackCoolTime -= dt;
   Vec2 prePos = getPosition();
   int previousAct = unitAct;
@@ -3372,26 +3403,51 @@ void Movable::moveNew(float dt) { // movenew start
         if (currentOilExtractor != nullptr) {
           gatherOil(currentOilExtractor);
         }
-      } else if (returningPlace != nullptr && unitAct == UNIT_ACT_NONE) {
-        // Resume the delivery run only when the ship is idle
-        // (stopped short of the depot, or the player redirected it
-        // and it arrived there). Re-issuing the order every frame
-        // resets route-following (unitActDetail) and stalls the ship.
-        // Aim at a water tile beside the depot (see getOilShipReturnPoint) so
-        // the water A* can path around land instead of falling back to a
-        // straight line that beaches the ship.
-        this->moveFlagPos =
-            WORLD->getOilShipReturnPoint((EnemyBase *)returningPlace,
-                                         getPosition());
-        this->unitAct = UNIT_ACT_MOVE;
-        this->unitActDetail = UNIT_ACT_DETAIL_IDLE;
-        this->target = returningPlace;
-        this->moveToPos = Vec2::ZERO;
+      } else if (unitAct == UNIT_ACT_NONE) {
+        // No depot existed at pickup (returningPlace never set): keep
+        // re-checking while idle so the ship un-stucks itself as soon as a
+        // shipyard/refinery completes, instead of holding the oil forever.
+        if (returningPlace == nullptr) {
+          returningPlace = WORLD->getNearestOilDepot(getPosition(), isEnemy);
+        }
+        if (returningPlace != nullptr) {
+          // Resume the delivery run only when the ship is idle
+          // (stopped short of the depot, or the player redirected it
+          // and it arrived there). Re-issuing the order every frame
+          // resets route-following (unitActDetail) and stalls the ship.
+          // Aim at a water tile beside the depot (see getOilShipReturnPoint)
+          // so the water A* can path around land instead of falling back to a
+          // straight line that beaches the ship.
+          this->moveFlagPos =
+              WORLD->getOilShipReturnPoint((EnemyBase *)returningPlace,
+                                           getPosition());
+          this->unitAct = UNIT_ACT_MOVE;
+          this->unitActDetail = UNIT_ACT_DETAIL_IDLE;
+          this->target = returningPlace;
+          this->moveToPos = Vec2::ZERO;
+        }
       }
     } else if (currentOilExtractor != nullptr) {
-      // Moving toward extractor; hide inside when reached
-      if (currentOilExtractor->getBoundingBoxForIntersect().intersectsRect(
-              getBoundingBoxForIntersect())) {
+      // Moving toward extractor; hide inside when reached. The move order
+      // targets the nearest free water tile BESIDE the footprint (see
+      // gatherOil), and the ship's 60x60 intersect box can fall a few px
+      // short of the footprint edge from that tile's center - and always
+      // does from a corner tile - so also accept standing on any tile
+      // adjacent to the footprint.
+      bool dockAtExtractor =
+          currentOilExtractor->getBoundingBoxForIntersect().intersectsRect(
+              getBoundingBoxForIntersect());
+      if (!dockAtExtractor) {
+        EnemyBase *ext = (EnemyBase *)currentOilExtractor;
+        Vec2 t = WORLD->getCoordinateFromPosition(getPosition());
+        Vec2 st = ext->buildingStartCoordinate;
+        cocos2d::Size sz = ext->buildingOccupySize;
+        dockAtExtractor = (int)t.x >= (int)st.x - 1 &&
+                          (int)t.x <= (int)(st.x + sz.width) &&
+                          (int)t.y >= (int)st.y - 1 &&
+                          (int)t.y <= (int)(st.y + sz.height);
+      }
+      if (dockAtExtractor) {
         if (!isInExtractor) {
           isInExtractor = true;
           this->setVisible(false);
@@ -3466,15 +3522,16 @@ void Movable::moveNew(float dt) { // movenew start
        unitAct == UNIT_ACT_GATHER_TREE) &&
       unitActDetail != UNIT_ACT_DETAIL_ATTACK) {
     if (isTemporaryFlying) {
-      // Carrying wood back to the drop-off point flies the whole way,
-      // same as carrying gold - don't let the generic stuck-recovery
-      // auto-cancel cut that short just because the current tile
-      // happens to be unblocked (see attackTree()).
-      if (!isCarryingTree &&
-          !WORLD->isOccupied(WORLD->getCoordinateFromPosition(getPosition()))) {
+      // Temporary flight only exists to get off blocked tiles (leaving a
+      // mine, standing where a tree just fell). Land as soon as the current
+      // tile is free and re-path on the ground - wood carriers included, so
+      // the trip back to the drop-off walks around lakes instead of flying
+      // straight across the water. A carrier that is genuinely boxed in by
+      // forest gets its flight back in the failed-path branch below.
+      if (!WORLD->isOccupied(WORLD->getCoordinateFromPosition(getPosition()))) {
         isTemporaryFlying = false;
         moveToPos = Vec2::ZERO;
-        isRouteSet = false;
+        resetRoute();
       }
     }
     if (moveToPos == Vec2::ZERO && unitActDetail != UNIT_ACT_DETAIL_ATTACK) {
@@ -3564,10 +3621,34 @@ void Movable::moveNew(float dt) { // movenew start
         // buildings.
         array = GM->getPathForShip(selfPos, targetMoveTilePos);
         if (array == nullptr || array->count() == 0) {
-          // No water path found — fall back to straight line.
-          unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
-          array = PointArray::create(1);
-          array->addControlPoint(moveToPos);
+          float tileDx = targetMoveTilePos.x - selfPos.x;
+          if (tileDx < 0)
+            tileDx = -tileDx;
+          float tileDy = targetMoveTilePos.y - selfPos.y;
+          if (tileDy < 0)
+            tileDy = -tileDy;
+          if (tileDx <= 1 && tileDy <= 1) {
+            // Same or adjacent tile - A* returns nothing for a start==goal
+            // route; a straight step is safe here (the per-frame water check
+            // in the walk code still guards it).
+            unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
+            array = PointArray::create(1);
+            array->addControlPoint(moveToPos);
+          } else {
+            // No water route (target on land, in a disconnected water region,
+            // or walled off by water buildings). The old straight-line
+            // fallback plowed into the coast, where the per-frame water check
+            // blocks every step - a permanent wedge. Fail the order the same
+            // way ground units do: record the failed pair (moveToTarget skips
+            // re-pathing the same start/end), stop, and fall through with the
+            // empty route - the empty-route branch below clears attackFlagPos
+            // so stopNew() doesn't bounce the ship straight back into
+            // re-pathing every frame.
+            isMoveToTargetFailed = true;
+            stopNew();
+            failedFindPathStart = selfPos;
+            failedFindPathEnd = targetMoveTilePos;
+          }
         } else {
           unitActDetail = UNIT_ACT_DETAIL_WALK_ROUTE;
         }
@@ -3585,32 +3666,52 @@ void Movable::moveNew(float dt) { // movenew start
             gatherTree(WORLD->getNearestTree(getPosition(), ExcludeTreeList));
             return;
           }
-          if (target) {
-            unreachableTarget = target;
-            if (alliSide == WHICH_SIDE_HERO) {
-              UnreachableUnitList.pushBack(target);
-              WORLD->findTargetEnemy(this);
-              target = nullptr;
-              return;
+          if (isCarryingTree) {
+            // No ground route to the drop-off (the worker chopped itself
+            // into a forest pocket). Fall back to the old carry flight so
+            // the wood still gets delivered; the landing check above only
+            // re-fires once the unit is over a free tile again.
+            isTemporaryFlying = true;
+            unitActDetail = UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET;
+            array = PointArray::create(1);
+            array->addControlPoint(moveToPos);
+          } else {
+            if (target) {
+              unreachableTarget = target;
+              if (alliSide == WHICH_SIDE_HERO) {
+                UnreachableUnitList.pushBack(target);
+                WORLD->findTargetEnemy(this);
+                target = nullptr;
+                return;
+              }
             }
-          }
-          isMoveToTargetFailed = true;
-          stopNew();
-          failedFindPathStart = selfPos;
-          failedFindPathEnd = targetMoveTilePos;
-          if (targetMoveTilePos == attackFlagTilePos) {
-            failedAttackFlagPos = attackFlagPos;
-            attackFlagPos = Vec2::ZERO;
-            // Attack-move failed to path - if that's because the
-            // target is a single water-crossing away on another
-            // island, ferry across via Shuttle instead of just
-            // cancelling the order. Two-or-more-crossing routes
-            // (through an intermediate island) aren't handled yet.
-            if (!needsFerryToTarget &&
-                !WORLD->isSameIsland(getPosition(), failedAttackFlagPos) &&
-                WORLD->isSingleShuttleHopAway(getPosition(),
-                                              failedAttackFlagPos)) {
-              WORLD->beginShuttleFerry(this, failedAttackFlagPos);
+            isMoveToTargetFailed = true;
+            stopNew();
+            failedFindPathStart = selfPos;
+            failedFindPathEnd = targetMoveTilePos;
+            if (targetMoveTilePos == attackFlagTilePos) {
+              failedAttackFlagPos = attackFlagPos;
+              attackFlagPos = Vec2::ZERO;
+              // Attack-move failed to path - if that's because the
+              // target is a single water-crossing away on another
+              // island, ferry across via Shuttle instead of just
+              // cancelling the order. Two-or-more-crossing routes
+              // (through an intermediate island) aren't handled yet.
+              if (!needsFerryToTarget &&
+                  !WORLD->isSameIsland(getPosition(), failedAttackFlagPos) &&
+                  WORLD->isSingleShuttleHopAway(getPosition(),
+                                                failedAttackFlagPos)) {
+                if (!WORLD->beginShuttleFerry(this, failedAttackFlagPos) &&
+                    isEnemy) {
+                  // No shuttle with cargo room exists right now. Park the
+                  // request instead of dropping it: the retry pump in
+                  // updateShuttleFerries() re-attempts every tick, so this
+                  // unit boards as soon as the AI fields a shuttle. AI-only -
+                  // a player order should not silently auto-board much later.
+                  needsFerryToTarget = true;
+                  ferryFinalTarget = failedAttackFlagPos;
+                }
+              }
             }
           }
         }
@@ -3678,7 +3779,14 @@ void Movable::moveNew(float dt) { // movenew start
               routePositionArray->count() - 1); // remove last tile pos
           addRoute(targetPos);                  // test
         }
-        if (routePositionArray->count() > 2) {
+        if (routePositionArray->count() > 2 && !isShipUnit) {
+          // Skipping the first waypoint smooths land-unit starts, but for
+          // ships the straight first leg to waypoint[1] can clip the corner
+          // of whatever the A* just routed around (land or a freshly built
+          // water building) - the per-frame tile check then blocks it,
+          // recovery sidesteps, the re-path gets clipped again, and the
+          // ship just paces back and forth in front of the obstacle.
+          // Ships follow their route exactly as planned.
           routePositionArray->removeControlPointAtIndex(0);
         }
       } else {
@@ -3856,6 +3964,25 @@ void Movable::moveNew(float dt) { // movenew start
                 !WORLD->isWaterTileAt((int)t.x, (int)t.y) ||
                 WORLD->isShipTileBlocked((int)t.x, (int)t.y, this,
                                          collidesWithShips);
+          } else if (!isFlying && !isTemporaryFlying &&
+                     unitActDetail ==
+                         UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET) {
+            // Land units must never walk onto water. The ground A* already
+            // refuses water tiles, but straight-line moves skip pathfinding
+            // and isBlockExistBetween's 50px sampling can step right over a
+            // coastal water tile - which sent melee units marching onto the
+            // sea while chasing oil ships. A target that needs swimming to
+            // reach is unreachable for a land unit, so drop the chase and
+            // park at the water's edge.
+            Vec2 t = WORLD->getCoordinateFromPosition(dest);
+            if (WORLD->isWaterTileAt((int)t.x, (int)t.y)) {
+              shipBlocked = true;
+              if (target != nullptr) {
+                unreachableTarget = target;
+                target = nullptr;
+              }
+              stopNew();
+            }
           }
           if (!shipBlocked) {
             this->setPosition(dest);
@@ -3872,6 +3999,20 @@ void Movable::moveNew(float dt) { // movenew start
                 !WORLD->isWaterTileAt((int)t.x, (int)t.y) ||
                 WORLD->isShipTileBlocked((int)t.x, (int)t.y, this,
                                          collidesWithShips);
+          } else if (!isFlying && !isTemporaryFlying &&
+                     unitActDetail ==
+                         UNIT_ACT_DETAIL_WALK_STRAIGHT_TO_TARGET) {
+            // See the matching check in the arrival branch above - keep land
+            // units off water during straight-line moves.
+            Vec2 t = WORLD->getCoordinateFromPosition(nextPos);
+            if (WORLD->isWaterTileAt((int)t.x, (int)t.y)) {
+              shipBlocked = true;
+              if (target != nullptr) {
+                unreachableTarget = target;
+                target = nullptr;
+              }
+              stopNew();
+            }
           }
           if (!shipBlocked) {
             this->setPosition(nextPos);
@@ -3879,7 +4020,11 @@ void Movable::moveNew(float dt) { // movenew start
             shipBlockedThisFrame = true;
           }
         }
-        if (collidesWithShips) {
+        if (isShip) {
+          // Deadlock recovery for every ship type, not just the ship-vs-ship
+          // colliders: oil ships skip ship collision but can still be blocked
+          // by terrain corners or by a water building completing on their
+          // route, and without recovery they froze in place forever.
           // Ship-vs-ship deadlock recovery. Ship movement above just waits when
           // its next tile is taken by another ship, and the water A* doesn't
           // route around ships (resetWaterPathState only blocks terrain and
@@ -3949,7 +4094,28 @@ void Movable::moveNew(float dt) { // movenew start
                 int ny = (int)curTile.y + ndy[k];
                 if (!WORLD->isWaterTileAt(nx, ny))
                   continue;
-                if (WORLD->isShipTileBlocked(nx, ny, this))
+                // Oil ships ignore other ships while moving, so their escape
+                // scan must too (checkOtherShips=false), or they'd refuse
+                // tiles they can actually pass through.
+                if (WORLD->isShipTileBlocked(nx, ny, this, collidesWithShips))
+                  continue;
+                // A diagonal slide through the corner between two blocked
+                // tiles would wedge exactly like a corner-cutting path -
+                // require both orthogonal neighbors to be open water.
+                // Water buildings sit on water tiles, so isWaterTileAt alone
+                // would still let the slide clip their corners - check the
+                // building/ship occupancy too.
+                if (ndx[k] != 0 && ndy[k] != 0 &&
+                    (!WORLD->isWaterTileAt((int)curTile.x + ndx[k],
+                                           (int)curTile.y) ||
+                     !WORLD->isWaterTileAt((int)curTile.x,
+                                           (int)curTile.y + ndy[k]) ||
+                     WORLD->isShipTileBlocked((int)curTile.x + ndx[k],
+                                              (int)curTile.y, this,
+                                              collidesWithShips) ||
+                     WORLD->isShipTileBlocked((int)curTile.x,
+                                              (int)curTile.y + ndy[k], this,
+                                              collidesWithShips)))
                   continue;
                 float ddx = (float)nx - destTile.x, ddy = (float)ny - destTile.y;
                 float dsq = ddx * ddx + ddy * ddy;
@@ -4599,7 +4765,23 @@ void Movable::move(float dt) {
 }
 cocos2d::Rect Movable::getBoundingBoxForIntersect() {
   if (isBuilding || unitType == UNIT_TREE) {
-    return Sprite::getBoundingBox();
+    cocos2d::Rect box = Sprite::getBoundingBox();
+    if (isBuilding && buildingOccupySize.width > 0) {
+      // The building image is not centered on its occupied tiles (e.g. the
+      // castle sprite sits 25px left of its 4x3 footprint's center), so a
+      // worker standing at a right-side approaching point can miss the
+      // sprite's box entirely and never trigger the resource drop-off.
+      // Approach points are footprint-based, so include the footprint here.
+      Vec2 bottomLeft =
+          WORLD->getPositionFromTileCoordinate(
+              buildingStartCoordinate.x,
+              buildingStartCoordinate.y + buildingOccupySize.height - 1) -
+          Vec2(TILE_SIZE / 2, TILE_SIZE / 2);
+      box.merge(cocos2d::Rect(bottomLeft.x, bottomLeft.y,
+                              buildingOccupySize.width * TILE_SIZE,
+                              buildingOccupySize.height * TILE_SIZE));
+    }
+    return box;
   } else if (spine) {
     return cocos2d::Rect(getPositionX() - 50, getPositionY() - 30, 100, 130);
   } else {

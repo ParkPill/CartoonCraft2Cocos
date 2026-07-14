@@ -383,7 +383,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_EVENT_HERO_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
             lbl = (Text*)btn->getChildByName("lblDesc");
             LM->setLocalizedStringNotKey(lbl, strmake("%s(%d/2)", LM->getText("two time buy for the account").c_str(), getEventHeroBoughtCount()));
             
@@ -416,7 +416,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MID_MONTH_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
             lbl = (Text*)btn->getChildByName("lblDesc");
             std::string strLimit = LM->getText("n time buy for day");
             strLimit = strLimit.replace(strLimit.find("7"), 1, "3");
@@ -444,7 +444,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale("cc_starterkey"));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
         }
         if(iapList.find(IAP_DETAIL_MARTIAL_ART_PACKAGE) == std::string::npos){
             Node* child = layer->getChildByName("btnMartialArtPackage");
@@ -460,7 +460,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MARTIAL_ART_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
             
             lbl = (Text*)btn->getChildByName("lblRank0");
             LM->setLocalizedString(lbl, "rare hero");
@@ -489,7 +489,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CLASSIC_WAR_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
             
             lbl = (Text*)btn->getChildByName("lblRank0");
             LM->setLocalizedString(lbl, "rare hero");
@@ -524,7 +524,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_CREW_MANAGER_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
         }
         if(iapList.find(IAP_DETAIL_MASTER_CREW_PACKAGE) == std::string::npos){
             Node* child = layer->getChildByName("btnMasterCrew");
@@ -540,7 +540,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             lbl->setFontName(LM->getLocalizedFont());
             lbl->setFontSize(lbl->getFontSize());
             lbl->setString(GameSharing::getPriceLocale(IAP_DETAIL_MASTER_CREW_PACKAGE));
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
         }
         
         for (int i = 0; i < 4; i++) {
@@ -586,7 +586,7 @@ void ShopLayer::onShopTabClick(Ref* ref){
             }else if(i == 3){
                 lbl->setString(GameSharing::getPriceLocale("cc_gem100"));
             }
-            if(lbl->getFontName().compare("Helveticas") == 0) lbl->setTextColor(Color4B::BLACK);
+            if(lbl->getFontName().compare("BMDOHYEON.ttf") != 0) lbl->setTextColor(Color4B::BLACK);
         }
     }
 //    x -= gapX*4/5;

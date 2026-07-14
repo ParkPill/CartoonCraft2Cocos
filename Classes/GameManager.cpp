@@ -26,6 +26,64 @@
 using namespace cocostudio;
 
 #include "Movable.h"
+#include <chrono>
+#include <cstdio>
+
+// --- temporary performance instrumentation (see GameManager.h) --------------
+long long PerfProbe::frameUs = 0;
+long long PerfProbe::frameMaxUs = 0;
+long long PerfProbe::moveUs = 0;
+long long PerfProbe::targetUs = 0;
+long long PerfProbe::pathUs = 0;
+long long PerfProbe::pathMaxUs = 0;
+long long PerfProbe::fogUs = 0;
+long long PerfProbe::minimapUs = 0;
+long long PerfProbe::aiUs = 0;
+int PerfProbe::frameCount = 0;
+int PerfProbe::targetCalls = 0;
+int PerfProbe::pathCalls2 = 0;
+double PerfProbe::sinceLogSec = 0;
+
+long long PerfProbe::nowUs()
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+               std::chrono::steady_clock::now().time_since_epoch())
+        .count();
+}
+
+void PerfProbe::report(float dt, int heroes, int enemies)
+{
+    frameCount++;
+    sinceLogSec += dt;
+    if (sinceLogSec < 5.0) {
+        return;
+    }
+    char buf[512];
+    snprintf(buf, sizeof(buf),
+             "[PERF] units H:%d E:%d | tick avg %.2fms max %.2fms (n=%d) | "
+             "move %.1fms | target %.1fms (%d calls) | "
+             "path %.1fms max %.2fms (%d calls) | "
+             "fog %.1fms | minimap %.1fms | ai %.1fms | window %.1fs",
+             heroes, enemies,
+             frameCount > 0 ? frameUs / 1000.0 / frameCount : 0.0,
+             frameMaxUs / 1000.0, frameCount,
+             moveUs / 1000.0,
+             targetUs / 1000.0, targetCalls,
+             pathUs / 1000.0, pathMaxUs / 1000.0, pathCalls2,
+             fogUs / 1000.0, minimapUs / 1000.0, aiUs / 1000.0,
+             sinceLogSec);
+    cocos2d::log("%s", buf);
+    FILE* fp = fopen("perf_log.txt", "a");
+    if (fp) {
+        fprintf(fp, "%s\n", buf);
+        fclose(fp);
+    }
+    frameUs = frameMaxUs = moveUs = targetUs = 0;
+    pathUs = pathMaxUs = fogUs = minimapUs = aiUs = 0;
+    frameCount = targetCalls = pathCalls2 = 0;
+    sinceLogSec = 0;
+}
+// ----------------------------------------------------------------------------
 
 static void registrationHostShowMessage(Node* host, std::string msg)
 {
@@ -309,6 +367,17 @@ GameManager::GameManager()
     astar = AStar::create();
     this->addChild(astar);
     waterAstar = AStar::create();
+    // Ships are blocked per-tile while moving (Movable::moveNew), so a path
+    // that cuts the corner between two diagonally-touching land tiles would
+    // pass A* but wedge the ship permanently at that corner.
+    waterAstar->strictDiagonal = true;
+    // Ship orders often target tiles the water A* can't stand on (building
+    // footprints, points beside the coast); sail to the nearest reachable
+    // water tile instead of cancelling the order.
+    waterAstar->partialPathToNearest = true;
+    // Use the admissible (sqrt) heuristic so sea routes are actually
+    // shortest paths instead of greedy coast-hugging ones.
+    waterAstar->admissibleHeuristic = true;
     this->addChild(waterAstar);
     size = Director::getInstance()->getVisibleSize();
     life = UserDefault::getInstance()->getIntegerForKey(KEY_LIFE, 5);
@@ -3372,7 +3441,12 @@ PointArray *GameManager::getPath(cocos2d::Vec2 start, cocos2d::Vec2 end)
     //    return  ar;
     // stage 4.tmx test
     getPathCall++;
+    long long __p0 = PERF_NOW();
     deque<Cell *> _result = astar->getPath(start.x, start.y, end.x, end.y);
+    long long __pd = PERF_NOW() - __p0;
+    PerfProbe::pathUs += __pd;
+    PerfProbe::pathCalls2++;
+    if (__pd > PerfProbe::pathMaxUs) PerfProbe::pathMaxUs = __pd;
     PointArray *pointArray = PointArray::create(_result.size());
     if (_result.size() == 1)
     {
@@ -3455,7 +3529,12 @@ void GameManager::setWaterPathState(int x, int y, int state)
 }
 PointArray *GameManager::getPathForShip(cocos2d::Vec2 start, cocos2d::Vec2 end)
 {
+    long long __p0 = PERF_NOW();
     deque<Cell *> _result = waterAstar->getPath(start.x, start.y, end.x, end.y);
+    long long __pd = PERF_NOW() - __p0;
+    PerfProbe::pathUs += __pd;
+    PerfProbe::pathCalls2++;
+    if (__pd > PerfProbe::pathMaxUs) PerfProbe::pathMaxUs = __pd;
     PointArray *pointArray = PointArray::create(_result.size());
     if (_result.size() <= 1) return pointArray;
     for (int i = (int)_result.size() - 1; i >= 0; i--) {
@@ -5652,6 +5731,22 @@ int GameManager::getFoodUseForUnit(int index)
     {
         return 2;
     }
+    else if (index == UNIT_HUMAN_SHUTTLE || index == UNIT_ORC_SHUTTLE)
+    {
+        return 2;
+    }
+    else if (index == UNIT_HUMAN_OIL_SHIP || index == UNIT_ORC_OIL_SHIP)
+    {
+        return 1;
+    }
+    else if (index == UNIT_HUMAN_SHIP || index == UNIT_ORC_SHIP)
+    {
+        return 3;
+    }
+    else if (index == UNIT_HUMAN_BATTLE_SHIP || index == UNIT_ORC_BATTLE_SHIP)
+    {
+        return 5;
+    }
     return 0;
 }
 void GameManager::addConsumedItem(std::string strSkuName)
@@ -6566,7 +6661,7 @@ int GameManager::getUnitAP(int unit)
     {
         return 40;
     }
-    else if (unit == UNIT_HUMAN_BATTLE_SHIP)
+    else if (unit == UNIT_HUMAN_BATTLE_SHIP || unit == UNIT_ORC_BATTLE_SHIP)
     {
         return 120;
     }
