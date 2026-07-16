@@ -4,17 +4,34 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.magmon.cartooncraft",
+  "applicationId": "com.studionap.cartooncraft2",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 312,
-      "versionName": "4.24",
-      "outputFile": "CartoonCraft_release-4.24.apk"
+      "versionCode": 315,
+      "versionName": "4.27",
+      "outputFile": "CartoonCraft_release-4.27.apk"
     }
   ],
-  "elementType": "File"
+  "elementType": "File",
+  "baselineProfiles": [
+    {
+      "minApi": 28,
+      "maxApi": 30,
+      "baselineProfiles": [
+        "baselineProfiles/1/CartoonCraft_release-4.27.dm"
+      ]
+    },
+    {
+      "minApi": 31,
+      "maxApi": 2147483647,
+      "baselineProfiles": [
+        "baselineProfiles/0/CartoonCraft_release-4.27.dm"
+      ]
+    }
+  ],
+  "minSdkVersionForDexing": 23
 }

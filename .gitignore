@@ -67,7 +67,6 @@ Assets/Firebase/Plugins/x86_64/FirebaseCppApp-7_1_0.so
 sysinfo.txt
 
 # Builds
-*.apk
 *.aab
 *.zip
 *.blob
